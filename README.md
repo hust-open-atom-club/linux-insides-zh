@@ -1,34 +1,28 @@
 linux-insides
 ===============
 
-A series of posts about the linux kernel and its insides.
+一系列关于Linux内核和其内在。
 
-**The goal is simple** - to share my modest knowledge about the internals of the linux kernel and help people who are interested in the linux kernel internals, and other low-level subject matter.
+**目的很简单** - 分享我对Linux内核的内部的一点知识，帮助对linux内核内部感兴趣的人，和其他低级话题。
 
-**Questions/Suggestions**: Feel free about any questions or suggestions by pinging me at twitter [@0xAX](https://twitter.com/0xAX), adding [issue](https://github.com/0xAX/linux-internals/issues/new) or just drop me [email](mailto:anotherworldofworld@gmail.com).
+**问题/建议**: 请随意twitter原作者 [@0xAX](https://twitter.com/0xAX)任何问题或者建议 ,添加[issue](https://github.com/0xAX/linux-internals/issues/new)或mail[email](mailto:anotherworldofworld@gmail.com)。
 
-Support
--------
+p.s:这是原作者说的以上都是原作者原话翻译过来的，而我没他那么厉害ﾟ(ﾟ´Д｀ﾟ)ﾟ｡太专业的问题我也不会> <
 
-**Support** If you like `linux-insides` you can support me with: 
-
-[![Flattr linux-insides](https://img.shields.io/badge/donate-flattr-green.svg)](https://flattr.com/submit/auto?user_id=0xAX&url=https://github.com/0xAX/linux-insides/&title=linux-insed) [![Support at gratipay](http://img.shields.io/gratipay/0xAX.svg)](https://gratipay.com/0xAX/) [![Support with bitcoin](https://img.shields.io/badge/donate-bitcoin-green.svg)](https://www.coinbase.com/checkouts/0bfa452a41cf52c0b3f99500b4f31685) [![Support via gitbook](https://img.shields.io/badge/donate-gitbook-green.svg)](https://gumroad.com/l/gitbook_54c9232c1db1670300055523?wanted=true)
 
 LICENSE
 -------------
 
 Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
-Contributions 
---------------
-
-Feel free to create issues or create pull-requests if you find any issues or my English is poor.
-
-**Please read [CONTRIBUTING.md](https://github.com/0xAX/linux-insides/blob/master/CONTRIBUTING.md) before pushing any changes.**
-
-![image](http://oi58.tinypic.com/23upobq.jpg)
-
-Author
+作者
 ---------------
-
 [@0xAX](https://twitter.com/0xAX)
+
+译者
+---------------
+[@xinqiu][http://xinqiu.me]
+
+####说明
+
+这是我翻译的第二本书，这本书对我来说可能有点难度，进度不是很快，我打算一边看CSAPP一边翻翻看吧，如果你也感兴趣想参加翻译就`fork`一下，然后翻好了`PR`给我，也可以给我mail[mail](xinqiu.94@gmail.com)。也希望大家能纠错和给我提意见。
