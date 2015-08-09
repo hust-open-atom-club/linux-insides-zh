@@ -1,10 +1,9 @@
-# Kernel boot process
+# 内核引导过程
 
-This chapter describes the linux kernel boot process. You will see here a
-couple of posts which describe the full cycle of the kernel loading process:
+本章介绍了Linux内核引导过程。你将在这看到一些描述内核加载过程的整个周期的相关文章：
 
-* [From the bootloader to kernel](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) - describes all stages from turning on the computer to before the first instruction of the kernel;
-* [First steps in the kernel setup code](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) - describes first steps in the kernel setup code. You will see heap initialization, querying of different parameters like EDD, IST and etc...
-* [Video mode initialization and transition to protected mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) - describes video mode initialization in the kernel setup code and transition to protected mode.
-* [Transition to 64-bit mode](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-4.html) - describes preparation for transition into 64-bit mode and transition into it.
-* [Kernel Decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) - describes preparation before kernel decompression and directly decompression.
+* [从引导加载程序内核](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/index.html/linux-bootstrap-1.html) - 介绍了从启动计算机到内核执行第一条指令之前的所有阶段;
+* [在内核安装代码的第一步](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/linux-bootstrap-2.html) - 介绍了在内核设置代码的第一个步骤。你会看到堆的初始化，查询不同的参数，如EDD，IST和等...
+* [视频模式初始化和转换到保护模式](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/linux-bootstrap-3.html) - 介绍了视频模式初始化内核设置代码并过渡到保护模式。
+* [过渡到64位模式](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/linux-bootstrap-4.html) - 介绍了过渡到64位模式的准备并过渡到64位。
+* [内核解压缩](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/linux-bootstrap-5.html) - 介绍了内核解压缩之前的准备然后直接解压缩。
