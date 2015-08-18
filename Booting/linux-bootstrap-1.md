@@ -1,10 +1,10 @@
-Kernel booting process. Part 1.
+内核引导过程. Part 1.
 ================================================================================
 
-From the bootloader to kernel
+从引导加载程序内核
 --------------------------------------------------------------------------------
 
-If you have read my previous [blog posts](http://0xax.blogspot.com/search/label/asm), you can see that sometime ago I started to get involved with low-level programming. I wrote some posts about x86_64 assembly programming for Linux. At the same time, I started to dive into the Linux source code. I have a great interest in understanding how low-level things work, how programs run on my computer, how they are located in memory, how the kernel manages processes and memory, how the network stack works on low-level and many many other things. So, I decided to write yet another series of posts about the Linux kernel for **x86_64**.
+如果你已经看过我之前的[文章](http://0xax.blogspot.com/search/label/asm)，就知道之前我开始和底层编程打交道。我写了一些关于Linux x86_64 汇编的文章。同时，我开始深入研究Linux源代码。底层是如果工作的，程序是如何在电脑上运行的，他们是如何在内存中定位的，内核是如何管理进程和内存，网络堆栈是如何在底层工作的等等，这些我都非常感兴趣。因此，我决定去写另外的一系列文章关于**x86_64**框架的Linux内核。
 
 Note that I'm not a professional kernel hacker and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). I appreciate it. All posts will also be accessible at [linux-insides](https://github.com/0xAX/linux-insides) and if you find something wrong with my English or the post content, feel free to send a pull request.
 
