@@ -7,3 +7,4 @@
 * [视频模式初始化和转换到保护模式](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/linux-bootstrap-3.html) - 介绍了视频模式初始化内核设置代码并过渡到保护模式。
 * [过渡到64位模式](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/linux-bootstrap-4.html) - 介绍了过渡到64位模式的准备并过渡到64位。
 * [内核解压缩](http://xinqiu.gitbooks.io/linux-inside-zh/content/Booting/linux-bootstrap-5.html) - 介绍了内核解压缩之前的准备然后直接解压缩。
+
