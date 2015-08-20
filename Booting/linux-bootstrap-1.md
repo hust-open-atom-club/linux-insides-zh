@@ -6,27 +6,28 @@
 
 如果你已经看过我之前的[文章](http://0xax.blogspot.com/search/label/asm)，就知道之前我开始和底层编程打交道。我写了一些关于Linux x86_64 汇编的文章。同时，我开始深入研究Linux源代码。底层是如果工作的，程序是如何在电脑上运行的，他们是如何在内存中定位的，内核是如何管理进程和内存，网络堆栈是如何在底层工作的等等，这些我都非常感兴趣。因此，我决定去写另外的一系列文章关于**x86_64**框架的Linux内核。
 
-Note that I'm not a professional kernel hacker and I don't write code for the kernel at work. It's just a hobby. I just like low-level stuff, and it is interesting for me to see how these things work. So if you notice anything confusing, or if you have any questions/remarks, ping me on twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new). I appreciate it. All posts will also be accessible at [linux-insides](https://github.com/0xAX/linux-insides) and if you find something wrong with my English or the post content, feel free to send a pull request.
+值得注意的是我不是一个专业的内核黑客并且我的工作不是为内核贡献代码。这只是小兴趣。我只是喜欢底层的东西，底层是如何工作的让我产生了很大的兴趣。如果你发现任何迷惑的地方或者你有任何问题/备注，[twitter](https://twitter.com/0xAX)，[email](anotherworldofworld@gmail.com)我或者提一个[issue](https://github.com/0xAX/linux-insides).(PS:翻译上的问题请mail我:xinqiu.94@gmail.com或github上@xinqiu)。我会很高兴。所有的文章也可以在[linux-insides](https://github.com/0xAX/linux-insides)上看，如果你发现哪里英文或内容错误，随意提个PR。(PS:中文版地址：https://github.com/xinqiu/linux-insides)
 
 
-*Note that this isn't the official documentation, just learning and sharing knowledge.*
+*注意这不是官方文档，只是学习和分享知识*
 
-**Required knowledge**
+**需要的基础知识**
 
-* Understanding C code
-* Understanding assembly code (AT&T syntax)
+* 理解 C 代码
+* 理解 汇编语言 代码 （AT&T 语法）
 
-Anyway, if you just started to learn some tools, I will try to explain some parts during this and the following posts. Ok, little introduction finished and now we can start to dive into the kernel and low-level stuff.
+不管怎样，如果你才开始学一些，我会在这些文章中尝试去解释一些部分。好了，小的介绍结束，我们开始深入内核和底层。
 
-All code is actually for kernel - 3.18. If there are changes, I will update the posts accordingly.
+所有的代码实际上是内核 - 3.18.如果有任何改变，我将会做相应的更新。
 
-The Magic Power Button, What happens next?
+神奇的电源按钮，接下来会发生什么？
 --------------------------------------------------------------------------------
 
-Despite that this is a series of posts about Linux kernel, we will not start from kernel code (at least in this paragraph). Ok, you pressed the magic power button on your laptop or desktop computer and it started to work. After the motherboard sends a signal to the [power supply](https://en.wikipedia.org/wiki/Power_supply), the power supply provides the computer with the proper amount of electricity. Once motherboard receives the [power good signal](https://en.wikipedia.org/wiki/Power_good_signal), it tries to run the CPU. The CPU resets all leftover data in its registers and sets up predefined values for every register.
+尽管这一系列文章关于 Linux 内核，我们还没有从内核代码（至少在这一章）开始。好了，当你按下你笔记本或台式机的神奇电源按钮，它开始工作。在主板发送一个信号给[电源](https://en.wikipedia.org/wiki/Power_supply)，电源提供电脑适当量的电力。一旦主板收到了[电源备妥信号](https://en.wikipedia.org/wiki/Power_good_signal),它会尝试运行 CPU 。CPU 复位寄存器里的所有剩余数据，设置预定义的值给每个寄存器。
 
 
-[80386](https://en.wikipedia.org/wiki/Intel_80386) and later CPUs define the following predefined data in CPU registers after the computer resets:
+[80386](https://en.wikipedia.org/wiki/Intel_80386) 
+以及后来的 CPUs 在电脑复位后，在 CPU 寄存器中定义了如下预定义数据：
 
 ```
 IP          0xfff0
