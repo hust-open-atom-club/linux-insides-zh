@@ -23,6 +23,8 @@ Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-s
 ---------------
 [@xinqiu][http://xinqiu.me]
 
+[@oska874][ezio_zhang@outlook.com]
+
 ####说明
 
 这是我翻译的第二本书，这本书对我来说可能有点难度，进度不是很快，我打算一边看CSAPP一边翻翻看吧，如果你也感兴趣想参加翻译就`fork`一下，然后翻好了`PR`给我，也可以给我[mail](xinqiu.94@gmail.com)。也希望大家能纠错和给我提意见。
