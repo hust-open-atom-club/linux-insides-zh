@@ -35,29 +35,29 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-处理器开始在[实模式](https://en.wikipedia.org/wiki/Real_mode)工作，我们需要退回一点去理解在这种模式下的内存分割。所有 x86兼容处理器都支持实模式，从[8086](https://en.wikipedia.org/wiki/Intel_8086)到现在的Intel 64位 CPU。8086处理器有一个20位寻址总线，这意味着它可以对0到2^20 位地址空间进行操作(1Mb).不过它只有16位的寄存器，通过这个16位寄存器最大寻址是2^16即 0xffff(64 Kb)。[内存分配](http://en.wikipedia.org/wiki/Memory_segmentation) 被用来充分利用所有空闲地址空间。所有内存被分成固定的65535 bytes或64 KB大小的小块。由于我们不能用16位寄存器寻址小于64KB的内存，一种替代的方法被设计出来了。一个地址包括两个部分：数据段起始地址和从该数据段起的偏移量。为了得到内存中的物理地址，我们要让数据段乘16并加上偏移量：
+处理器开始在[实模式](https://en.wikipedia.org/wiki/Real_mode)工作，我们需要退回一点去理解在这种模式下的内存分割。所有 x86兼容处理器都支持实模式，从[8086](https://en.wikipedia.org/wiki/Intel_8086)到现在的Intel 64位 CPU。8086处理器有一个20位寻址总线，这意味着它可以对0到2^20 位地址空间进行操作(1Mb).不过它只有16位的寄存器，通过这个16位寄存器最大寻址是2^16即 0xffff(64 Kb)。[内存分配](http://en.wikipedia.org/wiki/Memory_segmentation) 被用来充分利用所有空闲地址空间。所有内存被分成固定的65535 字节或64 KB大小的小块。由于我们不能用16位寄存器寻址小于64KB的内存，一种替代的方法被设计出来了。一个地址包括两个部分：数据段起始地址和从该数据段起的偏移量。为了得到内存中的物理地址，我们要让数据段乘16并加上偏移量：
 
 ```
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-For example if `CS:IP` is `0x2000:0x0010`, the corresponding physical address will be:
+举个例子，如果 `CS:IP` 是 `0x2000:0x0010`, 相关的物理地址将会是： 
 
 ```python
 >>> hex((0x2000 << 4) + 0x0010)
 '0x20010'
 ```
 
-But if we take the biggest segment part and offset: `0xffff:0xffff`, it will be:
+不过如果我们让最大端进行偏移：`0xffff:0xffff`，将会是：
 
 ```python
 >>> hex((0xffff << 4) + 0xffff)
 '0x10ffef'
 ```
 
-which is 65519 bytes over first megabyte. Since only one megabyte is accessible in real mode, `0x10ffef` becomes `0x00ffef` with disabled [A20](https://en.wikipedia.org/wiki/A20_line).
+这超出1MB65519字节。既然只有1MB在实模式中可以访问，`0x10ffef` 变成有[A20](https://en.wikipedia.org/wiki/A20_line)缺陷的 `0x00ffef`。
 
-Ok, now we know about real mode and memory addressing. Let's get back to register values after reset.
+我们知道实模式和内存地址。回到复位后的寄存器值。
 
 `CS` register consists of two parts: the visible segment selector and hidden base address. We know predefined `CS` base and `IP` value, logical address will be:
 
