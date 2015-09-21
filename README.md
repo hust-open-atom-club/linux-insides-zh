@@ -21,9 +21,9 @@ Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-s
 
 译者
 ---------------
-[@xinqiu][http://xinqiu.me]
+[@xinqiu](http://xinqiu.me)
 
-[@oska874][ezio_zhang@outlook.com]
+[@oska874](ezio_zhang@outlook.com)
 
 ####说明
 
