@@ -7,7 +7,7 @@ linux-insides
 
 **问题/建议**: 请随意twitter原作者 [@0xAX](https://twitter.com/0xAX)任何问题或者建议 ,添加[issue](https://github.com/0xAX/linux-internals/issues/new)或[mail](mailto:anotherworldofworld@gmail.com)我。
 
-p.s:这是原作者说的以上都是原作者原话翻译过来的，而我没他那么厉害ﾟ(ﾟ´Д｀ﾟ)ﾟ｡太专业的问题我也不会> <
+p.s:这是原作者说的以上都是原作者原话翻译过来的
 
 
 LICENSE
@@ -21,9 +21,9 @@ Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-s
 
 译者
 ---------------
-[@xinqiu][http://xinqiu.me]
+[@xinqiu](http://xinqiu.me)
 
-[@oska874][ezio_zhang@outlook.com]
+[@oska874](ezio_zhang@outlook.com)
 
 ####说明
 
