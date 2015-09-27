@@ -87,7 +87,7 @@ typedef struct elf64_shdr {
 
 **程序头表(Program header table)**
 
-All sections are grouped into segments in an executable or shared object file. Program header is an array of structures which describe every segment. It looks like:
+在可执行文件或者共享链接库中所有的节(sections)都被分为多个段(segments)。程序头是一个结构的数组，每一个结构都表示一个段(segments)。它的结构就像这样：
 
 ```C
 typedef struct elf64_phdr {
@@ -102,16 +102,18 @@ typedef struct elf64_phdr {
 } Elf64_Phdr;
 ```
 
-in the linux kernel source code.
+在内核源码种。
 
-`elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L254).
+`elf64_phdr` 定义在相同的 [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L254) 文件中.
 
 The ELF object file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Now let's a look at the `vmlinux` ELF object.
+
+EFL文件也包含其他的字段或结构。你可以在 [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf) 中查看。现在我们来查看一下 `vmlinux` 这个ELF文件。
 
 vmlinux
 --------------------------------------------------------------------------------
 
-`vmlinux` is also a relocatable ELF object file . We can take a look at it with the `readelf` util. First of all let's look at the header:
+`vmlinux` 也是一个可重定位的ELF文件。我们可以使用 `readelf` 工具来查看它。首先，让我们看一下它的头部：
 
 ```
 $ readelf -h  vmlinux
@@ -137,15 +139,14 @@ ELF Header:
   Section header string table index: 70
 ```
 
-Here we can see that `vmlinux` is a 64-bit executable file.
-
-We can read from the [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt#L19):
+我们可以看出 `vmlinux` 是一个64位可执行文件。
+我们可以从 [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt#L19) 读到相关信息:
 
 ```
 ffffffff80000000 - ffffffffa0000000 (=512 MB)  kernel text mapping, from phys 0
 ```
 
-We can then look this address up in the `vmlinux` ELF object with:
+之后我们可以在 `vmlinux` ELF文件中查看这个地址：
 
 ```
 $ readelf -s vmlinux | grep ffffffff81000000
@@ -154,9 +155,9 @@ $ readelf -s vmlinux | grep ffffffff81000000
  90766: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 startup_64
 ```
 
-Note that the address of the `startup_64` routine is not `ffffffff80000000`, but `ffffffff81000000` and now I'll explain why.
+值得注意的是，`startup_64` 例程的地址不是 `ffffffff80000000`, 而是 `ffffffff81000000`。现在我们来解释一下。
 
-We can see following definition in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
+我们可以在 [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) 看见如下的定义 :
 
 ```
     . = __START_KERNEL;
@@ -172,15 +173,15 @@ We can see following definition in the [arch/x86/kernel/vmlinux.lds.S](https://g
 	}
 ```
 
-Where `__START_KERNEL` is:
+其中，`__START_KERNEL` 定义如下:
 
 ```
 #define __START_KERNEL		(__START_KERNEL_map + __PHYSICAL_START)
 ```
 
-`__START_KERNEL_map` is the value from the documentation - `ffffffff80000000` and `__PHYSICAL_START` is `0x1000000`. That's why address of the `startup_64` is `ffffffff81000000`.
+从这个文档中看出，`__START_KERNEL_map` 的值是 `ffffffff80000000` 以及 `__PHYSICAL_START` 的值是 `0x1000000`. 这就是 `startup_64`的地址是 `ffffffff81000000`的原因了。
 
-And at last we can get program headers from `vmlinux` with the following command:
+最后我们通过以下命令来得到程序头表的内容：
 
 ```
 readelf -l vmlinux
@@ -215,6 +216,7 @@ Program Headers:
 		  .smp_locks .data_nosave .bss .brk
 ```
 
-Here we can see five segments with sections list. You can find all of these sections in the generated linker script at - `arch/x86/kernel/vmlinux.lds`.
+这里我们可以看出五个包含节(sections)列表的段(segments)。你可以在生成的链接器脚本 - `arch/x86/kernel/vmlinux.lds` 中找到所有的节(sections)。
 
-That's all. Of course it's not a full description of ELF (Executable and Linkable Format), but if you want to know more, you can find the documentation - [here](http://www.uclibc.org/docs/elf-64-gen.pdf)
+就这样。当然，它不是ELF(Executable and Linkable Format)的完整描述，但是如果你想要知道更多，可以参考这个文档 - [here](http://www.uclibc.org/docs/elf-64-gen.pdf)
+
