@@ -7,7 +7,7 @@ ELF (Executable and Linkable Format)是一种为可执行文件，目标文件�
 
 * ELF头(ELF header) - 描述文件的主要特性：类型，CPU架构，入口地址，现有部分的大小和偏移等等；
 
-* 程序头表(Program header table) 列举了所有有效的段(segments)和他们的属性。 程序头表需要加载器将文件中的节加载到虚拟内存段中；
+* 程序头表(Program header table) - 列举了所有有效的段(segments)和他们的属性。 程序头表需要加载器将文件中的节加载到虚拟内存段中；
 
 * 节头表(Section header table) - 包含对节(sections)的描述。
 
@@ -15,10 +15,10 @@ ELF (Executable and Linkable Format)是一种为可执行文件，目标文件�
 
 **ELF头(ELF header)**
 
-ELF头(ELF header)位于文件的开始位置。它的主要目的是定位文件的其他部分。文件头主要包含以下字段：
+ELF头(ELF header)位于文件的开始位置。 它的主要目的是定位文件的其他部分。 文件头主要包含以下字段：
 
 * ELF文件鉴定 - 一个字节数组用来确认文件是否是一个ELF文件，并且提供普通文件特征的信息；
-* 文件类型 - 确定文件类型。这个字段描述文件是一个重定位文件，或可执行文件,或...；
+* 文件类型 - 确定文件类型。 这个字段描述文件是一个重定位文件，或可执行文件,或...；
 * 目标结构；
 * ELF文件格式的版本；
 * 程序入口地址；
@@ -53,7 +53,7 @@ typedef struct elf64_hdr {
 
 **节(sections)**
 
-所有的数据都存储在ELF文件的节(sections)中。我们通过节头表中的索引(index)来确认节(sections)。节头表表项包含以下字段：
+所有的数据都存储在ELF文件的节(sections)中。 我们通过节头表中的索引(index)来确认节(sections)。 节头表表项包含以下字段：
 
 * 节的名字；
 * 节的类型；
@@ -87,7 +87,7 @@ typedef struct elf64_shdr {
 
 **程序头表(Program header table)**
 
-在可执行文件或者共享链接库中所有的节(sections)都被分为多个段(segments)。程序头是一个结构的数组，每一个结构都表示一个段(segments)。它的结构就像这样：
+在可执行文件或者共享链接库中所有的节(sections)都被分为多个段(segments)。 程序头是一个结构的数组，每一个结构都表示一个段(segments)。 它的结构就像这样：
 
 ```C
 typedef struct elf64_phdr {
@@ -102,18 +102,16 @@ typedef struct elf64_phdr {
 } Elf64_Phdr;
 ```
 
-在内核源码种。
+在内核源码中。
 
 `elf64_phdr` 定义在相同的 [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L254) 文件中.
 
-The ELF object file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Now let's a look at the `vmlinux` ELF object.
-
-EFL文件也包含其他的字段或结构。你可以在 [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf) 中查看。现在我们来查看一下 `vmlinux` 这个ELF文件。
+EFL文件也包含其他的字段或结构。 你可以在 [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf) 中查看。 现在我们来查看一下 `vmlinux` 这个ELF文件。
 
 vmlinux
 --------------------------------------------------------------------------------
 
-`vmlinux` 也是一个可重定位的ELF文件。我们可以使用 `readelf` 工具来查看它。首先，让我们看一下它的头部：
+`vmlinux` 也是一个可重定位的ELF文件。 我们可以使用 `readelf` 工具来查看它。 首先，让我们看一下它的头部：
 
 ```
 $ readelf -h  vmlinux
@@ -155,7 +153,7 @@ $ readelf -s vmlinux | grep ffffffff81000000
  90766: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 startup_64
 ```
 
-值得注意的是，`startup_64` 例程的地址不是 `ffffffff80000000`, 而是 `ffffffff81000000`。现在我们来解释一下。
+值得注意的是，`startup_64` 例程的地址不是 `ffffffff80000000`, 而是 `ffffffff81000000`。 现在我们来解释一下。
 
 我们可以在 [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) 看见如下的定义 :
 
@@ -179,7 +177,7 @@ $ readelf -s vmlinux | grep ffffffff81000000
 #define __START_KERNEL		(__START_KERNEL_map + __PHYSICAL_START)
 ```
 
-从这个文档中看出，`__START_KERNEL_map` 的值是 `ffffffff80000000` 以及 `__PHYSICAL_START` 的值是 `0x1000000`. 这就是 `startup_64`的地址是 `ffffffff81000000`的原因了。
+从这个文档中看出，`__START_KERNEL_map` 的值是 `ffffffff80000000` 以及 `__PHYSICAL_START` 的值是 `0x1000000`。 这就是 `startup_64`的地址是 `ffffffff81000000`的原因了。
 
 最后我们通过以下命令来得到程序头表的内容：
 
@@ -216,7 +214,6 @@ Program Headers:
 		  .smp_locks .data_nosave .bss .brk
 ```
 
-这里我们可以看出五个包含节(sections)列表的段(segments)。你可以在生成的链接器脚本 - `arch/x86/kernel/vmlinux.lds` 中找到所有的节(sections)。
+这里我们可以看出五个包含节(sections)列表的段(segments)。 你可以在生成的链接器脚本 - `arch/x86/kernel/vmlinux.lds` 中找到所有的节(sections)。
 
-就这样。当然，它不是ELF(Executable and Linkable Format)的完整描述，但是如果你想要知道更多，可以参考这个文档 - [here](http://www.uclibc.org/docs/elf-64-gen.pdf)
-
+就这样吧。 当然，它不是ELF(Executable and Linkable Format)的完整描述，但是如果你想要知道更多，可以参考这个文档 - [这里](http://www.uclibc.org/docs/elf-64-gen.pdf)
