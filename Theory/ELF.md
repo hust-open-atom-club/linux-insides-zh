@@ -1,32 +1,34 @@
 ELF文件格式
 ================================================================================
 
-ELF (Executable and Linkable Format) is a standard file format for executable files, object code, shared libraries and core dumps. Linux and many UNIX-like operating systems use this format. Let's look at the structure of the ELF-64 Object File Format and some definitions in the linux kernel source code which related with it.
+ELF (Executable and Linkable Format)是一种为可执行文件，目标文件，共享链接库和内核转储(core dumps)准备的标准文件格式。 Linux和很多类Unix操作系统都使用这个格式。 让我们来看一下64位ELF文件格式的结构以及内核源码中有关于它的一些定义。
 
-An ELF object file consists of the following parts:
+一个ELF文件由以下三部分组成：
 
-* ELF header - describes the main characteristics of the object file: type, CPU architecture, the virtual address of the entry point, the size and offset of the remaining parts, etc...;
-* Program header table - lists the available segments and their attributes. Program header table need loaders for placing sections of the file as virtual memory segments;
-* Section header table - contains the description of the sections.
+* ELF头(ELF header) - 描述文件的主要特性：类型，CPU架构，入口地址，现有部分的大小和偏移等等；
 
-Now let's have a closer look on these components.
+* 程序头表(Program header table) - 列举了所有有效的段(segments)和他们的属性。 程序头表需要加载器将文件中的节加载到虚拟内存段中；
 
-**ELF header**
+* 节头表(Section header table) - 包含对节(sections)的描述。
 
-The ELF header is located at the beginning of the object file. Its main purpose is to locate all other parts of the object file. The File header contains the following fields:
+现在让我们对这些部分有一些更深的了解。
 
-* ELF identification - array of bytes which helps identify the file as an ELF object file and also provides information about general object file characteristic;
-* Object file type - identifies the object file type. This field can describe that ELF file is a relocatable object file, an executable file, etc...;
-* Target architecture;
-* Version of the object file format;
-* Virtual address of the program entry point;
-* File offset of the program header table;
-* File offset of the section header table;
-* Size of an ELF header;
-* Size of a program header table entry;
-* and other fields...
+**ELF头(ELF header)**
 
-You can find the `elf64_hdr` structure which presents ELF64 header in the linux kernel source code:
+ELF头(ELF header)位于文件的开始位置。 它的主要目的是定位文件的其他部分。 文件头主要包含以下字段：
+
+* ELF文件鉴定 - 一个字节数组用来确认文件是否是一个ELF文件，并且提供普通文件特征的信息；
+* 文件类型 - 确定文件类型。 这个字段描述文件是一个重定位文件，或可执行文件,或...；
+* 目标结构；
+* ELF文件格式的版本；
+* 程序入口地址；
+* 程序头表的文件偏移；
+* 节头表的文件偏移；
+* ELF头(ELF header)的大小；
+* 程序头表的表项大小；
+* 其他字段...
+
+你可以在内核源码种找到表示ELF64 header的结构体 `elf64_hdr`：
 
 ```C
 typedef struct elf64_hdr {
@@ -47,24 +49,24 @@ typedef struct elf64_hdr {
 } Elf64_Ehdr;
 ```
 
-This structure defined in the [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L220)
+这个结构体定义在 [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L220)
 
-**Sections**
+**节(sections)**
 
-All data stores in a sections in an Elf object file. Sections identified by index in the section header table. Section header contains following fields:
+所有的数据都存储在ELF文件的节(sections)中。 我们通过节头表中的索引(index)来确认节(sections)。 节头表表项包含以下字段：
 
-* Section name;
-* Section type;
-* Section attributes;
-* Virtual address in memory;
-* Offset in file;
-* Size of section;
-* Link to other section;
-* Miscellaneous information;
-* Address alignment boundary;
-* Size of entries, if section has table;
+* 节的名字；
+* 节的类型；
+* 节的属性；
+* 内存地址；
+* 文件中的偏移；
+* 节的大小；
+* 到其他节的链接；
+* 各种各样的信息；
+* 地址对齐；
+* 这个表项的大小，如果有的话；
 
-And presented with the following `elf64_shdr` structure in the linux kernel:
+而且，在linux内核中结构体 `elf64_shdr` 如下所示:
 
 ```C
 typedef struct elf64_shdr {
@@ -83,9 +85,9 @@ typedef struct elf64_shdr {
 
 [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L312)
 
-**Program header table**
+**程序头表(Program header table)**
 
-All sections are grouped into segments in an executable or shared object file. Program header is an array of structures which describe every segment. It looks like:
+在可执行文件或者共享链接库中所有的节(sections)都被分为多个段(segments)。 程序头是一个结构的数组，每一个结构都表示一个段(segments)。 它的结构就像这样：
 
 ```C
 typedef struct elf64_phdr {
@@ -100,16 +102,16 @@ typedef struct elf64_phdr {
 } Elf64_Phdr;
 ```
 
-in the linux kernel source code.
+在内核源码中。
 
-`elf64_phdr` defined in the same [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L254).
+`elf64_phdr` 定义在相同的 [elf.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h#L254) 文件中.
 
-The ELF object file also contains other fields/structures which you can find in the [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf). Now let's a look at the `vmlinux` ELF object.
+EFL文件也包含其他的字段或结构。 你可以在 [Documentation](http://www.uclibc.org/docs/elf-64-gen.pdf) 中查看。 现在我们来查看一下 `vmlinux` 这个ELF文件。
 
 vmlinux
 --------------------------------------------------------------------------------
 
-`vmlinux` is also a relocatable ELF object file . We can take a look at it with the `readelf` util. First of all let's look at the header:
+`vmlinux` 也是一个可重定位的ELF文件。 我们可以使用 `readelf` 工具来查看它。 首先，让我们看一下它的头部：
 
 ```
 $ readelf -h  vmlinux
@@ -135,15 +137,14 @@ ELF Header:
   Section header string table index: 70
 ```
 
-Here we can see that `vmlinux` is a 64-bit executable file.
-
-We can read from the [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt#L19):
+我们可以看出 `vmlinux` 是一个64位可执行文件。
+我们可以从 [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt#L19) 读到相关信息:
 
 ```
 ffffffff80000000 - ffffffffa0000000 (=512 MB)  kernel text mapping, from phys 0
 ```
 
-We can then look this address up in the `vmlinux` ELF object with:
+之后我们可以在 `vmlinux` ELF文件中查看这个地址：
 
 ```
 $ readelf -s vmlinux | grep ffffffff81000000
@@ -152,9 +153,9 @@ $ readelf -s vmlinux | grep ffffffff81000000
  90766: ffffffff81000000     0 NOTYPE  GLOBAL DEFAULT    1 startup_64
 ```
 
-Note that the address of the `startup_64` routine is not `ffffffff80000000`, but `ffffffff81000000` and now I'll explain why.
+值得注意的是，`startup_64` 例程的地址不是 `ffffffff80000000`, 而是 `ffffffff81000000`。 现在我们来解释一下。
 
-We can see following definition in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
+我们可以在 [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) 看见如下的定义 :
 
 ```
     . = __START_KERNEL;
@@ -170,15 +171,15 @@ We can see following definition in the [arch/x86/kernel/vmlinux.lds.S](https://g
 	}
 ```
 
-Where `__START_KERNEL` is:
+其中，`__START_KERNEL` 定义如下:
 
 ```
 #define __START_KERNEL		(__START_KERNEL_map + __PHYSICAL_START)
 ```
 
-`__START_KERNEL_map` is the value from the documentation - `ffffffff80000000` and `__PHYSICAL_START` is `0x1000000`. That's why address of the `startup_64` is `ffffffff81000000`.
+从这个文档中看出，`__START_KERNEL_map` 的值是 `ffffffff80000000` 以及 `__PHYSICAL_START` 的值是 `0x1000000`。 这就是 `startup_64`的地址是 `ffffffff81000000`的原因了。
 
-And at last we can get program headers from `vmlinux` with the following command:
+最后我们通过以下命令来得到程序头表的内容：
 
 ```
 readelf -l vmlinux
@@ -213,6 +214,6 @@ Program Headers:
 		  .smp_locks .data_nosave .bss .brk
 ```
 
-Here we can see five segments with sections list. You can find all of these sections in the generated linker script at - `arch/x86/kernel/vmlinux.lds`.
+这里我们可以看出五个包含节(sections)列表的段(segments)。 你可以在生成的链接器脚本 - `arch/x86/kernel/vmlinux.lds` 中找到所有的节(sections)。
 
-That's all. Of course it's not a full description of ELF (Executable and Linkable Format), but if you want to know more, you can find the documentation - [here](http://www.uclibc.org/docs/elf-64-gen.pdf)
+就这样吧。 当然，它不是ELF(Executable and Linkable Format)的完整描述，但是如果你想要知道更多，可以参考这个文档 - [这里](http://www.uclibc.org/docs/elf-64-gen.pdf)
