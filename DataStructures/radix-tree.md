@@ -3,7 +3,8 @@ Linux内核中的数据结构
 
 基数树
 --------------------------------------------------------------------------------
-正如你所知道的 Linux 内核通过许多不同库以及函数提供各种数据结构以及算法。这个部分我们将介绍其中一个数据结构 [Radix tree](http://en.wikipedia.org/wiki/Radix_tree)。Linux 内核中有两个文件与 `radix tree` 的实现和API相关：
+正如你所知道的 Linux 内核通过许多不同库以及函数提供各种数据结构以及算法实现。
+这个部分我们将介绍其中一个数据结构 [Radix tree](http://en.wikipedia.org/wiki/Radix_tree)。Linux 内核中有两个文件与 `radix tree` 的实现和API相关：
 
 * [include/linux/radix-tree.h](https://github.com/torvalds/linux/blob/master/include/linux/radix-tree.h)
 * [lib/radix-tree.c](https://github.com/torvalds/linux/blob/master/lib/radix-tree.c)
@@ -40,7 +41,7 @@ Linux内核中的数据结构
                             +-----------+
 ```
 
-这个例子中，我们可以看到 `trie` 所存储的关键字信息 `go` 与 `cat`，压缩 trie 或 `radix tree` 与 `trie` 所不同的是，对于只有一个孩子的中间节点将被压缩。
+这个例子中，我们可以看到 `trie` 所存储的关键字信息 `go` 与 `cat`，压缩 trie 或 `radix tree` 与 `trie` 所不同的是，所有只存在单个孩子的中间节点将被压缩。
 
 Linux 内核中的 Radix 树将值映射为整型关键字，Radix 的数据结构定义在 [include/linux/radix-tree.h](https://github.com/torvalds/linux/blob/master/include/linux/radix-tree.h) 文件中 :
 
@@ -55,7 +56,7 @@ struct radix_tree_root {
 上面这个是 radix 树的 root 节点的结构体，它包括三个成员：
 
 * `height`   - 从叶节点向上计算出的树高度。
-* `gfp_mask` - 内存申请的标识。
+* `gfp_mask` - 内存分配标识。
 * `rnode`    - 子节点指针。
 
 这里首先要讨论的结构体成员是 `gfp_mask` : 
