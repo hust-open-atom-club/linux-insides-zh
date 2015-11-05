@@ -26,17 +26,17 @@ Linux Insides
 |Concepts||未开始|
 |DataStructures||正在进行|
 |├9.1|[@mudongliang](https://github.com/mudongliang)|正在进行|
-|└9.2|[@mudongliang](https://github.com/mudongliang)|正在进行|
+|└9.2|[Alick Guo](https://github.com/a1ickgu0)|正在进行|
 |Theory||正在进行|
 |├10.1|[@mudongliang](https://github.com/mudongliang)|正在进行|
-|└10.2|[@mudongliang](https://github.com/mudongliang)|正在进行|
+|└10.2|[@mudongliang](https://github.com/mudongliang)|已完成|
 |Misc||正在进行|
 |├12.1|[@oska874](https://github.com/oska874)|已完成|
 |├12.2||未开始|
 |└12.3||未开始|
 
 ##翻译认领规则
----------------
+
 为了避免多个译者同时翻译相同章节的情况出现， 请按照以下规则认领自己要翻译的章节：
 
 * 开一个 issue ，告诉大家你想翻译哪一章或者哪一节，并且确保 issue 页面里面没有其他人在翻译相同的章节。
@@ -48,22 +48,21 @@ Linux Insides
 
 
 作者
----------------
+
 [@0xAX](https://twitter.com/0xAX)
 
 
 贡献者
----------------
-
+	
 [@xinqiu](https://github.com/xinqiu)
 
 [@oska874](https://github.com/oska874)
 	
 [@mudongliang](https://github.com/mudongliang)
 
+[Alick Guo](https://github.com/a1ickgu0)
 
 LICENSE
--------------
 
 Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
