@@ -47,12 +47,12 @@ Linux Insides
 
 
 
-作者
+##作者
 
 [@0xAX](https://twitter.com/0xAX)
 
 
-贡献者
+##贡献者
 	
 [@xinqiu](https://github.com/xinqiu)
 
@@ -62,7 +62,7 @@ Linux Insides
 
 [@Alick Guo](https://github.com/a1ickgu0)
 
-LICENSE
+##LICENSE
 
 Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
