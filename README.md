@@ -60,7 +60,7 @@ Linux Insides
 	
 [@mudongliang](https://github.com/mudongliang)
 
-[Alick Guo](https://github.com/a1ickgu0)
+[@Alick Guo](https://github.com/a1ickgu0)
 
 LICENSE
 
