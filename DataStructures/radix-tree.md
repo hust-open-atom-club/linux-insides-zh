@@ -9,7 +9,9 @@ Linux内核中的数据结构
 * [include/linux/radix-tree.h](https://github.com/torvalds/linux/blob/master/include/linux/radix-tree.h)
 * [lib/radix-tree.c](https://github.com/torvalds/linux/blob/master/lib/radix-tree.c)
 
-首先说明一下什么是 `radix tree` ，Radix tree 是一个 `压缩 trie`， [trie](http://en.wikipedia.org/wiki/Trie) 是一种通过保存关联数组（associative array）来提供 `关键字-值（key-value）` 存储与查找的数据结构。通常关键字是字符串，不过也可以是其他数据类型。 trie 结构的节点与 `n-tree` 不同，其节点中并不存储关键字，取而代之的是存储单个字符标签。关键字查找时，通过从树的根开始遍历关键字相关的所有字符标签节点，直至到达最终的叶子节点。下面是个例子：
+首先说明一下什么是 `radix tree` 。Radix tree 是一种 `压缩 trie`，其中 [trie](http://en.wikipedia.org/wiki/Trie) 是一种通过保存关联数组（associative array）来提供 `关键字-值（key-value）` 存储与查找的数据结构。通常关键字是字符串，不过也可以是其他数据类型。 
+
+trie 结构的节点与 `n-tree` 不同，其节点中并不存储关键字，取而代之的是存储单个字符标签。关键字查找时，通过从树的根开始遍历关键字相关的所有字符标签节点，直至到达最终的叶子节点。下面是个例子：
 
 
 ```
@@ -59,12 +61,12 @@ struct radix_tree_root {
 * `gfp_mask` - 内存分配标识。
 * `rnode`    - 子节点指针。
 
-这里首先要讨论的结构体成员是 `gfp_mask` : 
+这里我们先讨论的结构体成员是 `gfp_mask` : 
 
 Linux 底层的内存申请接口需要提供一类标识（flag） - `gfp_mask` ，用于描述内存申请的行为。这个以 `GFP_` 前缀开头的内存申请控制标识主要包括，`GFP_NOIO` 禁止所有IO操作但允许睡眠等待内存，`__GFP_HIGHMEM` 允许申请内核的高端内存，`GFP_ATOMIC` 高优先级申请内存且操作不允许被睡眠。
 
 
-接下来说的节结构体成员是`rnode`：
+接下来说的结构体成员是`rnode`：
 
 ```C
 struct radix_tree_node {
@@ -93,7 +95,7 @@ struct radix_tree_node {
 * `rcu_head` - 用于节点释放的RCU链表。
 * `private_list` - 存储数据。
 
-结构体 `radix_tree_node` 的最后两个成员 `tags` 与 `slots` 是非常重要且需要特别注意的。每个  Radix  树节点都可以包括一个指向存储数据指针的 slots 集合，空闲 slots 的指针指向 NULL。 Linux 内核的 Radix 树结构体中还包含用于记录节点存储状态的标签 `tags` 成员，标签通过位设置指示 Radix 树的数据存储状态。
+结构体 `radix_tree_node` 的最后两个成员 `tags` 与 `slots` 是非常重要且需要特别注意的。每个 Radix 树节点都可以包括一个指向存储数据指针的 slots 集合，空闲 slots 的指针指向 NULL。 Linux 内核的 Radix 树结构体中还包含用于记录节点存储状态的标签 `tags` 成员，标签通过位设置指示 Radix 树的数据存储状态。
 
 至此，我们了解到 radix 树的结构，接下来看一下 radix 树所提供的 API。
 
@@ -168,7 +170,7 @@ radix 树的查找实现有以下几个函数：The search in a radix tree imple
 
 这个函数通过给定的关键字查找 radix 树，并返关键字所对应的结点。
 
-第二个函数 `radix_tree_gang_lookup` 具有以下特征：
+第二个函数 `radix_tree_gang_lookup` 具有以下特征：
 
 ```C
 unsigned int radix_tree_gang_lookup(struct radix_tree_root *root,
@@ -187,3 +189,5 @@ unsigned int radix_tree_gang_lookup(struct radix_tree_root *root,
 
 * [Radix tree](http://en.wikipedia.org/wiki/Radix_tree)
 * [Trie](http://en.wikipedia.org/wiki/Trie)
+
+
