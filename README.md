@@ -22,7 +22,7 @@ Linux Insides
 |Interrupts||未开始|
 |System calls||未开始|
 |Timers and time management||未开始|
-|Memory management||未开始|
+|Memory management|[@choleraehyq](http://cholerae.com)|正在进行|
 |Concepts||未开始|
 |DataStructures||正在进行|
 |├9.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|正在进行|
