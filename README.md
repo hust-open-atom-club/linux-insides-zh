@@ -18,7 +18,17 @@ Linux Insides
 |├1.3||未开始|
 |├1.4||未开始|
 |└1.5||未开始|
-|Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
+|Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|介绍完成，内容正在进行|
+|├2.1|[@lijiang1](https://github.com/xinqiu)|正在进行|
+|├2.2||未开始|
+|├2.3||未开始|
+|├2.4||未开始|
+|└2.5||未开始|
+|├2.6||未开始|
+|├2.7||未开始|
+|├2.8||未开始|
+|└2.9||未开始|
+|├2.10||未开始|
 |Interrupts||未开始|
 |System calls||未开始|
 |Timers and time management||未开始|
