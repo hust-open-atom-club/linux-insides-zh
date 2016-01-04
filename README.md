@@ -18,7 +18,7 @@ Linux Insides
 |├1.3||未开始|
 |├1.4||未开始|
 |└1.5||未开始|
-|Initialization||未开始|
+|Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
 |Interrupts||未开始|
 |System calls||未开始|
 |Timers and time management||未开始|
