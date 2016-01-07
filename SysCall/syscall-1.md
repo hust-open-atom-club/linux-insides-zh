@@ -1,19 +1,20 @@
-System calls in the Linux kernel. Part 1.
+Linux 内核系统调用 第一节。
 ================================================================================
 
-Introduction
+简介
 --------------------------------------------------------------------------------
 
-This post opens up a new chapter in [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book, and as you may understand from the title, this chapter will be devoted to the [System call](https://en.wikipedia.org/wiki/System_call) concept in the Linux kernel. The choice of topic for this chapter is not accidental. In the previous [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we saw interrupts and interrupt handling. The concept of system calls is very similar to that of interrupts. This is because the most common way to implement system calls is as software interrupts. We will see many different aspects that are related to the system call concept. For example, we will learn what's happening when a system call occurs from userspace. We will see an implementation of a couple system call handlers in the Linux kernel, [VDSO](https://en.wikipedia.org/wiki/VDSO) and [vsyscall](https://lwn.net/Articles/446528/) concepts and many many more.
+这次提交为[linux-insides](http://0xax.gitbooks.io/linux-insides/content/)添加一个新的章节，从标题就可以知道, 这一章节将介绍Linux 内核中 [System call](https://en.wikipedia.org/wiki/System_call)的概念。章节内容的选择并非偶然。在前一章节[章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html)我们了解了中断及中断处理。系统调用的概念与中断非常相似，这是因为软件中断是执行系统调用最常见的方式。我们将讨论系统调用概念的各个方面。例如，用户空间发起系统调用的细节，内核中一组系统调用处理器的执行过程, [VDSO](https://en.wikipedia.org/wiki/VDSO) 和 [vsyscall](https://lwn.net/Articles/446528/) 概念以及其他信息。
 
-Before we dive into Linux system call implementation, it is good to know some theory about system calls. Let's do it in the following paragraph.
+在了解Linux 内核系统调用执行过程之前，了解一些系统调用的原理是有帮助的。我们从下面的段落开始。
 
-System call. What is it?
+什么是系统调用?
 --------------------------------------------------------------------------------
 
-A system call is just a userspace request of a kernel service. Yes, the operating system kernel provides many services. When your program wants to write to or read from a file, start to listen for connections on a [socket](https://en.wikipedia.org/wiki/Network_socket), delete or create directory, or even to finish its work, a program uses a system call. In another words, a system call is just a [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) kernel space function that user space progams call to handle some request.
+系统调用是用户空间请求内核服务。操作系统内核提供很多服务。当程序读写文件，开始监听连接的[socket](https://en.wikipedia.org/wiki/Network_socket)，删除或创建目录或程序结束时，都会执行系统调用。换句话说，系统调用仅仅是一些[C](https://en.wikipedia.org/wiki/C_%28programming_language%29) 内核空间函数，用户空间程序调用其处理一些请求。
 
-The Linux kernel provides a set of these functions and each architecture provides its own set. For example: the [x86_64](https://en.wikipedia.org/wiki/X86-64) provides [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) system calls and the [x86](https://en.wikipedia.org/wiki/X86) provides [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) different system calls. Ok, a system call is just a function. Let's look on a simple `Hello world` example that's written in the assembly programming language:
+Linux 内核提供一系列的函数并且这些函数与CPU架构相关。 例如：[x86_64](https://en.wikipedia.org/wiki/X86-64) 提供 [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) 个系统调用，[x86](https://en.wikipedia.org/wiki/X86) 提供 [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) 个不同的系统调用。
+系统调用仅仅是一些函数。 我们讨论一个使用汇编语言编写的简单 `Hello world` 示例:
 
 ```assembly
 .data
@@ -26,7 +27,7 @@ msg:
     .global _start
 
 _start:
-	movq  $1, %rax
+    movq  $1, %rax
     movq  $1, %rdi
     movq  $msg, %rsi
     movq  $len, %rdx
@@ -37,54 +38,44 @@ _start:
     syscall
 ```
 
-We can compile the above with the following commands:
+使用下面的命令可编译这些语句:
 
 ```
 $ gcc -c test.S
 $ ld -o test test.o
 ```
 
-and run it as follows:
+执行:
 
 ```
 ./test
 Hello, world!
 ```
 
-Ok, what do we see here? This simple code represents `Hello world` assembly program for the Linux `x86_64` architecture. We can see two sections here:
+这些简单的代码是一个简单的Linux `x86_64` 架构 `Hello world` 汇编程序，代码包含两个段:
 
 * `.data`
 * `.text`
 
-The first section - `.data` stores initialized data of our program (`Hello world` string and its length in our case). The second section - `.text` contains the code of our program. We can split the code of our program into two parts: first part will be before the first `syscall` instruction and the second part will be between first and second `syscall` instructions. First of all what does the `syscall` instruction do in our code and generally? As we can read in the [64-ia-32-architectures-software-developer-vol-2b-manual](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html):
+第一个段 - `.data` 存储程序的初始数据 (在示例中为`Hello world` 字符串). 第二个段 - `.text` 包含程序的代码. 程序可分为两部分: 第一部分为第一个 `syscall` 指令之前的代码，第二部分为两个 `syscall` 指令之间的代码。首先在示例程序及一般应用中， `syscall` 指令有什么功能?[64-ia-32-architectures-software-developer-vol-2b-manual](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)中提到:
 
 ```
-SYSCALL invokes an OS system-call handler at privilege level 0. It does so by
-loading RIP from the IA32_LSTAR MSR (after saving the address of the instruction
-following SYSCALL into RCX). (The WRMSR instruction ensures that the
-IA32_LSTAR MSR always contain a canonical address.)
+SYSCALL 引起操作系统系统调用处理器处于特权级0，通过加载IA32_LSTAR MSR至RIP(在RCX中保存 SYSCALL 之后指令地址)完成. (WRMSR 指令确保IA32_LSTAR MSR总是包含一个连续的地址。)
 ...
 ...
 ...
-SYSCALL loads the CS and SS selectors with values derived from bits 47:32 of the
-IA32_STAR MSR. However, the CS and SS descriptor caches are not loaded from the
-descriptors (in GDT or LDT) referenced by those selectors.
-
-Instead, the descriptor caches are loaded with fixed values. It is the respon-
-sibility of OS software to ensure that the descriptors (in GDT or LDT) referenced
-by those selector values correspond to the fixed values loaded into the descriptor
-caches; the SYSCALL instruction does not ensure this correspondence.
+SYSCALL 加载由 IA32_STAR MSR 47：32位得到的值至 CS 和 SS 段选择器。因此，根据这些段选择器 CS 和 SS 描述符缓存并未从描述符加载(位于 GDT 或 LDT 中)。
+相反，描述符缓存从固定值加载。操作系统软件需要确保，由段选择器得到的描述符与从固定值加载至描述符缓存的描述符保持一致。 SYSCALL 指令不保证两者的一致。
 ```
 
-and we are initializing `syscalls` by the writing of the `entry_SYSCALL_64` that defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembler file and represents `SYSCALL` instruction entry to the `IA32_STAR` [Model specific register](https://en.wikipedia.org/wiki/Model-specific_register):
+使用[arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S)汇编程序中定义的 `entry_SYSCALL_64` 初始化 `syscalls`
+同时 `SYSCALL` 指令进入[arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c) 源码文件中的 `IA32_STAR` [Model specific register](https://en.wikipedia.org/wiki/Model-specific_register):
 
 ```C
 wrmsrl(MSR_LSTAR, entry_SYSCALL_64);
 ```
 
-in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c) source code file.
-
-So, the `syscall` instruction invokes a handler of a given system call. But how does it know which handler to call? Actually it gets this information from the general purpose [registers](https://en.wikipedia.org/wiki/Processor_register). As you can see in the system call [table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl), each system call has an unique number. In our example, first system call is - `write` that writes data to the given file. Let's look in the system call table and try to find `write` system call. As we can see, the [write](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L10) system call has number - `1`. We pass the number of this system call through the `rax` register in our example. The next general purpose registers: `%rdi`, `%rsi` and `%rdx` take parameters of the `write` syscall. In our case, they are [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) (`1` is [stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29) in our case), second parameter is the pointer to our string, and the third is size of data. Yes, you heard right. Parameters for a system call. As I already wrote above, a system call is a just `C` function in the kernel space. In our case first system call is write. This system call defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and looks like:
+因此，`syscall` 指令唤醒一个系统调用对应的处理器。但是如何确定调用哪个处理器？事实上这些信息从通用目的[寄存器](https://en.wikipedia.org/wiki/Processor_register)。正如系统调用[表](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)的描述，每个系统调用对应特定的编号。上面的示例中, 第一个系统调用是 - `write` 将数据写入制定文件。在系统调用表中查找 write 系统调用.[write](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L10) 系统调用的编号为 - `1`。在示例中通过`rax`寄存器传递该编号，接下来的几个通用目的寄存器: `%rdi`, `%rsi` 和 `%rdx` 保存 `write` 系统调用的参数。 在示例中为[文件描述符](https://en.wikipedia.org/wiki/File_descriptor) (`1` 是[stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29)), 第二个参数字符串指针, 第三个为数据的大小。是的，你听到的没错，系统调用的参数。正如上文, 系统调用仅仅是内核空间的 `C` 函数。示例中第一个系统调用为 write ，在[fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) 源文件中定义如下:
 
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
@@ -96,19 +87,19 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 }
 ```
 
-Or in other words:
+或者换言之:
 
 ```C
 ssize_t write(int fd, const void *buf, size_t nbytes);
 ```
 
-Don't worry about the `SYSCALL_DEFINE3` macro for now, we'll come back to it.
+现在不用担心宏 `SYSCALL_DEFINE3` ,稍后再做讨论。
 
-The second part of our example is the same, but we call other system call. In this case we call [exit](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L69) system call. This system call gets only one parameter:
+示例的第二部分也是一样的, 但调用了另一系统调用[exit](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L69)。这个系统调用仅虚一个参数:
 
 * Return value
 
-and handles the way our program exits. We can pass the program name of our program to the [strace](https://en.wikipedia.org/wiki/Strace) util and we will see our system calls:
+参数说明程序退出的方式。[strace](https://en.wikipedia.org/wiki/Strace) 工具可根据程序的名称输出系统调用的过程:
 
 ```
 $ strace test
@@ -120,7 +111,8 @@ _exit(0)                                = ?
 +++ exited with 0 +++
 ```
 
-In the first line of the `strace` output, we can see [execve](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L68) system call that executes our program, and the second and third are system calls that we have used in our program: `write` and `exit`. Note that we pass the parameter through the general purpose registers in our example. The order of the registers is not accidental. The order of the registers is defined by the following agreement - [x86-64 calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions). This and other agreement for the `x86_64` architecture explained in the special document - [System V Application Binary Interface. PDF](http://www.x86-64.org/documentation/abi.pdf). In a general way, argument(s) of a function are placed either in registers or pushed on the stack. The right order is:
+ `strace` 输出的第一行, [execve](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L68) 系统调用开始执行程序，第二，三行为程序中使用的系统调用: `write` 和 `exit`。注意示例中通过通用目的寄存器传递系统调用的参数。寄存器的顺序是特定的。寄存器的顺序由- 声明[x86-64 calling conventions](https://en.wikipedia.org/wiki/X86_calling_conventions#x86-64_calling_conventions)定义。
+ `x86_64` 架构的声明在另一个特别的文档中 - [System V Application Binary Interface. PDF](http://www.x86-64.org/documentation/abi.pdf)。通常, 函数参数被置于寄存器或者堆栈中。正确的顺序为:
 
 * `rdi`;
 * `rsi`;
@@ -129,11 +121,11 @@ In the first line of the `strace` output, we can see [execve](https://github.com
 * `r8`;
 * `r9`.
 
-for the first six parameters of a function. If a function has more than six arguments, other parameters will be placed on the stack.
+对应函数的前六个参数。若函数多于六个参数，其他参数将放在堆栈中。
 
-We do not use system calls in our code directly, but our program uses it when we want to print something, check access to a file or just write or read something to it.
+示例代码中未直接使用系统调用，但程序通过系统调用打印输出，检查文件的权限或是从文件中读写。
 
-For example:
+例如:
 
 ```C
 #include <stdio.h>
@@ -152,13 +144,13 @@ int main(int argc, char **argv)
 }
 ```
 
-There are no `fopen`, `fgets`, `printf` and `fclose` system calls in the Linux kernel, but `open`, `read` `write` and `close` instead. I think you know that these four functions `fopen`, `fgets`, `printf` and `fclose` are just functions that defined in the `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library). Actually these functions are wrappers for the system calls. We do not call system calls directly in our code, but using [wrapper](https://en.wikipedia.org/wiki/Wrapper_function) functions from the standard library. The main reason of this is simple: a system call must be performed quickly, very quickly. As a system call must be quick, it must be small. The standard library takes responsibility to perform system calls with the correct set parameters and makes different checks before it will call the given system call. Let's compile our program with the following command:
+Linux内核中没有 `fopen`, `fgets`, `printf` 和 `fclose` 系统调用，而是 `open`, `read` `write` 和 `close`。`fopen`, `fgets`, `printf` 和 `fclose` 仅仅是 `C` [standard library](https://en.wikipedia.org/wiki/GNU_C_Library)中定义的函数。事实上这些函数是系统调用的封装。代码中没有直接使用系统调用，而是通过标准库的 [封装](https://en.wikipedia.org/wiki/Wrapper_function)函数。这样做的主要原因是: 系统调用执行的要快，非常快。由于系统调用快的同时也非常小。标准库在执行系统调用前，确保系统调用参数设置正确及完成其他不同的检查。对比示例程序和以下命令:
 
 ```
 $ gcc test.c -o test
 ```
 
-and look on it with the [ltrace](https://en.wikipedia.org/wiki/Ltrace) util:
+通过[ltrace](https://en.wikipedia.org/wiki/Ltrace)工具观察:
 
 ```
 $ ltrace ./test
@@ -172,13 +164,13 @@ fclose(0x602010)                                                   = 0
 +++ exited (status 0) +++
 ```
 
-The `ltrace` util displays a set of userspace calls of a program. The `fopen` function opens the given text file, the `fgets` reads file content to the `buf` buffer, the `puts` function prints it to the `stdout` and the `fclose` function closes file by the given file descriptor. And as I already wrote, all of these functions call an appropriate system call. For example `puts` calls the `write` system call inside, we can see it if we will add `-S` option to the `ltrace` program:
+`ltrace`工具显示程序用户空间的调用。 `fopen` 函数打开给定的文本文件,  `fgets` 函数读取文件内容至 `buf` 缓存，`puts` 输出文件内容至 `stdout` ， `fclose` 函数根据文件描述符关闭函数。如上文描述，这些函数调用特定的系统调用。例如： `puts` 内部调用 `write` 系统调用，`ltrace` 添加 `-S`可观察到这一调用:
 
 ```
 write@SYS(1, "Hello World!\n\n", 14) = 14
 ```
 
-Yes, system calls are ubiquitous. Each program needs to open/write/read file, network connection, allocate memory and many other things that can be provided only by the kernel. The [proc](https://en.wikipedia.org/wiki/Procfs) file system contains special files in a format: `/proc/pid/systemcall` that exposes the system call number and argument registers for the system call currently being executed by the process. For example, pid 1, that is [systemd](https://en.wikipedia.org/wiki/Systemd) for me:
+系统调用是普遍存在的。每个程序都需要打开/写/读文件，网络连接，内存分配和许多其他功能只能由内核完成。[proc](https://en.wikipedia.org/wiki/Procfs) 文件系统有一个具有特定格式的特殊文件: `/proc/pid/systemcall`记录了正在被进程调用的系统调用的编号和参数寄存器。例如,进程号 1 的程序是[systemd](https://en.wikipedia.org/wiki/Systemd):
 
 ```
 $ sudo cat /proc/1/comm
@@ -201,15 +193,14 @@ $ sudo cat /proc/2093/syscall
 270 0xf 0x7fff068a5a90 0x7fff068a5b10 0x0 0x7fff068a59c0 0x7fff068a59d0 0x7fff068a59b0 0x7f777dd8813c
 ```
 
-the system call with the number `270` which is [sys_pselect6](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L279) system call that allows `emacs` to monitor multiple file descriptors.
+编号为 `270` 的系统调用是 [sys_pselect6](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L279) ，该系统调用使 `emacs` 监控多个文件描述符。
 
-Now we know a little about system call, what is it and why we need in it. So let's look at the `write` system call that our program used.
+现在我们对系统调用有所了解，知道什么是系统调用及为什么需要系统调用。接下来，讨论示例程序中使用的 `write` 系统调用
 
-Implementation of write system call
+写系统调用的实现
 --------------------------------------------------------------------------------
 
-Let's look at the implementation of this system call directly in the source code of the Linux kernel. As we already know, the `write` system call is defined in the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and looks like this:
-
+查看Linux内核源文件中写系统调用的实现。[fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c)源码文件中的 `write` 系统调用定义如下：
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 		size_t, count)
@@ -229,7 +220,7 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 }
 ```
 
-First of all, the `SYSCALL_DEFINE3` macro is defined in the [include/linux/syscalls.h](https://github.com/torvalds/linux/blob/master/include/linux/syscalls.h) header file and expands to the definition of the `sys_name(...)` function. Let's look at this macro:
+首先，宏 `SYSCALL_DEFINE3` 在头文件 [include/linux/syscalls.h](https://github.com/torvalds/linux/blob/master/include/linux/syscalls.h) 中定义并且 `sys_name(...)` 函数定义的扩展。宏的定义如下:
 
 ```C
 #define SYSCALL_DEFINE3(name, ...) SYSCALL_DEFINEx(3, _##name, __VA_ARGS__)
@@ -239,12 +230,12 @@ First of all, the `SYSCALL_DEFINE3` macro is defined in the [include/linux/sysca
         __SYSCALL_DEFINEx(x, sname, __VA_ARGS__)
 ```
 
-As we can see the `SYSCALL_DEFINE3` macro takes `name` parameter which will represent name of a system call and variadic number of parameters. This macro just expands to the `SYSCALL_DEFINEx` macro that takes the number of the parameters the given system call, the `_##name` stub for the future name of the system call (more about tokens concatenation with the `##` you can read in the [documentation](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) of [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)). Next we can see the `SYSCALL_DEFINEx` macro. This macro expands to the two following macros:
+宏 `SYSCALL_DEFINE3` 的参数有代表系统调用的名称的 `name`  和可变个数的参数。 这个宏仅仅作为 `SYSCALL_DEFINEx` 宏的扩展确定了传入宏的参数个数。 `_##name` 作为未来系统调用名称的存根 (更多关于 `##`符号连结可参阅[documentation](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) of [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection))。宏 `SYSCALL_DEFINEx` 作为以下两个宏的扩展:
 
 * `SYSCALL_METADATA`;
 * `__SYSCALL_DEFINEx`.
 
-Implementation of the first macro `SYSCALL_METADATA` depends on the `CONFIG_FTRACE_SYSCALLS` kernel configuration option. As we can understand from the name of this option, it allows to enable tracer to catch the syscall entry and exit events. If this kernel configuration option is enabled, the `SYSCALL_METADATA` macro executes initialization of the `syscall_metadata` structure that defined in the [include/trace/syscall.h](https://github.com/torvalds/linux/blob/master/include/trace/syscall.h) header file and contains different useful fields as name of a system call, number of a system call in the system call [table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl), number of parameters of a system call, list of parameter types and etc:
+第一个宏 `SYSCALL_METADATA` 的实现与内核配置选项 `CONFIG_FTRACE_SYSCALLS` 有关。从选项的名称可知，选项允许 tracer 捕获系统调用的进入和退出。若该内核配置选项开启，宏 `SYSCALL_METADATA`  执行头文件[include/trace/syscall.h](https://github.com/torvalds/linux/blob/master/include/trace/syscall.h) 中`syscall_metadata` 结构的初始化。结构中包含多种有用字段例如系统调用的名称, 系统调用[表](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)中的编号，参数个数, 参数类型列表等:
 
 ```C
 #define SYSCALL_METADATA(sname, nb, ...)                             \
@@ -268,13 +259,13 @@ Implementation of the first macro `SYSCALL_METADATA` depends on the `CONFIG_FTRA
              *__p_syscall_meta_##sname = &__syscall_meta_##sname;
 ```
 
-If the `CONFIG_FTRACE_SYSCALLS` kernel option does not enabled during kernel configuration, in this way the `SYSCALL_METADATA` macro expands to empty string:
+若内核配置时 `CONFIG_FTRACE_SYSCALLS` 未开启，此时宏 `SYSCALL_METADATA`扩展为空字符串:
 
 ```C
 #define SYSCALL_METADATA(sname, nb, ...)
 ```
 
-The second macro `__SYSCALL_DEFINEx` expands to the definition of the five following functions:
+第二个宏 `__SYSCALL_DEFINEx` 扩展为 以下五个函数的定义:
 
 ```C
 #define __SYSCALL_DEFINEx(x, name, ...)                                 \
@@ -296,13 +287,13 @@ The second macro `__SYSCALL_DEFINEx` expands to the definition of the five follo
         static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__))
 ```
 
-The first `sys##name` is definition of the syscall handler function with the given name - `sys_system_call_name`. The `__SC_DECL` macro takes the `__VA_ARGS__` and combines call input parameter system type and the parameter name, because the macro definition is unable to determine the parameter types. And the `__MAP` macro applies `__SC_DECL` macro to the `__VA_ARGS__` arguments. The other functions that are generated by the `__SYSCALL_DEFINEx` macro are need to protect from the [CVE-2009-0029](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-0029) and we will not dive into details about this here. Ok, as result of the `SYSCALL_DEFINE3` macro, we will have:
+第一个函数 `sys##name` 是给定名称 `sys_system_call_name` 系统调用处理器函数的定义。 宏 `__SC_DECL` 的参数有 `__VA_ARGS__` 及组合调用传入参数系统类型和 参数名称，因为宏定义中无法指定参数类型。宏 `__MAP` 应用宏 `__SC_DECL` 给 `__VA_ARGS__` 参数。其他由宏 `__SYSCALL_DEFINEx` 产生的函数需要 protect from the [CVE-2009-0029](https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-0029) 此处不必深入研究。作为宏 `SYSCALL_DEFINE3` 的结果:
 
 ```C
 asmlinkage long sys_write(unsigned int fd, const char __user * buf, size_t count);
 ```
 
-Now we know a little about the system call's definition and we can go back to the implementation of the `write` system call. Let's look on the implementation of this system call again:
+现在我们对系统调用的定义有一定了解，回头讨论 `write` 系统调用的实现:
 
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
@@ -323,13 +314,13 @@ SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
 }
 ```
 
-As we already know and can see from the code, it takes three arguments:
+从代码可知，该调用有三个参数:
 
 * `fd`    - file descriptor;
 * `buf`   - buffer to write;
 * `count` - length of buffer to write.
 
-and writes data from a buffer declared by the user to a given device or a file. Note that the second parameter `buf`, defined with the `__user` attribute. The main purpose of this attribute is for checking the Linux kernel code with the [sparse](https://en.wikipedia.org/wiki/Sparse) util. It is defined in the [include/linux/compiler.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler.h) header file and depends on the `__CHECKER__` definition in the Linux kernel. That's all about useful meta-information related to our `sys_write` system call, let's try to understand how this system call is implemented. As we can see it starts from the definition of the `f` structure that has `fd` structure type that represent file descriptor in the Linux kernel and we put the result of the call of the `fdget_pos` function. The `fdget_pos` function defined in the same [source](https://github.com/torvalds/linux/blob/master/fs/read_write.c) code file and just expands the call of the `__to_fd` function:
+功能是将用户定义的缓冲中的数据写入指定的设备或文件。注意第二个参数 `buf`, 定义了 `__user` 属性。该属性的主要目的是通过[sparse](https://en.wikipedia.org/wiki/Sparse) 工具检查 Linux 代码。sparse 定义于[include/linux/compiler.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler.h) 头文件中并依赖 Linux 内核的 `__CHECKER__` 定义。其中全是关于 `sys_write` 系统调用的有用元信息。试着理解该系统调用的实现，定义从 `fd` 结构类型的 `f` 结构开始，这是 Linux 内核中的文件描述符。将调用的输出传入 `fdget_pos` 函数。 `fdget_pos` 函数在相同的[源文件](https://github.com/torvalds/linux/blob/master/fs/read_write.c)中定义，并且仅作为 `__to_fd` 函数的扩展:
 
 ```C
 static inline struct fd fdget_pos(int fd)
@@ -338,7 +329,7 @@ static inline struct fd fdget_pos(int fd)
 }
 ```
 
-The main purpose of the `fdget_pos` is to convert the given file descriptor which is just a number to the `fd` structure. Through the long chain of function calls, the `fdget_pos` function gets the file descriptor table of the current process, `current->files`, and tries to find a corresponding file descriptor number there. As we got the `fd` structure for the given file descriptor number, we check it and return if it does not exist. We get the current position in the file with the call of the `file_pos_read` function that just returns `f_pos` field of the our file:
+ `fdget_pos` 的主要目的是转化 `fd` 结构中仅仅作为的数字的给定的文件描述符。 通过一长链的函数调用， `fdget_pos` 函数得到但前进程的文件描述符表, `current->files`, 并尝试从表中获取一致的文件描述符编号。当获取到给定文件描述符的 `fd` 结构后, 检查文件并返回文件是否存在。通过调用函数 `file_pos_read` 获取当前处于文件中的位置。函数返回文件的 `f_pos` 字段:
 
 ```C
 static inline loff_t file_pos_read(struct file *file)
@@ -347,14 +338,14 @@ static inline loff_t file_pos_read(struct file *file)
 }
 ```
 
-and call the `vfs_write` function. The `vfs_write` function defined the [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) source code file and does the work for us - writes given buffer to the given file starting from the given position. We will not dive into details about the `vfs_write` function, because this function is weakly related to the `system call` concept but mostly about [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system) concept which we will see in another chapter. After the `vfs_write` has finished its work, we check the result and if it was finished successfully we change the position in the file with the `file_pos_write` function:
+之后调用 `vfs_write` 函数。 `vfs_write` 函数在源码文件 [fs/read_write.c](https://github.com/torvalds/linux/blob/master/fs/read_write.c) 中定义。其功能为 - 向指定文件的指定位置写入指定缓冲中的数据。此处不深入 `vfs_write` 函数的细节，因为这个函数与`系统调用`没有太多联系，反而与另一章节[Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system)相关。`vfs_write` 结束相关工作后, 检查结果若成功执行，使用`file_pos_write` 函数改变在文件中的位置:
 
 ```C
 if (ret >= 0)
 	file_pos_write(f.file, pos);
 ```
 
-that just updates `f_pos` with the given position in the given file:
+这恰好使用给定的位置更新给定文件的 `f_pos`:
 
 ```C
 static inline void file_pos_write(struct file *file, loff_t pos)
@@ -363,28 +354,26 @@ static inline void file_pos_write(struct file *file, loff_t pos)
 }
 ```
 
-At the end of the our `write` system call handler, we can see the call of the following function:
+在 `write` 系统调用处理函数的结束, 是以下函数:
 
 ```C
 fdput_pos(f);
 ```
 
-unlocks the `f_pos_lock` mutex that protects file position during concurrent writes from threads that share file descriptor.
+解锁在共享文件描述符的线程并发写文件时保护文件位置的互斥量 `f_pos_lock`。
 
-That's all.
+我们讨论了Linux内核提供的系统调用的部分实现。显然略过了 `write` 系统调用的部分实现细节，正如文中所述, 在该章节中仅关心系统调用的相关内容，不讨论与其他子系统相关的内容，例如[Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system).
 
-We have seen the partial implementation of one system call provided by the Linux kernel. Of course we have missed some parts in the implementation of the `write` system call, because as I mentioned above, we will see only system calls related stuff in this chapter and will not see other stuff related to other subsystems, such as [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system).
-
-Conclusion
+总结
 --------------------------------------------------------------------------------
 
-This concludes the first part covering system call concepts in the Linux kernel. We have covered the theory of system calls so far and in the next part we will continue to dive into this topic, touching Linux kernel code related to system calls.
+总结Linux内核中关于系统调用概念的 the first part covering system call concepts in the Linux kernel. 本节中讨论了系统调用的原理，接下来的一节将深入该主题，了解 Linux 内核系统调用相关代码。
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/0xAX/linux-insides).**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [system call](https://en.wikipedia.org/wiki/System_call)
