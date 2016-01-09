@@ -20,7 +20,7 @@ Linux Insides
 |└1.5||未开始|
 |Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
 |Interrupts||未开始|
-|System calls||未开始|
+|System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
 |Timers and time management||未开始|
 |Memory management|[@choleraehyq](http://cholerae.com)|正在进行|
 |Concepts||未开始|
