@@ -1,39 +1,41 @@
 分页
 ================================================================================
 
-Introduction
+简介
 --------------------------------------------------------------------------------
 
-In the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) of the series `Linux kernel booting process` we learned about what the kernel does in its earliest stage. In the next step the kernel will initialize different things like `initrd` mounting, lockdep initialization, and many many others things, before we can see how the kernel runs the first init process.
+在 Linux 内核启动过程中的[第五部分](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)，我们学到了内核在最早的阶段做的工作。在接下来的步骤中，在我们明白内核如何运行第一个 init 进程，内核初始化不同的事，比如 `initrd` 加载， lockdep 初始化，以及许多许多其他的事，
 
-Yeah, there will be many different things, but many many and once again many work with **memory**.
+是的，那将有很多不同的事，但是还有更多更多更多关于**内存**的工作。
 
-In my view, memory management is one of the most complex part of the linux kernel and in system programming in general. This is why before we proceed with the kernel initialization stuff, we need to get acquainted with paging.
+在我的意见中，一般而言，内存管理是 linux 内核和系统编程最复杂的部分之一。这就是为什么在我们处理内核初始化事情之前，我们需要了解分页。
 
-`Paging` is a mechanism that translates a linear memory address to a physical address. If you have read the previous parts of this book, you may remember that we saw segmentation in real mode when physical addresses are calculated by shifting a segment register by four and adding an offset. We also saw segmentation in protected mode, where we used the descriptor tables and base addresses from descriptors with offsets to calculate the physical addresses. Now that we are in 64-bit mode, will see paging.
+`分页`是将线性地址转换为物理地址的机制。如果我们已经读过了这本书之前的部分，你可能记得我们在实模式下有分段机制，当时物理地址是由左移四位段寄存器加上偏移算出来的。我们也看了保护模式下的分段机制，其中我们使用描述符表和从描述符得到的基地址加上偏移得到物理地址。由于我们在64位模式，我们将看分页机制。
 
-As the Intel manual says:
+正如 Intel 手册中说的：
 
-> Paging provides a mechanism for implementing a conventional demand-paged, virtual-memory system where sections of a program’s execution environment are mapped into physical memory as needed.
+> 分页机制提供一种机制，为了实现一种常见的页需求，虚拟内存系统，其中一个程序执行环境中的段将要按照需求被映射到物理地址。
 
-So... In this post I will try to explain the theory behind paging. Of course it will be closely related to the `x86_64` version of the linux kernel for, but we will not go into too much details (at least in this post).
+所以... 在这个帖子中我将尝试解释分页背后的理论。当然它将与64位版本的 linux 内核关系密切，但是我们将不会深入太多细节（至少在这个帖子里面）。
 
 Enabling paging
+开启分页
 --------------------------------------------------------------------------------
 
 There are three paging modes:
+有三种分页模式：
 
-* 32-bit paging;
-* PAE paging;
-* IA-32e paging.
+* 32位分页模式；
+* PAE分页；
+* IA-32e分页。
 
-We will only explain the last mode here. To enable the `IA-32e paging` paging mode we need to do following things:
+我们这里将只解释最后一种模式。为了开启 `IA-32e 分页模式`，我们需要做如下事情：
 
-* set the `CR0.PG` bit;
-* set the `CR4.PAE` bit;
-* set the `IA32_EFER.LME` bit.
+* 设置 `CR0.PG` 位；
+* 设置 `CR4.PAE` 位；
+* 设置 `IA32_EFER.LME` 位。
 
-We already saw where those this bits were set in [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+我们已经在 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中看见了这些位被设置了：
 
 ```assembly
 movl	$(X86_CR0_PG | X86_CR0_PE), %eax
@@ -49,7 +51,7 @@ btsl	$_EFER_LME, %eax
 wrmsr
 ```
 
-Paging structures
+分页数据结构
 --------------------------------------------------------------------------------
 
 Paging divides the linear address space into fixed-size pages. Pages can be mapped into the physical address space or even external storage. This fixed size is `4096` bytes for the `x86_64` linux kernel. To perform the linear address translation to a physical address special structures are used. Every structure is `4096` bytes size and contains `512` entries (this only for `PAE` and `IA32_EFER.LME` modes). Paging structures are hierarchical and the linux kernel uses 4 level of paging in the `x86_64` architecture. The CPU uses a part of the linear address to identify the entry in another paging structure which is at the lower level or physical memory region (`page frame`) or physical address in this region (`page offset`). The address of the top level paging structure located in the `cr3` register. We already saw this in [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
