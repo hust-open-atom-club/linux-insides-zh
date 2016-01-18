@@ -25,7 +25,7 @@ Linux Insides
 |├2.2||未开始|
 |├4.3||未开始|
 |├4.4||未开始|
-|Timers and time management||未开始|
+|Timers and time management|[@icecoobe](https://github.com/icecoobe)|未开始|
 |Memory management|[@choleraehyq](http://cholerae.com)|正在进行|
 |Concepts||未开始|
 |DataStructures||正在进行|
