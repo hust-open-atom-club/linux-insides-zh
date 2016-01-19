@@ -189,7 +189,7 @@ endif
 include scripts/Kbuild.include
 ```
 
-文件 [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt) 或者又叫做 `Kernel Build System` 是一个用来管理构建内核及其模块的特殊框架。`Kbuild` 文件的语法与 Makefile 一样。文件[scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) 为 `Kbuild` 系统提供了一些常规的定义。因为我们包含了这个 `Kbuild` 文件，我们可以看到和不同工具关联的这些变量的定义，这些工具会在内核和模块编译过程中被使用（比如链接器、编译器、来自 [binutils](http://www.gnu.org/software/binutils/) 的二进制工具包）：
+文件 [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt) 或者又叫做 `Kernel Build System` 是一个用来管理构建内核及其模块的特殊框架。`Kbuild` 文件的语法与 Makefile 一样。文件 [scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) 为 `Kbuild` 系统提供了一些常规的定义。因为我们包含了这个 `Kbuild` 文件，我们可以看到和不同工具关联的这些变量的定义，这些工具会在内核和模块编译过程中被使用（比如链接器、编译器、来自 [binutils](http://www.gnu.org/software/binutils/) 的二进制工具包）：
 
 ```Makefile
 AS		= $(CROSS_COMPILE)as
@@ -248,7 +248,7 @@ export RCS_TAR_IGNORE := --exclude SCCS --exclude BitKeeper --exclude .svn \
 
 ###直面内核构建
 
-现在我们已经完成了所有的准备工作，根 Makefile（注：内核根目录下的 Makefile ）的下一步工作就是和编译内核相关的了。在这之前，我们不会在终端看到 `make` 命令输出的任何东西。但是现在编译的第一步开始了，这里我们需要从内核根 Makefile 的 [598](https://github.com/torvalds/linux/blob/master/Makefile#L598) 行开始，这里可以看到目标 `vmlinux`：
+现在我们已经完成了所有的准备工作，根 Makefile（注：内核根目录下的 Makefile ）的下一步工作就是和编译内核相关的了。在这之前，我们不会在终端看到 `make` 命令输出的任何东西。但是现在编译的第一步开始了，这里我们需要从内核根 Makefile 的 [598](https://github.com/torvalds/linux/blob/master/Makefile#L598) 行开始，这里可以看到目标 `vmlinux` ：
 
 ```Makefile
 all: vmlinux
@@ -257,7 +257,7 @@ all: vmlinux
 
 不要操心我们略过的从 `export RCS_FIND_IGNORE.....` 到 `all: vmlinux.....` 这一部分 Makefile 代码，他们只是负责根据各种配置文件（`make *.config`）生成不同目标内核的，因为之前我就说了这一部分我们只讨论构建内核的通用途径。
 
-目标 `all:` 是在命令行如果不指定具体目标时默认使用的目标。你可以看到这里包含了架构相关的 Makefile（在这里就指的是 [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) ）。从这一时刻起，我们会从这个 makefile 继续进行下去。如我们所见，目标 `all` 依赖于根 Makefile 后面声明的 `vmlinux` ： 
+目标 `all:` 是在命令行如果不指定具体目标时默认使用的目标。你可以看到这里包含了架构相关的 Makefile（在这里就指的是 [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) ）。从这一时刻起，我们会从这个 Makefile 继续进行下去。如我们所见，目标 `all` 依赖于根 Makefile 后面声明的 `vmlinux` ： 
 
 ```Makefile
 vmlinux: scripts/link-vmlinux.sh $(vmlinux-deps) FORCE
@@ -311,7 +311,7 @@ prepare1: prepare2 $(version_h) include/generated/utsrelease.h \
 prepare2: prepare3 outputmakefile asm-generic
 ```
 
-第一个 `prepare0` 展开到 `archprepare` ，后者又展开到 `archheader` 和 `archscripts`，这两个变量定义在 `x86_64` 相关的 [Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) 。让我们看看这个文件。`x86_64` 特定的 Makefile 从变量定义开始，这些变量都是和特定架构的配置文件 ([defconfig](https://github.com/torvalds/linux/tree/master/arch/x86/configs)，等等)有关联。在定义了编译 [16-bit](https://en.wikipedia.org/wiki/Real_mode) 代码的编译选项之后，根据变量 `BITS` 的值，如果是 `32` ，汇编代码、链接器、以及其它很多东西（全部的定义都可以在[arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile)找到）对应的参数就是 `i386`，而 `64` 就对应的是 `x86_84`。
+第一个 `prepare0` 展开到 `archprepare` ，后者又展开到 `archheader` 和 `archscripts` ，这两个变量定义在 `x86_64` 相关的 [Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) 。让我们看看这个文件。`x86_64` 特定的 Makefile 从变量定义开始，这些变量都是和特定架构的配置文件 ([defconfig](https://github.com/torvalds/linux/tree/master/arch/x86/configs)，等等)有关联。在定义了编译 [16-bit](https://en.wikipedia.org/wiki/Real_mode) 代码的编译选项之后，根据变量 `BITS` 的值，如果是 `32` ，汇编代码、链接器、以及其它很多东西（全部的定义都可以在[arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile)找到）对应的参数就是 `i386`，而 `64` 就对应的是 `x86_84` 。
 
 第一个目标是 Makefile 生成的系统调用列表(syscall table)中的 `archheaders` ：
 
@@ -368,7 +368,7 @@ $(Q)$(MAKE) $(build)=arch/x86/tools relocs
   HOSTLD  arch/x86/tools/relocs
 ```
 
-在编译完 `relocs.c` 之后会检查 `version.h` :
+在编译完 `relocs.c` 之后会检查 `version.h` ：
 
 ```Makefile
 $(version_h): $(srctree)/Makefile FORCE
@@ -395,7 +395,7 @@ prepare0: archprepare FORCE
 build := -f $(srctree)/scripts/Makefile.build obj
 ```
 
-或者在我们的例子中，它就是当前源码目录路径：`.`：
+或者在我们的例子中，它就是当前源码目录路径： `.` ：
 
 ```Makefile
 $(Q)$(MAKE) -f $(srctree)/scripts/Makefile.build obj=.
@@ -440,7 +440,7 @@ $(vmlinux-dirs): prepare scripts
 	$(Q)$(MAKE) $(build)=$@
 ```
 
-符号 `$@` 在这里代表了 `vmlinux-dirs`，这就表明程序会递归遍历从 `vmlinux-dirs` 以及它内部的全部目录（依赖于配置），并且在对应的目录下执行 `make` 命令。我们可以在输出看到结果：
+符号 `$@` 在这里代表了 `vmlinux-dirs` ，这就表明程序会递归遍历从 `vmlinux-dirs` 以及它内部的全部目录（依赖于配置），并且在对应的目录下执行 `make` 命令。我们可以在输出看到结果：
 
 ```
   CC      init/main.o
@@ -523,13 +523,13 @@ bzImage: vmlinux
 	$(Q)ln -fsn ../../x86/boot/bzImage $(objtree)/arch/$(UTS_MACHINE)/boot/$@
 ```
 
-在这里我们可以看到第一次为 boot 目录执行 `make`，在我们的例子里是这样的：
+在这里我们可以看到第一次为 boot 目录执行 `make` ，在我们的例子里是这样的：
 
 ```Makefile
 boot := arch/x86/boot
 ```
 
-现在的主要目标是编译目录 `arch/x86/boot` 和 `arch/x86/boot/compressed` 的代码，构建 `setup.bin` 和 `vmlinux.bin` ，最后用这两个文件生成 `bzImage`。第一个目标是定义在 [arch/x86/boot/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/Makefile) 的 `$(obj)/setup.elf` :
+现在的主要目标是编译目录 `arch/x86/boot` 和 `arch/x86/boot/compressed` 的代码，构建 `setup.bin` 和 `vmlinux.bin` ，最后用这两个文件生成 `bzImage`。第一个目标是定义在 [arch/x86/boot/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/Makefile) 的 `$(obj)/setup.elf` ：
 
 ```Makefile
 $(obj)/setup.elf: $(src)/setup.ld $(SETUP_OBJS) FORCE
@@ -629,19 +629,19 @@ $(obj)/zoffset.h: $(obj)/compressed/vmlinux FORCE
 ld -m elf_x86_64   -T arch/x86/boot/setup.ld arch/x86/boot/a20.o arch/x86/boot/bioscall.o arch/x86/boot/cmdline.o arch/x86/boot/copy.o arch/x86/boot/cpu.o arch/x86/boot/cpuflags.o arch/x86/boot/cpucheck.o arch/x86/boot/early_serial_console.o arch/x86/boot/edd.o arch/x86/boot/header.o arch/x86/boot/main.o arch/x86/boot/mca.o arch/x86/boot/memory.o arch/x86/boot/pm.o arch/x86/boot/pmjump.o arch/x86/boot/printf.o arch/x86/boot/regs.o arch/x86/boot/string.o arch/x86/boot/tty.o arch/x86/boot/video.o arch/x86/boot/video-mode.o arch/x86/boot/version.o arch/x86/boot/video-vga.o arch/x86/boot/video-vesa.o arch/x86/boot/video-bios.o -o arch/x86/boot/setup.elf
 ```
 
-最后的两件事是创建包含目录 `arch/x86/boot/*` 下的编译过的代码的 `setup.bin`：
+最后的两件事是创建包含目录 `arch/x86/boot/*` 下的编译过的代码的 `setup.bin` ：
 
 ```
 objcopy  -O binary arch/x86/boot/setup.elf arch/x86/boot/setup.bin
 ```
 
-以及从 `vmlinux` 生成 `vmlinux.bin` :
+以及从 `vmlinux` 生成 `vmlinux.bin` ：
 
 ```
 objcopy  -O binary -R .note -R .comment -S arch/x86/boot/compressed/vmlinux arch/x86/boot/vmlinux.bin
 ```
 
-最最后，我们编译主机程序 [arch/x86/boot/tools/build.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tools/build.c) ，它将会用来把 `setup.bin` 和 `vmlinux.bin` 打包成 `bzImage` :
+最最后，我们编译主机程序 [arch/x86/boot/tools/build.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tools/build.c) ，它将会用来把 `setup.bin` 和 `vmlinux.bin` 打包成 `bzImage` ：
 
 ```
 arch/x86/boot/tools/build arch/x86/boot/setup.bin arch/x86/boot/vmlinux.bin arch/x86/boot/zoffset.h arch/x86/boot/bzImage
@@ -660,7 +660,7 @@ Kernel: arch/x86/boot/bzImage is ready  (#5)
 
 ###结论
 
-这就是本文的结尾部分。本文我们了解了编译内核的全部步骤：从执行 `make` 命令开始，到最后生成 `bzImage`。我知道，linux 内核的 Makefile 和构建 linux 的过程第一眼看起来可能比较迷惑，但是这并不是很难。希望本文可以帮助你理解构建 linux 内核的整个流程。
+这就是本文的结尾部分。本文我们了解了编译内核的全部步骤：从执行 `make` 命令开始，到最后生成 `bzImage` 。我知道，linux 内核的 Makefile 和构建 linux 的过程第一眼看起来可能比较迷惑，但是这并不是很难。希望本文可以帮助你理解构建 linux 内核的整个流程。
 
 ###链接
 
