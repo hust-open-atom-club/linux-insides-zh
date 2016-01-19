@@ -189,7 +189,7 @@ endif
 include scripts/Kbuild.include
 ```
 
-文件 [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt) 或者又叫做 `Kernel Build System` 是一个用来管理构建内核及其模块的特殊框架。`Kbuild` 文件的语法与 Makefile 一样。文件[scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) 为 `Kbuild` 系统提供了一些常规的定义。因为我们包含了这个 `Kbuild` 文件，我们可以看到和不同工具关联的这些变量的定义，这些工具会在内核和模块编译过程中被使用（比如链接器、编译器、来自 [binutils](http://www.gnu.org/software/binutils/) 的二进制工具包 ）：
+文件 [Kbuild](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/kbuild.txt) 或者又叫做 `Kernel Build System` 是一个用来管理构建内核及其模块的特殊框架。`Kbuild` 文件的语法与 Makefile 一样。文件[scripts/Kbuild.include](https://github.com/torvalds/linux/blob/master/scripts/Kbuild.include) 为 `Kbuild` 系统提供了一些常规的定义。因为我们包含了这个 `Kbuild` 文件，我们可以看到和不同工具关联的这些变量的定义，这些工具会在内核和模块编译过程中被使用（比如链接器、编译器、来自 [binutils](http://www.gnu.org/software/binutils/) 的二进制工具包）：
 
 ```Makefile
 AS		= $(CROSS_COMPILE)as
