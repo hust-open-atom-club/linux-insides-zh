@@ -395,7 +395,7 @@ prepare0: archprepare FORCE
 build := -f $(srctree)/scripts/Makefile.build obj
 ```
 
-或者在我们的例子中，它就是当前源码目录路径： `.` ：
+或者在我们的例子中，它就是当前源码目录路径- `.` ：
 
 ```Makefile
 $(Q)$(MAKE) -f $(srctree)/scripts/Makefile.build obj=.
