@@ -29,13 +29,8 @@ Linux Insides
 |├3.7||未开始|
 |├3.8||未开始|
 |├3.9||未开始|
-|├3.10||未开始|
-|||未开始|
+|└3.10||未开始|
 |System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
-|├4.1||未开始|
-|├4.2||未开始|
-|├4.3||未开始|
-|├4.4||未开始|
 |Timers and time management|[@icecoobe](https://github.com/icecoobe)|正在进行|
 |Memory management|[@choleraehyq](http://cholerae.com)|正在进行|
 |Concepts||未开始|
@@ -67,15 +62,12 @@ Linux Insides
 [@0xAX](https://twitter.com/0xAX)
 
 
-##贡献者
+##中文维护者
 	
 [@xinqiu](https://github.com/xinqiu)
-
-[@oska874](https://github.com/oska874)
 	
 [@mudongliang](https://github.com/mudongliang)
 
-[@Alick Guo](https://github.com/a1ickgu0)
 
 ##LICENSE
 
