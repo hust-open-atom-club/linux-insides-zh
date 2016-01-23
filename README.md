@@ -68,6 +68,10 @@ Linux Insides
 	
 [@mudongliang](https://github.com/mudongliang)
 
+##翻译人员
+
+详见[contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md)
+
 
 ##LICENSE
 
