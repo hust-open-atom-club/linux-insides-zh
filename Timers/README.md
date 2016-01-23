@@ -1,7 +1,5 @@
-# Timers and time management
 # 定时器和时间管理
 
-This chapter describes timers and time management related concepts in the linux kernel.
 本章介绍 Linux 内核中定时器和时间管理相关的观念。
 
 * [简介](http://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html) - 简单介绍 Linux 内核中的定时器。

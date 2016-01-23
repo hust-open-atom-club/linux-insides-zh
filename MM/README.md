@@ -1,4 +1,3 @@
-# Linux kernel memory management
 # Linux 内核内存管理
 
 本章描述 Linux 内核中的内存管理。在本章中你会看到一系列描述 Linux 内核内存管理框架的不同部分的帖子。
