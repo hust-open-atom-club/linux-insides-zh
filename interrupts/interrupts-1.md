@@ -142,7 +142,7 @@ static inline void native_irq_enable(void)
 * 任务门（Task gates）
 * 陷阱门（Trap gates）
 
-in the `x86` architecture. Only [long mode](http://en.wikipedia.org/wiki/Long_mode) interrupt gates and trap gates can be referenced in the `x86_64`. Like the `Global Descriptor Table`, the `Interrupt Descriptor table` is an array of 8-byte gates on `x86` and an array of 16-byte gates on `x86_64`. We can remember from the second part of the [Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html), that `Global Descriptor Table` must contain `NULL` descriptor as its first element. Unlike the `Global Descriptor Table`, the `Interrupt Descriptor Table` may contain a gate; it is not mandatory. For example, you may remember that we have loaded the Interrupt Descriptor table with the `NULL` gates only in the earlier [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) while transitioning into [protected mode](http://en.wikipedia.org/wiki/Protected_mode):
+在 `x86` 架构中，只有 [long mode](http://en.wikipedia.org/wiki/Long_mode) 中断门和陷阱中断门可以在 `x86_64` 中引用。就像 `全局描述符表`，`中断描述符表` 在 `x86` 上是一个 8 字节数组门，而在 `x86_64` 上是一个16字节数组门。让我们回忆在[内核启动程序](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html)的第二部分，`全局描述符表` 必须包含 `NULL` 描述符作为它的第一个元素。与 `全局描述符表` 不一样的是，`中断描述符表` 的第一个元素可以是一个门。它并不是强制要求的。比如，你可能还记得我们只是在早期的章节中过渡到[保护模式](http://en.wikipedia.org/wiki/Protected_mode)时用 `NULL` 门加载过中断描述符表：
 
 ```C
 /*
@@ -155,12 +155,12 @@ static void setup_idt(void)
 }
 ```
 
-from the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c). The `Interrupt Descriptor table` can be located anywhere in the linear address space and the base address of it must be aligned on an 8-byte boundary on `x86` or 16-byte boundary on `x86_64`. The base address of the `IDT` is stored in the special register - `IDTR`. There are two instructions on `x86`-compatible processors to modify the `IDTR` register:
+在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c)中。`中断描述符表` 可以在线性地址空间和基址的任何地方被加载，只要在 `x86` 上以8字节对齐，在 `x86_64` 上以16字节对齐。`IDT` 的基址存储在一个特殊的寄存器 - IDTR。在 `x86` 上有两个指令 - 协调工作来修改 `IDTR` 寄存器： 
 
 * `LIDT`
 * `SIDT`
 
-The first instruction `LIDT` is used to load the base-address of the `IDT` i.e. the specified operand into the `IDTR`. The second instruction `SIDT` is used to read and store the contents of the `IDTR` into the specified operand. The `IDTR` register is 48-bits on the `x86` and contains the following information:
+第一个指令 `LIDT` 用来加载 `IDT` 的基址，即在 `IDTR` 的指定操作数。第二个指令 `SIDT` 用来在指定操作数中读取和存储 `IDTR` 的内容。在 `x86` 上 `IDTR` 寄存器是 48 位，包含了下面的信息：
 
 ```
 +-----------------------------------+----------------------+
@@ -171,7 +171,7 @@ The first instruction `LIDT` is used to load the base-address of the `IDT` i.e. 
 47                                16 15                    0
 ```
 
-Looking at the implementation of `setup_idt`, we have prepared a `null_idt` and loaded it to the `IDTR` register with the `lidt` instruction. Note that `null_idt` has `gdt_ptr` type which is defined as:
+让我们看看 `setup_idt` 的实现，我们准备了一个 `null_idt`，并且使用 `lidt` 指令把它加载到 `IDTR` 寄存器。注意，`null_idt` 是 `gdt_ptr` 类型，后者定义如下：
 
 ```C
 struct gdt_ptr {
@@ -180,7 +180,7 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-Here we can see the definition of the structure with the two fields of 2-bytes and 4-bytes each (a total of 48-bits) as we can see in the diagram. Now let's look at the `IDT` entries structure. The `IDT` entries structure is an array of the 16-byte entries which are called gates in the `x86_64`. They have the following structure:
+这里我们可以看看 `IDTR` 结构的定义，就像我们在示意图中看到的一样，由 2 字节和 4 字节（共 48 位）的两个域组成。现在，让我们看看 `IDT` 入口结构体，它是一个在 `x86` 中被称为门的 16 字节数组。它拥有下面的结构：
 
 ```
 127                                                                             96
