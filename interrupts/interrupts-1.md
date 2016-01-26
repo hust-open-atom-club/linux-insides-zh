@@ -137,6 +137,7 @@ static inline void native_irq_enable(void)
 
 现在我们了解了一些关于各种类型的中断和异常的内容，是时候转到更实用的部分了。我们从 `中断描述符表` 开始。就如之前所提到的，`IDT` 保存了中断和异常处理程序的入口指针。`IDT` 是一个类似于 `全局描述符表（Global Descriptor Table）`的结构，我们在[内核启动程序](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html)的第二部分已经介绍过。但是他们确实有一些不同，`IDT` 的表项被称为 `门（gates）`，而不是 `描述符（descriptors）`。
 
+
 * 中断门（Interrupt gates）
 * 任务门（Task gates）
 * 陷阱门（Trap gates）
