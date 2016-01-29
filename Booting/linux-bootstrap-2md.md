@@ -39,7 +39,7 @@
  
 通过这2个信息，我们可以通过下面的公式计算出对应的物理地址 
 
-```
+```c
 PhysicalAddress = Segment * 16 + Offset
 ```
 
