@@ -155,7 +155,7 @@ static void setup_idt(void)
 }
 ```
 
-在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c)中。`中断描述符表` 可以在线性地址空间和基址的任何地方被加载，只要在 `x86` 上以8字节对齐，在 `x86_64` 上以16字节对齐。`IDT` 的基址存储在一个特殊的寄存器 - IDTR。在 `x86` 上有两个指令 - 协调工作来修改 `IDTR` 寄存器： 
+在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c)中。`中断描述符表` 可以在线性地址空间和基址的任何地方被加载，只要在 `x86` 上以 8 字节对齐，在 `x86_64` 上以 16 字节对齐。`IDT` 的基址存储在一个特殊的寄存器 - IDTR。在 `x86` 上有两个指令 - 协调工作来修改 `IDTR` 寄存器： 
 
 * `LIDT`
 * `SIDT`
@@ -209,9 +209,9 @@ struct gdt_ptr {
 +-------------------------------------------------------------------------------+
 ```
 
-To form an index into the IDT, the processor scales the exception or interrupt vector by sixteen. The processor handles the occurrence of exceptions and interrupts just like it handles calls of a procedure when it sees the `call` instruction. A processor uses an unique number or `vector number` of the interrupt or the exception as the index to find the necessary `Interrupt Descriptor Table` entry. Now let's take a closer look at an `IDT` entry.
+为了把索引格式化成 IDT 的格式，处理器把异常和中断向量分为 16 个级别。处理器处理异常和中断的发生就像它看到 `call` 指令时处理一个程序调用一样。处理器使用中断或异常的唯一的数字或 `中断标识码` 作为索引来寻找对应的 `中断描述符表` 的条目。现在让我们更近距离地看看 `IDT` 条目。
 
-As we can see, `IDT` entry on the diagram consists of the following fields:
+就像我们所看到的一样，在表中的 `IDT` 条目由下面的域组成：
 
 * `0-15` bits  - offset from the segment selector which is used by the processor as the base address of the entry point of the interrupt handler;
 * `16-31` bits - base address of the segment select which contains the entry point of the interrupt handler;
