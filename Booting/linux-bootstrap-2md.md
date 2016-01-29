@@ -39,8 +39,8 @@
  
 通过这2个信息，我们可以通过下面的公式计算出对应的物理地址 
 
-```c
+```
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-
+在保护模式中，内存段的定义Memory segmentation was completely redone in protected mode. There are no 64 Kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called Segment Descriptor. The segment descriptors are stored in a data structure called Global Descriptor Table (GDT).
