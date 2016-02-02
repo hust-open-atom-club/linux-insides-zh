@@ -43,4 +43,11 @@
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-在保护模式中，内存段的定义Memory segmentation was completely redone in protected mode. There are no 64 Kilobyte fixed-size segments. Instead, the size and location of each segment is described by an associated data structure called Segment Descriptor. The segment descriptors are stored in a data structure called Global Descriptor Table (GDT).
+在保护模式中，内存段的定义和实模式完全不同。在保护模式中，每个内存段不再是64K大小，段的大小和起始位置是通过一个叫做`段描述符`的数据结构进行描述的。所有内存段的段描述符存储在一个叫做`全局描述符表`(GDT)的内存结构中。
+
+全局描述符表示一个内存数据结构，但是它在内存中的位置并不是固定的，它的地址保存在一个特殊寄存器`GDTR`中。在后面的章节中，我们将在Linux内核代码中看到全局描述符表的地址是如何被保存到`GDTR`中的。具体的汇编代码看起来是这样的：
+
+```assembly
+lgdt gdt
+```
+
