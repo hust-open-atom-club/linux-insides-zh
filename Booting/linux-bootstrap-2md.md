@@ -73,7 +73,7 @@ lgdt gdt
 
 粗粗一看，上面的结构非常吓人，不过实际上这个结构是非常容易理解的。比如在上图中的LIMIT 15:0表示这个数据结构的0到15位保存的内存段的大小的0到15位。相似的LIMITE 19:16表示上述数据结构的16到19位保存的是内存段大小的16到19位。从这个分析中，我们可以看出每个内存段的大小是通过20位进行描述的。下面我们将对这个数据结构进行仔细分析：
 
-1. 内存段长度[20位]被保存在上述内存结构的0-15和16-19位。根据上述内存结构中`G`位的设置，这20位内存定义的内存长度是不一样的。下面是一些具体的例子：
+1. Limit[20位]被保存在上述内存结构的0-15和16-19位。根据上述内存结构中`G`位的设置，这20位内存定义的内存长度是不一样的。下面是一些具体的例子：
 
   * 如果`G`= 0, 并且Limit = 0， 那么表示段长度是1 byte
   * 如果`G` = 1, 并且Limit = 0, 那么表示段长度是4K bytes
@@ -85,3 +85,36 @@ lgdt gdt
   * 如果G = 0, 那么内存段的长度是按照1 byte进行增长的 ( Limit每增加1，段长度增加1 byte )，最大的内存段长度将是1M bytes；
   * 如果G = 1, 那么内存段的长度是按照4K bytes ( Limit每增加1，段长度增加4K bytes )进行增长的，最大的内存段长度将是4G bytes;
   * 段长度的计算公司是 base_seg_length * ( LIMIT + 1)。
+   
+2. Base[32-bits]被保存在上述地址结构的0-15， 32-39以及56-63位。Base定义了段基址。
+
+3. Type/Attribute (40-47 bits) 定义了内存段的类型以及支持的操作。
+  * `S` 标记（ 第44位 ）定义了段的类型，`S` = 0说明这个内存段是一个系统段；`S` = 1说明这个内存段是一个代码段或者是数据段（ 堆栈段是一种特使类型的数据段，堆栈段必须是可以进行读写的段 ）。
+   
+  在`S` = 1的情况下，上述内存结构的第43位决定了内存段是数据段还是代码段。如果43位 = 0，拿说明是一个数据段，否则就是一个代码段。
+
+对于数据段和代码段，下面的表格给出了段类型定义
+
+```
+|           Type Field        | Descriptor Type | Description
+|-----------------------------|-----------------|------------------
+| Decimal                     |                 |
+|             0    E    W   A |                 |
+| 0           0    0    0   0 | Data            | Read-Only
+| 1           0    0    0   1 | Data            | Read-Only, accessed
+| 2           0    0    1   0 | Data            | Read/Write
+| 3           0    0    1   1 | Data            | Read/Write, accessed
+| 4           0    1    0   0 | Data            | Read-Only, expand-down
+| 5           0    1    0   1 | Data            | Read-Only, expand-down, accessed
+| 6           0    1    1   0 | Data            | Read/Write, expand-down
+| 7           0    1    1   1 | Data            | Read/Write, expand-down, accessed
+|                  C    R   A |                 |
+| 8           1    0    0   0 | Code            | Execute-Only
+| 9           1    0    0   1 | Code            | Execute-Only, accessed
+| 10          1    0    1   0 | Code            | Execute/Read
+| 11          1    0    1   1 | Code            | Execute/Read, accessed
+| 12          1    1    0   0 | Code            | Execute-Only, conforming
+| 14          1    1    0   1 | Code            | Execute-Only, conforming, accessed
+| 13          1    1    1   0 | Code            | Execute/Read, conforming
+| 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
+```
