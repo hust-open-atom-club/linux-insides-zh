@@ -51,3 +51,4 @@ PhysicalAddress = Segment * 16 + Offset
 lgdt gdt
 ```
 
+`lgdt`汇编代码将把全局描述符表的基地址和大小保存到`GDTR`寄存器中。`GRTD`是一个48位的寄存器，where the `lgdt` instruction loads the base address and limit(size) of global descriptor table to the `GDTR` register. `GDTR` is a 48-bit register and consists of two parts:
