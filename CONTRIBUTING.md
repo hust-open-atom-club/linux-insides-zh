@@ -10,7 +10,7 @@
 2. 通过如下命令从你的 Github 帐号 `clone` 库： 
 
     ```
-    git clone git@github.com:your_github_username/linux-insides.git
+    git clone git@github.com:your_github_username/linux-insides-zh.git
     ```
 
 3. 通过如下命令创建分支 (`branch`) :
@@ -30,6 +30,6 @@
     git push --set-upstream origin linux-insides-zh-fix
     ```
 
-6. 点击 `New pull request` 按钮，将 your_github_username 库的 linux-insides-zh-fix 分支的修改提交到 MintCN 的 `linux-insides-zh` 库中。
+6. 点击 `New pull request` 按钮，将 your_github_username 的 `linux-insides-zh` 库的 linux-insides-zh-fix 分支的修改提交到 MintCN 的 `linux-insides-zh` 库中。
 
 十分感谢！
