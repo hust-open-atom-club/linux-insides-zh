@@ -32,4 +32,4 @@
 
 6. 点击 `New pull request` 按钮，将 your_github_username 库的 linux-insides-zh-fix 分支的修改提交到 MintCN 的 `linux-insides-zh` 库中。
 
-Thank you.
+十分感谢！
