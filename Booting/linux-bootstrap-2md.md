@@ -118,3 +118,4 @@ lgdt gdt
 | 13          1    1    1   0 | Code            | Execute/Read, conforming
 | 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
 ```
+
