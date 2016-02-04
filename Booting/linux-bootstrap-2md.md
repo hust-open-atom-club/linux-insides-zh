@@ -91,7 +91,7 @@ lgdt gdt
 3. Type/Attribute (40-47 bits) 定义了内存段的类型以及支持的操作。
   * `S` 标记（ 第44位 ）定义了段的类型，`S` = 0说明这个内存段是一个系统段；`S` = 1说明这个内存段是一个代码段或者是数据段（ 堆栈段是一种特使类型的数据段，堆栈段必须是可以进行读写的段 ）。
    
-  在`S` = 1的情况下，上述内存结构的第43位决定了内存段是数据段还是代码段。如果43位 = 0，拿说明是一个数据段，否则就是一个代码段。
+在`S` = 1的情况下，上述内存结构的第43位决定了内存段是数据段还是代码段。如果43位 = 0，拿说明是一个数据段，否则就是一个代码段。
 
 对于数据段和代码段，下面的表格给出了段类型定义
 
@@ -119,3 +119,9 @@ lgdt gdt
 | 15          1    1    1   1 | Code            | Execute/Read, conforming, accessed
 ```
 
+从上面的表格我们可以看出，当第43位是`0`的时候，这个段描述符对应的是一个数据段，如果该位是`1`，那么表示这个段描述符对应的是一个代码段。对于数据段，第42，41，40位表示的是(*E*扩展，*W*可写，*A*可访问）；对于代码段，第42，41，40位表示的是(*C*一致，*R*可读，*A*可访问）。 *A*ccessible) or CRA(*C*onforming *R*eadable *A*ccessible)。
+  * if E(bit 42) is 0, expand up other wise expand down. Read more [here](http://www.sudleyplace.com/dpmione/expanddown.html).
+  * if W(bit 41)(for Data Segments) is 1, write access is allowed otherwise not. Note that read access is always allowed on data segments.
+  * A(bit 40) - Whether the segment is accessed by processor or not.
+  * C(bit 43) is conforming bit(for code selectors). If C is 1, the segment code can be executed from a lower level privilege e.g. user level. If C is 0, it can only be executed from the same privilege level.
+  * R(bit 41)(for code segments). If 1 read access to segment is allowed otherwise not. Write access is never allowed to code segments.
