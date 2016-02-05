@@ -207,6 +207,22 @@ GLOBAL(memcpy)
 ENDPROC(memcpy)
 ```
 
-Yeah, we just moved to C code and now assembly again :) First of all we can see that `memcpy` and other routines which are defined here, start and end with the two macros: `GLOBAL` and `ENDPROC`. `GLOBAL` is described in [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) which defines `globl` directive and the label for it. `ENDPROC` is described in [include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h) which marks the `name` symbol as a function name and ends with the size of the `name` symbol.
+在`copy.S`文件中，你可以看到所有的方法都开始于`GLOBAL`宏定义，而结束于`ENDPROC`宏定义。 
+
+你可以在 [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h)中找到`GLOBAL`宏定义。这个宏给代码段分配了一个名字标签，并且让这个名字全局可用。 
+
+```assembly
+#define GLOBAL(name)	\
+	.globl name;	\
+	name:
+```
+
+你可以在[include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h)中找到`ENDPROC`宏的定义。 这个宏通过`END(name)`代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
+
+```assembly
+#define ENDPROC(name) \
+	.type name, @function ASM_NL \
+	END(name)
+```
 
 Implementation of `memcpy` is easy. At first, it pushes values from the `si` and `di` registers to the stack to preserve their values because they will change during the `memcpy`. `memcpy` (and other functions in copy.S) use `fastcall` calling conventions. So it gets its incoming parameters from the `ax`, `dx` and `cx` registers.  Calling `memcpy` looks like this:
