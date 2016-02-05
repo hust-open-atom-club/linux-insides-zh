@@ -140,4 +140,15 @@ lgdt gdt
   * 栈段（由SS寄存器指向的数据段）。此时该标志称为B（Big）标志，用于指明隐含堆栈操作（如PUSH、POP或CALL）时的栈指针大小。如果该标志置位，则使用32位栈指针并存放在ESP寄存器中；如果该标志为0，则使用16位栈指针并存放在SP寄存器中。如果堆栈段被设置成一个下扩数据段，这个B标志也同时指定了堆栈段的上界限。
   * 下扩数据段。此时该标志称为B标志，用于指明堆栈段的上界限。如果设置了该标志，则堆栈段的上界限是0xFFFFFFFF（4GB）；如果没有设置该标志，则堆栈段的上界限是0xFFFF（64KB）。
 
+在保护模式下，段寄存器保存的不再是一个内存段的基地址，而是一个称为`段选择器`的结构。每个段描述符都对应一个`段选择器`。`段选择器`是一个16位的数据结构，下图显示了这个数据结构的内容：
 
+```
+-----------------------------
+|       Index    | TI | RPL |
+-----------------------------
+```
+
+Where,
+* **Index** shows the index number of the descriptor in the GDT.
+* **TI**(Table Indicator) shows where to search for the descriptor. If it is 0 then search in the Global Descriptor Table(GDT) otherwise it will look in Local Descriptor Table(LDT).
+* And **RPL** is Requester's Privilege Level.
