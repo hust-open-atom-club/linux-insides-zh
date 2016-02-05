@@ -120,8 +120,9 @@ lgdt gdt
 ```
 
 从上面的表格我们可以看出，当第43位是`0`的时候，这个段描述符对应的是一个数据段，如果该位是`1`，那么表示这个段描述符对应的是一个代码段。对于数据段，第42，41，40位表示的是(*E*扩展，*W*可写，*A*可访问）；对于代码段，第42，41，40位表示的是(*C*一致，*R*可读，*A*可访问）。 *A*ccessible) or CRA(*C*onforming *R*eadable *A*ccessible)。
-  * if E(bit 42) is 0, expand up other wise expand down. Read more [here](http://www.sudleyplace.com/dpmione/expanddown.html).
-  * if W(bit 41)(for Data Segments) is 1, write access is allowed otherwise not. Note that read access is always allowed on data segments.
-  * A(bit 40) - Whether the segment is accessed by processor or not.
-  * C(bit 43) is conforming bit(for code selectors). If C is 1, the segment code can be executed from a lower level privilege e.g. user level. If C is 0, it can only be executed from the same privilege level.
-  * R(bit 41)(for code segments). If 1 read access to segment is allowed otherwise not. Write access is never allowed to code segments.
+  * 如果`E` = 0，数据段是向上扩展数据段，反之为向下扩展数据段。关于向上扩展和向下扩展数据段，可以参考下面的[链接](http://www.sudleyplace.com/dpmione/expanddown.html).
+  * 如果`W` = 1，说明这个数据段是可写的，否则不可写。所有数据段都是可读的。
+  * A位表示该内存段是否已经被CPU访问。
+  * 如果`C` = 1，说明这个代码段可以被第优先级的代码访问，比如可以被用户态代码访问。反之如果`C` = 0，说明只能同优先级的代码段可以访问。
+  * 如果`R` = 1，说明该代码段可读。代码段是永远没有写权限的。
+
