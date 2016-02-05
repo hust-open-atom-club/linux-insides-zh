@@ -148,7 +148,8 @@ lgdt gdt
 -----------------------------
 ```
 
-Where,
-* **Index** shows the index number of the descriptor in the GDT.
-* **TI**(Table Indicator) shows where to search for the descriptor. If it is 0 then search in the Global Descriptor Table(GDT) otherwise it will look in Local Descriptor Table(LDT).
-* And **RPL** is Requester's Privilege Level.
+其中，
+* **Index** 表示在GDT中，对应段描述符的索引号。
+* **TI** 表示要在GDT还是LDT中查找对应的段描述符
+* **RPL** 表示请求者优先级。这个优先级将和段描述符中的优先级协同工作，共同确定访问是否合法。
+ 
