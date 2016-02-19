@@ -346,9 +346,10 @@ ENDPROC(memset)
 
 换言之`stack_end = esp - STACK_SIZE`.
 
-有了堆栈结束地址之后，堆的结束地址就被计算出来了：
+在计算了堆栈结束地址之后，代码计算了堆的结束地址：
 
 ```c
+    //heap_end = heap_end_ptr + 512
     heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
 ```
 which means `heap_end_ptr` or `_end` + `512`(`0x200h`). The last check is whether `heap_end` is greater than `stack_end`. If it is then `stack_end` is assigned to `heap_end` to make them equal.
