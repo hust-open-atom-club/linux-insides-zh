@@ -349,6 +349,7 @@ ENDPROC(memset)
 在计算了堆栈结束地址之后，代码计算了堆的结束地址：
 
 ```c
+
     //heap_end = heap_end_ptr + 512
     heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
 ```
