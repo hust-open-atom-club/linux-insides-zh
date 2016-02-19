@@ -337,13 +337,14 @@ ENDPROC(memset)
 
 ```C
     char *stack_end;
-
+    
+    //%P1 is (-STACK_SIZE)
     if (boot_params.hdr.loadflags & CAN_USE_HEAP) {
         asm("leal %P1(%%esp),%0"
             : "=r" (stack_end) : "i" (-STACK_SIZE));
 ```
 
-`stack_end = esp - STACK_SIZE`.
+换言之`stack_end = esp - STACK_SIZE`.
 
 Then there is the `heap_end` calculation:
 ```c
