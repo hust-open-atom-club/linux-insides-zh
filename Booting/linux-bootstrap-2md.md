@@ -191,16 +191,16 @@ lgdt gdt
 
 ```assembly
 GLOBAL(memcpy)
-	pushw	%si
-	pushw	%di
-	movw	%ax, %di
-	movw	%dx, %si
-	pushw	%cx
-	shrw	$2, %cx
-	rep; movsl
-	popw	%cx
-	andw	$3, %cx
-	rep; movsb
+	pushw	%si          ;push si to stack
+	pushw	%di          ;push di to stack
+	movw	%ax, %di     ;move &boot_param.hdr to di
+	movw	%dx, %si     ;move &hdr to si
+	pushw	%cx          ;push cx to stack ( sizeof(hdr) )
+	shrw	$2, %cx    
+	rep; movsl           ;copy based on 4 bytes
+	popw	%cx          ;pop cx
+	andw	$3, %cx      ;cx = cx % 4
+	rep; movsb           ;copy based on one byte
 	popw	%di
 	popw	%si
 	retl
@@ -225,4 +225,17 @@ ENDPROC(memcpy)
 	END(name)
 ```
 
-Implementation of `memcpy` is easy. At first, it pushes values from the `si` and `di` registers to the stack to preserve their values because they will change during the `memcpy`. `memcpy` (and other functions in copy.S) use `fastcall` calling conventions. So it gets its incoming parameters from the `ax`, `dx` and `cx` registers.  Calling `memcpy` looks like this:
+`memcpy`的实现代码是很容易理解的。首先，代码将`si`和`di`寄存器的值压入堆栈进行保存，这么做的原因是因为后续的代码将修改`si`和`di`寄存器的值。`memcpy`函数（也包括其他定义在copy.s中的其他函数）使用了`fastcall`调用规则，意味着所有的函数调用参数是通过`ax`, `dx`, `cx`寄存器传入的，而不是传统的通过堆栈传入。因此在使用下面的代码调用`memcpy`函数的时候
+
+```c
+memcpy(&boot_params.hdr, &hdr, sizeof hdr);
+```
+
+函数的参数是这样传递的
+
+* `ax` 寄存器指向`boot_param.hdr`的内存地址
+* `dx` 寄存器指向`hdr`的内存地址
+* `cx` 寄存器包含`hdr`结构的大小
+ 
+`memcpy`函数在将`si`和`di`寄存器压栈之后，将`boot_param.hdr`的地址放入`di`寄存器，将`hdr`的地址放入`si`寄存器，并且将`hdr`数据结构的大小压栈。 接下来代码首先以4个字节为单位，将`si`寄存器指向的内存内容拷贝`di`寄存器指向的内存。当剩下的字节数不足4字节的时候，代码将原始的`hdr`数据结构大小出栈放入`cx`，然后对`cx`的值对4求模，接下来就是根据`cx`的值，以字节为单位将`si`寄存器指向的内存内容拷贝到`di`寄存器指向的内存。当拷贝操作完成之后，将保留的`si`以及`di`寄存器值出栈，函数返回。
+
