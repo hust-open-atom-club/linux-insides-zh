@@ -239,3 +239,85 @@ memcpy(&boot_params.hdr, &hdr, sizeof hdr);
  
 `memcpy`函数在将`si`和`di`寄存器压栈之后，将`boot_param.hdr`的地址放入`di`寄存器，将`hdr`的地址放入`si`寄存器，并且将`hdr`数据结构的大小压栈。 接下来代码首先以4个字节为单位，将`si`寄存器指向的内存内容拷贝`di`寄存器指向的内存。当剩下的字节数不足4字节的时候，代码将原始的`hdr`数据结构大小出栈放入`cx`，然后对`cx`的值对4求模，接下来就是根据`cx`的值，以字节为单位将`si`寄存器指向的内存内容拷贝到`di`寄存器指向的内存。当拷贝操作完成之后，将保留的`si`以及`di`寄存器值出栈，函数返回。
 
+控制台初始化
+--------------------------------------------------------------------------------
+
+在`hdr`结构体被拷贝到`boot_params.hdr`成员之后，系统接下来将进行控制台的初始化。控制台初始化时通过调用[arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c)中定义的`console_init`函数实现的。
+
+这个函数首先查看命令行参数是否包含`earlyprintk`选项。如果命令行参数包含该选项，那么函数将分析这个选项的内容。得到控制台将使用的串口信息，然后进行串口的初始化。以下是`earlyprintk`选项可能的取值：
+
+* serial,0x3f8,115200
+* serial,ttyS0,115200
+* ttyS0,115200
+
+当串口初始化成功之后，我们将看到如下的输出如果命令行参数包含`debug`选项。
+
+```C
+if (cmdline_find_option_bool("debug"))
+    puts("early console in setup code\n");
+```
+
+`puts`函数定义在[tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c)。这个函数只是简单的调用`putchar`函数将输入字符串中的内容按字节输出。下面让我们来看看`putchar`函数的实现：
+
+```C
+void __attribute__((section(".inittext"))) putchar(int ch)
+{
+    if (ch == '\n')
+        putchar('\r');
+
+    bios_putchar(ch);
+
+    if (early_serial_base != 0)
+        serial_putchar(ch);
+}
+```
+
+`__attribute__((section(".inittext")))` 说明这段代码将被放入`.inittext`代码段。关于`.inittext`代码段的定义你可以在 [setup.ld](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L19)中找到。
+
+首先如果需要输出的字符是`\n`，那么`putchar`函数将调用自己首先输出一个字符`\r`。接下来，就调用`bios_putchar`函数将字符输出到显示器（使用bios int10中断）：
+
+```C
+static void __attribute__((section(".inittext"))) bios_putchar(int ch)
+{
+    struct biosregs ireg;
+
+    initregs(&ireg);
+    ireg.bx = 0x0007;
+    ireg.cx = 0x0001;
+    ireg.ah = 0x0e;
+    ireg.al = ch;
+    intcall(0x10, &ireg, NULL);
+}
+```
+
+在上面的代码中`initreg`函数接受一个`biosregs`结构的地址作为输入参数，该函数首先调用`memset`函数将`biosregs`结构体所有成员清0。
+
+```C
+    memset(reg, 0, sizeof *reg);
+    reg->eflags |= X86_EFLAGS_CF;
+    reg->ds = ds();
+    reg->es = ds();
+    reg->fs = fs();
+    reg->gs = gs();
+```
+
+Let's look at the [memset](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S#L36) implementation:
+
+```assembly
+GLOBAL(memset)
+    pushw   %di
+    movw    %ax, %di
+    movzbl  %dl, %eax
+    imull   $0x01010101,%eax
+    pushw   %cx
+    shrw    $2, %cx
+    rep; stosl
+    popw    %cx
+    andw    $3, %cx
+    rep; stosb
+    popw    %di
+    retl
+ENDPROC(memset)
+```
+
+As you can read above, it uses the `fastcall` calling conventions like the `memcpy` function, which means that the function gets parameters from `ax`, `dx` and `cx` registers.
