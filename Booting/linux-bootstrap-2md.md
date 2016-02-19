@@ -333,7 +333,7 @@ ENDPROC(memset)
 
 当堆栈和bss段在[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S)中被初始化之后 (细节请参考上一篇[part](linux-bootstrap-1.md)), 内核需要初始化全局堆，全局堆的初始化是通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数实现的。
 
-First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21) flag from the [`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) in the kernel setup header and calculates the end of the stack if this flag was set:
+代码首先检查内核设置头中的[`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321)是否设置了 [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21)标志。 如果该标记被设置了，那么代码将计算堆栈的结束地址：:
 
 ```C
     char *stack_end;
@@ -343,7 +343,7 @@ First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds
             : "=r" (stack_end) : "i" (-STACK_SIZE));
 ```
 
-or in other words `stack_end = esp - STACK_SIZE`.
+`stack_end = esp - STACK_SIZE`.
 
 Then there is the `heap_end` calculation:
 ```c
