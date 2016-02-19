@@ -331,7 +331,7 @@ ENDPROC(memset)
 堆初始化
 --------------------------------------------------------------------------------
 
-当堆栈和bss段在[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S)中被初始化之后 (细节请参考上一篇[part](linux-bootstrap-1.md)), 内核需要初始化全局堆，全局堆[heap](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 的初始化是通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数实现的。
+当堆栈和bss段在[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S)中被初始化之后 (细节请参考上一篇[part](linux-bootstrap-1.md)), 内核需要初始化全局堆，全局堆的初始化是通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数实现的。
 
 First of all `init_heap` checks the [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21) flag from the [`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) in the kernel setup header and calculates the end of the stack if this flag was set:
 
