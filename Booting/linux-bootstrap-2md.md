@@ -326,4 +326,4 @@ ENDPROC(memset)
 
 接下来的`imull`指令将`eax`寄存器的值乘上`0x01010101`。这么做的原因是代码每次将尝试拷贝4个字节内存的内容。下面让我们来看一个具体的例子，假设我们需要将`0x7`这个数值放到内存中，在执行`imull`指令之前，`eax`寄存器的值是`0x7`，在`imull`指令被执行之后，`eax`寄存器的内容变成了`0x07070707`（4个字节的`0x7`）。在`imull`指令之后，代码使用`rep; stosl`指令将`eax`寄存器的内容拷贝到`es:di`指向的内存。
 
-在`bisoregs`结构体被`initregs`函数正确填充之后，`bios_putchar` 调用中断 [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which prints a character. Afterwards it checks if the serial port was initialized or not and writes a character there with [serial_putchar](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c#L30) and `inb/outb` instructions if it was set.
+在`bisoregs`结构体被`initregs`函数正确填充之后，`bios_putchar` 调用中断 [0x10](http://www.ctyme.com/intr/rb-0106.htm) 在显示器上输出一个字符。接下来`putchar`函数检查是否初始化了串口，如果串口被初始化了，那么将调用[serial_putchar](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c#L30)将字符输出到串口。
