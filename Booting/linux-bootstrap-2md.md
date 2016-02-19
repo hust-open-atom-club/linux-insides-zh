@@ -301,7 +301,7 @@ static void __attribute__((section(".inittext"))) bios_putchar(int ch)
     reg->gs = gs();
 ```
 
-Let's look at the [memset](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S#L36) implementation:
+下面让我们来看看[memset](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S#L36)函数的实现 :
 
 ```assembly
 GLOBAL(memset)
