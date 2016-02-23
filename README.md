@@ -21,13 +21,13 @@ Linux Insides
 |Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
 |Interrupts||正在进行|
 |├3.1|[@littleneko](https://github.com/littleneko)|正在进行|
-|├3.2||未开始|
-|├3.3||未开始|
-|├3.4||未开始|
-|├3.5||未开始|
-|├3.6||未开始|
-|├3.7||未开始|
-|├3.8||未开始|
+|├3.2|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├3.3|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├3.4|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├3.5|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├3.6|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├3.7|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├3.9||未开始|
 |└3.10||未开始|
 |System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
