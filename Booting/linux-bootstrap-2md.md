@@ -368,6 +368,7 @@ ENDPROC(memset)
 ```c
 /*from cpu.c*/
 check_cpu(&cpu_level, &req_level, &err_flags);
+/*after check_cpu call, req_level = req_level defined in cpucheck.c*/
 if (cpu_level < req_level) {
     printf("This kernel requires an %s CPU, ", cpu_name(req_level)); 
     printf("but only detected an %s CPU.\n", cpu_name(cpu_level));
