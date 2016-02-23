@@ -14,7 +14,7 @@ Linux Insides
 | ------------- |:-------------:| -----:|
 |Booting||正在进行|
 |├1.1|[@xinqiu](https://github.com/xinqiu)|正在进行|
-|├1.2||未开始|
+|├1.2|[@hailincai](https://github.com/hailincai)|正在进行|
 |├1.3||未开始|
 |├1.4||未开始|
 |└1.5||未开始|
