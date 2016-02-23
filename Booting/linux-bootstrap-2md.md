@@ -358,19 +358,23 @@ ENDPROC(memset)
 
 到这里位置，全局堆就被正确初始化了。在全局堆被初始化之后，我们就可以使用`GET_HEAP`方法。至于这个函数的实现和使用，我们将在后续的章节中看到。
 
-CPU validation
+检查CPU类型
 --------------------------------------------------------------------------------
 
-The next step as we can see is cpu validation by `validate_cpu` from [arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c).
+在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c)提供的`validate_cpu`方法检查CPU类型以确定系统是否能够在当前的CPU上运行。
 
-It calls the [`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102) function and passes cpu level and required cpu level to it and checks that the kernel launches on the right cpu level.
+`validate_cpu`调用了[`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。function and passes cpu level and required cpu level to it and checks that the kernel launches on the right cpu level.
+
 ```c
+/*from cpu.c*/
 check_cpu(&cpu_level, &req_level, &err_flags);
 if (cpu_level < req_level) {
-    ...
+    printf("This kernel requires an %s CPU, ", cpu_name(req_level)); 
+    printf("but only detected an %s CPU.\n", cpu_name(cpu_level));
     return -1;
 }
 ```
+
 `check_cpu` checks the cpu's flags, presence of [long mode](http://en.wikipedia.org/wiki/Long_mode) in case of x86_64(64-bit) CPU, checks the processor's vendor and makes preparation for certain vendors like turning off SSE+SSE2 for AMD if they are missing, etc.
 
 Memory detection
