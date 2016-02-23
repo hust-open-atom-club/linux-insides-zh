@@ -376,7 +376,7 @@ if (cpu_level < req_level) {
 }
 ```
 
-`check_cpu` checks the cpu's flags, presence of [long mode](http://en.wikipedia.org/wiki/Long_mode) in case of x86_64(64-bit) CPU, checks the processor's vendor and makes preparation for certain vendors like turning off SSE+SSE2 for AMD if they are missing, etc.
+`check_cpu`方法做了大量的检测和设置工作，下面就简单介绍 checks the cpu's flags, presence of [long mode](http://en.wikipedia.org/wiki/Long_mode) in case of x86_64(64-bit) CPU, checks the processor's vendor and makes preparation for certain vendors like turning off SSE+SSE2 for AMD if they are missing, etc.
 
 Memory detection
 --------------------------------------------------------------------------------
