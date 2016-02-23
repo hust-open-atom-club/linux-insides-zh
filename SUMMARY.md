@@ -3,7 +3,7 @@
 * [Introduction](README.md)
 * [引导](Booting/README.md)
    * [从引导加载程序内核](Booting/linux-bootstrap-1.md)
-   * [在内核安装代码的第一步](Booting/linux-bootstrap-2md.md)
+   * [在内核安装代码的第一步](Booting/linux-bootstrap-2.md)
    * [视频模式初始化和转换到保护模式](Booting/linux-bootstrap-3.md)
    * [过渡到64位模式](Booting/linux-bootstrap-4.md)
    * [内核解压缩](Booting/linux-bootstrap-5.md)
