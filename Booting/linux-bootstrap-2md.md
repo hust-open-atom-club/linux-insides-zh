@@ -363,7 +363,7 @@ ENDPROC(memset)
 
 在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c)提供的`validate_cpu`方法检查CPU类型以确定系统是否能够在当前的CPU上运行。
 
-`validate_cpu`调用了[`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。function and passes cpu level and required cpu level to it and checks that the kernel launches on the right cpu level.
+`validate_cpu`调用了[`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。
 
 ```c
 /*from cpu.c*/
@@ -381,7 +381,7 @@ if (cpu_level < req_level) {
 内存侦测
 --------------------------------------------------------------------------------
 
-接下来，内核调用`detect_memory`方法进行内存侦测，以得到系统当前内存的使用分布。It uses different programming interfaces for memory detection like `0xe820`, `0xe801` and `0x88`. We will see only the implementation of **0xE820** here.
+接下来，内核调用`detect_memory`方法进行内存侦测，以得到系统当前内存的使用分布。该方法是用多种编程接口，包括`0xe820`，`0xe801`和`0x88`，进行内存侦测。在这里我们只介绍[arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c)中提供的`detect_memory_e820`方法。
 
 Let's look into the `detect_memory_e820` implementation from the [arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c) source file. First of all, the `detect_memory_e820` function initializes the `biosregs` structure as we saw above and fills registers with special values for the `0xe820` call:
 
