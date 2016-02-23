@@ -376,7 +376,7 @@ if (cpu_level < req_level) {
 }
 ```
 
-`check_cpu`方法做了大量的检测和设置工作，下面就简单介绍一些：1）检查cpu标志，如果cpu是64位cpu，那么就设置[long mode](http://en.wikipedia.org/wiki/Long_mode), 2) 检查CPU的制造商checks the processor's vendor and makes preparation for certain vendors like turning off SSE+SSE2 for AMD if they are missing, etc.
+`check_cpu`方法做了大量的检测和设置工作，下面就简单介绍一些：1）检查cpu标志，如果cpu是64位cpu，那么就设置[long mode](http://en.wikipedia.org/wiki/Long_mode), 2) 检查CPU的制造商，根据制造商的不同，设置不同的CPU选项。比如对于AMD出厂的cpu，如果不支持SSE+SSE2，那么就禁止这些选项。
 
 Memory detection
 --------------------------------------------------------------------------------
