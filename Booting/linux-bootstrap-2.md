@@ -382,9 +382,9 @@ if (cpu_level < req_level) {
 内存分布侦测
 --------------------------------------------------------------------------------
 
-接下来，内核调用`detect_memory`方法进行内存侦测，以得到系统当前内存的使用分布。该方法使用多种编程接口，包括`0xe820`（获取全部内存分配），`0xe801`和`0x88`（获取临近内存大小），进行内存分布侦测。在这里我们只介绍[arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c)中提供的`detect_memory_e820`方法。
+接下来，内核调用 `detect_memory` 方法进行内存侦测，以得到系统当前内存的使用分布。该方法使用多种编程接口，包括 `0xe820`（获取全部内存分配），`0xe801` 和 `0x88`（获取临近内存大小），进行内存分布侦测。在这里我们只介绍[arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c)中提供的 `detect_memory_e820` 方法。
 
-该方法首先调用`initregs`方法初始化`biosregs`数据结构，然后向该数据结构填入`0xe820`编程接口所要求的参数：
+该方法首先调用 `initregs` 方法初始化 `biosregs` 数据结构，然后向该数据结构填入 `0xe820` 编程接口所要求的参数：
 
 ```assembly
     initregs(&ireg);
