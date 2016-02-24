@@ -243,15 +243,15 @@ memcpy(&boot_params.hdr, &hdr, sizeof hdr);
 控制台初始化
 --------------------------------------------------------------------------------
 
-在`hdr`结构体被拷贝到`boot_params.hdr`成员之后，系统接下来将进行控制台的初始化。控制台初始化时通过调用[arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c)中定义的`console_init`函数实现的。
+在 `hdr` 结构体被拷贝到 `boot_params.hdr` 成员之后，系统接下来将进行控制台的初始化。控制台初始化时通过调用[arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c)中定义的 `console_init` 函数实现的。
 
-这个函数首先查看命令行参数是否包含`earlyprintk`选项。如果命令行参数包含该选项，那么函数将分析这个选项的内容。得到控制台将使用的串口信息，然后进行串口的初始化。以下是`earlyprintk`选项可能的取值：
+这个函数首先查看命令行参数是否包含 `earlyprintk` 选项。如果命令行参数包含该选项，那么函数将分析这个选项的内容。得到控制台将使用的串口信息，然后进行串口的初始化。以下是 `earlyprintk` 选项可能的取值：
 
 * serial,0x3f8,115200
 * serial,ttyS0,115200
 * ttyS0,115200
 
-当串口初始化成功之后，如果命令行参数包含`debug`选项，我们将看到如下的输出。
+当串口初始化成功之后，如果命令行参数包含 `debug` 选项，我们将看到如下的输出。
 
 ```C
 if (cmdline_find_option_bool("debug"))
