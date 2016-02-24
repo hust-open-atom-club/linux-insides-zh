@@ -531,11 +531,11 @@ static inline void set_fs(u16 seg)
 #endif
 ```
 
-最后是[`query_edd`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c#L122) 方法调用, 这个方法从BIOS中查询`Enhanced Disk Drive`信息。下面让我们看看`query_edd`方法的实现。
+最后是[`query_edd`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c#L122) 方法调用, 这个方法从BIOS中查询 `Enhanced Disk Drive` 信息。下面让我们看看 `query_edd` 方法的实现。
 
-首先，代码检查内核命令行参数是否设置了[edd](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt#L1023) 选项，如果edd选项设置成`off`，`query_edd`不做任何操作，直接返回。
+首先，代码检查内核命令行参数是否设置了[edd](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt#L1023) 选项，如果edd选项设置成 `off`，`query_edd` 不做任何操作，直接返回。
 
-如果EDD被激活了，`query_edd`遍历所有BIOS支持的硬盘，并获取相应硬盘的EDD信息：
+如果EDD被激活了，`query_edd` 遍历所有BIOS支持的硬盘，并获取相应硬盘的EDD信息：
 
 ```C
 for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
@@ -549,7 +549,7 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
     ...
 ```
 
-在代码中 `0x80`是第一块硬盘，`EDD_MBR_SIG_MAX`是一个宏，值为16。代码把获得的信息放入数组[edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172)中。`get_edd_info`方法通过调用`0x13`中断调用（设置`ah = 0x41` ) 来检查EDD是否被硬盘支持。如果EDD被支持，代码将再次调用`0x13`中断，在这次调用中`ah = 0x48`，并且`si`指向一个数据缓冲区地址。中断调用之后，EDD信息将被保存到`si`指向的缓冲区地址。
+在代码中 `0x80` 是第一块硬盘，`EDD_MBR_SIG_MAX` 是一个宏，值为16。代码把获得的信息放入数组[edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172)中。`get_edd_info` 方法通过调用 `0x13` 中断调用（设置 `ah = 0x41` ) 来检查EDD是否被硬盘支持。如果EDD被支持，代码将再次调用 `0x13` 中断，在这次调用中 `ah = 0x48`，并且 `si` 指向一个数据缓冲区地址。中断调用之后，EDD信息将被保存到 `si` 指向的缓冲区地址。
 
 结束语
 --------------------------------------------------------------------------------
