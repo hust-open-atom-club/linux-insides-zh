@@ -184,11 +184,11 @@ lgdt gdt
 
 这个函数将内核设置信息拷贝到`boot_params`结构的相应字段。大家可以在[arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113)找到`boot_params`结构的定义。
 
-1. 将[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L281)中定义的`hdr`结构中的内容拷贝到`boot_params`结构的字段`struct setup_header hdr`中。
+1. 将[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L281)中定义的 `hdr` 结构中的内容拷贝到 `boot_params` 结构的字段 `struct setup_header hdr` 中。
 
 2. 如果内核是通过老的命令行协议运行起来的，那么就更新内核的命令行指针。
 
-这里需要注意的是拷贝`hdr`数据结构的`memcpy`函数不是C语言中的函数，而是定义在 [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S)。让我们来具体分析一下这段代码：
+这里需要注意的是拷贝 `hdr` 数据结构的 `memcpy` 函数不是C语言中的函数，而是定义在 [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S)。让我们来具体分析一下这段代码：
 
 ```assembly
 GLOBAL(memcpy)
