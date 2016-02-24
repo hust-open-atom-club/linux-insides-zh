@@ -291,7 +291,7 @@ static void __attribute__((section(".inittext"))) bios_putchar(int ch)
 }
 ```
 
-在上面的代码中`initreg`函数接受一个`biosregs`结构的地址作为输入参数，该函数首先调用`memset`函数将`biosregs`结构体所有成员清0。
+在上面的代码中 `initreg` 函数接受一个 `biosregs` 结构的地址作为输入参数，该函数首先调用 `memset` 函数将 `biosregs` 结构体所有成员清0。
 
 ```C
     memset(reg, 0, sizeof *reg);
@@ -321,7 +321,7 @@ GLOBAL(memset)
 ENDPROC(memset)
 ```
 
-首先你会发现，`memset`函数和`memcpy`函数一样使用了`fastcall`调用规则，因此函数的参数是通过`ax`，`dx`以及`cx`寄存器传入函数内部的。
+首先你会发现，`memset` 函数和 `memcpy` 函数一样使用了 `fastcall` 调用规则，因此函数的参数是通过`ax`，`dx`以及`cx`寄存器传入函数内部的。
 
 就像memcpy函数一样，`memset`函数一开始将`di`寄存器入栈，然后将`biosregs`结构的地址从`ax`寄存器拷贝到`di`寄存器。接下来，使用`movzbl`指令将`dl`寄存器的内容拷贝到`ax`寄存器的低字节，到这里`ax`寄存器就包含了需要拷贝到`di`寄存器所指向的内存的值。
 
