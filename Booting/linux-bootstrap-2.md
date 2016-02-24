@@ -251,7 +251,7 @@ memcpy(&boot_params.hdr, &hdr, sizeof hdr);
 * serial,ttyS0,115200
 * ttyS0,115200
 
-当串口初始化成功之后，我们将看到如下的输出如果命令行参数包含`debug`选项。
+当串口初始化成功之后，如果命令行参数包含`debug`选项，我们将看到如下的输出。
 
 ```C
 if (cmdline_find_option_bool("debug"))
