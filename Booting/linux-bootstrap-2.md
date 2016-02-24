@@ -576,3 +576,4 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
 * [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
 * [TLDP documentation for Linux Boot Process](http://www.tldp.org/HOWTO/Linux-i386-Boot-Code-HOWTO/setup.html) (old)
 * [Previous Part](linux-bootstrap-1.md)
+* [BIOS Interrupt](http://wiki.osdev.org/BIOS)
