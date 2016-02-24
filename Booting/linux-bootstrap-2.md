@@ -218,7 +218,7 @@ ENDPROC(memcpy)
 	name:
 ```
 
-你可以在[include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h)中找到 `ENDPROC` 宏的定义。 这个宏通过`END(name)`代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
+你可以在[include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h)中找到 `ENDPROC` 宏的定义。 这个宏通过 `END(name)` 代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
 
 ```assembly
 #define ENDPROC(name) \
@@ -226,7 +226,7 @@ ENDPROC(memcpy)
 	END(name)
 ```
 
-`memcpy`的实现代码是很容易理解的。首先，代码将`si`和`di`寄存器的值压入堆栈进行保存，这么做的原因是因为后续的代码将修改`si`和`di`寄存器的值。`memcpy`函数（也包括其他定义在copy.s中的其他函数）使用了`fastcall`调用规则，意味着所有的函数调用参数是通过`ax`, `dx`, `cx`寄存器传入的，而不是传统的通过堆栈传入。因此在使用下面的代码调用`memcpy`函数的时候
+`memcpy` 的实现代码是很容易理解的。首先，代码将 `si` 和 `di` 寄存器的值压入堆栈进行保存，这么做的原因是因为后续的代码将修改`si`和`di`寄存器的值。`memcpy`函数（也包括其他定义在copy.s中的其他函数）使用了`fastcall`调用规则，意味着所有的函数调用参数是通过`ax`, `dx`, `cx`寄存器传入的，而不是传统的通过堆栈传入。因此在使用下面的代码调用`memcpy`函数的时候
 
 ```c
 memcpy(&boot_params.hdr, &hdr, sizeof hdr);
