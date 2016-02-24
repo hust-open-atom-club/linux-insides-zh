@@ -449,7 +449,7 @@ if (cpu_level < req_level) {
 
 接下来内核将进行一系列的参数查询。我们在这里将不深入介绍所有这些查询，我们将在后续章节中在进行详细介绍。在这里我们将简单介绍一些系统参数查询:
 
-[query_mca](https://github.com/torvalds/linux/blob/master/arch/x86/boot/mca.c#L18) 方法调用`0x15`中断[0x15](http://www.ctyme.com/intr/rb-1594.htm)来获取机器的型号信息，BIOS版本以及其他一些硬件相关的属性：
+[query_mca](https://github.com/torvalds/linux/blob/master/arch/x86/boot/mca.c#L18) 方法调用[0x15](http://www.ctyme.com/intr/rb-1594.htm)中断来获取机器的型号信息，BIOS版本以及其他一些硬件相关的属性：
 
 ```c
 int query_mca(void)
