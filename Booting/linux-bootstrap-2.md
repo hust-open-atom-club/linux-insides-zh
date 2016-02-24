@@ -517,13 +517,13 @@ static inline void set_fs(u16 seg)
 
 在`query_mca`的最后，代码将`es:bx`指向的内存地址的内容拷贝到`boot_params.sys_desc_table`。
 
-接下来，调用`query_ist`方法获取[Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)信息。这个方法首先检查CPU类型，然后调用`0x15`中断获得这个信息并放入`boot_params`中。
+接下来，内核调用`query_ist`方法获取[Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)信息。这个方法首先检查CPU类型，然后调用`0x15`中断获得这个信息并放入`boot_params`中。
 
 接下来，内核会调用[query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) 方法从BIOS获得 [高级电源管理](http://en.wikipedia.org/wiki/Advanced_Power_Management) 信息。`query_apm_bios`也是调用`0x15`中断，只不过将`ah`设置成0x53以获得APM设置。中断调用返回之后，代码将检查`bx`和`cx`的值，如果`bx`不是`0x504d` ( PM 标记 )，或者`cx`不是0x02 (0x02，表示支持保护模式)，那么代码直接返回错误。否则，将进行下面的步骤。
 
 接下来，代码使用`ax = 0x5304`来调用`0x15`中断，以断开`APM`接口；然后使用`ax = 0x5303`调用`0x15`中断，以连接到保护模式接口；最后使用`ax = 0x5300`调用`0x15`中断再次获取APM设置，然后将信息写入`boot_params.apm_bios_info`。
 
-只有在`CONFIG_APM`或者`CONFIG_APM_MODULE`被设置的情况下，`query_apm_bios`方法才会被调用：
+需要注意的是，只有在`CONFIG_APM`或者`CONFIG_APM_MODULE`被设置的情况下，`query_apm_bios`方法才会被调用：
 
 ```C
 #if defined(CONFIG_APM) || defined(CONFIG_APM_MODULE)
