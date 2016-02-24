@@ -362,7 +362,7 @@ ENDPROC(memset)
 检查CPU类型
 --------------------------------------------------------------------------------
 
-在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c)提供的`validate_cpu`方法检查CPU以确定系统是否能够在当前的CPU上运行。
+在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c)提供的`validate_cpu`方法检查CPU级别以确定系统是否能够在当前的CPU上运行。
 
 `validate_cpu`调用了[`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。
 
@@ -377,7 +377,7 @@ if (cpu_level < req_level) {
 }
 ```
 
-`check_cpu`方法做了大量的检测和设置工作，下面就简单介绍一些：1）检查cpu标志，如果cpu是64位cpu，那么就设置[long mode](http://en.wikipedia.org/wiki/Long_mode), 2) 检查CPU的制造商，根据制造商的不同，设置不同的CPU选项。比如对于AMD出厂的cpu，如果不支持SSE+SSE2，那么就禁止这些选项。
+除此之外，`check_cpu`方法还做了大量的其他检测和设置工作，下面就简单介绍一些：1）检查cpu标志，如果cpu是64位cpu，那么就设置[long mode](http://en.wikipedia.org/wiki/Long_mode), 2) 检查CPU的制造商，根据制造商的不同，设置不同的CPU选项。比如对于AMD出厂的cpu，如果不支持SSE+SSE2，那么就禁止这些选项。
 
 内存侦测
 --------------------------------------------------------------------------------
