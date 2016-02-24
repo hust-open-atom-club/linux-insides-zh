@@ -400,20 +400,20 @@ if (cpu_level < req_level) {
 * `es:di` 包含数据缓冲区的地址
 * `ebx` 必须为0.
 
-接下来就是通过一个循环来收集内存信息了。每个循环都开始于一个`0x15`中断调用，这个中断调用返回地址分配表中的一项，接着程序将返回的`ebx`设置到`biosregs`数据结构中，然后进行下一次的`0x15`中断调用。那么循环什么时候结束呢？直到`0x15`调用返回的eflags包含标志`X86_EFLAGS_CF`:
+接下来就是通过一个循环来收集内存信息了。每个循环都开始于一个 `0x15` 中断调用，这个中断调用返回地址分配表中的一项，接着程序将返回的 `ebx` 设置到 `biosregs` 数据结构中，然后进行下一次的 `0x15` 中断调用。那么循环什么时候结束呢？直到 `0x15` 调用返回的eflags包含标志 `X86_EFLAGS_CF`:
 
 ```C
     intcall(0x15, &ireg, &oreg);
     ireg.ebx = oreg.ebx;
 ```
 
-在循环结束之后，整个内存分配信息将被写入到`e820entry`数组中，这个数组的每个元素包含下面3个信息:
+在循环结束之后，整个内存分配信息将被写入到 `e820entry` 数组中，这个数组的每个元素包含下面3个信息:
 
 * 内存段的起始地址
 * 内存段的大小
 * 内存段的类型（类型可以是reserved, usable等等)。
 
-你可以在`dmesg`输出中看到这个数组的内容：
+你可以在 `dmesg` 输出中看到这个数组的内容：
 
 ```
 [    0.000000] e820: BIOS-provided physical RAM map:
@@ -428,7 +428,7 @@ if (cpu_level < req_level) {
 键盘初始化
 --------------------------------------------------------------------------------
 
-接下来内核调用[`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) 方法进行键盘初始化操作。 首先，方法调用`initregs`初始化寄存器结构，然后调用[0x16](http://www.ctyme.com/intr/rb-1756.htm)中断来获取键盘状态。
+接下来内核调用[`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) 方法进行键盘初始化操作。 首先，方法调用`initregs`初始化寄存器结构，然后调用 [0x16](http://www.ctyme.com/intr/rb-1756.htm)中断来获取键盘状态。
 
 ```c
     initregs(&ireg);
