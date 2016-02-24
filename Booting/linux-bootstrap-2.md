@@ -523,7 +523,7 @@ static inline void set_fs(u16 seg)
 
 接下来，代码使用 `ax = 0x5304` 来调用 `0x15` 中断，以断开 `APM` 接口；然后使用 `ax = 0x5303` 调用 `0x15` 中断，使用32位接口重新连接 `APM`；最后使用 `ax = 0x5300` 调用 `0x15` 中断再次获取APM设置，然后将信息写入 `boot_params.apm_bios_info`。
 
-需要注意的是，只有在`CONFIG_APM`或者`CONFIG_APM_MODULE`被设置的情况下，`query_apm_bios`方法才会被调用：
+需要注意的是，只有在 `CONFIG_APM` 或者 `CONFIG_APM_MODULE` 被设置的情况下，`query_apm_bios` 方法才会被调用：
 
 ```C
 #if defined(CONFIG_APM) || defined(CONFIG_APM_MODULE)
