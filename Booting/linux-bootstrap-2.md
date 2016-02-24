@@ -437,7 +437,7 @@ if (cpu_level < req_level) {
     boot_params.kbd_status = oreg.al;
 ```
 
-在获取了键盘状态之后，代码再次调用`0x16`中断[0x16](http://www.ctyme.com/intr/rb-1757.htm) 来设置键盘的按键检测频率。
+在获取了键盘状态之后，代码再次调用[0x16](http://www.ctyme.com/intr/rb-1757.htm)中断来设置键盘的按键检测频率。
 
 ```c
     ireg.ax = 0x0305;   /* Set keyboard repeat rate */
