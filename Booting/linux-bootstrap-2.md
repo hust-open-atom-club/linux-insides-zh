@@ -210,7 +210,7 @@ ENDPROC(memcpy)
 
 在`copy.S`文件中，你可以看到所有的方法都开始于 `GLOBAL` 宏定义，而结束于 `ENDPROC` 宏定义。 
 
-你可以在 [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h)中找到`GLOBAL`宏定义。这个宏给代码段分配了一个名字标签，并且让这个名字全局可用。 
+你可以在 [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h)中找到 `GLOBAL` 宏定义。这个宏给代码段分配了一个名字标签，并且让这个名字全局可用。 
 
 ```assembly
 #define GLOBAL(name)	\
@@ -218,7 +218,7 @@ ENDPROC(memcpy)
 	name:
 ```
 
-你可以在[include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h)中找到`ENDPROC`宏的定义。 这个宏通过`END(name)`代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
+你可以在[include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h)中找到 `ENDPROC` 宏的定义。 这个宏通过`END(name)`代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
 
 ```assembly
 #define ENDPROC(name) \
