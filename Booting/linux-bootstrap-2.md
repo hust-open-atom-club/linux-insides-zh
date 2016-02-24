@@ -166,7 +166,7 @@ lgdt gdt
 
 ![linear address](http://oi62.tinypic.com/2yo369v.jpg)
 
-当代码要从实模式进入保护模式的时候，需要执行下面的操作： is:
+当代码要从实模式进入保护模式的时候，需要执行下面的操作：
 
 * 禁止中断发生
 * 使用命令`lgdt`将GDT表装入内存
