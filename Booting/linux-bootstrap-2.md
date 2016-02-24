@@ -182,7 +182,7 @@ lgdt gdt
 
 让我们从`main`函数开始看起，这个函数中，首先调用了[`copy_boot_params(void)`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L30)。 
 
-这个函数将内存设置信息拷贝到`boot_params`结构的相应字段。大家可以在[arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113)找到`boot_params`结构的定义。
+这个函数将内核设置信息拷贝到`boot_params`结构的相应字段。大家可以在[arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113)找到`boot_params`结构的定义。
 
 1. 将[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L281)中定义的`hdr`结构中的内容拷贝到`boot_params`结构的字段`struct setup_header hdr`中。
 
