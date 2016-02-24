@@ -475,7 +475,7 @@ int query_mca(void)
 }
 ```
 
-这个方法设置`ah`寄存器的值为`0xc0`，然后调用`0x15` BIOS中断。中断返回之后代码检查 [carry flag](http://en.wikipedia.org/wiki/Carry_flag)。如果它被置位，说明BIOS不支持[**MCA**](https://en.wikipedia.org/wiki/Micro_Channel_architecture)。如果CF被设置成0，那么`ES:BX`指向系统信息表。这个表的内容如下所示：
+这个方法设置 `ah` 寄存器的值为 `0xc0`，然后调用 `0x15` BIOS中断。中断返回之后代码检查 [carry flag](http://en.wikipedia.org/wiki/Carry_flag)。如果它被置位，说明BIOS不支持[**MCA**](https://en.wikipedia.org/wiki/Micro_Channel_architecture)。如果CF被设置成0，那么 `ES:BX` 指向系统信息表。这个表的内容如下所示：
 
 ```
 Offset  Size    Description
@@ -504,7 +504,7 @@ Offset  Size    Description
  13h  3 BYTEs   "JPN"
  ```
 
-接下来代码调用`set_fs`方法，将`es`寄存器的值写入`fs`寄存器:
+接下来代码调用 `set_fs` 方法，将 `es` 寄存器的值写入 `fs` 寄存器:
 
 ```c
 static inline void set_fs(u16 seg)
@@ -513,15 +513,15 @@ static inline void set_fs(u16 seg)
 }
 ```
 
-在[boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h) 存在很多类似于`set_fs`的方法, 比如 `set_gs`。
+在[boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h) 存在很多类似于 `set_fs` 的方法, 比如 `set_gs`。
 
-在`query_mca`的最后，代码将`es:bx`指向的内存地址的内容拷贝到`boot_params.sys_desc_table`。
+在 `query_mca` 的最后，代码将 `es:bx` 指向的内存地址的内容拷贝到 `boot_params.sys_desc_table`。
 
-接下来，内核调用`query_ist`方法获取[Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)信息。这个方法首先检查CPU类型，然后调用`0x15`中断获得这个信息并放入`boot_params`中。
+接下来，内核调用 `query_ist` 方法获取[Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)信息。这个方法首先检查CPU类型，然后调用 `0x15` 中断获得这个信息并放入 `boot_params` 中。
 
-接下来，内核会调用[query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) 方法从BIOS获得 [高级电源管理](http://en.wikipedia.org/wiki/Advanced_Power_Management) 信息。`query_apm_bios`也是调用`0x15`中断，只不过将`ax`设置成`0x5300`以得APM设置信息。中断调用返回之后，代码将检查`bx`和`cx`的值，如果`bx`不是`0x504d` ( PM 标记 )，或者`cx`不是0x02 (0x02，表示支持保护模式)，那么代码直接返回错误。否则，将进行下面的步骤。
+接下来，内核会调用[query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) 方法从BIOS获得 [高级电源管理](http://en.wikipedia.org/wiki/Advanced_Power_Management) 信息。`query_apm_bios` 也是调用 `0x15` 中断，只不过将 `ax` 设置成 `0x5300` 以得到APM设置信息。中断调用返回之后，代码将检查 `bx` 和 `cx` 的值，如果 `bx` 不是 `0x504d` ( PM 标记 )，或者 `cx` 不是 `0x02` (0x02，表示支持32位模式)，那么代码直接返回错误。否则，将进行下面的步骤。
 
-接下来，代码使用`ax = 0x5304`来调用`0x15`中断，以断开`APM`接口；然后使用`ax = 0x5303`调用`0x15`中断，使用32位接口重新连接`APM`；最后使用`ax = 0x5300`调用`0x15`中断再次获取APM设置，然后将信息写入`boot_params.apm_bios_info`。
+接下来，代码使用 `ax = 0x5304` 来调用 `0x15` 中断，以断开 `APM` 接口；然后使用 `ax = 0x5303` 调用 `0x15` 中断，使用32位接口重新连接 `APM`；最后使用 `ax = 0x5300` 调用 `0x15` 中断再次获取APM设置，然后将信息写入 `boot_params.apm_bios_info`。
 
 需要注意的是，只有在`CONFIG_APM`或者`CONFIG_APM_MODULE`被设置的情况下，`query_apm_bios`方法才会被调用：
 
