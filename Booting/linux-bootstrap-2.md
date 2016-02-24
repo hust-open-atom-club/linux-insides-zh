@@ -258,7 +258,7 @@ if (cmdline_find_option_bool("debug"))
     puts("early console in setup code\n");
 ```
 
-`puts` 函数定义在[tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c)。这个函数只是简单的调用`putchar`函数将输入字符串中的内容按字节输出。下面让我们来看看`putchar`函数的实现：
+`puts` 函数定义在[tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c)。这个函数只是简单的调用 `putchar` 函数将输入字符串中的内容按字节输出。下面让我们来看看  `putchar`函数的实现：
 
 ```C
 void __attribute__((section(".inittext"))) putchar(int ch)
@@ -273,9 +273,9 @@ void __attribute__((section(".inittext"))) putchar(int ch)
 }
 ```
 
-`__attribute__((section(".inittext")))` 说明这段代码将被放入`.inittext`代码段。关于`.inittext`代码段的定义你可以在 [setup.ld](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L19)中找到。
+`__attribute__((section(".inittext")))` 说明这段代码将被放入 `.inittext` 代码段。关于 `.inittext` 代码段的定义你可以在 [setup.ld](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L19)中找到。
 
-如果需要输出的字符是`\n`，那么`putchar`函数将调用自己首先输出一个字符`\r`。接下来，就调用`bios_putchar`函数将字符输出到显示器（使用bios int10中断）：
+如果需要输出的字符是 `\n` ，那么 `putchar` 函数将调用自己首先输出一个字符 `\r`。接下来，就调用 `bios_putchar` 函数将字符输出到显示器（使用bios int10中断）：
 
 ```C
 static void __attribute__((section(".inittext"))) bios_putchar(int ch)
