@@ -323,7 +323,7 @@ ENDPROC(memset)
 
 首先你会发现，`memset`函数和`memcpy`函数一样使用了`fastcall`调用规则，因此函数的参数是通过`ax`，`dx`以及`cx`寄存器传入函数内部的。
 
-就像memcpy函数一样，`memset`函数一开始将`di`寄存器入栈，然后将`biosregs`结构的地址从`ax`寄存器拷贝到`di`寄存器。接下来，使用`movzbl`指令将`dl`寄存器的内容拷贝到`ax`寄存器的字节，到这里`ax`寄存器就包含了需要拷贝到`di`寄存器所指向的内存的值。
+就像memcpy函数一样，`memset`函数一开始将`di`寄存器入栈，然后将`biosregs`结构的地址从`ax`寄存器拷贝到`di`寄存器。接下来，使用`movzbl`指令将`dl`寄存器的内容拷贝到`ax`寄存器的低字节，到这里`ax`寄存器就包含了需要拷贝到`di`寄存器所指向的内存的值。
 
 接下来的`imull`指令将`eax`寄存器的值乘上`0x01010101`。这么做的原因是代码每次将尝试拷贝4个字节内存的内容。下面让我们来看一个具体的例子，假设我们需要将`0x7`这个数值放到内存中，在执行`imull`指令之前，`eax`寄存器的值是`0x7`，在`imull`指令被执行之后，`eax`寄存器的内容变成了`0x07070707`（4个字节的`0x7`）。在`imull`指令之后，代码使用`rep; stosl`指令将`eax`寄存器的内容拷贝到`es:di`指向的内存。
 
@@ -332,7 +332,7 @@ ENDPROC(memset)
 堆初始化
 --------------------------------------------------------------------------------
 
-当堆栈和bss段在[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S)中被初始化之后 (细节请参考上一篇[part](linux-bootstrap-1.md)), 内核需要初始化全局堆，全局堆的初始化是通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数实现的。
+当堆栈和bss段在[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S)中被初始化之后 (细节请参考上一篇[part](linux-bootstrap-1.md))， 内核需要初始化全局堆，全局堆的初始化是通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数实现的。
 
 代码首先检查内核设置头中的[`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321)是否设置了 [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21)标志。 如果该标记被设置了，那么代码将计算堆栈的结束地址：:
 
