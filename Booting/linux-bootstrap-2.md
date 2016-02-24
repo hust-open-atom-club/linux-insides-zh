@@ -258,7 +258,7 @@ if (cmdline_find_option_bool("debug"))
     puts("early console in setup code\n");
 ```
 
-`puts`函数定义在[tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c)。这个函数只是简单的调用`putchar`函数将输入字符串中的内容按字节输出。下面让我们来看看`putchar`函数的实现：
+`puts` 函数定义在[tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c)。这个函数只是简单的调用`putchar`函数将输入字符串中的内容按字节输出。下面让我们来看看`putchar`函数的实现：
 
 ```C
 void __attribute__((section(".inittext"))) putchar(int ch)
