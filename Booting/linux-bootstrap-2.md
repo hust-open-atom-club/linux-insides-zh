@@ -549,7 +549,7 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
     ...
 ```
 
-在代码中 `0x80`是第一块硬盘，`EDD_MBR_SIG_MAX`是一个宏，值为16。代码把获得的信息放入数组[edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172)中。`get_edd_info`方法通过调用`0x13`中断调用（设置`ah = 0x41` ) 来检查EDD是否被硬盘支持。如果EDD被支持，代码将再次调用`0x13`中断，在这次调用中`ah = 0x48`，并且`si`指向一个数据缓冲区地址。中断调用之后，EDD信息将被保存到`si`指向的缓冲区。
+在代码中 `0x80`是第一块硬盘，`EDD_MBR_SIG_MAX`是一个宏，值为16。代码把获得的信息放入数组[edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172)中。`get_edd_info`方法通过调用`0x13`中断调用（设置`ah = 0x41` ) 来检查EDD是否被硬盘支持。如果EDD被支持，代码将再次调用`0x13`中断，在这次调用中`ah = 0x48`，并且`si`指向一个数据缓冲区地址。中断调用之后，EDD信息将被保存到`si`指向的缓冲区地址。
 
 结束语
 --------------------------------------------------------------------------------
