@@ -475,7 +475,7 @@ int query_mca(void)
 }
 ```
 
-这个方法设置`ah`寄存器的值为`0xc0`，然后调用`0x15` BIOS中断。中断返回之后代码检查 [carry flag](http://en.wikipedia.org/wiki/Carry_flag)。如果它被置位，说明BIOS不支持(**MCA**)[https://en.wikipedia.org/wiki/Micro_Channel_architecture]。如果CF被设置成0，那么`ES:BX`指向系统信息表。这个表的内容如下所示：
+这个方法设置`ah`寄存器的值为`0xc0`，然后调用`0x15` BIOS中断。中断返回之后代码检查 [carry flag](http://en.wikipedia.org/wiki/Carry_flag)。如果它被置位，说明BIOS不支持[**MCA**](https://en.wikipedia.org/wiki/Micro_Channel_architecture)。如果CF被设置成0，那么`ES:BX`指向系统信息表。这个表的内容如下所示：
 
 ```
 Offset  Size    Description
