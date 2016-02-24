@@ -355,7 +355,7 @@ ENDPROC(memset)
     heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
 ```
 
-接下来代码判断`heap_end`是否大于`stack_end`，如果条件成立，将`stack_end`设置成`heap_end`（这么做是因为在大部分系统中全局堆和堆栈是相邻的）。
+接下来代码判断`heap_end`是否大于`stack_end`，如果条件成立，将`stack_end`设置成`heap_end`（这么做是因为在大部分系统中全局堆和堆栈是相邻的，但是增长方向是相反的）。
 
 到这里位置，全局堆就被正确初始化了。在全局堆被初始化之后，我们就可以使用`GET_HEAP`方法。至于这个函数的实现和使用，我们将在后续的章节中看到。
 
