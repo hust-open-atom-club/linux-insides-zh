@@ -515,7 +515,7 @@ static inline void set_fs(u16 seg)
 
 在[boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h) 存在很多类似于`set_fs`的方法, 比如 `set_gs`。
 
-在`query_mca`的最后，代码将`es:bx`指向的内存地址的拷贝到`boot_params.sys_desc_table`。
+在`query_mca`的最后，代码将`es:bx`指向的内存地址拷贝到`boot_params.sys_desc_table`。
 
 接下来，调用`query_ist`方法获取[Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)信息。这个方法首先检查CPU类型，然后调用`0x15`中断获得这个信息并放入`boot_params`中。
 
