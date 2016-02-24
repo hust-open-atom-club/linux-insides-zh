@@ -428,7 +428,7 @@ if (cpu_level < req_level) {
 键盘初始化
 --------------------------------------------------------------------------------
 
-接下来内核调用[`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) 方法进行键盘初始化操作。 首先，方法调用`initregs`初始化寄存器结构，然后调用 [0x16](http://www.ctyme.com/intr/rb-1756.htm)中断来获取键盘状态。
+接下来内核调用[`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) 方法进行键盘初始化操作。 首先，方法调用`initregs`初始化寄存器结构，然后调用[0x16](http://www.ctyme.com/intr/rb-1756.htm)中断来获取键盘状态。
 
 ```c
     initregs(&ireg);
