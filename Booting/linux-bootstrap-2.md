@@ -327,7 +327,7 @@ ENDPROC(memset)
 
 接下来的 `imull` 指令将 `eax` 寄存器的值乘上 `0x01010101`。这么做的原因是代码每次将尝试拷贝4个字节内存的内容。下面让我们来看一个具体的例子，假设我们需要将 `0x7` 这个数值放到内存中，在执行 `imull` 指令之前，`eax` 寄存器的值是 `0x7`，在 `imull` 指令被执行之后，`eax` 寄存器的内容变成了 `0x07070707`（4个字节的 `0x7`）。在 `imull` 指令之后，代码使用 `rep; stosl` 指令将 `eax` 寄存器的内容拷贝到 `es:di` 指向的内存。
 
-在`bisoregs`结构体被`initregs`函数正确填充之后，`bios_putchar` 调用中断 [0x10](http://www.ctyme.com/intr/rb-0106.htm) 在显示器上输出一个字符。接下来`putchar`函数检查是否初始化了串口，如果串口被初始化了，那么将调用[serial_putchar](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c#L30)将字符输出到串口。
+在 `bisoregs` 结构体被 `initregs` 函数正确填充之后，`bios_putchar` 调用中断 [0x10](http://www.ctyme.com/intr/rb-0106.htm) 在显示器上输出一个字符。接下来 `putchar` 函数检查是否初始化了串口，如果串口被初始化了，那么将调用[serial_putchar](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c#L30)将字符输出到串口。
 
 堆初始化
 --------------------------------------------------------------------------------
@@ -355,16 +355,16 @@ ENDPROC(memset)
     heap_end = (char *)((size_t)boot_params.hdr.heap_end_ptr + 0x200);
 ```
 
-接下来代码判断`heap_end`是否大于`stack_end`，如果条件成立，将`stack_end`设置成`heap_end`（这么做是因为在大部分系统中全局堆和堆栈是相邻的，但是增长方向是相反的）。
+接下来代码判断 `heap_end` 是否大于 `stack_end`，如果条件成立，将 `stack_end` 设置成 `heap_end`（这么做是因为在大部分系统中全局堆和堆栈是相邻的，但是增长方向是相反的）。
 
-到这里为止，全局堆就被正确初始化了。在全局堆被初始化之后，我们就可以使用`GET_HEAP`方法。至于这个函数的实现和使用，我们将在后续的章节中看到。
+到这里为止，全局堆就被正确初始化了。在全局堆被初始化之后，我们就可以使用 `GET_HEAP` 方法。至于这个函数的实现和使用，我们将在后续的章节中看到。
 
 检查CPU类型
 --------------------------------------------------------------------------------
 
-在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c)提供的`validate_cpu`方法检查CPU级别以确定系统是否能够在当前的CPU上运行。
+在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c)提供的 `validate_cpu` 方法检查CPU级别以确定系统是否能够在当前的CPU上运行。
 
-`validate_cpu`调用了[`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。
+`validate_cpu` 调用了[`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。
 
 ```c
 /*from cpu.c*/
@@ -377,7 +377,7 @@ if (cpu_level < req_level) {
 }
 ```
 
-除此之外，`check_cpu`方法还做了大量的其他检测和设置工作，下面就简单介绍一些：1）检查cpu标志，如果cpu是64位cpu，那么就设置[long mode](http://en.wikipedia.org/wiki/Long_mode), 2) 检查CPU的制造商，根据制造商的不同，设置不同的CPU选项。比如对于AMD出厂的cpu，如果不支持SSE+SSE2，那么就禁止这些选项。
+除此之外，`check_cpu` 方法还做了大量的其他检测和设置工作，下面就简单介绍一些：1）检查cpu标志，如果cpu是64位cpu，那么就设置[long mode](http://en.wikipedia.org/wiki/Long_mode), 2) 检查CPU的制造商，根据制造商的不同，设置不同的CPU选项。比如对于AMD出厂的cpu，如果不支持 `SSE+SSE2`，那么就禁止这些选项。
 
 内存分布侦测
 --------------------------------------------------------------------------------
