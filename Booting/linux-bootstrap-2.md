@@ -1,5 +1,4 @@
 # 在内核安装代码的第一步
-#https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html
 
 内核启动的第一步  
 --------------------------------------------------------------------------------
