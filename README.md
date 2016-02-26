@@ -13,7 +13,7 @@ Linux Insides
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
 |Booting||正在进行|
-|├1.1|[@xinqiu](https://github.com/xinqiu)|正在进行|
+|├1.1|[@hailincai](https://github.com/hailincai)|正在进行|
 |├1.2|[@hailincai](https://github.com/hailincai)|正在进行|
 |├1.3|[@hailincai](https://github.com/hailincai)|正在进行|
 |├1.4||未开始|
