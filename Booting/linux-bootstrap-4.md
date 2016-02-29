@@ -8,7 +8,7 @@
 
 **注意：这部分将会有大量的汇编代码，如果你不熟悉汇编，建议你找本书参考一下。**
 
-在[上一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，我们停在了跳转到位于[arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S)的 32 位入口点这一步：
+在[上一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，我们停在了跳转到位于 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 的 32 位入口点这一步：
 
 ```assembly
 jmpl	*%eax
@@ -259,7 +259,7 @@ ebp            0x100000	0x100000
 ...
 ```
 
-好了，那是对的。`startup_32` 的地址是 `0x100000`。在我们知道了 `startup_32` 的地址之后，我们可以开始准备切换到[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)了。我们的下一个目标是建立栈并且确认 CPU 对长模式和[SSE](https://zh.wikipedia.org/wiki/SSE)的支持。
+好了，那是对的。`startup_32` 的地址是 `0x100000`。在我们知道了 `startup_32` 的地址之后，我们可以开始准备切换到[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)了。我们的下一个目标是建立栈并且确认 CPU 对长模式和 [SSE](https://zh.wikipedia.org/wiki/SSE) 的支持。
 
 栈的建立和 CPU 的确认
 --------------------------------------------------------------------------------
@@ -444,9 +444,9 @@ gdt_end:
 
 Linux 内核使用`4级`页表，通常我们会建立6个页表：
 
-* 1个 `PML4` 或称为 `4级页映射` 表，包含1个项；
-* 1个 `PDP` 或称为 `页目录指针` 表，包含4个项；
-* 4个 页目录表，包含 `2048` 个项；
+* 1 个 `PML4` 或称为 `4级页映射` 表，包含 1 个项；
+* 1 个 `PDP` 或称为 `页目录指针` 表，包含 4 个项；
+* 4 个 页目录表，包含 `2048` 个项；
 
 让我们看看其实现方式。首先我们在内存中为页表清理一块缓存。每个表都是 `4096` 字节，所以我们需要 `24`KB 的空间：
 
@@ -493,7 +493,7 @@ pgtable:
 	jnz	1b
 ```
 
-我们把3级页目录指针表的基地址（从`pgtable`表偏移`4096`或者`0x1000`）放到`edi`，把第一个2级页目录指针表的首项的地址放到`eax`寄存器。把`4`赋值给`ecx`寄存器，其将会作为接下来循环的计数器，然后将第一个页目录指针项写到`edi`指向的地址。之后，`edi`将会包含带有标记`0x7`的第一个页目录指针项的地址。接下来我们就计算后面的几个页目录指针项的地址，每个占8字节，把地址赋值给`eax`，然后回到循环开头将其写入`edi`所在地址。建立页表结构的最后一步就是建立`2048`个`2MB`页的页表项。
+我们把 3 级页目录指针表的基地址（从`pgtable`表偏移`4096`或者`0x1000`）放到`edi`，把第一个 2 级页目录指针表的首项的地址放到`eax`寄存器。把`4`赋值给`ecx`寄存器，其将会作为接下来循环的计数器，然后将第一个页目录指针项写到`edi`指向的地址。之后，`edi`将会包含带有标记`0x7`的第一个页目录指针项的地址。接下来我们就计算后面的几个页目录指针项的地址，每个占 8 字节，把地址赋值给`eax`，然后回到循环开头将其写入`edi`所在地址。建立页表结构的最后一步就是建立`2048`个`2MB`页的页表项。
 
 ```assembly
 	leal	pgtable + 0x2000(%ebx), %edi
@@ -520,12 +520,12 @@ pgtable:
 	movl	%eax, %cr3
 ```
 
-全部结束了。所有的准备工作都已经完成，我们可以开始看如何切换到长模式了。
+这样就全部结束了。所有的准备工作都已经完成，我们可以开始看如何切换到长模式了。
 
 切换到长模式
 --------------------------------------------------------------------------------
 
-首先我们需要设置[MSR](http://en.wikipedia.org/wiki/Model-specific_register)中的`EFER.LME`标记为`0xC0000080`：
+首先我们需要设置 [MSR](http://en.wikipedia.org/wiki/Model-specific_register) 中的`EFER.LME`标记为`0xC0000080`：
 
 ```assembly
 	movl	$MSR_EFER, %ecx
@@ -534,7 +534,7 @@ pgtable:
 	wrmsr
 ```
 
-在这里我们把`MSR_EFER`标记（在 [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7) 定义）放到`ecx`寄存器中，然后调用`rdmsr`指令读取[MSR](http://en.wikipedia.org/wiki/Model-specific_register)寄存器。在`rdmsr`执行之后，我们将会获得`edx:eax`中的结果值，其取决于`ecx`的值。我们通过`btsl`指令检查`EFER_LME`位，并且通过`wrmsr`指令将`eax`的数据写入`MSR`寄存器。
+在这里我们把`MSR_EFER`标记（在 [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7) 中定义）放到`ecx`寄存器中，然后调用`rdmsr`指令读取 [MSR](http://en.wikipedia.org/wiki/Model-specific_register) 寄存器。在`rdmsr`执行之后，我们将会获得`edx:eax`中的结果值，其取决于`ecx`的值。我们通过`btsl`指令检查`EFER_LME`位，并且通过`wrmsr`指令将`eax`的数据写入`MSR`寄存器。
 
 下一步我们将内核段代码地址入栈（我们在 GDT 中定义了），然后将`startup_64`的地址导入`eax`。
 
@@ -575,11 +575,11 @@ ENTRY(startup_64)
 总结
 --------------------------------------------------------------------------------
 
-这是 linux 内核启动流程的第4部分。如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)。
+这是 linux 内核启动流程的第4部分。如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我 [twitter](https://twitter.com/0xAX) 或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)。
 
 下一节我们将会看到内核解压缩流程和其他更多。
 
-**英文不是我的母语。如果你发现我的英文描述有任何问题，请提交一个PR到[linux-insides](https://github.com/0xAX/linux-internals).**
+**英文不是我的母语。如果你发现我的英文描述有任何问题，请提交一个PR到 [linux-insides](https://github.com/0xAX/linux-internals)。**
 
 相关链接
 --------------------------------------------------------------------------------
