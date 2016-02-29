@@ -4,15 +4,9 @@
 切换到64位模式
 --------------------------------------------------------------------------------
 
-This is the fourth part of the `Kernel booting process` where we will see first steps in [protected mode](http://en.wikipedia.org/wiki/Protected_mode), like checking that cpu supports [long mode](http://en.wikipedia.org/wiki/Long_mode) and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions), [paging](http://en.wikipedia.org/wiki/Paging), initializes the page tables and at the end we will discus the transition to [long mode](https://en.wikipedia.org/wiki/Long_mode).
-
-这是`内核引导过程`的第四部分，我们将会看到在[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)中的最初几步，比如检查cpu是否支持[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)，[SSE](https://zh.wikipedia.org/wiki/SSE)和[分页](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)以及页表的初始化，在这部分的最后我们还将讨论如何切换到[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)。
-
-**NOTE: will be much assembly code in this part, so if you are unfaimilat you might want to consult a a book about it**
+这是`内核引导过程`的第四部分，我们将会看到在[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)中的最初几步，比如确认CPU支持[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)，[SSE](https://zh.wikipedia.org/wiki/SSE)和[分页](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)以及页表的初始化，在这部分的最后我们还将讨论如何切换到[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)。
 
 **注意：这部分将会有大量的汇编代码，如果你不熟悉汇编，建议你找本书参考一下。**
-
-In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md) we stopped at the jump to the 32-bit entry point in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S):
 
 在[上一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，我们停在了跳转到位于[arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S)的 32 位入口点这一步：
 
@@ -20,9 +14,7 @@ In the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting
 jmpl	*%eax
 ```
 
-You will recall that `eax` register contains the address of the 32-bit entry point. We can read about this in the [linux kernel x86 boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt):
-
-回忆一下`eax`寄存器包含了 32 位入口点的地址。我们可以在[x86 linux 内核引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)中找到相关内容：
+回忆一下`eax`寄存器包含了 32 位入口点的地址。我们可以在 [x86 linux 内核引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt) 中找到相关内容：
 
 ```
 When using bzImage, the protected-mode kernel was relocated to 0x100000
@@ -32,9 +24,8 @@ When using bzImage, the protected-mode kernel was relocated to 0x100000
 当使用 bzImage，保护模式下的内核被重定位至 0x100000
 ```
 
-Let's make sure that it is true by looking at the register values at the 32-bit entry point:
 
-让我们检查一下 32 位入口点的寄存器值来确认这是对的：
+让我们检查一下 32 位入口点的寄存器值来确保这是对的：
 
 ```
 eax            0x100000	1048576
@@ -55,16 +46,12 @@ fs             0x18	24
 gs             0x18	24
 ```
 
-We can see here that `cs` register contains - `0x10` (as you will remember from the previous part, this is the second index in the Global Descriptor Table), `eip` register is `0x100000` and base address of all segments including the code segment are zero. So we can get the physical address, it will be `0:0x100000` or just `0x100000`, as specified by the boot protocol. Now let's start with the 32-bit entry point.
+我们可以看到这里的`cs`寄存器的内容 - `0x10` （在前一节我们提到，这代表全局描述符表中的第二个索引项），`eip`寄存器值是 `0x100000` 并且包括代码段的所有段的基地址都为0。所以我们可以得到物理地址： `0:0x100000` 或者 `0x100000`，正如协议规定的一样。现在让我们从 32 位入口点开始。
 
-我们可以看到这里的`cs`寄存器包含了 `0x10` （在前一节我们提到，这代表全局描述符表中的第二个索引），`eip`寄存器值是 `0x100000` 并且包括代码段的所有段的基地址都为0。所以我们可以得到物理地址，是 `0:0x100000` 或者 `0x100000`，正如协议规定的一样。现在让我们从32位入口点开始。
-
-32位入口点
+32 位入口点
 --------------------------------------------------------------------------------
 
-We can find the definition of the 32-bit entry point in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
-
-我们可以在汇编源码 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 找到32位入口点的定义。
+我们可以在汇编源码 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中找到 32 位入口点的定义。
 
 ```assembly
 	__HEAD
@@ -76,18 +63,12 @@ ENTRY(startup_32)
 ENDPROC(startup_32)
 ```
 
-First of all why `compressed` directory? Actually `bzimage` is a gzipped `vmlinux + header + kernel setup code`. We saw the kernel setup code in all of the previous parts. So, the main goal of the `head_64.S` is to prepare for entering long mode, enter into it and then decompress the kernel. We will see all of the steps up to kernel decompression in this part.
-
-首先，为什么是`被压缩 (compressed)` 的目录？实际上`bzimage`是一个被 gzip 压缩的`vmlinux + 头文件 + 内核启动代码`。我们在前几个章节已经看到了内核启动的代码。所以，`head_64.S` 的主要目的就是为了进入长模式，进入以后解压内核。我们将在这一节看到以上直到内核解压缩所有的步骤。
-
-There were two files in the `arch/x86/boot/compressed` directory:
+首先，为什么是`被压缩 (compressed)` 的目录？实际上`bzimage`是一个被 gzip 压缩的`vmlinux + 头文件 + 内核启动代码`。我们在前几个章节已经看到了内核启动的代码。所以，`head_64.S`的主要目的就是为了准备并进入长模式，进入以后解压内核。我们将在这一节看到以上直到内核解压缩之前的所有步骤。
 
 在`arch/x86/boot/compressed`目录下有两个文件：
 
 * [head_32.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_32.S)
 * [head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)
-
-but we will see only `head_64.S` because as you may remember this book is only `x86_64` related;  `head_32.S` was not used in our case. Let's look at [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile). There we can see the following target:
 
 但是我们只关注`head_64.S`，因为你可能还记得我们这本书只和`x86_64`有关；在我们这里`head_32.S`没有被使用到。让我们关注 [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile)。这里我们可以看到以下目标：
 
@@ -96,8 +77,6 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 	$(obj)/string.o $(obj)/cmdline.o \
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
-
-Note `$(obj)/head_$(BITS).o`. This means that we will select which file to link based on what `$(BITS)` is set to, either head_32.o or head_64.o.   `$(BITS)` is defined elsewhere in [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/Makefile) based on the .config file:
 
 注意`$(obj)/head_$(BITS).o`。这意味着我们将会选择基于`$(BITS)`所设置的文件执行链接操作，head_32.o 或者 head_64.o。`$(BITS)` 在 [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/Makefile) 之中被 .config 文件另外定义：
 
@@ -113,17 +92,12 @@ else
 endif
 ```
 
-Now we know where to start, so let's do it.
-
 现在我们知道从哪里开始了，那就来吧。
 
-Reload the segments if needed
-在必要的时候重新载入段
+必要时重载内存段寄存器
 --------------------------------------------------------------------------------
 
-As indicated above, we start in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file. First we see the definition of the special section attribute before the `startup_32` definition:
-
-正如上面阐述的，我们从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 这个汇编文件开始。首先我们看到了在`startup_32`之前的特殊段属性定义：
+正如上面阐述的，我们先从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 这个汇编文件开始。首先我们看到了在`startup_32`之前的特殊段属性定义：
 
 ```assembly
     __HEAD
@@ -131,15 +105,11 @@ As indicated above, we start in the [arch/x86/boot/compressed/head_64.S](https:/
 ENTRY(startup_32)
 ```
 
-The `__HEAD` is macro which is defined in [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file and expands to the definition of the following section:
-
-这个`__HEAD`是一个在头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h)中定义的宏，展开后就是下面这个段的定义：
+这个`__HEAD`是一个定义在头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h)中的宏，展开后就是下面这个段的定义：
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
-
-with `.head.text` name and `ax` flags. In our case, these flags show us that this section is [executable](https://en.wikipedia.org/wiki/Executable) or in other words contains code. We can find definition of this section in the [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) linker script:
 
 拥有`.head.text`的命名和`ax`标记。在这里，这些标记告诉我们这个段是[可执行的](https://en.wikipedia.org/wiki/Executable)或者换种说法，包含了代码。我们可以在 [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) 这个链接脚本里找到这个段的定义： 
 
@@ -154,29 +124,21 @@ SECTIONS
 	}
 ```
 
-If you are not familiar with syntax of `GNU LD` linker scripting language, you can find more information in the [documentation](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts). In short, the `.` symbol is a special variable of linker - location counter. The value assigned to it is an offset relative to the offset of the segment. In our case we assign zero to location counter. This means that that our code is linked to run from the `0` offset in memory. Moreover, we can find this information in comments:
-
-如果你不熟悉`GNU LD`这个链接脚本语言的语法，你可以在[这个文档](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts)中找到更多信息。简单来说，这个`.`符号是一个链接器的特殊变量-位置计数器。其被赋值为相对于该段的偏移。在这里，我们将位置计数器赋值为0，这意味着我们的代码被链接到内存的`0`偏移处。此外，我们可以从注释找到更多信息：
+如果你不熟悉`GNU LD`这个链接脚本语言的语法，你可以在[这个文档](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts)中找到更多信息。简单来说，这个`.`符号是一个链接器的特殊变量 - 位置计数器。其被赋值为相对于该段的偏移。在这里，我们将位置计数器赋值为0，这意味着我们的代码被链接到内存的`0`偏移处。此外，我们可以从注释找到更多信息：
 
 ```
 Be careful parts of head_64.S assume startup_32 is at address 0.
 ```
 
 ```
-要小心 head_64.S 中一部分假设 startup_32 位于地址 0。
+要小心， head_64.S 中一些部分假设 startup_32 位于地址 0。
 ```
-
-Ok, now we know where we are, and now is the best time to look inside the `startup_32` function.
 
 好了，现在我们知道我们在哪里了，接下来就是深入`startup_32`函数的最佳时机。
 
-In the beginning of the `startup_32` function, we can see the `cld` instruction which clears the `DF` bit in the [flags](https://en.wikipedia.org/wiki/FLAGS_register) register. When direction flag is clear, all string operations like [stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html), [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html) and others will increment the index registers `esi` or `edi`. We need to clear direction flag because later we will use strings operations for clearing space for page tables, etc.
+在`startup_32`函数的开始，我们可以看到`cld`指令将[标志寄存器](http://baike.baidu.com/view/1845107.htm)的`DF`（方向标志）位清空。当方向标志被清空，所有的串操作指令像[stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html)， [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html)等等将会增加索引寄存器 `esi` 或者 `edi`的值。我们需要清空方向标志是因为接下来我们会使用汇编的串操作指令来做为页表腾出空间等工作。
 
-在`startup_32`函数的开始，我们可以看到`cld`指令将[标志寄存器](http://baike.baidu.com/view/1845107.htm)的 `DF`（方向标志） 位清空。当方向标志被清空，所有的串操作指令像[stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html)， [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html)等等将会增加索引寄存器 `esi` 或者 `edi`。我们需要清空方向标志是因为接下来我们会使用汇编的串操作来为页表腾出空间等。
-
-After we have cleared the `DF` bit, next step is the check of the `KEEP_SEGMENTS` flag from `loadflags` kernel setup header field. If you remember we already saw `loadflags` in the very first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. There we checked `CAN_USE_HEAP` flag to get ability to use heap. Now we need to check the `KEEP_SEGMENTS` flag. This flags is described in the linux [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) documentation:
-
-在我们清空`DF`标志后，下一步就是从内核加载头中的`loadflags`检查`KEEP_SEGMENTS`标志。你是否还记得在本书的[最初一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-1.md)我们已经看到过`loadflags`。在那里我们检查了`CAN_USE_HEAP`标记以使用堆。现在我们需要检查`KEEP_SEGMENTS`标记。这些标记在 linux 的[引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)文档中有描述：
+在我们清空`DF`标志后，下一步就是从内核加载头中的`loadflags`字段来检查`KEEP_SEGMENTS`标志。你是否还记得在本书的[最初一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-1.md)，我们已经看到过`loadflags`。在那里我们检查了`CAN_USE_HEAP`标记以使用堆。现在我们需要检查`KEEP_SEGMENTS`标记。这些标记在 linux 的[引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)文档中有描述：
 
 ```
 Bit 6 (write): KEEP_SEGMENTS
@@ -189,12 +151,10 @@ Bit 6 (write): KEEP_SEGMENTS
 
 ```
 第 6 位 (写): KEEP_SEGMENTS
-  协议: 2.07+
+  协议版本: 2.07+
   - 为0，在32位入口点重载段寄存器
   - 为1，不在32位入口点重载段寄存器。假设 %cs %ds %ss %es 都被设到基地址为0的普通段中（或者在他们的环境中等价的位置）。
 ```
-
-So, if the `KEEP_SEGMENTS` bit is not set in the `loadflags`, we need to reset `ds`, `ss` and `es` segment registers to a flat segment with base `0`. That we do:
 
 所以，如果`KEEP_SEGMENTS`位在`loadflags`中没有被设置，我们需要重置`ds`,`ss`和`es`段寄存器到一个基地址为`0`的普通段中。如下：
 
@@ -209,13 +169,9 @@ So, if the `KEEP_SEGMENTS` bit is not set in the `loadflags`, we need to reset `
 	movl	%eax, %ss
 ```
 
-Remember that the `__BOOT_DS` is `0x18` (index of data segment in the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)). If `KEEP_SEGMENTS` is set, we jump to the nearest `1f` label or update segment registers with `__BOOT_DS` if it is not set. It is pretty easy, but here is one interesting moment. If you've read the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), you may remember that we already updated these segment registers right after we switched to [protected mode](https://en.wikipedia.org/wiki/Protected_mode) in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S). So why do we need to care about values of segment registers again? The answer is easy. The Linux kernel also has a 32-bit boot protocol and if a bootloader uses it to load the Linux kernel all code before the `startup_32` will be missed. In this case, the `startup_32` will be first entry point of the Linux kernel right after bootloader and there are no guarantees that segment registers will be in known state.
+记住`__BOOT_DS`是`0x18`（位于[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)中数据段的索引）。如果设置了 `KEEP_SEGMENTS` ，我们就跳转到最近的 `1f` 标签，或者当没有`1f`标签，则用`__BOOT_DS`更新段寄存器。这非常简单，但是这是一个有趣的操作。如果你已经读了[前一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，你或许还记得我们在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 中切换到[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)的时候已经更新了这些段寄存器。那么为什么我们还要去关心这些段寄存器的值呢。答案很简单，Linux 内核也有32位的引导协议，如果一个引导程序之前使用32位协议引导内核，那么在`startup_32`之前的代码就会被忽略。在这种情况下`startup_32`将会变成引导程序之后的第一个入口点，不保证段寄存器会不会处于未知状态。
 
-记住`__BOOT_DS`是`0x18`（数据段的索引位于[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)）。如果设置了 `KEEP_SEGMENTS` ，我们就跳转到最近的 `1f` 标签，或者当没有 `1f` 标签，则用`__BOOT_DS`更新段寄存器。这非常简单，但是这是一个有趣的操作。如果你已经读了[前一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，你或许还记得我们在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 中切换到[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)的时候已经更新了这些段寄存器。那么为什么我们还要去关心这些段寄存器的值呢。答案很简单，Linux 内核也有32位的引导协议，如果一个引导程序之前使用32位协议引导内核，那么在 `startup_32` 之前的代码就会被忽略。在这种情况下`startup_32`将会变成引导程序之后的第一个入口点，不保证段寄存器会不会处于未知状态。
-
-After we have checked the `KEEP_SEGMENTS` flag and put the correct value to the segment registers, the next step is to calculate difference between where we loaded and compiled to run. Remember that `setup.ld.S` contains following deifnition: `. = 0` at the start of the `.head.text` section. This means that the code in this section is compiled to run from `0` address. We can see this in `objdump` output:
-
-在我们检查了 `KEEP_SEGMENTS` 标记并且给段寄存器设置了正确的值之后，下一步就是计算我们代码的加载和编译运行之间的位置偏差了。记住 `setup.ld.S` 包含了以下定义：在 `.head.text` 段的开始 `. = 0`。这意味着这一段代码被编译成从 `0` 地址运行。我们可以在 `objdump` 输出中看到：
+在我们检查了`KEEP_SEGMENTS`标记并且给段寄存器设置了正确的值之后，下一步就是计算我们代码的加载和编译运行之间的位置偏差了。记住`setup.ld.S`包含了以下定义：在`.head.text`段的开始`. = 0`。这意味着这一段代码被编译成从`0`地址运行。我们可以在`objdump`输出中看到：
 
 ```
 arch/x86/boot/compressed/vmlinux:     file format elf64-x86-64
@@ -228,18 +184,14 @@ Disassembly of section .head.text:
    1:   f6 86 11 02 00 00 40    testb  $0x40,0x211(%rsi)
 ```
 
-The `objdump` util tells us that the address of the `startup_32` is `0`. But actually it is not so. Our current goal is to know where actually we are. It is pretty simple to do in [long mode](https://en.wikipedia.org/wiki/Long_mode), because it support `rip` relative addressing, but currently we are in [protected mode](https://en.wikipedia.org/wiki/Protected_mode). We will use common pattern to know the address of the `startup_32`. We need to define a label and make a call to this label and pop the top of the stack to a register:
-
-`objdump` 功能告诉我们 `startup_32` 的地址是 `0`。但是实际上并不是。我们当前的目标是获知我们实际上在哪里。在[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)下，这非常简单，因为其支持 `rip` 相对寻址，但是我们当前处于[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)下。我们将会使用一个常用的方法来确定 `startup_32` 的地址。我们需要定义一个标签并且跳转到它，然后把栈顶弹出到一个寄存器：
+`objdump`告诉我们`startup_32`的地址是`0`。但是实际上并不是。我们当前的目标是获知我们实际上在哪里。在[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)下，这非常简单，因为其支持`rip`相对寻址，但是我们当前处于[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)下。我们将会使用一个常用的方法来确定`startup_32`的地址。我们需要定义一个标签并且跳转到它，然后把栈顶抛出到一个寄存器中：
 
 ```assembly
 call label
 label: pop %reg
 ```
 
-After this a register will contain the address of a label. Let's look to the similar code which search address of the `startup_32` in the Linux kernel:
-
-在这之后，一个寄存器将会包含标签的地址，让我们看看在 Linux 内核中相似的寻找 `startup_32` 地址的代码：
+在这之后，那个寄存器将会包含标签的地址，让我们看看在 Linux 内核中相似的寻找`startup_32`地址的代码：
 
 ```assembly
 	leal	(BP_scratch+4)(%esi), %esp
@@ -248,9 +200,7 @@ After this a register will contain the address of a label. Let's look to the sim
 	subl	$1b, %ebp
 ```
 
-As you remember from the previous part, the `esi` register contains the address of the [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) structure which was filled before we moved to the protected mode. The `boot_params` structure contains a special field `scratch` with offset `0x1e4`. These four bytes field will be temporary stack for `call` instruction. We are getting the address of the `scratch` field + 4 bytes and putting it in the `esp` register. We add `4` bytes to the base of the `BP_scratch` field because, as just described, it will be a temporary stack and the stack grows from top to down in `x86_64` architecture. So our stack pointer will point to the top of the stack. Next we can see the pattern that I've described above. We make a call to the `1f` label and put the address of this label to the `ebp` register, because we have return address on the top of stack after the `call` instruction will be executed. So, for now we have an address of the `1f` label and now it is easy to get address of the `startup_32`. We need just to subtract address of label from the address which we got from the stack:
-
-回忆前一节，`esi` 寄存器包含了 [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) 结构的地址，这个结构在我们切换到保护模式之前已经被填充了。`bootparams` 这个结构体包含了一个特殊的成员 `scratch` ，其偏移量为 `0x1e4`。这个4字节的区域将会成为 `call` 指令的临时栈。我们把 `scratch`的地址加 4 存入 `esp` 寄存器。我们之所以在 `BP_scratch` 基础上加 `4` 是因为，如之前所说的，这将成为一个临时的栈，而在 `x86_64` 架构下，栈是自顶向下生长的。所以我们的栈指针就会指向栈顶。接下来我们就可以看到我上面描述的过程。我们跳转到 `1f` 标签并且把该标签的地址放入 `ebp` 寄存器，因为在执行 `call` 指令之后我们把返回地址放到了栈顶。那么，目前我们拥有 `1f` 标签的地址，也能够很容易得到 `startup_32` 的地址。我们只需要把我们从栈里得到的地址减去标签的地址：
+回忆前一节，`esi`寄存器包含了 [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) 结构的地址，这个结构在我们切换到保护模式之前已经被填充了。`bootparams` 这个结构体包含了一个特殊的成员`scratch`，其偏移量为`0x1e4`。这个 4 字节的区域将会成为`call`指令的临时栈。我们把`scratch`的地址加 4 存入`esp`寄存器。我们之所以在`BP_scratch`基础上加`4`是因为，如之前所说的，这将成为一个临时的栈，而在`x86_64`架构下，栈是自顶向下生长的。所以我们的栈指针就会指向栈顶。接下来我们就可以看到我上面描述的过程。我们跳转到 `1f` 标签并且把该标签的地址放入`ebp`寄存器，因为在执行`call`指令之后我们把返回地址放到了栈顶。那么，目前我们拥有`1f`标签的地址，也能够很容易得到`startup_32`的地址。我们只需要把我们从栈里得到的地址减去标签的地址：
 
 ```
 startup_32 (0x0)     +-----------------------+
@@ -268,9 +218,7 @@ startup_32 (0x0)     +-----------------------+
                      +-----------------------+
 ```
 
-The `startup_32` is linked to run at `0x0` address and this means that `1f` has `0x0 + offset to 1f` address. Actually it is something about `0x22` bytes. The `ebp` register contains the real physical address of the `1f` label. So, if we will subtract `1f` from the `ebp` we will get the real physical address of the `startup_32`. The Linux kernel [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) describes that the base of the protected mode kernel is `0x100000`. We can verify this with [gdb](https://en.wikipedia.org/wiki/GNU_Debugger). Let's start debugger and put breakpoint to the `1f` address which is `0x100022`. If this is correct we will see `0x100022` in the `ebp` register:
-
-`startup_32` 被链接到在 `0x0` 地址运行，这意味着 `1f` 的地址为 `0x0 + 1f 的偏移`。实际上大概是 `0x22` 字节。`ebp` 寄存器包含了 `1f` 标签的实际物理地址。所以如果我们从 `ebp` 中减去 `1f`，我们就会得到 `startup_32` 的实际物理地址。Linux 内核的[引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)描述了保护模式下的内核基地址是 `0x100000`。我们可以用 [gdb](https://zh.wikipedia.org/wiki/GNU%E4%BE%A6%E9%94%99%E5%99%A8) 来验证。让我们启动调试器并且在 `1f` 的地址 `0x100022` 添加断点。如果这是正确的，我们将会看到在 `ebp` 寄存器中为 `0x100022`：
+`startup_32`被链接为在`0x0`地址运行，这意味着`1f`的地址为`0x0 + 1f 的偏移量`。实际上偏移量大概是`0x22`字节。`ebp`寄存器包含了`1f`标签的实际物理地址。所以如果我们从`ebp`中减去`1f`，我们就会得到`startup_32`的实际物理地址。Linux 内核的[引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)描述了保护模式下的内核基地址是 `0x100000`。我们可以用 [gdb](https://zh.wikipedia.org/wiki/GNU%E4%BE%A6%E9%94%99%E5%99%A8) 来验证。让我们启动调试器并且在`1f`的地址`0x100022`添加断点。如果这是正确的，我们将会看到在`ebp`寄存器中值为`0x100022`：
 
 ```
 $ gdb
@@ -302,9 +250,7 @@ fs             0x18	0x18
 gs             0x18	0x18
 ```
 
-If we will execute next instruction which is `subl	$1b, %ebp`, we will see:
-
-如果我们执行下一条指令 `subl	$1b, %ebp`，我们将会看到：
+如果我们执行下一条指令`subl	$1b, %ebp`，我们将会看到：
 
 ```
 nexti
@@ -313,17 +259,12 @@ ebp            0x100000	0x100000
 ...
 ```
 
-Ok, that's true. The address of the `startup_32` is `0x100000`. After we know the address of the `startup_32` label, we can start to prepare for the transition to [long mode](https://en.wikipedia.org/wiki/Long_mode). Our next goal is to setup the stack and verify that the CPU supports long mode and [SSE](http://en.wikipedia.org/wiki/Streaming_SIMD_Extensions).
-
 好了，那是对的。`startup_32` 的地址是 `0x100000`。在我们知道了 `startup_32` 的地址之后，我们可以开始准备切换到[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)了。我们的下一个目标是建立栈并且确认 CPU 对长模式和[SSE](https://zh.wikipedia.org/wiki/SSE)的支持。
 
-Stack setup and CPU verification
-栈的建立和CPU的确认
+栈的建立和 CPU 的确认
 --------------------------------------------------------------------------------
 
-We could not setup the stack while we did not know the address of the `startup_32` label. We can imagine the stack as an array and the stack pointer register `esp` must point to the end of this array. Of course we can define an array in our code, but we need to know its actual address to configure stack pointer in a correct way. Let's look at the code:
-
-如果不知道 `startup_32` 标签的地址，我们无法建立栈。我们可以把栈看作是一个数组，并且栈指针寄存器 `esp` 必须指向数组的底部。当然我们可以在自己的代码里定义一个数组，但是我们需要知道其真实地址来正确配置栈指针。让我们看一下代码：
+如果不知道 `startup_32` 标签的地址，我们无法建立栈。我们可以把栈看作是一个数组，并且栈指针寄存器`esp`必须指向数组的底部。当然我们可以在自己的代码里定义一个数组，但是我们需要知道其真实地址来正确配置栈指针。让我们看一下代码：
 
 ```assembly
 	movl	$boot_stack_end, %eax
@@ -331,9 +272,7 @@ We could not setup the stack while we did not know the address of the `startup_3
 	movl	%eax, %esp
 ```
 
-The `boots_stack_end` defined in the same [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file and located in the [.bss](https://en.wikipedia.org/wiki/.bss) section:
-
-`boots_stack_end` 定义在同一个汇编文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中，位于 [.bss](https://en.wikipedia.org/wiki/.bss) 段：
+`boots_stack_end` 被定义在同一个汇编文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中，位于 [.bss](https://en.wikipedia.org/wiki/.bss) 段：
 
 ```assembly
 	.bss
@@ -345,13 +284,9 @@ boot_stack:
 boot_stack_end:
 ```
 
-First of all we put the address of `boot_stack_end` into the `eax` register. From now the `eax` register will contain address of the `boot_stack_end` where it was linked or in other words `0x0 + boot_stack_end`. To get the real address of the `boot_stack_end` we need to add the real address of the `startup_32`. As you remember, we have found this address above and put it to the `ebp` register. In the end, the register `eax` will contain real address of the `boot_stack_end` and we just need to put to the stack pointer.
+首先，我们把 `boot_stack_end` 放到 `eax` 寄存器中。现在`eax`寄存器将包含`boot_stack_end`链接后的地址或者说`0x0 + boot_stack_end`。为了得到`boot_stack_end`的实际地址，我们需要加上 `startup_32`的实际地址。回忆一下，前面我们找到了这个地址并且把它存到了`ebp`寄存器中。最后，`eax`寄存器将会包含`boot_stack_end`的实际地址，我们只需要将其加到栈指针上。
 
-首先，我们把 `boot_stack_end` 放到 `eax` 寄存器中。现在 `eax` 寄存器将包含 `boot_stack_end` 链接后的地址或者说 `0x0 + boot_stack_end`。为了得到 `boot_stack_end` 的实际地址，我们需要加上 `startup_32` 的实际地址。回忆一下，前面我们找到了这个地址并且把它存到了 `ebp` 寄存器中。最后，`eax` 寄存器将会包含 `boot_stack_end` 的实际地址，我们只需要将其加到栈指针上。
-
-After we have set up the stack, next step is CPU verification. As we are going to execute transition to the `long mode`, we need to check that the CPU supports `long mode` and `SSE`. We will do it by the call of the `verify_cpu` function:
-
-在外面建立了栈之后，下一步是 CPU 确认。既然我们将要切换到 `长模式`，我们需要检查 CPU 是否支持 `长模式` 和 `SSE`。我们将会在跳转到 `verify_cpu` 之后执行：
+在外面建立了栈之后，下一步是 CPU 的确认。既然我们将要切换到`长模式`，我们需要检查 CPU 是否支持 `长模式` 和 `SSE`。我们将会在跳转到`verify_cpu`函数之后执行：
 
 ```assembly
 	call	verify_cpu
@@ -359,13 +294,9 @@ After we have set up the stack, next step is CPU verification. As we are going t
 	jnz	no_longmode
 ```
 
-This function defined in the [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) assembly file and just contains a couple of calls to the [cpuid](https://en.wikipedia.org/wiki/CPUID) instruction. This instruction is used for getting information about the processor. In our case it checks `long mode` and `SSE` support and returns `0` on success or `1` on fail in the `eax` register.
+这个函数定义在 [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) 中，只是包含了几个对 [cpuid](https://en.wikipedia.org/wiki/CPUID) 指令的调用。该指令用于获取处理器的信息。在我们的情况下，它检查了对`长模式`和`SSE`的支持，通过`eax`寄存器返回0表示成功，1表示失败。
 
-这个函数在 [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) 中定义，只是包含了几个对 [cpuid](https://en.wikipedia.org/wiki/CPUID) 指令的调用。该指令用于获取处理器的信息。在我们的情况下，它检查了 `长模式` 和 `SSE` 的支持，通过 `eax` 寄存器返回0表示成功，1表示失败。
-
-If the value of the `eax` is not zero, we jump to the `no_longmode` label which just stops the CPU by the call of the `hlt` instruction while no hardware interrupt will not happen:
-
-如果 `eax` 的值不是 0 ，我们跳转到 `no_longmode` 标签，用 `hlt` 指令停止 CPU ，期间不会发生中断：
+如果`eax`的值不是 0 ，我们跳转到`no_longmode`标签，用`hlt`指令停止 CPU ，期间不会发生硬件中断：
 
 ```assembly
 no_longmode:
@@ -374,17 +305,12 @@ no_longmode:
 	jmp     1b
 ```
 
-If the value of the `eax` register is zero, everything is ok and we are able to continue.
-
 如果 `eax` 的值为0，万事大吉，我们可以继续。
 
-Calculate relocation address
 计算重定位地址
 --------------------------------------------------------------------------------
 
-The next step is calculating relocation address for decompression if needed. First we need to know what it means for a kernel to be `relocatable`. We already know that the base address of the 32-bit entry point of the Linux kernel is `0x100000`. But that is a 32-bit entry point. Default base address of the Linux kernel is determined by the value of the `CONFIG_PHYSICAL_START` kernel configuration option and its default value is - `0x1000000` or `1 MB`. The main problem here is that if the Linux kernel crashes, a kernel developer must have a `rescue kernel` for [kdump](https://www.kernel.org/doc/Documentation/kdump/kdump.txt) which is configured to load from a different address. The Linux kernel provides special configuration option to solve this problem - `CONFIG_RELOCATABLE`. As we can read in the documentation of the Linux kernel:
-
-下一步是在必要的时候计算解压缩之后的地址。首先，我们需要知道内核重定位的意义。我们已经知道 Linux 内核的32位入口点地址位于 `0x100000`。但是那是一个32位的入口。默认的内核基地址由内核配置项 `CONFIG_PHYSICAL_START` 的值所确定，其默认值为 `0x100000` 或 `1 MB`。这里的主要问题是如果内核崩溃了，内核开发者需要一个配置于不同地址的 `救援内核` 来进行 [kdump](https://www.kernel.org/doc/Documentation/kdump/kdump.txt)。Linux 内核提供了特殊的配置选项以解决此问题 - `CONFIG_RELOCATABLE`。我们可以在内核文档中找到：
+下一步是在必要的时候计算解压缩之后的地址。首先，我们需要知道内核重定位的意义。我们已经知道 Linux 内核的32位入口点地址位于`0x100000`。但是那是一个32位的入口。默认的内核基地址由内核配置项`CONFIG_PHYSICAL_START`的值所确定，其默认值为`0x100000` 或`1 MB`。这里的主要问题是如果内核崩溃了，内核开发者需要一个配置于不同地址加载的`救援内核`来进行 [kdump](https://www.kernel.org/doc/Documentation/kdump/kdump.txt)。Linux 内核提供了特殊的配置选项以解决此问题 - `CONFIG_RELOCATABLE`。我们可以在内核文档中找到：
 
 ```
 This builds a kernel image that retains relocation information
@@ -401,17 +327,13 @@ it has been loaded at and the compile time physical address
 注意：如果 CONFIG_RELOCATABLE=y， 那么 内核将会从其被加载的位置运行，编译时的物理地址 (CONFIG_PHYSICAL_START) 将会被作为最低地址位置的限制。
 ```
 
-In simple terms this means that the Linux kernel with the same configuration can be booted from different addresses. Technically, this is done by the compiling decompressor as [position independent code](https://en.wikipedia.org/wiki/Position-independent_code). If we look at [/arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile), we will see that the decompressor is indeed compiled with the `-fPIC` flag:
-
-简单来说，这意味着相同配置下的 Linux 内核可以从不同地址被启动。这是通过将程序以 [位置无关代码](https://zh.wikipedia.org/wiki/%E5%9C%B0%E5%9D%80%E6%97%A0%E5%85%B3%E4%BB%A3%E7%A0%81) 的形式编译来达到的。如果我们参考  [/arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile)，我们将会看到解压器是用 `-fPIC` 标记编译的：
+简单来说，这意味着相同配置下的 Linux 内核可以从不同地址被启动。这是通过将程序以 [位置无关代码](https://zh.wikipedia.org/wiki/%E5%9C%B0%E5%9D%80%E6%97%A0%E5%85%B3%E4%BB%A3%E7%A0%81) 的形式编译来达到的。如果我们参考 [/arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile)，我们将会看到解压器的确是用`-fPIC`标记编译的：
 
 ```Makefile
 KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 ```
 
-When we are using position-independent code an address obtained by adding the address field of the command and the value of the program counter. We can load a code which is uses such addressing from any address. That's why we had to get the real physical address of `startup_32`. Now let's get back to the Linux kernel code. Our current goal is to calculate an address where we can relocate the kernel for decompression. Calculation of this address depends on `CONFIG_RELOCATABLE` kernel configuration option. Let's look at the code:
-
-当我们使用位置无关代码时，一段代码的地址是由一个控制地址加上程序计数器计算得到的。我们可以从任意一个地址加载使用这种方式寻址的代码。这就是为什么我们需要获得 `startup_32` 的实际地址。现在让我们回到 Linux 内核代码。我们目前的目标是计算出内核解压的地址。这个地址的计算取决于内核配置项 `CONFIG_RELOCATABLE` 。让我们看代码：
+当我们使用位置无关代码时，一段代码的地址是由一个控制地址加上程序计数器计算得到的。我们可以从任意一个地址加载使用这种方式寻址的代码。这就是为什么我们需要获得`startup_32`的实际地址。现在让我们回到 Linux 内核代码。我们目前的目标是计算出内核解压的地址。这个地址的计算取决于内核配置项`CONFIG_RELOCATABLE`。让我们看代码：
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -429,9 +351,7 @@ When we are using position-independent code an address obtained by adding the ad
 	addl	$z_extract_offset, %ebx
 ```
 
-Remember that value of the `ebp` register is the physical address of the `startup_32` label. If the `CONFIG_RELOCATABLE` kernel configuration option is enabled during kernel configuration, we put this address to the `ebx` register, align it to the `2M` and compare it with the `LOAD_PHYSICAL_ADDR` value. The `LOAD_PHYSICAL_ADDR` macro defined in the [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) header file and it looks like this:
-
-记住 `ebp` 寄存器的值就是 `startup_32` 标签的物理地址。如果在内核配置中 `CONFIG_RELOCATABLE` 内核配置项开启，我们就把这个地址放到 `ebx` 寄存器中，对齐到 `2M` ，然后和 `LOAD_PHYSICAL_ADDR` 的值比较。`LOAD_PHYSICAL_ADDR` 宏在头文件 [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) 定义，如下：
+记住`ebp`寄存器的值就是`startup_32`标签的物理地址。如果在内核配置中`CONFIG_RELOCATABLE`内核配置项开启，我们就把这个地址放到`ebx`寄存器中，对齐到`2M`，然后和`LOAD_PHYSICAL_ADDR`的值比较。`LOAD_PHYSICAL_ADDR`宏在头文件 [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) 定义，如下：
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -439,19 +359,12 @@ Remember that value of the `ebp` register is the physical address of the `startu
 				& ~(CONFIG_PHYSICAL_ALIGN - 1))
 ```
 
-As we can see it just expands to the aligned `CONFIG_PHYSICAL_ALIGN` value which represents physical address of where to load kernel. After comparison of the `LOAD_PHYSICAL_ADDR` and value of the `ebx` register, we add offset from the `startup_32` where to decompress the compressed kernel image. If the `CONFIG_RELOCATABLE` option is not enabled during kernel configuration, we just put default address where to load kernel and add `z_extract_offset` to it.
-
-我们可以看到该宏只是展开成对齐的 `CONFIG_PHYSICAL_ALIGN` 值，其表示了内核加载位置的物理地址。在比较了 `LOAD_PHYSICAL_ADDR` 和 `ebx` 的值之后，我们给 `startup_32` 加上偏移来获得解压内核镜像的地址。如果 `CONFIG_RELOCATABLE` 选项在内核配置时没有开启，我们就直接将默认的地址加上 `z_extract_offset`。
-
-After all of these calculations we will have `ebp` which contains the address where we loaded it and `ebx` set to the address of where kernel will be moved after decompression.
+我们可以看到该宏只是展开成对齐的`CONFIG_PHYSICAL_ALIGN`值，其表示了内核加载位置的物理地址。在比较了`LOAD_PHYSICAL_ADDR`和`ebx`的值之后，我们给`startup_32`加上偏移来获得解压内核镜像的地址。如果`CONFIG_RELOCATABLE`选项在内核配置时没有开启，我们就直接将默认的地址加上`z_extract_offset`。
 
 在前面的操作之后，`ebp`包含了我们加载时的地址，`ebx` 被设为内核解压缩的目标地址。
 
-Preparation before entering long mode
-进入长模式前的准备
+进入长模式前的准备工作
 --------------------------------------------------------------------------------
-
-When we have the base address where we will relocate compressed kernel image we need to do the last preparation before we can transition to 64-bit mode. First we need to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table) for this:
 
 在我们得到了重定位内核镜像的基地址之后，我们需要做切换到64位模式之前的最后准备。首先，我们需要更新[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)：
 
@@ -461,9 +374,7 @@ When we have the base address where we will relocate compressed kernel image we 
 	lgdt	gdt(%ebp)
 ```
 
-Here we put the base address from `ebp` register with `gdt` offset into the `eax` register. Next we put this address into `ebp` register with offset `gdt+2` and load the `Global Descriptor Table` with the `lgdt` instruction. To understand the magic with `gdt` offsets we need to look at the definition of the `Global Descriptor Table`. We can find its definition in the same source code [file](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
-
-在这里我们把 `ebp` 寄存器加上 `gdt` 偏移存到 `eax` 寄存器。接下来我们把这个地址放到 `ebp` 加上 `gdt+2` 偏移的位置上，并且用 `lgdt` 指令载入 `全局描述符表`。为了理解这个神奇的 `gdt` 偏移量，我们需要关注`全局描述符表`的定义。我们可以在同一个[源文件](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)中找到其定义：
+在这里我们把`ebp`寄存器加上`gdt`偏移存到`eax`寄存器。接下来我们把这个地址放到`ebp`加上`gdt+2`偏移的位置上，并且用`lgdt`指令载入`全局描述符表`。为了理解这个神奇的`gdt` 偏移量，我们需要关注`全局描述符表`的定义。我们可以在同一个[源文件](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)中找到其定义：
 
 ```assembly
 	.data
@@ -479,23 +390,14 @@ gdt:
 gdt_end:
 ```
 
-We can see that it is located in the `.data` section and contains five descriptors: `null` descriptor, kernel code segment, kernel data segment and two task descriptors. We already loaded the `Global Descriptor Table` in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-3.md), and now we're doing almost the same here, but descriptors with `CS.L = 1` and `CS.D = 0` for execution in `64` bit mode. As we can see, the definition of the `gdt` starts from two bytes: `gdt_end - gdt` which represents last byte in the `gdt` table or table limit. The next four bytes contains base address of the `gdt`. Remember that the `Global Descriptor Table` is stored in the `48-bits GDTR` which consists of two parts:
-
-我们可以看到其位于 `.data` 段，并且包含了5个描述符： `null`、内核代码段、内核数据段和其他两个任务描述符。我们已经在[上一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)载入了`全局描述符表`，和我们现在做的差不多，但是描述符改为 `CS.L = 1` `CS.D = 0` 从而在 `64` 位模式下执行。我们可以看到， `gdt` 的定义从两个字节开始： `gdt_end - gdt`，代表了 `gdt` 表的最后一个字节，或者说表的范围。接下来的4个字节包含了 `gdt` 的基地址。记住 `全局描述符表` 保存在 `48位 GDTR-全局描述符表寄存器`中，由两个部分组成：
-
-* size(16-bit) of global descriptor table;
-* address(32-bit) of the global descriptor table.
+我们可以看到其位于`.data`段，并且包含了5个描述符：`null`、内核代码段、内核数据段和其他两个任务描述符。我们已经在[上一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)载入了`全局描述符表`，和我们现在做的差不多，但是描述符改为`CS.L = 1` `CS.D = 0` 从而在`64`位模式下执行。我们可以看到，`gdt`的定义从两个字节开始：`gdt_end - gdt`，代表了`gdt`表的最后一个字节，或者说表的范围。接下来的4个字节包含了`gdt`的基地址。记住`全局描述符表`保存在`48位 GDTR-全局描述符表寄存器`中，由两个部分组成：
 
 * 全局描述符表的大小 (16位）
 * 全局描述符表的基址 (32位)
 
-So, we put address of the `gdt` to the `eax` register and then we put it to the `.long	gdt` or `gdt+2` in our assembly code. From now we have formed structure for the `GDTR` register and can load the `Global Descriptor Table` with the `lgtd` instruction.
+所以，我们把`gdt`的地址放到`eax`寄存器，然后存到 `.long	gdt` 或者 `gdt+2`。现在我们已经建立了 `GDTR` 寄存器的结构，并且可以用 `lgdt` 指令载入`全局描述符表`了。
 
-所以，我们把 `gdt` 的地址放到 `eax`寄存器，然后存到 `.long	gdt` 或者 `gdt+2`。现在我们已经建立了 `GDTR` 寄存器的结构，并且可以用 `lgdt` 指令载入`全局描述符表`了。
-
-After we have loaded the `Global Descriptor Table`, we must enable [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) mode by putting the value of the `cr4` register into `eax`, setting 5 bit in it and loading it again into `cr4`:
-
-在我们载入`全局描述符表`之后，我们必须启动 [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) 模式。方法是将 `cr4` 寄存器的值传入 `eax` ，将第5位置1，然后再写回 `cr4`。
+在我们载入`全局描述符表`之后，我们必须启用 [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) 模式。方法是将`cr4`寄存器的值传入`eax`，将第5位置1，然后再写回`cr4`。
 
 ```assembly
 	movl	%cr4, %eax
@@ -503,50 +405,25 @@ After we have loaded the `Global Descriptor Table`, we must enable [PAE](http://
 	movl	%eax, %cr4
 ```
 
-Now we are almost finished with all preparations before we can move into 64-bit mode. The last step is to build page tables, but before that, here is some information about long mode.
-
 现在我们已经接近完成进入64位模式前的所有准备工作了。最后一步是建立页表，但是在此之前，这里有一些关于长模式的知识。
 
-Long mode
 长模式
 --------------------------------------------------------------------------------
 
-[Long mode](https://en.wikipedia.org/wiki/Long_mode) is the native mode for [x86_64](https://en.wikipedia.org/wiki/X86-64) processors. First let's look at some differences between `x86_64` and the `x86`.
+[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)是 [x86_64](https://en.wikipedia.org/wiki/X86-64) 系列处理器的原生模式。首先让我们看一看`x86_64`和`x86`的一些区别。
 
-[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)是 [x86_64](https://en.wikipedia.org/wiki/X86-64) 系列处理器的原生模式。首先让我们看一看 `x86_64` 和 `x86` 的一些区别。
+`64位`模式提供了一些新特性，比如：
 
-The `64-bit` mode provides features such as:
-
-* New 8 general purpose registers from `r8` to `r15` + all general purpose registers are 64-bit now;
-* 64-bit instruction pointer - `RIP`;
-* New operating mode - Long mode;
-* 64-Bit Addresses and Operands;
-* RIP Relative Addressing (we will see an example if it in the next parts).
-
-`64位`模式提供了一些新特性如：
-
-* 从 `r8` 到 `r15` 8个新的通用寄存器，并且所有通用寄存器都是64位的了。
+* 从`r8`到`r15`8个新的通用寄存器，并且所有通用寄存器都是64位的了。
 * 64位指令指针 - `RIP`;
 * 新的操作模式 - 长模式;
 * 64位地址和操作数;
-* RIP 相对寻址 (我们将会在接下来的章节看到).
-
-Long mode is an extension of legacy protected mode. It consists of two sub-modes:
+* RIP 相对寻址 (我们将会在接下来的章节看到一个例子).
 
 长模式是一个传统保护模式的扩展，其由两个子模式构成：
 
-* 64-bit mode;
-* compatibility mode.
-
 * 64位模式
 * 兼容模式
-
-To switch into `64-bit` mode we need to do following things:
-
-* To enable [PAE](https://en.wikipedia.org/wiki/Physical_Address_Extension);
-* To build page tables and load the address of the top level page table into the `cr3` register;
-* To enable `EFER.LME`;
-* To enable paging.
 
 为了切换到 `64位` 模式，我们需要完成以下操作：
 
@@ -556,37 +433,22 @@ To switch into `64-bit` mode we need to do following things:
 * 启用分页;
 
 
-We already enabled `PAE` by setting the `PAE` bit in the `cr4` control register. Our next goal is to build structure for [paging](https://en.wikipedia.org/wiki/Paging). We will see this in next paragraph.
+我们已经通过设置`cr4`控制寄存器中的`PAE`位启动`PAE`了。在下一个段落，我们就要建立[分页](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)的结构了。
 
-我们已经通过设置 `cr4` 控制寄存器中的 `PAE` 位启动 `PAE` 了。在下一段，我们接下来就要建立[分页](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)的结构了。
-
-Early page tables initialization
 初期页表初始化
 --------------------------------------------------------------------------------
 
-So, we already know that before we can move into `64-bit` mode, we need to build page tables, so, let's look at the building of early `4G` boot page tables.
-
-现在，我们已经知道了在进入 `64位` 模式之前，我们需要先建立页表，那么就让我们看看如何建立 `4G` 启动页表。
-
-**NOTE: I will not describe theory of virtual memory here, if you need to know more about it, see links in the end of this part**
+现在，我们已经知道了在进入`64位`模式之前，我们需要先建立页表，那么就让我们看看如何建立初期的`4G`启动页表。
 
 **注意：我不会在这里解释虚拟内存的理论，如果你想知道更多，查看本节最后的链接**
 
-The Linux kernel uses `4-level` paging, and generally we build 6 page tables:
-
-* One `PML4` or `Page Map Level 4` table with one entry;
-* One `PDP` or `Page Directory Pointer` table with four entries;
-* Four Page Directory tables with `2048` entries.
-
-Linux 内核使用 `4级` 页表，通常我们会建立6个页表：
+Linux 内核使用`4级`页表，通常我们会建立6个页表：
 
 * 1个 `PML4` 或称为 `4级页映射` 表，包含1个项；
 * 1个 `PDP` 或称为 `页目录指针` 表，包含4个项；
 * 4个 页目录表，包含 `2048` 个项；
 
-Let's look at the implementation of this. First of all we clear the buffer for the page tables in memory. Every table is `4096` bytes, so we need clear `24` kilobytes buffer:
-
-让我们看看其实现方式。首先我们在内存中为页表清理一块缓存。每个表都是 `4096` 字节，所以我们需要 `24` KB 的空间：
+让我们看看其实现方式。首先我们在内存中为页表清理一块缓存。每个表都是 `4096` 字节，所以我们需要 `24`KB 的空间：
 
 ```assembly
 	leal	pgtable(%ebx), %edi
@@ -595,11 +457,7 @@ Let's look at the implementation of this. First of all we clear the buffer for t
 	rep	stosl
 ```
 
-We put the address of the `pgtable` relative to `ebx` (remember that `ebx` contains the address to relocate the kernel for decompression) to the `edi` register, clear `eax` register and `6144` to the `ecx` register. The `rep stosl` instruction will write value of the `eax` to the `edi`, increase value of the `edi` register on `4` and decrease value of the `ecx` register on `4`. This operation will be repeated while value of the `ecx` register will be greater than zero. That's why we put magic `6144` to the `ecx`.
-
-我们把和 `ebx` 相关的 `pgtable` 的地址放到 `edi` 寄存器中，清空 `eax` 寄存器，并将 `ecx` 赋值为 `6144` 。`rep stosl` 指令将会把 `eax` 的值写到 `edi` 指向的地址，然后给 `edi` 加 4 ，`ecx` 减 4 ，重复直到 `ecx` 小于等于 0 。所以我们把 `6144` 赋值给 `ecx` 。
-
-The `pgtable` is defined in the end of [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly file and looks:
+我们把和`ebx`相关的`pgtable`的地址放到`edi`寄存器中，清空`eax`寄存器，并将`ecx`赋值为`6144`。`rep stosl`指令将会把`eax`的值写到`edi`指向的地址，然后给`edi`加 4 ，`ecx`减 4 ，重复直到`ecx`小于等于 0 。所以我们才把`6144`赋值给 `ecx` 。
 
 `pgtable` 定义在 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 的最后：
 
@@ -610,11 +468,7 @@ pgtable:
 	.fill 6*4096, 1, 0
 ```
 
-As we can see, it is located in the `.pgtable` section and its size is `24` kilobytes.
-
 我们可以看到，其位于 `.pgtable` 段，大小为 `24KB`。
-
-After we have got buffer for the `pgtable` structure, we can start to build the top level page table - `PML4` - with:
 
 在我们为`pgtable`分配了空间之后，我们可以开始构建顶级页表 - `PML4` ：
 
@@ -624,11 +478,7 @@ After we have got buffer for the `pgtable` structure, we can start to build the 
 	movl	%eax, 0(%edi)
 ```
 
-Here again, we put the address of the `pgtable` relative to `ebx` or in other words relative to address of the `startup_32` to the `edi` register. Next we put this address with offset `0x1007` in the `eax` register. The `0x1007` is `4096` bytes which is the size of the `PML4` plus `7`. The `7` here represents flags of the `PML4` entry. In our case, these flags are `PRESENT+RW+USER`. In the end we just write first the address of the first `PDP` entry to the `PML4`.
-
-还是在这里，我们把和 `ebx` 相关的，或者说和 `startup_32`相关的 `pgtable` 的地址放到 `ebi` 寄存器。接下来我们把相对此地址偏移 `0x1007` 的地址放到 `eax` 寄存器中。 `0x1007` 是 `PML4` 的大小 `4096` 加上 `7`。这里的 `7` 代表了 `PML4` 的项标记。在我们这里，这些标记是 `PRESENT+RW+USER`。在最后我们把第一个 `PDP（页目录指针）` 项的地址写到 `PML4` 中。
-
-In the next step we will build four `Page Directory` entries in the `Page Directory Pointer` table with the same `PRESENT+RW+USE` flags:
+还是在这里，我们把和`ebx`相关的，或者说和`startup_32`相关的`pgtable`的地址放到`ebi`寄存器。接下来我们把相对此地址偏移`0x1007`的地址放到`eax`寄存器中。`0x1007`是`PML4`的大小 `4096` 加上 `7`。这里的`7`代表了`PML4`的项标记。在我们这里，这些标记是`PRESENT+RW+USER`。在最后我们把第一个 `PDP（页目录指针）` 项的地址写到 `PML4` 中。
 
 在接下来的一步，我们将会在 `页目录指针（PDP）` 表（3级页表）建立 4 个带有`PRESENT+RW+USE`标记的`Page Directory （2级页表）`项：
 
@@ -643,9 +493,7 @@ In the next step we will build four `Page Directory` entries in the `Page Direct
 	jnz	1b
 ```
 
-We put the base address of the page directory pointer which is `4096` or `0x1000` offset from the `pgtable` table in `edi` and the address of the first page directory pointer entry in `eax` register. Put `4` in the `ecx` register, it will be a counter in the following loop and write the address of the first page directory pointer table entry to the `edi` register. After this `edi` will contain the address of the first page directory pointer entry with flags `0x7`. Next we just calculate the address of following page directory pointer entries where each entry is `8` bytes, and write their addresses to `eax`. The last step of building paging structure is the building of the `2048` page table entries with `2-MByte` pages:
-
-我们把3级页目录指针表的基地址（从`pgtable`表偏移`4096`或者`0x1000`）放到`edi`，把第一个2级页目录指针表的首项的地址放到`eax`寄存器。把`4`赋值给`ecx`寄存器，其将会作为接下来循环的计数器，然后将第一个页目录指针项写到`edi`指向的地址。之后，`edi`将会包含带有标记`0x7`的第一个页目录指针项的地址。接下来我们就计算后面的几个页目录指针项的地址，每个占8字节，把地址赋值给`eax`，然后回到循环开头将其写入`edi`所在地址。建立页表结构的最后一步就是建立`2048`个`2MB`页表项。
+我们把3级页目录指针表的基地址（从`pgtable`表偏移`4096`或者`0x1000`）放到`edi`，把第一个2级页目录指针表的首项的地址放到`eax`寄存器。把`4`赋值给`ecx`寄存器，其将会作为接下来循环的计数器，然后将第一个页目录指针项写到`edi`指向的地址。之后，`edi`将会包含带有标记`0x7`的第一个页目录指针项的地址。接下来我们就计算后面的几个页目录指针项的地址，每个占8字节，把地址赋值给`eax`，然后回到循环开头将其写入`edi`所在地址。建立页表结构的最后一步就是建立`2048`个`2MB`页的页表项。
 
 ```assembly
 	leal	pgtable + 0x2000(%ebx), %edi
@@ -658,16 +506,12 @@ We put the base address of the page directory pointer which is `4096` or `0x1000
 	jnz	1b
 ```
 
-Here we do almost the same as in the previous example, all entries will be with flags - `$0x00000183` - `PRESENT + WRITE + MBZ`. In the end we will have `2048` pages with `2-MByte` page or:
-
 在这里我们做的几乎和上面一样，所有的表项都带着标记 - `$0x00000183` - `PRESENT + WRITE + MBZ`。最后我们将会拥有`2048`个`2MB`页的页表，或者说：
 
 ```python
 >>> 2048 * 0x00200000
 4294967296
 ```
-
-`4G` page table. We just finished to build our early page table structure which maps `4` gigabytes of memory and now we can put the address of the high-level page table - `PML4` - in `cr3` control register:
 
 `4G`页表。我们刚刚完成我们的初期页表结构，其映射了`4G`大小的内存，现在我们可以把高级页表`PML4`的地址放到`cr3`寄存器中了：
 
@@ -676,15 +520,10 @@ Here we do almost the same as in the previous example, all entries will be with 
 	movl	%eax, %cr3
 ```
 
-That's all. All preparation are finished and now we can see transition to the long mode.
-
 全部结束了。所有的准备工作都已经完成，我们可以开始看如何切换到长模式了。
 
-Transition to the 64-bit mode
 切换到长模式
 --------------------------------------------------------------------------------
-
-First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) to `0xC0000080`:
 
 首先我们需要设置[MSR](http://en.wikipedia.org/wiki/Model-specific_register)中的`EFER.LME`标记为`0xC0000080`：
 
@@ -695,11 +534,7 @@ First of all we need to set the `EFER.LME` flag in the [MSR](http://en.wikipedia
 	wrmsr
 ```
 
-Here we put the `MSR_EFER` flag (which is defined in [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7)) in the `ecx` register and call `rdmsr` instruction which reads the [MSR](http://en.wikipedia.org/wiki/Model-specific_register) register. After `rdmsr` executes, we will have the resulting data in `edx:eax` which depends on the `ecx` value. We check the `EFER_LME` bit with the `btsl` instruction and write data from `eax` to the `MSR` register with the `wrmsr` instruction.
-
 在这里我们把`MSR_EFER`标记（在 [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7) 定义）放到`ecx`寄存器中，然后调用`rdmsr`指令读取[MSR](http://en.wikipedia.org/wiki/Model-specific_register)寄存器。在`rdmsr`执行之后，我们将会获得`edx:eax`中的结果值，其取决于`ecx`的值。我们通过`btsl`指令检查`EFER_LME`位，并且通过`wrmsr`指令将`eax`的数据写入`MSR`寄存器。
-
-In the next step we push the address of the kernel segment code to the stack (we defined it in the GDT) and put the address of the `startup_64` routine in `eax`.
 
 下一步我们将内核段代码地址入栈（我们在 GDT 中定义了），然后将`startup_64`的地址导入`eax`。
 
@@ -708,8 +543,6 @@ In the next step we push the address of the kernel segment code to the stack (we
 	leal	startup_64(%ebp), %eax
 ```
 
-After this we push this address to the stack and enable paging by setting `PG` and `PE` bits in the `cr0` register:
-
 在这之后我们把这个地址入栈然后通过设置`cr0`寄存器中的`PG`和`PE`启用分页：
 
 ```assembly
@@ -717,19 +550,13 @@ After this we push this address to the stack and enable paging by setting `PG` a
 	movl	%eax, %cr0
 ```
 
-and execute:
-
 然后执行：
 
 ```assembly
 lret
 ```
 
-instruction. Remember that we pushed the address of the `startup_64` function to the stack in the previous step, and after the `lret` instruction, the CPU extracts the address of it and jumps there.
-
-指令。记住前一步我们已经将`startup_64`函数的地址入栈，在`lret`指令之后，CPU 丢弃了其地址跳转到了这里。
-
-After all of these steps we're finally in 64-bit mode:
+指令。记住前一步我们已经将`startup_64`函数的地址入栈，在`lret`指令之后，CPU 取出了其地址跳转到那里。
 
 这些步骤之后我们最后来到了64位模式：
 
@@ -742,23 +569,15 @@ ENTRY(startup_64)
 ....
 ```
 
-That's all!
 
 就是这样！
 
-Conclusion
 总结
 --------------------------------------------------------------------------------
 
-This is the end of the fourth part linux kernel booting process. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create an [issue](https://github.com/0xAX/linux-insides/issues/new).
-
 这是 linux 内核启动流程的第4部分。如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)。
 
-In the next part we will see kernel decompression and many more.
-
 下一节我们将会看到内核解压缩流程和其他更多。
-
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
 
 **英文不是我的母语。如果你发现我的英文描述有任何问题，请提交一个PR到[linux-insides](https://github.com/0xAX/linux-internals).**
 
