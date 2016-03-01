@@ -423,7 +423,7 @@ Field name:	loadflags
 BSS段设置
 --------------------------------------------------------------------------------
 
-在我们正式执行 C 代码之前，我们还有2件事情需要完成。1）设置正确的 `BSS` 段 [BSS](https://en.wikipedia.org/wiki/.bss)；2）检查 `magic` 签名。接下来的代码，首先检查 `magic` 签名 [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39)，如果签名不对，直接跳转到 `setup_bad` 部分执行代码：
+在我们正式执行 C 代码之前，我们还有2件事情需要完成。1）设置正确的 [BSS](https://en.wikipedia.org/wiki/.bss)段 ；2）检查 `magic` 签名。接下来的代码，首先检查 `magic` 签名 [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39)，如果签名不对，直接跳转到 `setup_bad` 部分执行代码：
 
 ```assembly
 cmpl	$0x5a5aaa55, setup_sig
