@@ -14,7 +14,7 @@ Linux Insides
 | ------------- |:-------------:| -----:|
 |Booting||正在进行|
 |├1.1|[@hailincai](https://github.com/hailincai)|正在进行|
-|├1.2|[@hailincai](https://github.com/hailincai)|正在进行|
+|├1.2|[@hailincai](https://github.com/hailincai)|已完成|
 |├1.3|[@hailincai](https://github.com/hailincai)|正在进行|
 |├1.4||未开始|
 |└1.5||未开始|
@@ -38,7 +38,7 @@ Linux Insides
 |├9.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|正在进行|
 |└9.2|[@Alick Guo](https://github.com/a1ickgu0)|正在进行|
 |Theory||正在进行|
-|├10.1|[@mudongliang](https://github.com/mudongliang)|正在进行|
+|├10.1|[@mudongliang](https://github.com/mudongliang)|已完成|
 |└10.2|[@mudongliang](https://github.com/mudongliang)|已完成|
 |Misc||正在进行|
 |├12.1|[@oska874](https://github.com/oska874)|已完成|
