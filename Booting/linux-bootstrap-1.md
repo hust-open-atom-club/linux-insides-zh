@@ -375,7 +375,7 @@ cs = 0x1020
 
 下面我们就来分析在这三中情况下，代码都是如何工作的：
 
-1. `ss` 寄存器的值是 0x10000，在这种情况下，代码将直接跳转到标号为 `2` 的代码处执行:
+* `ss` 寄存器的值是 0x10000，在这种情况下，代码将直接跳转到标号为 `2` 的代码处执行:
 
 ```
 2: 	andw	$~3, %dx
@@ -390,7 +390,7 @@ cs = 0x1020
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
-2. 下面让我们来看 `ss` != `ds`的情况，首先将 setup code 的结束地址 [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) 写入 `dx` 寄存器。然后检查 `loadflags` 中是否设置了 `CAN_USE_HEAP` 标志。   根据 kernel boot protocol 的定义，[loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) 是一个标志字段。这个字段的 `Bit 7` 就是 `CAN_USE_HEAP` 标志：
+* 下面让我们来看 `ss` != `ds`的情况，首先将 setup code 的结束地址 [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) 写入 `dx` 寄存器。然后检查 `loadflags` 中是否设置了 `CAN_USE_HEAP` 标志。   根据 kernel boot protocol 的定义，[loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) 是一个标志字段。这个字段的 `Bit 7` 就是 `CAN_USE_HEAP` 标志：
 
 ```
 Field name:	loadflags
@@ -416,7 +416,7 @@ Field name:	loadflags
 
 ![stack](http://oi62.tinypic.com/dr7b5w.jpg)
 
-3. 最后一种情况就是 `CAN_USE_HEAP` 没有置位， 那么我们就将 `dx` 寄存器的值加上 `STACK_SIZE`，然后跳转到标号为 `2` 的代码处继续执行，接着我们就得到了如下图所示的堆栈：
+* 最后一种情况就是 `CAN_USE_HEAP` 没有置位， 那么我们就将 `dx` 寄存器的值加上 `STACK_SIZE`，然后跳转到标号为 `2` 的代码处继续执行，接着我们就得到了如下图所示的堆栈：
 
 ![minimal stack](http://oi60.tinypic.com/28w051y.jpg)
 
