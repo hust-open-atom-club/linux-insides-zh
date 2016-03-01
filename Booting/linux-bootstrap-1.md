@@ -253,9 +253,9 @@ X+08000  +------------------------+
 内核设置
 --------------------------------------------------------------------------------
 
-经过上面的一系列操作，我们终于进入到内核了。不过从技术上说，内核还没有被运行起来，因为首先我们需要正确设置内核，启动内存管理，进程管理等等。内核设置代码的运行起点是 [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) 中定义的 [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293) 函数。 在_start函数开始之前，还有很多的代码，那这些代码是做什么的呢？
+经过上面的一系列操作，我们终于进入到内核了。不过从技术上说，内核还没有被运行起来，因为首先我们需要正确设置内核，启动内存管理，进程管理等等。内核设置代码的运行起点是 [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) 中定义的 [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293) 函数。 在 `_start` 函数开始之前，还有很多的代码，那这些代码是做什么的呢？
 
-实际上_start开始之前的代码是 kenerl 自带的 bootloader。在很久以前，是可以使用这个 bootloader 来启动 Linux 的。不过在新的 Linux 中，这个 bootloader 代码已经不再启动 Linux 内核，而只是输出一个错误信息。 如果你运行下面的命令，直接使用 Linux 内核来启动，你会开到下图所示的错误：
+实际上 `_start` 开始之前的代码是 kenerl 自带的 bootloader。在很久以前，是可以使用这个 bootloader 来启动 Linux 的。不过在新的 Linux 中，这个 bootloader 代码已经不再启动 Linux 内核，而只是输出一个错误信息。 如果你运行下面的命令，直接使用 Linux 内核来启动，你会看到下图所示的错误：
 
 ```
 qemu-system-x86_64 vmlinuz-3.18-generic
@@ -263,7 +263,7 @@ qemu-system-x86_64 vmlinuz-3.18-generic
 
 ![Try vmlinuz in qemu](http://oi60.tinypic.com/r02xkz.jpg)
 
-为了能够作为 bootloader 来使用, `header.S` 开始出定义了 [MZ] [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) 魔术数字, 并且定义了  [PE](https://en.wikipedia.org/wiki/Portable_Executable) 头，在 PE 头中定义了输出的字符串：
+为了能够作为 bootloader 来使用, `header.S` 开始处定义了 [MZ] [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) 魔术数字, 并且定义了  [PE](https://en.wikipedia.org/wiki/Portable_Executable) 头，在 PE 头中定义了输出的字符串：
 
 ```assembly
 #ifdef CONFIG_EFI_STUB
@@ -289,7 +289,7 @@ pe_header:
 _start:
 ```
 
-其他的 bootloader (grub2 and others) 知道 _start 所在的位置（ 从 `MZ` 头开始便宜 `0x200` 字节 ），所以这些 bootloader 就会忽略所有在这个位置前的代码（这些之前的代码位于 `.bstext` 段中）， 直接跳转到这个位置启动内核。
+其他的 bootloader (grub2 and others) 知道 _start 所在的位置（ 从 `MZ` 头开始偏移 `0x200` 字节 ），所以这些 bootloader 就会忽略所有在这个位置前的代码（这些之前的代码位于 `.bstext` 段中）， 直接跳转到这个位置启动内核。
 
 ```
 //
