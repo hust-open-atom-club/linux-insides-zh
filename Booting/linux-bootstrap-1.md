@@ -84,7 +84,7 @@ reset_vector:
 	...
 ```
 
-上面的跳转（ [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9）跳转到地址  `_start - ( . + 2)` 去执行代码。 `reset` 段是16字节代码段， 起始于地址 
+上面的跳转指令（ [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9）跳转到地址  `_start - ( . + 2)` 去执行代码。 `reset` 段是16字节代码段， 起始于地址 
 `0xfffffff0`，因此 CPU 复位之后，就会跳到这个地址来执行相应的代码 ：
 
 ```
