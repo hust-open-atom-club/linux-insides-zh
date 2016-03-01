@@ -6,7 +6,7 @@
 
 如果你已经看过我之前的[文章](http://0xax.blogspot.com/search/label/asm)，就知道之前我开始和底层编程打交道。我写了一些关于 Linux x86_64  汇编的文章。同时，我开始深入研究 Linux 源代码。底层是如果工作的，程序是如何在电脑上运行的，他们是如何在内存中定位的，内核是如何管理进程和内存，网络堆栈是如何在底层工作的等等，这些我都非常感兴趣。因此，我决定去写另外的一系列文章关于 **x86_64** 框架的 Linux 内核。
 
-值得注意的是我不是一个专业的内核黑客并且我的工作不是为内核贡献代码。这只是小兴趣。我只是喜欢底层的东西，底层是如何工作的让我产生了很大的兴趣。如果你发现任何迷惑的地方或者你有任何问题/备注，[twitter](https://twitter.com/0xAX)，[email](anotherworldofworld@gmail.com)我或者提一个[issue](https://github.com/0xAX/linux-insides).(PS:翻译上的问题请mail我:xinqiu.94@gmail.com或github上@xinqiu)。我会很高兴。所有的文章也可以在[linux-insides](https://github.com/0xAX/linux-insides)上看，如果你发现哪里英文或内容错误，随意提个PR。(PS:中文版地址：https://github.com/xinqiu/linux-insides)
+请注意我不是一个专业的内核黑客并且我的工作不是为内核贡献代码。这只是小兴趣。我只是喜欢底层的东西，底层是如何工作的让我产生了很大的兴趣。如果你发现任何迷惑的地方或者你有任何问题/备注，[twitter](https://twitter.com/0xAX)，[email](anotherworldofworld@gmail.com)我或者提一个[issue](https://github.com/0xAX/linux-insides).(PS:翻译上的问题请mail我:xinqiu.94@gmail.com或github上@xinqiu)。我会很高兴。所有的文章也可以在[linux-insides](https://github.com/0xAX/linux-insides)上看，如果你发现哪里英文或内容错误，随意提个PR。(PS:中文版地址：https://github.com/xinqiu/linux-insides)
 
 
 *注意这不是官方文档，只是学习和分享知识*
