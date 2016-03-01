@@ -72,7 +72,7 @@ PhysicalAddress = Segment * 16 + Offset
 '0xfffffff0'
 ```
 
-得到的 `0xfffffff0` 是4GB - 16 字节。 这个地方是 [复位向量(Reset vector)](http://en.wikipedia.org/wiki/Reset_vector) 。 这是CPU在重置后期望执行的第一条指令的内存地址。它包含一个 [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) 指令，这个指令通常指向BIOS入口点。举个例子，如果访问 [coreboot](http://www.coreboot.org/) 源代码，将看到：
+得到的 `0xfffffff0` 是 4GB - 16 字节。 这个地方是 [复位向量(Reset vector)](http://en.wikipedia.org/wiki/Reset_vector) 。 这是CPU在重置后期望执行的第一条指令的内存地址。它包含一个 [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) 指令，这个指令通常指向BIOS入口点。举个例子，如果访问 [coreboot](http://www.coreboot.org/) 源代码，将看到：
 
 ```assembly
 	.section ".reset"
@@ -84,8 +84,8 @@ reset_vector:
 	...
 ```
 
-跳转指令 [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9 到地址 `_start - ( . + 2)` 。 `reset` 段是16字节， 起始于 
-`0xfffffff0` ：
+上面的跳转（ [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9）跳转到地址  `_start - ( . + 2)` 去执行代码。 `reset` 段是16字节代码段， 起始于地址 
+`0xfffffff0`，因此 CPU 复位之后，就会跳到这个地址来执行相应的代码 ：
 
 ```
 SECTIONS {
@@ -99,7 +99,7 @@ SECTIONS {
 }
 ```
 
-现在BIOS已经开始工作了。在初始化和检查硬件之后，需要寻找可引导设备。引导顺序储存在BIOS配置中。引导顺序的功能是控制内核尝试引导的设备。对于尝试引导一个硬件，BIOS尝试寻找引导扇区。在硬盘分区上有一个MBR分区布局，引导扇区储存在第一个扇区(512字节)的起始446字节。剩下的第一个扇区的两个字节是 `0x55` 和 `0xaa` ，发出设备可引导的信号给BIOS。举个例子：
+现在BIOS已经开始工作了。在初始化和检查硬件之后，需要寻找到一个可引导设备。可引导设备列表存储在在 BIOS 配置中, BIOS 将根据其中配置的顺序，尝试从不同的设备上寻找引导程序。对于硬盘，BIOS  将尝试寻找引导扇区。如果在硬盘上存在一个MBR分区，那么引导扇区储存在第一个扇区(512字节)的头446字节，引导扇区的最后必须是 `0x55` 和 `0xaa` ，这2个字节称为魔术字节，如果 BIOS 看到这2个字节，就知道这个设备是一个可引导设备。举个例子：
 
 ```assembly
 ;
@@ -129,7 +129,7 @@ db 0xaa
 nasm -f bin boot.nasm && qemu-system-x86_64 boot
 ```
 
-这让 [QEMU](http://qemu.org) 使用刚才新建的 `boot` 二进制文件作为磁盘镜像。由于这个二进制文件是由上述汇编语言产生，它满足引导扇区(起始设为 `0x7c00`, 用Magic Sequence结束)的需求。QEMU将这个二进制文件作为磁盘镜像的主引导记录(MBR)。
+这让 [QEMU](http://qemu.org) 使用刚才新建的 `boot` 二进制文件作为磁盘镜像。由于这个二进制文件是由上述汇编语言产生，它满足引导扇区(起始设为 `0x7c00`, 用Magic Bytes结束)的需求。QEMU将这个二进制文件作为磁盘镜像的主引导记录(MBR)。
 
 将看到:
 
@@ -159,7 +159,7 @@ PhysicalAddress = Segment * 16 + Offset
 '0x10ffef'
 ```
 
-这个地址在 [8086](https://en.wikipedia.org/wiki/Intel_8086) 处理器下，将被转换成地址 `0x0ffef`, 原因是因为，8086 cpu 只有20位地址线，只能表示 ``2^20 = 1MB` 的地址，而上面这个地址已经超出了 1MB 地址的范围，所以 CPU 就舍弃了最高位。
+这个地址在 [8086](https://en.wikipedia.org/wiki/Intel_8086) 处理器下，将被转换成地址 `0x0ffef`, 原因是因为，8086 cpu 只有20位地址线，只能表示 `2^20 = 1MB` 的地址，而上面这个地址已经超出了 1MB 地址的范围，所以 CPU 就舍弃了最高位。
 
 实模式下的 1MB 地址空间分配表：
 
@@ -188,7 +188,7 @@ PhysicalAddress = Segment * 16 + Offset
 引导程序
 --------------------------------------------------------------------------------
 
-在现实世界中，要启动 Linux 系统，可以有多种引导程序可以选择。比如 [GRUB 2](https://www.gnu.org/software/grub/) 和 [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project)。Linux内核通过 [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) 来定义应该如何实现引导程序。在这里我们将之介绍 GRUB 2。
+在现实世界中，要启动 Linux 系统，有多种引导程序可以选择。比如 [GRUB 2](https://www.gnu.org/software/grub/) 和 [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project)。Linux内核通过 [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) 来定义应该如何实现引导程序。在这里我们将只介绍 GRUB 2。
 
 现在 BIOS 已经选择了一个启动设备，并且将控制权转移给了启动扇区中的代码，在我们的例子中，启动扇区代码是 [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD)。因为这段代码只能占用一个扇区，因此非常简单，只做一些必要的初始化，然后就跳转到 GRUB 2's core image 去执行。 Core image 的代码请参考 [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD)，一般来说 core image 在磁盘上是存储在启动扇区之后到第一个可用分区之前。core image 的初始化代码会把整个 core image （包括 GRUB 2的内核代码和文件系统驱动） 引导到内存中。 引导完成之后，[grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c)将被调用。
 
