@@ -14,7 +14,7 @@
 jmpl	*%eax
 ```
 
-回忆一下`eax`寄存器包含了 32 位入口点的地址。我们可以在 [x86 linux 内核引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt) 中找到相关内容：
+你应该还记得，`eax`寄存器包含了 32 位入口点的地址。我们可以在 [x86 linux 内核引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt) 中找到相关内容：
 
 ```
 When using bzImage, the protected-mode kernel was relocated to 0x100000
@@ -46,7 +46,7 @@ fs             0x18	24
 gs             0x18	24
 ```
 
-我们可以看到这里的`cs`寄存器的内容 - `0x10` （在前一节我们提到，这代表全局描述符表中的第二个索引项），`eip`寄存器值是 `0x100000` 并且包括代码段的所有段的基地址都为0。所以我们可以得到物理地址： `0:0x100000` 或者 `0x100000`，正如协议规定的一样。现在让我们从 32 位入口点开始。
+我们在这里可以看到`cs`寄存器包含了 - `0x10` （回忆前一章节，这代表了全局描述符表中的第二个索引项），`eip`寄存器的值是 `0x100000` ，并且包括代码段在内的所有内存段的基地址都为0。所以我们可以得到物理地址： `0:0x100000` 或者 `0x100000`，和协议规定的一样。现在让我们从 32 位入口点开始。
 
 32 位入口点
 --------------------------------------------------------------------------------
@@ -63,14 +63,14 @@ ENTRY(startup_32)
 ENDPROC(startup_32)
 ```
 
-首先，为什么是`被压缩 (compressed)` 的目录？实际上`bzimage`是一个被 gzip 压缩的`vmlinux + 头文件 + 内核启动代码`。我们在前几个章节已经看到了内核启动的代码。所以，`head_64.S`的主要目的就是为了准备并进入长模式，进入以后解压内核。我们将在这一节看到以上直到内核解压缩之前的所有步骤。
+首先，为什么目录名叫做`被压缩的 (compressed)`？实际上`bzimage`是由`vmlinux + 头文件 + 内核启动代码`被 gzip 压缩之后获得的。我们在前几个章节已经看到了内核启动的代码。所以，`head_64.S`的主要目的就是为了做好进入长模式的准备然后进入长模式，进入以后再解压内核。在这一节，我们将会看到直到内核解压缩之前的所有步骤。
 
 在`arch/x86/boot/compressed`目录下有两个文件：
 
 * [head_32.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_32.S)
 * [head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)
 
-但是我们只关注`head_64.S`，因为你可能还记得我们这本书只和`x86_64`有关；在我们这里`head_32.S`没有被使用到。让我们关注 [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile)。这里我们可以看到以下目标：
+但是，你可能还记得我们这本书只和`x86_64`有关，所以我们只会关注`head_64.S`；在我们这里`head_32.S`没有被用到。让我们看一下 [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile)。在那里我们可以看到以下目标：
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
