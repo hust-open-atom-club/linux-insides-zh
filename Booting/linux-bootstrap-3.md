@@ -576,7 +576,7 @@ Remember that `eax` contains the address of the 32-bit entry (we passed it as fi
 
 That's all. We're in the protected mode and stop at it's entry point. We will see what happens next in the next part.
 
-Conclusion
+结论
 --------------------------------------------------------------------------------
 
 This is the end of the third part about linux kernel insides. In next part we will see first steps in the protected mode and transition into the [long mode](http://en.wikipedia.org/wiki/Long_mode).
@@ -585,7 +585,7 @@ If you have any questions or suggestions write me a comment or ping me at [twitt
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes, please send me a PR with corrections at [linux-insides](https://github.com/0xAX/linux-internals).**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [VGA](http://en.wikipedia.org/wiki/Video_Graphics_Array)
