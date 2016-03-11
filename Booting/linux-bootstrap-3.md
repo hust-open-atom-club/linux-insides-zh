@@ -279,13 +279,13 @@ static int vga_set_mode(struct mode_info *mode)
 
 在上面的代码中，每个 `vga_set***` 函数只是简单调用 `0x10` BIOS 中断来进行显示模式的设置。
 
-After we have set video mode, we pass it to `boot_params.hdr.vid_mode`.
+在显卡的显示模式被正确设置之后，这个最终的显示模式被写回  `boot_params.hdr.vid_mode`。
 
-Next `vesa_store_edid` is called. This function simply stores the [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) (**E**xtended **D**isplay **I**dentification **D**ata) information for kernel use. After this `store_mode_params` is called again. Lastly, if `do_restore` is set, the screen is restored to an earlier state.
+接下来 `set_video` 函数将调用 `vesa_store_edid` 函数， 这个函数只是简单的将  [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) (**E**xtended **D**isplay **I**dentification **D**ata) 写入内存，以便于内核访问。最后， `set_video` 将调用 `do_restore` 函数将前面保存的当前屏幕信息还原到屏幕上。
 
-After this we have set video mode and now we can switch to the protected mode.
+到这里位置，显示模式的设置完成，接下来我们可以切换到保护模式了。
 
-Last preparation before transition into protected mode
+在切换到保护模式之前的最后的准备工作
 --------------------------------------------------------------------------------
 
 We can see the last function call - `go_to_protected_mode` - in [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184). As the comment says: `Do the last things and invoke protected mode`, so let's see these last things and switch into protected mode.
