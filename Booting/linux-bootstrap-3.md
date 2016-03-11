@@ -239,9 +239,9 @@ for (;;) {
   }
 ```
 
-The `set_mode` function is defined in [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) and gets only one parameter, `mode`, which is the number of video modes (we got it from the menu or in the start of `setup_video`, from the kernel setup header). 
+你可以在 [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) 中找到 `set_mode` 函数的定义。这个函数只接受一个参数，这个参数是对应的现实模式的数字表示（这个数字来自于显示模式选择菜单，或者从内核命令行参数获得）。
 
-The `set_mode` function checks the `mode` and calls the `raw_set_mode` function. The `raw_set_mode` calls the `set_mode` function for the selected card i.e. `card->set_mode(struct mode_info*)`. We can get access to this function from the `card_info` structure. Every video mode defines this structure with values filled depending upon the video mode (for example for `vga` it is the `video_vga.set_mode` function. See above example of `card_info` structure for `vga`). `video_vga.set_mode` is `vga_set_mode`, which checks the vga mode and calls the respective function:
+`set_mode` 函数首先检查传入的 `mode` 参数，然后调用 `raw_set_mode` 函数。而后者将遍历内核知道的所有 `card_info` 信息，如果发现某张显卡支持传入的模式，这调用 `card_info` 结构中保存的 `set_mode` 函数地址进行显卡显示模式的设置。已 `video_vga` 这个 `card_info` 结构来说，保存在其中的 `set_mode` 函数就指向了 `vga_set_mode` 函数。下面的代码就是 `vga_set_mode` 函数的实现，这个函数根据输入的 vga 显示模式，调用不同的函数完成显示模式的设置：
 
 ```C
 static int vga_set_mode(struct mode_info *mode)
@@ -277,7 +277,7 @@ static int vga_set_mode(struct mode_info *mode)
 }
 ```
 
-Every function which sets up video mode just calls the `0x10` BIOS interrupt with a certain value in the `AH` register.
+在上面的代码中，每个 `vga_set***` 函数只是简单调用 `0x10` BIOS 中断来进行显示模式的设置。
 
 After we have set video mode, we pass it to `boot_params.hdr.vid_mode`.
 
