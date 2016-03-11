@@ -396,7 +396,7 @@ outb(0xfb, 0x21);       /* Mask all but cascade on the primary PIC */
 
 到这里位置，我们就完成了所有的准备工作，下面我们就将正式开始从实模式转换到保护模式。
 
-Set up Interrupt Descriptor Table
+设置中断描述符表
 --------------------------------------------------------------------------------
 
 Now we set up the Interrupt Descriptor table (IDT). `setup_idt`:
