@@ -16,7 +16,7 @@ Linux Insides
 |├1.1|[@hailincai](https://github.com/hailincai)|正在进行|
 |├1.2|[@hailincai](https://github.com/hailincai)|已完成|
 |├1.3|[@hailincai](https://github.com/hailincai)|正在进行|
-|├1.4||未开始|
+|├1.4|[@zmj1316](https://github.com/zmj1316)|正在进行|
 |└1.5||未开始|
 |Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
 |Interrupts||正在进行|
