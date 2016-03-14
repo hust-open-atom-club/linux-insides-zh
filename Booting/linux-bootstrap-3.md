@@ -426,6 +426,7 @@ struct gdt_ptr {
 在设置完中断描述符表之后，我们将使用 `setup_gdt` 函数来设置全部描述符表（关于全局描述符表，大家可以参考[上一章](linux-bootstrap-2.md#protected-mode) 的内容）。在 `setup_gdt` 函数中，使用 `boot_gdt` 数组定义了需要引入 GDTR 寄存器的段描述符信息：
 
 ```C
+   //GDT_ENTRY_BOOT_CS 定义在http://lxr.free-electrons.com/source/arch/x86/include/asm/segment.h#L19 = 2
 	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
 		[GDT_ENTRY_BOOT_CS] = GDT_ENTRY(0xc09b, 0, 0xfffff),
 		[GDT_ENTRY_BOOT_DS] = GDT_ENTRY(0xc093, 0, 0xfffff),
@@ -466,7 +467,7 @@ Not aligned - 4
 Aligned - 16
 ```
 
-因为我们 `boot_gdt` 要求16字节对齐，而我们在这个数组中只定义了 3 个段描述符（一共是 8 *3 = 24字节 ），所以在开头将出现一个空的 8 字节。这样一来这个数组就满足了段描述符表的结构要求（第一项必须是空描述符）。在我们这个数组中，由于前面说的 16 字节对齐的原因，`GDT_ENTRY_BOOT_CS` 的索引将是 1， 而不是 0 （ 当进入保护模式之后，GDT 还会被重新 load )。
+因为我们 `boot_gdt` 的定义中， `GDT_ENTRY_BOOT_CS = 2`，所以在数组中有2个空项，第一项是一个空的描述符，第二项在代码中没有使用。在没有 `align 16` 之前，整个结构占用了（8*5=40）个字节，加了 `align 16` 之后，结构就占用了 48 字节 。
 
 上面代码中出现的 `GDT_ENTRY` 是一个宏定义，这个宏接受 3 个参数（标志，基地址，段长度）来产生段描述符结构。让我们来具体分析上面数组中的代码段描述符来看看这个宏是如何工作的，对于这个段，`GDT_ENTRY` 接受了下面 3 个参数：
 
@@ -529,18 +530,18 @@ protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4
 * 保护模式代码的入口
 * `boot_params` 结构的地址
 
-Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and second is in `edx`.
+第一个参数保存在 `eax` 寄存器，而第二个参数保存在 `edx` 寄存器。
 
-First of all we put the address of `boot_params` in the `esi` register and the address of code segment register `cs` (0x1000) in `bx`. After this we shift `bx` by 4 bits and add the address of label `2` to it (we will have the physical address of label `2` in the `bx` after this) and jump to label `1`. Next we put data segment and task state segment in the `cs` and `di` registers with:
+代码首先在 `boot_params` 地址放入 `esi` 寄存器，然后将 `cs` 寄存器内容放入 `bx` 寄存器，接着执行 `bx << 4 + 标号为2的代码的地址`，这样一来 `bx` 寄存器就包含了标号为2的代码的地址。接下来代码将把数据段索引放入 `cx` 寄存器，将  TSS 段索引放入 `di` 寄存器：
 
 ```assembly
 movw	$__BOOT_DS, %cx
 movw	$__BOOT_TSS, %di
 ```
 
-As you can read above `GDT_ENTRY_BOOT_CS` has index 2 and every GDT entry is 8 byte, so `CS` will be `2 * 8 = 16`, `__BOOT_DS` is 24 etc.
+就像前面我们看到的 `GDT_ENTRY_BOOT_CS` 的值为2，每个段描述符都是 8 字节，所以 `cx` 寄存器的值将是 `2*8 = 16`，`di` 寄存器的值将是 `4*8 =32`。
 
-Next we set the `PE` (Protection Enable) bit in the `CR0` control register:
+接下来，我们通过设置 `CR0` 寄存器相应的为使 CPU 进入保护模式：
 
 ```assembly
 movl	%cr0, %edx
@@ -548,30 +549,31 @@ orb	$X86_CR0_PE, %dl
 movl	%edx, %cr0
 ```
 
-and make a long jump to protected mode:
+在进入保护模式之后，通过一个长跳转进入 32 位代码：
 
 ```assembly
 	.byte	0x66, 0xea
 2:	.long	in_pm32
-	.word	__BOOT_CS
+	.word	__BOOT_CS ;(GDT_ENTRY_BOOT_CS*8) = 16，段描述符表索引
 ```
 
-where
-* `0x66` is the operand-size prefix which allows us to mix 16-bit and 32-bit code,
-* `0xea` - is the jump opcode,
-* `in_pm32` is the segment offset
-* `__BOOT_CS` is the code segment.
+这段代码中
+* `0x66` 操作符前缀允许我们混合执行 16 位和 32 位代码
+* `0xea` - 跳转指令的操作符
+* `in_pm32` 跳转地址偏移
+* `__BOOT_CS` 代码段描述符索引
 
-After this we are finally in the protected mode:
+在执行了这个跳转命令之后，我们就在保护模式下执行代码了：
 
 ```assembly
 .code32
 .section ".text32","ax"
 ```
 
-Let's look at the first steps in protected mode. First of all we set up the data segment with:
+保护模式代码的第一步就是重置所有的段寄存器:
 
 ```assembly
+GLOBAL(in_pm32)
 movl	%ecx, %ds
 movl	%ecx, %es
 movl	%ecx, %fs
@@ -579,7 +581,7 @@ movl	%ecx, %gs
 movl	%ecx, %ss
 ```
 
-If you paid attention, you can remember that we saved `$__BOOT_DS` in the `cx` register. Now we fill it with all segment registers besides `cs` (`cs` is already `__BOOT_CS`). Next we zero out all general purpose registers besides `eax` with:
+还记得我们在实模式代码中将 `$__BOOT_DS` （数据段描述符索引）放入了 `cx` 寄存器。，所以上面的代码甚至所有段寄存器（除了 `CS` 寄存器）指向数据段。接下来代码将所有的通用寄存器清 0 ：
 
 ```assembly
 xorl	%ecx, %ecx
@@ -589,24 +591,22 @@ xorl	%ebp, %ebp
 xorl	%edi, %edi
 ```
 
-And jump to the 32-bit entry point in the end:
+最后使用长跳转跳入正在的 32 为代码（通过参数传入的地址）
 
 ```
-jmpl	*%eax
+jmpl	*%eax ;?jmpl cs:eax?
 ```
 
-Remember that `eax` contains the address of the 32-bit entry (we passed it as first parameter into `protected_mode_jump`).
-
-That's all. We're in the protected mode and stop at it's entry point. We will see what happens next in the next part.
+到这里，我们就进入了保护模式开始执行代码了，下一章我们将分析这段 32 位代码到底做了些什么。
 
 结论
 --------------------------------------------------------------------------------
 
-This is the end of the third part about linux kernel insides. In next part we will see first steps in the protected mode and transition into the [long mode](http://en.wikipedia.org/wiki/Long_mode).
+这章到这里就结束了，在下一章中我们将具体介绍这章最后跳转到的 32 位代码，并且了解系统是如何进入  [long mode](http://en.wikipedia.org/wiki/Long_mode)的。
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes, please send me a PR with corrections at [linux-insides](https://github.com/0xAX/linux-internals).**
+**英文不是我的母语。如果你发现我的英文描述有任何问题，请提交一个PR到[linux-insides](https://github.com/0xAX/linux-internals).**
 
 链接
 --------------------------------------------------------------------------------
