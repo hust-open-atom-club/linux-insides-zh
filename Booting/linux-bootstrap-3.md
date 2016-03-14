@@ -399,7 +399,7 @@ outb(0xfb, 0x21);       /* Mask all but cascade on the primary PIC */
 设置中断描述符表
 --------------------------------------------------------------------------------
 
-Now we set up the Interrupt Descriptor table (IDT). `setup_idt`:
+现在内核将调用 `setup_idt` 方法来设置中断描述符表（ IDT ）：
 
 ```C
 static void setup_idt(void)
@@ -409,7 +409,8 @@ static void setup_idt(void)
 }
 ```
 
-which sets up the Interrupt Descriptor Table (describes interrupt handlers and etc.). For now the IDT is not installed (we will see it later), but now we just the load IDT with the `lidtl` instruction. `null_idt` contains address and size of IDT, but now they are just zero. `null_idt` is a `gdt_ptr` structure, it as defined as:
+上面的代码使用 `lidtl` 指令将 `null_idt` 所指向的中断描述符表引入寄存器 IDT。由于 `null_idt` 没有设定中断描述符表的长度（ 0 ），所以这段指令执行之后，实际上没有任何中断调用被设置成功（所有中断调用都是空的），在后面的章节中我们将看到正确的设置。`null_idt` 是一个 `gdt_ptr` 机构的数据，这个结构的定义如下所示：
+
 ```C
 struct gdt_ptr {
 	u16 len;
@@ -417,12 +418,12 @@ struct gdt_ptr {
 } __attribute__((packed));
 ```
 
-where we can see the 16-bit length(`len`) of the IDT and the 32-bit pointer to it (More details about the IDT and interruptions will be seen in the next posts). ` __attribute__((packed))` means that the size of `gdt_ptr` is the minimum required size. So the size of the `gdt_ptr` will be 6 bytes here or 48 bits. (Next we will load the pointer to the `gdt_ptr` to the `GDTR` register and you might remember from the previous post that it is 48-bits in size).
+在上面的定义中，我们可以看到上面这个结构包含一个 16 bit 的长度字段，和一个 32 bit 的指针字段。`__attribute__((packed))` 意味着这个结构就只包含 48 bit 信息（没有字节对齐优化）。在下面一节中，我们将看到相同的结构将被导入 `GDTR` 寄存器（如果你还记得上一章的内容，应该记得 GDTR 寄存器是 48 bit 长度的）。
 
-Set up Global Descriptor Table
+设置全局描述符表
 --------------------------------------------------------------------------------
 
-Next is the setup of the Global Descriptor Table (GDT). We can see the `setup_gdt` function which sets up GDT (you can read about it in the [Kernel booting process. Part 2.](linux-bootstrap-2.md#protected-mode)). There is a definition of the `boot_gdt` array in this function, which contains the definition of the three segments:
+在设置完中断描述符表之后，我们将使用 `setup_gdt` 函数来设置全部描述符表（关于全局描述符表，大家可以参考[上一章](linux-bootstrap-2.md#protected-mode) 的内容）。在 `setup_gdt` 函数中，使用 `boot_gdt` 数组定义了需要引入 GDTR 寄存器的段描述符信息：
 
 ```C
 	static const u64 boot_gdt[] __attribute__((aligned(16))) = {
@@ -432,7 +433,8 @@ Next is the setup of the Global Descriptor Table (GDT). We can see the `setup_gd
 	};
 ```
 
-For code, data and TSS (Task State Segment). We will not use the task state segment for now, it was added there to make Intel VT happy as we can see in the comment line (if you're interested you can find commit which describes it - [here](https://github.com/torvalds/linux/commit/88089519f302f1296b4739be45699f06f728ec31)). Let's look at `boot_gdt`. First of all note that it has the `__attribute__((aligned(16)))` attribute. It means that this structure will be aligned by 16 bytes. Let's look at a simple example:
+在上面的 `boot_gdt` 数组中，我们定义了代码，数据和 TSS 段的段描述符，因为我们并没有设置任何的中断调用（记得上面所的 `null_idt`吗？），所以 TSS 段并不会被使用到。TSS 段存在的唯一目的就是让 Intel 处理器能够正确进入保护模式。下面让我们详细了解一下 `boot_gdt` 这个数组，首先，这个数组被 `__attribute__((aligned(16)))` 修饰，这就意味着这个数组将以 16 字节为单位对齐。让我们通过下面的例子来了解一下什么叫 16 字节对齐：
+
 ```C
 #include <stdio.h>
 
@@ -456,7 +458,7 @@ int main(void)
 }
 ```
 
-Technically a structure which contains one `int` field must be 4 bytes, but here `aligned` structure will be 16 bytes:
+上面的代码可以看出，一旦指定了 16 字节对齐，即使结构中只有一个 `int` 类型的字段，整个结构也将占用 16 个字节：
 
 ```
 $ gcc test.c -o test && test
@@ -464,70 +466,68 @@ Not aligned - 4
 Aligned - 16
 ```
 
-`GDT_ENTRY_BOOT_CS` has index - 2 here, `GDT_ENTRY_BOOT_DS` is `GDT_ENTRY_BOOT_CS + 1` and etc. It starts from 2, because first is a mandatory null descriptor (index - 0) and the second is not used (index - 1).
+因为我们 `boot_gdt` 要求16字节对齐，而我们在这个数组中只定义了 3 个段描述符（一共是 8 *3 = 24字节 ），所以在开头将出现一个空的 8 字节。这样一来这个数组就满足了段描述符表的结构要求（第一项必须是空描述符）。在我们这个数组中，由于前面说的 16 字节对齐的原因，`GDT_ENTRY_BOOT_CS` 的索引将是 1， 而不是 0 （ 当进入保护模式之后，GDT 还会被重新 load )。
 
-`GDT_ENTRY` is a macro which takes flags, base and limit and builds GDT entry. For example let's look at the code segment entry. `GDT_ENTRY` takes following values:
+上面代码中出现的 `GDT_ENTRY` 是一个宏定义，这个宏接受 3 个参数（标志，基地址，段长度）来产生段描述符结构。让我们来具体分析上面数组中的代码段描述符来看看这个宏是如何工作的，对于这个段，`GDT_ENTRY` 接受了下面 3 个参数：
 
-* base  - 0
-* limit - 0xfffff
-* flags - 0xc09b
+* 基地址  - 0
+* 段长度 - 0xfffff
+* 标志 - 0xc09b
 
-What does this mean? The segment's base address is 0, and the limit (size of segment) is - `0xffff` (1 MB). Let's look at the flags. It is `0xc09b` and it will be:
+上面这些数字表明，这个段的基地址是 0， 段长度是 `0xfffff` （ 1 MB ），而标志字段展开之后是下面的二进制数据：
 
 ```
 1100 0000 1001 1011
 ```
 
-in binary. Let's try to understand what every bit means. We will go through all bits from left to right:
+这些二进制数据的具体含义如下:
 
-* 1    - (G) granularity bit
-* 1    - (D) if 0 16-bit segment; 1 = 32-bit segment
-* 0    - (L) executed in 64 bit mode if 1
-* 0    - (AVL) available for use by system software
+* 1    - (G) 这里为 1，表示段的实际长度是 `0xfffff * 4kb ` = `4GB`
+* 1    - (D) 表示这个段是一个32位段
+* 0    - (L) 这个代码段没有运行在 long mode
+* 0    - (AVL) Linux 没有使用
 * 0000 - 4 bit length 19:16 bits in the descriptor
-* 1    - (P) segment presence in memory
-* 00   - (DPL) - privilege level, 0 is the highest privilege
-* 1    - (S) code or data segment, not a system segment
-* 101  - segment type execute/read/
-* 1    - accessed bit
+* 1    - (P) 段已经位于内存中
+* 00   - (DPL) - 段优先级为0
+* 1    - (S) 说明这个段是一个代码或者数据段
+* 101  - 段类型为可执行/可读
+* 1    - 段可访问
 
-You can read more about every bit in the previous [post](linux-bootstrap-2.md) or in the [Intel® 64 and IA-32 Architectures Software Developer's Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html).
+关于段描述符的更详细的信息你可以从上一章中获得 [post](linux-bootstrap-2.md)，你也可以阅读 [Intel® 64 and IA-32 Architectures Software Developer's Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)获取全部信息。
 
-After this we get the length of the GDT with:
+在定义了数组之后，代码将获取 GDT 的长度：
 
 ```C
 gdt.len = sizeof(boot_gdt)-1;
 ```
 
-We get the size of `boot_gdt` and subtract 1 (the last valid address in the GDT).
-
-Next we get a pointer to the GDT with:
+接下来是将 GDT 的地址放入 gdt.ptr 中：
 
 ```C
 gdt.ptr = (u32)&boot_gdt + (ds() << 4);
 ```
 
-Here we just get the address of `boot_gdt` and add it to the address of the data segment left-shifted by 4 bits (remember we're in the real mode now).
+这里的地址计算很简单，因为我们还在实模式，所以就是 （ ds << 4 + 数组起始地址）。
 
-Lastly we execute the `lgdtl` instruction to load the GDT into the GDTR register:
+最后通过执行 `lgdtl` 指令将 GDT 信息写入 GDTR 寄存器：
 
 ```C
 asm volatile("lgdtl %0" : : "m" (gdt));
 ```
 
-Actual transition into protected mode
+切换进入保护模式
 --------------------------------------------------------------------------------
 
-This is the end of the `go_to_protected_mode` function. We loaded IDT, GDT, disable interruptions and now can switch the CPU into protected mode. The last step is calling the `protected_mode_jump` function with two parameters:
+`go_to_protected_mode` 函数在完成 IDT, GDT 初始化，并禁止了 NMI 中断之后，将调用 `protected_mode_jump` 函数完成从实模式到保护模式的跳转：
 
 ```C
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
-which is defined in [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26). It takes two parameters:
+`protected_mode_jump` 函数定义在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26)，它接受下面2个参数:
 
-* address of protected mode entry point
-* address of `boot_params`
+* 保护模式代码的入口
+* `boot_params` 结构的地址
 
 Let's look inside `protected_mode_jump`. As I wrote above, you can find it in `arch/x86/boot/pmjump.S`. The first parameter will be in the `eax` register and second is in `edx`.
 
