@@ -4,7 +4,7 @@
 显示模式初始化和进入保护模式
 --------------------------------------------------------------------------------
 
-这一章是`内核启动过程`的第三部分，在[前一章](linux-bootstrap-2.md#kernel-booting-process-part-2)中，我们的内核启动过程之旅停在了对 `set_video` 函数的调用（这个函数定义在 [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181)）。在着一章中，我们将接着上一章继续我们的内核启动之旅。在这一章你将读到下面的内容：
+这一章是`内核启动过程`的第三部分，在[前一章](linux-bootstrap-2.md#kernel-booting-process-part-2)中，我们的内核启动过程之旅停在了对 `set_video` 函数的调用（这个函数定义在 [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181)）。在这一章中，我们将接着上一章继续我们的内核启动之旅。在这一章你将读到下面的内容：
 - 显示模式的初始化，
 - 在进入保护模式之前的准备工作，
 - 正式进入保护模式
@@ -38,7 +38,7 @@ vga=<mode>
 	line is parsed.
 ```
 
-所以我们可以通过将 `vga` 选项写入 grub 或者起到引导程序的配置文件将，从而让内核命令行得到相应的显示模式设置信息。就像上面所描述的那样，这个选项可以接受不同类型的值来表示相同的意思。比如你可以传入 `0XFFFD` 或者 `ask`，这2个值都表示需要显示一个菜单让用户选择想要的显示模式。下面的链接就给出了这个菜单：
+根据上面的描述，我们可以通过将 `vga` 选项写入 grub 或者起到引导程序的配置文件，从而让内核命令行得到相应的显示模式设置信息。这个选项可以接受不同类型的值来表示相同的意思。比如你可以传入 `0XFFFD` 或者 `ask`，这2个值都表示需要显示一个菜单让用户选择想要的显示模式。下面的链接就给出了这个菜单：
 
 ![video mode setup menu](http://oi59.tinypic.com/ejcz81.jpg)
 
@@ -54,7 +54,7 @@ vga=<mode>
 |------|------|-------|-----|------|----|-----|-----|-----|
 | Size |  1   |   2   |  4  |   8  |  1 |  2  |  4  |  8  |
 
-如果你尝试阅读内核代码，最好能够牢记这些数据类型。 them.
+如果你尝试阅读内核代码，最好能够牢记这些数据类型。
 
 堆操作 API
 --------------------------------------------------------------------------------
@@ -65,13 +65,13 @@ vga=<mode>
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-如果你阅读过第二部分，你应该还记得在第二部分中，我们通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数完成了 heap 的初始化。在 `boot.h` 中定义了一系列的方法来操作被初始化之后的 heap。这些操作包括：
+如果你阅读过第二部分，你应该还记得在第二部分中，我们通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数完成了 HEAP 的初始化。在 `boot.h` 中定义了一系列的方法来操作被初始化之后的 HEAP。这些操作包括：
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-就像我们在前面看到的，这个宏只是简单的将 HEAP 头设置到 `_end` 标号。在上一章中我们已经说明了 `_end` 标号的，在 `boot.h` 中通过 `extern char _end[];` 来引用（从这里可以看出，在内核初始化的时候堆和栈是共享内存空间的，详细的信息可以查看第一章的堆初始化和第二章的堆初始化）：
+就像我们在前面看到的，这个宏只是简单的将 HEAP 头设置到 `_end` 标号。在上一章中我们已经说明了 `_end` 标号，在 `boot.h` 中通过 `extern char _end[];` 来引用（从这里可以看出，在内核初始化的时候堆和栈是共享内存空间的，详细的信息可以查看第一章的堆栈初始化和第二章的堆初始化）：
 
 下面一个是 `GET_HEAP` 宏：
 
@@ -80,7 +80,7 @@ vga=<mode>
 	((type *)__get_heap(sizeof(type),__alignof__(type),(n)))
 ```
 
-可以看出这个宏调用了 `__get_heap` 函数来进行内存的分配。`__get_heap` 需要下面3个参数来进行内存分配参数：
+可以看出这个宏调用了 `__get_heap` 函数来进行内存的分配。`__get_heap` 需要下面3个参数来进行内存分配操作：
 
 * 某个数据类型所占用的字节数
 * `__alignof__(type)` 返回对于请求的数据类型需要怎样的对齐方式 ( 根据我的了解这个是 gcc 提供的一个功能 ）
@@ -102,7 +102,7 @@ static inline char *__get_heap(size_t s, size_t a, size_t n)
 
 现在让我们来了解这个函数是如何工作的。 这个函数首先根据对齐方式要求（参数 `a` ）调整 `HEAP` 的值，然后将 `HEAP` 值赋值给一个临时变量 `tmp`。接下来根据需要分配的对象的个数（参数 `n` ），预留出所需要的内存，然后将 `tmp` 返回给调用端。
 
-最后一个关于 heap 的操作是：
+最后一个关于 HEAP 的操作是：
 
 ```C
 static inline bool heap_free(size_t n)
@@ -113,7 +113,7 @@ static inline bool heap_free(size_t n)
 
 这个函数简单做了一个减法 `heap_end - HEAP`，如果相减的结果大于请求的内存，那么就返回真，否则返回假。
 
-我们已经看到了所有可以对 heap 进行操作，下面让我们继续显示模式设置过程。
+我们已经看到了所有可以对 HEAP 进行操作，下面让我们继续显示模式设置过程。
 
 设置显示模式
 --------------------------------------------------------------------------------
@@ -122,9 +122,9 @@ static inline bool heap_free(size_t n)
 
 `store_mode_params` 函数将调用 `store_cursor_position` 函数将当前屏幕上光标的位置保存起来。下面让我们来看 `store_cursor_poistion` 函数是如何实现的。
 
-首先函数初始化一个类型为 `biosregs` 的变量，将其中的 `AH` 寄存器内容设置成 `0x3`，然后调用 `0x10` bios 中断。当中断调用返回之后，`DL` 和 `DH` 寄存器分别包含了当前按光标的行和列信息。接着，这2个信息将被保存如 `boot_params.screen_info` 字段的 `orig_x` 和 `orig_y`字段。
+首先函数初始化一个类型为 `biosregs` 的变量，将其中的 `AH` 寄存器内容设置成 `0x3`，然后调用 `0x10` BIOS 中断。当中断调用返回之后，`DL` 和 `DH` 寄存器分别包含了当前光标的行和列信息。接着，这2个信息将被保存到 `boot_params.screen_info` 字段的 `orig_x` 和 `orig_y`字段。
 
-在 `store_cursor_position` 函数执行完毕之后，`store_mode_params` 函数将调用 `store_vide_mode` 函数将当前使用的现实模式保存到 `boot_params.screen_info.orig_video_mode`。
+在 `store_cursor_position` 函数执行完毕之后，`store_mode_params` 函数将调用 `store_vide_mode` 函数将当前使用的显示模式保存到 `boot_params.screen_info.orig_video_mode`。
 
 接下來 `store_mode_params` 函数将根据当前显示模式的设定，给 `video_segment` 变量设置正确的值（实际上就是设置显示内存的起始地址）。在 BIOS 将控制权转移到引导扇区的时候，显示内存地址和显示模式的对应关系如下表所示：
 
@@ -151,7 +151,7 @@ boot_params.screen_info.orig_video_points = font_size;
 
 接下来代码将从地址 `0x44a` 处获得屏幕列信息，从地址 `0x484` 处获得屏幕行信息，并将它们保存到 `boot_params.screen_info.orig_video_cols` 和 `boot_params.screen_info.orig_video_lines`。到这里，`store_mode_params` 的执行就结束了。
 
-接下来，`set_video` 函数将条用 `save_screen` 函数将当前屏幕上的所有信息保存到 HEAP 中。这个函数首先获得当前屏幕的所有信息（包括屏幕大小，当前光标位置，屏幕上的字符信息），并且保存到 `saved_screen` 结构体中。这个结构体的定义如下所示：
+接下来，`set_video` 函数将调用 `save_screen` 函数将当前屏幕上的所有信息保存到 HEAP 中。这个函数首先获得当前屏幕的所有信息（包括屏幕大小，当前光标位置，屏幕上的字符信息），并且保存到 `saved_screen` 结构体中。这个结构体的定义如下所示：
 
 ```C
 static struct saved_screen {
@@ -191,7 +191,7 @@ for (card = video_cards; card < video_cards_end; card++) {
 		video_cards_end = .;
 	}
 ```
-那么这段内存里面存放的数据是什么呢，下面我们就来详细分析。在内核初始化代码中，对于每个支持的现实模式都是使用下面的代码进行定义的：
+那么这段内存里面存放的数据是什么呢，下面我们就来详细分析。在内核初始化代码中，对于每个支持的显示模式都是使用下面的代码进行定义的：
 
 ```C
 static __videocard video_vga = {
@@ -224,7 +224,7 @@ struct card_info {
 
 在 `.videocards` 内存段实际上存放的就是所有被内核初始化代码定义的 `card_info` 结构（可以看成是一个数组），所以 `probe_cards` 函数可以使用 `video_cards`，通过循环遍历所有的 `card_info`。
 
-在 `probe_cards` 执行完成之后，我们终于进入 `set_video` 函数的主循环了。在这个循环中，如果 `vid_mode=ask`，那么将显示一个菜单让用户选择想要的显示模式，然后代码将根据用户的选择或者 `vid_mod` ，通过调用 `set_mode` 函数来设置正确的现实模式。如果设置成功，循环结束，否则显示菜单让用户选择显示模式，继续进行设置显示模式的尝试。
+在 `probe_cards` 执行完成之后，我们终于进入 `set_video` 函数的主循环了。在这个循环中，如果 `vid_mode=ask`，那么将显示一个菜单让用户选择想要的显示模式，然后代码将根据用户的选择或者 `vid_mod` 的值 ，通过调用 `set_mode` 函数来设置正确的显示模式。如果设置成功，循环结束，否则显示菜单让用户选择显示模式，继续进行设置显示模式的尝试。
 
 ```c
 for (;;) {
@@ -239,9 +239,9 @@ for (;;) {
   }
 ```
 
-你可以在 [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) 中找到 `set_mode` 函数的定义。这个函数只接受一个参数，这个参数是对应的现实模式的数字表示（这个数字来自于显示模式选择菜单，或者从内核命令行参数获得）。
+你可以在 [video-mode.c](https://github.com/0xAX/linux/blob/master/arch/x86/boot/video-mode.c#L147) 中找到 `set_mode` 函数的定义。这个函数只接受一个参数，这个参数是对应的显示模式的数字表示（这个数字来自于显示模式选择菜单，或者从内核命令行参数获得）。
 
-`set_mode` 函数首先检查传入的 `mode` 参数，然后调用 `raw_set_mode` 函数。而后者将遍历内核知道的所有 `card_info` 信息，如果发现某张显卡支持传入的模式，这调用 `card_info` 结构中保存的 `set_mode` 函数地址进行显卡显示模式的设置。已 `video_vga` 这个 `card_info` 结构来说，保存在其中的 `set_mode` 函数就指向了 `vga_set_mode` 函数。下面的代码就是 `vga_set_mode` 函数的实现，这个函数根据输入的 vga 显示模式，调用不同的函数完成显示模式的设置：
+`set_mode` 函数首先检查传入的 `mode` 参数，然后调用 `raw_set_mode` 函数。而后者将遍历内核知道的所有 `card_info` 信息，如果发现某张显卡支持传入的模式，这调用 `card_info` 结构中保存的 `set_mode` 函数地址进行显卡显示模式的设置。以 `video_vga` 这个 `card_info` 结构来说，保存在其中的 `set_mode` 函数就指向了 `vga_set_mode` 函数。下面的代码就是 `vga_set_mode` 函数的实现，这个函数根据输入的 vga 显示模式，调用不同的函数完成显示模式的设置：
 
 ```C
 static int vga_set_mode(struct mode_info *mode)
@@ -283,16 +283,16 @@ static int vga_set_mode(struct mode_info *mode)
 
 接下来 `set_video` 函数将调用 `vesa_store_edid` 函数， 这个函数只是简单的将  [EDID](https://en.wikipedia.org/wiki/Extended_Display_Identification_Data) (**E**xtended **D**isplay **I**dentification **D**ata) 写入内存，以便于内核访问。最后， `set_video` 将调用 `do_restore` 函数将前面保存的当前屏幕信息还原到屏幕上。
 
-到这里位置，显示模式的设置完成，接下来我们可以切换到保护模式了。
+到这里为止，显示模式的设置完成，接下来我们可以切换到保护模式了。
 
 在切换到保护模式之前的最后的准备工作
 --------------------------------------------------------------------------------
 
-在进入保护模式之前的最后一个函数调用发生在 [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184) 中的 `go_to_protected_mode` 函数，就像这个函数的注释说的，这个函数将进行最后的准备工作然后进入保护模式，线面就让我们来具体看看这个最后的准备工作是什么，以及如何切换如保护模式的。
+在进入保护模式之前的最后一个函数调用发生在 [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184) 中的 `go_to_protected_mode` 函数，就像这个函数的注释说的，这个函数将进行最后的准备工作然后进入保护模式，下面就让我们来具体看看最后的准备工作是什么，以及系统是如何切换如保护模式的。
 
-`go_to_protected_mode` 函数本身定义在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104)。 这个函数调用了一些其他的函数进行最后的准备工作，下面就让我们来看看这些函数是如何工作的。
+`go_to_protected_mode` 函数本身定义在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104)。 这个函数调用了一些其他的函数进行最后的准备工作，下面就让我们来具体看看这些函数。
 
-`go_to_protected_mode` 函数首先调用的 `realmode_switch_hook` 函数，后者如果发现 `realmode_swtch` hook， 那么将调用它并禁止 [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt) 中断，反之将直接禁止 NMI 中断。只有当 bootloader 运行在特殊的环境下（比如 DOS ）才会被使用。你可以在 [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**) 中详细了解 hook 函数的信息。
+`go_to_protected_mode` 函数首先调用的是 `realmode_switch_hook` 函数，后者如果发现 `realmode_switch` hook， 那么将调用它并禁止 [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt) 中断，反之将直接禁止 NMI 中断。只有当 bootloader 运行在宿主环境下（比如在 DOS 下运行 ）， hook 才会被使用。你可以在 [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**) 中详细了解 hook 函数的信息。
 
 ```c
 /*
@@ -323,7 +323,7 @@ io_delay();
 
 上面的代码首先调用 `cli` 汇编指令清楚了中断标志 `IF`，这条指令执行之后，外部中断就被禁止了，紧接着的下一行代码就禁止了 NMI 中断。
 
-这里简单介绍一下中断。中断是由硬件或者软件产生的，当中断产生的时候， CPU 将得到通知。这个时候， CPU 将停止当前指令的执行，保存当前代码的环境，然后将控制权移交到中断处理程序。当中断处理程序完成之后，将恢复中断之前的运行环境，那么被中断的代码将继续运行。 NMI 中断是一类特殊的中断，往往预示着系统发生了不可恢复的错误，所以在正常运行的操作系统中，NMI 中断是不会被禁止的，但是在进入保护模式之前，由于特殊需求，代码禁止了这类中断。我们将在后续的章节中对中断做更多的介绍，这里就不展开了。
+这里简单介绍一下中断。中断是由硬件或者软件产生的，当中断产生的时候， CPU 将得到通知。这个时候， CPU 将停止当前指令的执行，保存当前代码的环境，然后将控制权移交到中断处理程序。当中断处理程序完成之后，将恢复中断之前的运行环境，从而被中断的代码将继续运行。 NMI 中断是一类特殊的中断，往往预示着系统发生了不可恢复的错误，所以在正常运行的操作系统中，NMI 中断是不会被禁止的，但是在进入保护模式之前，由于特殊需求，代码禁止了这类中断。我们将在后续的章节中对中断做更多的介绍，这里就不展开了。
 
 现在让我们回到上面的代码，在 NMI 中断被禁止之后（通过写 `0x80` 进 CMOS 地址寄存器 `0x70` ），函数接着调用了 `io_delay` 函数进行了短暂的延时以等待 I/O 操作完成。下面就是 `io_delay` 函数的实现：
 
@@ -365,7 +365,7 @@ static int a20_test(int loops)
 
 这个函数首先将 `0x0000` 放入 `FS` 寄存器，将 `0xffff` 放入 `GS` 寄存器。然后通过 `rdfs32` 函数调用，将 `A20_TEST_ADDR` 内存地址的内容放入 `saved` 和 `ctr` 变量。
 
-接下来我们使用 `wrfs32` 函数将更新过的 `ctr` 的值写入 `fs:gs` ，然后延时 1ms，接着从Next we write an updated `ctr` value into `fs:gs` with the `wrfs32` function, then delay for 1ms, 接着从 `GS:A20_TEST_ADDR+0x10` 读取内容，如果该地址内容不为0，那么 A20 已经被激活。如果 A20 没有被激活，代码将尝试使用多种方法进行 A20 地址激活。其中的一种方法就是调用 BIOS `0X15` 中断激活 A20 地址线。
+接下来我们使用 `wrfs32` 函数将更新过的 `ctr` 的值写入 `fs:gs` ，接着延时 1ms， 然后从 `GS:A20_TEST_ADDR+0x10` 读取内容，如果该地址内容不为0，那么 A20 已经被激活。如果 A20 没有被激活，代码将尝试使用多种方法进行 A20 地址激活。其中的一种方法就是调用 BIOS `0X15` 中断激活 A20 地址线。
 
 如果 `enabled_a20` 函数调用失败，显示一个错误消息并且调用 `die` 函数结束操作系统运行。`die` 函数定义在 [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
 
@@ -383,7 +383,7 @@ outb(0, 0xf0);
 outb(0, 0xf1);
 ```
 
-这个函数非常简单，通过将 `0` 写入 I/O 端口 `0xf0` 和 `0xf1` 以清除数字协处理器。
+这个函数非常简单，通过将 `0` 写入 I/O 端口 `0xf0` 和 `0xf1` 以复位数字协处理器。
 
 接下来 `mask_all_interrupts` 函数将被调用：
 
@@ -409,7 +409,7 @@ static void setup_idt(void)
 }
 ```
 
-上面的代码使用 `lidtl` 指令将 `null_idt` 所指向的中断描述符表引入寄存器 IDT。由于 `null_idt` 没有设定中断描述符表的长度（ 0 ），所以这段指令执行之后，实际上没有任何中断调用被设置成功（所有中断调用都是空的），在后面的章节中我们将看到正确的设置。`null_idt` 是一个 `gdt_ptr` 机构的数据，这个结构的定义如下所示：
+上面的代码使用 `lidtl` 指令将 `null_idt` 所指向的中断描述符表引入寄存器 IDT。由于 `null_idt` 没有设定中断描述符表的长度（长度为 0 ），所以这段指令执行之后，实际上没有任何中断调用被设置成功（所有中断调用都是空的），在后面的章节中我们将看到正确的设置。`null_idt` 是一个 `gdt_ptr` 机构的数据，这个结构的定义如下所示：
 
 ```C
 struct gdt_ptr {
@@ -467,9 +467,9 @@ Not aligned - 4
 Aligned - 16
 ```
 
-因为我们 `boot_gdt` 的定义中， `GDT_ENTRY_BOOT_CS = 2`，所以在数组中有2个空项，第一项是一个空的描述符，第二项在代码中没有使用。在没有 `align 16` 之前，整个结构占用了（8*5=40）个字节，加了 `align 16` 之后，结构就占用了 48 字节 。
+因为在 `boot_gdt` 的定义中， `GDT_ENTRY_BOOT_CS = 2`，所以在数组中有2个空项，第一项是一个空的描述符，第二项在代码中没有使用。在没有 `align 16` 之前，整个结构占用了（8*5=40）个字节，加了 `align 16` 之后，结构就占用了 48 字节 。
 
-上面代码中出现的 `GDT_ENTRY` 是一个宏定义，这个宏接受 3 个参数（标志，基地址，段长度）来产生段描述符结构。让我们来具体分析上面数组中的代码段描述符来看看这个宏是如何工作的，对于这个段，`GDT_ENTRY` 接受了下面 3 个参数：
+上面代码中出现的 `GDT_ENTRY` 是一个宏定义，这个宏接受 3 个参数（标志，基地址，段长度）来产生段描述符结构。让我们来具体分析上面数组中的代码段描述符（ `GDT_ENTRY_BOOT_CS` ）来看看这个宏是如何工作的，对于这个段，`GDT_ENTRY` 接受了下面 3 个参数：
 
 * 基地址  - 0
 * 段长度 - 0xfffff
@@ -487,14 +487,14 @@ Aligned - 16
 * 1    - (D) 表示这个段是一个32位段
 * 0    - (L) 这个代码段没有运行在 long mode
 * 0    - (AVL) Linux 没有使用
-* 0000 - 4 bit length 19:16 bits in the descriptor
+* 0000 - 段长度的4个位
 * 1    - (P) 段已经位于内存中
 * 00   - (DPL) - 段优先级为0
 * 1    - (S) 说明这个段是一个代码或者数据段
 * 101  - 段类型为可执行/可读
 * 1    - 段可访问
 
-关于段描述符的更详细的信息你可以从上一章中获得 [post](linux-bootstrap-2.md)，你也可以阅读 [Intel® 64 and IA-32 Architectures Software Developer's Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)获取全部信息。
+关于段描述符的更详细的信息你可以从上一章中获得 [上一章](linux-bootstrap-2.md)，你也可以阅读 [Intel® 64 and IA-32 Architectures Software Developer's Manuals 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)获取全部信息。
 
 在定义了数组之后，代码将获取 GDT 的长度：
 
@@ -541,7 +541,7 @@ movw	$__BOOT_TSS, %di
 
 就像前面我们看到的 `GDT_ENTRY_BOOT_CS` 的值为2，每个段描述符都是 8 字节，所以 `cx` 寄存器的值将是 `2*8 = 16`，`di` 寄存器的值将是 `4*8 =32`。
 
-接下来，我们通过设置 `CR0` 寄存器相应的为使 CPU 进入保护模式：
+接下来，我们通过设置 `CR0` 寄存器相应的位使 CPU 进入保护模式：
 
 ```assembly
 movl	%cr0, %edx
@@ -591,7 +591,7 @@ xorl	%ebp, %ebp
 xorl	%edi, %edi
 ```
 
-最后使用长跳转跳入正在的 32 为代码（通过参数传入的地址）
+最后使用长跳转跳入正在的 32 位代码（通过参数传入的地址）
 
 ```
 jmpl	*%eax ;?jmpl cs:eax?
