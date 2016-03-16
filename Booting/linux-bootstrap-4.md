@@ -4,11 +4,11 @@
 切换到64位模式
 --------------------------------------------------------------------------------
 
-这是 `内核引导过程` 的第四部分，我们将会看到在[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)中的最初几步，比如确认CPU支持[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)，[SSE](https://zh.wikipedia.org/wiki/SSE)和[分页](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)以及页表的初始化，在这部分的最后我们还将讨论如何切换到[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)。
+这是 `内核引导过程` 的第四部分，我们将会看到在[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)中的最初几步，比如确认CPU是否支持[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)，[SSE](https://zh.wikipedia.org/wiki/SSE)和[分页](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)以及页表的初始化，在这部分的最后我们还将讨论如何切换到[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)。
 
 **注意：这部分将会有大量的汇编代码，如果你不熟悉汇编，建议你找本书参考一下。**
 
-在[上一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，我们停在了跳转到位于 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 的 32 位入口点这一步：
+在[前一章节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，我们停在了跳转到位于 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 的 32 位入口点这一步：
 
 ```assembly
 jmpl	*%eax
@@ -21,7 +21,7 @@ When using bzImage, the protected-mode kernel was relocated to 0x100000
 ```
 
 ```
-当使用 bzImage，保护模式下的内核被重定位至 0x100000
+当使用 bzImage 时，保护模式下的内核被重定位至 0x100000
 ```
 
 
@@ -46,7 +46,7 @@ fs             0x18	24
 gs             0x18	24
 ```
 
-我们在这里可以看到 `cs` 寄存器包含了 - `0x10` （回忆前一章节，这代表了全局描述符表中的第二个索引项）， `eip` 寄存器的值是 `0x100000`，并且包括代码段在内的所有内存段的基地址都为0。所以我们可以得到物理地址： `0:0x100000` 或者 `0x100000`，和协议规定的一样。现在让我们从 32 位入口点开始。
+我们在这里可以看到 `cs` 寄存器包含了 - `0x10` （回忆前一章节，这代表了全局描述符表中的第二个索引项）， `eip` 寄存器的值是 `0x100000`，并且包括代码段在内的所有内存段的基地址都为0。所以我们可以得到物理地址： `0:0x100000` 或者 `0x100000`，这和协议规定的一样。现在让我们从 32 位入口点开始。
 
 32 位入口点
 --------------------------------------------------------------------------------
@@ -63,7 +63,7 @@ ENTRY(startup_32)
 ENDPROC(startup_32)
 ```
 
-首先，为什么目录名叫做 `被压缩的 (compressed)` ？实际上 `bzimage` 是由 `vmlinux + 头文件 + 内核启动代码` 被 gzip 压缩之后获得的。我们在前几个章节已经看到了内核启动的代码。所以， `head_64.S` 的主要目的就是为了做好进入长模式的准备然后进入长模式，进入以后再解压内核。在这一节，我们将会看到直到内核解压缩之前的所有步骤。
+首先，为什么目录名叫做 `被压缩的 (compressed)` ？实际上 `bzimage` 是由 `vmlinux + 头文件 + 内核启动代码` 被 gzip 压缩之后获得的。我们在前几个章节已经看到了启动内核的代码。所以， `head_64.S` 的主要目的就是做好进入长模式的准备之后进入长模式，进入以后再解压内核。在这一章节，我们将会看到直到内核解压缩之前的所有步骤。
 
 在 `arch/x86/boot/compressed` 目录下有两个文件：
 
@@ -78,7 +78,7 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-注意 `$(obj)/head_$(BITS).o` 。这意味着我们将会选择基于 `$(BITS)` 所设置的文件执行链接操作，head_32.o 或者 head_64.o。`$(BITS)` 在 [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/Makefile) 之中被 .config 文件另外定义：
+注意 `$(obj)/head_$(BITS).o` 。这意味着我们将会选择基于 `$(BITS)` 所设置的文件执行链接操作，即 head_32.o 或者 head_64.o。`$(BITS)` 在 [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/Makefile) 之中根据 .config 文件另外定义：
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
@@ -94,7 +94,7 @@ endif
 
 现在我们知道从哪里开始了，那就来吧。
 
-必要时重载内存段寄存器
+必要时重新加载内存段寄存器
 --------------------------------------------------------------------------------
 
 正如上面阐述的，我们先从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 这个汇编文件开始。首先我们看到了在 `startup_32` 之前的特殊段属性定义：
@@ -105,13 +105,13 @@ endif
 ENTRY(startup_32)
 ```
 
-这个 `__HEAD` 是一个定义在头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h)中的宏，展开后就是下面这个段的定义：
+这个 `__HEAD` 是一个定义在头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 中的宏，展开后就是下面这个段的定义：
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
 
-拥有 `.head.text` 的命名和 `ax` 标记。在这里，这些标记告诉我们这个段是[可执行的](https://en.wikipedia.org/wiki/Executable)或者换种说法，包含了代码。我们可以在 [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) 这个链接脚本里找到这个段的定义： 
+其拥有 `.head.text` 的命名和 `ax` 标记。在这里，这些标记告诉我们这个段是[可执行的](https://en.wikipedia.org/wiki/Executable)或者换种说法，包含了代码。我们可以在 [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) 这个链接脚本里找到这个段的定义： 
 
 ```
 SECTIONS
@@ -124,7 +124,7 @@ SECTIONS
 	}
 ```
 
-如果你不熟悉 `GNU LD` 这个链接脚本语言的语法，你可以在[这个文档](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts)中找到更多信息。简单来说，这个 `.` 符号是一个链接器的特殊变量 - 位置计数器。其被赋值为相对于该段的偏移。在这里，我们将位置计数器赋值为0，这意味着我们的代码被链接到内存的 `0` 偏移处。此外，我们可以从注释找到更多信息：
+如果你不熟悉 `GNU LD` 这个链接脚本语言的语法，你可以在[这个文档](https://sourceware.org/binutils/docs/ld/Scripts.html#Scripts)中找到更多信息。简单来说，这个 `.` 符号是一个链接器的特殊变量 - 位置计数器。其被赋值为相对于该段的偏移。在这里，我们将位置计数器赋值为0，这意味着我们的代码被链接到内存的 `0` 偏移处。此外，我们可以从注释里找到更多信息：
 
 ```
 Be careful parts of head_64.S assume startup_32 is at address 0.
@@ -169,9 +169,9 @@ Bit 6 (write): KEEP_SEGMENTS
 	movl	%eax, %ss
 ```
 
-记住 `__BOOT_DS` 是 `0x18` （位于[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)中数据段的索引）。如果设置了 `KEEP_SEGMENTS` ，我们就跳转到最近的 `1f` 标签，或者当没有 `1f` 标签，则用 `__BOOT_DS` 更新段寄存器。这非常简单，但是这是一个有趣的操作。如果你已经读了[前一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，你或许还记得我们在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 中切换到[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)的时候已经更新了这些段寄存器。那么为什么我们还要去关心这些段寄存器的值呢。答案很简单，Linux 内核也有32位的引导协议，如果一个引导程序之前使用32位协议引导内核，那么在 `startup_32` 之前的代码就会被忽略。在这种情况下 `startup_32` 将会变成引导程序之后的第一个入口点，不保证段寄存器会不会处于未知状态。
+记住 `__BOOT_DS` 是 `0x18` （位于[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)中数据段的索引）。如果设置了 `KEEP_SEGMENTS` ，我们就跳转到最近的 `1f` 标签，或者当没有 `1f` 标签，则用 `__BOOT_DS` 更新段寄存器。这非常简单，但是这是一个有趣的操作。如果你已经读了[前一章节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，你或许还记得我们在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 中切换到[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)的时候已经更新了这些段寄存器。那么为什么我们还要去关心这些段寄存器的值呢？答案很简单，Linux 内核也有32位的引导协议，如果一个引导程序之前使用32位协议引导内核，那么在 `startup_32` 之前的代码就会被忽略。在这种情况下 `startup_32` 将会变成引导程序之后的第一个入口点，不保证段寄存器会不会处于未知状态。
 
-在我们检查了 `KEEP_SEGMENTS` 标记并且给段寄存器设置了正确的值之后，下一步就是计算我们代码的加载和编译运行之间的位置偏差了。记住 `setup.ld.S` 包含了以下定义：在 `.head.text` 段的开始 `. = 0` 。这意味着这一段代码被编译成从 `0` 地址运行。我们可以在 `objdump` 输出中看到：
+在我们检查了 `KEEP_SEGMENTS` 标记并且给段寄存器设置了正确的值之后，下一步就是计算我们代码的加载和编译运行之间的位置偏差了。记住 `setup.ld.S` 包含了以下定义：在 `.head.text` 段的开始 `. = 0` 。这意味着这一段代码被编译成从 `0` 地址运行。我们可以在 `objdump` 工具的输出中看到：
 
 ```
 arch/x86/boot/compressed/vmlinux:     file format elf64-x86-64
@@ -184,14 +184,14 @@ Disassembly of section .head.text:
    1:   f6 86 11 02 00 00 40    testb  $0x40,0x211(%rsi)
 ```
 
- `objdump` 告诉我们 `startup_32` 的地址是 `0` 。但是实际上并不是。我们当前的目标是获知我们实际上在哪里。在[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)下，这非常简单，因为其支持 `rip` 相对寻址，但是我们当前处于[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)下。我们将会使用一个常用的方法来确定 `startup_32` 的地址。我们需要定义一个标签并且跳转到它，然后把栈顶抛出到一个寄存器中：
+ `objdump` 工具告诉我们 `startup_32` 的地址是 `0` 。但实际上并不是。我们当前的目标是获知我们实际上在哪里。在[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)下，这非常简单，因为其支持 `rip` 相对寻址，但是我们当前处于[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)下。我们将会使用一个常用的方法来确定 `startup_32` 的地址。我们需要定义一个标签并且跳转到它，然后把栈顶抛出到一个寄存器中：
 
 ```assembly
 call label
 label: pop %reg
 ```
 
-在这之后，那个寄存器将会包含标签的地址，让我们看看在 Linux 内核中相似的寻找 `startup_32` 地址的代码：
+在这之后，那个寄存器将会包含标签的地址，让我们看看在 Linux 内核中类似的寻找 `startup_32` 地址的代码：
 
 ```assembly
 	leal	(BP_scratch+4)(%esi), %esp
@@ -200,7 +200,7 @@ label: pop %reg
 	subl	$1b, %ebp
 ```
 
-回忆前一节， `esi` 寄存器包含了 [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) 结构的地址，这个结构在我们切换到保护模式之前已经被填充了。`bootparams` 这个结构体包含了一个特殊的成员 `scratch` ，其偏移量为 `0x1e4` 。这个 4 字节的区域将会成为 `call` 指令的临时栈。我们把 `scratch` 的地址加 4 存入 `esp` 寄存器。我们之所以在 `BP_scratch` 基础上加 `4` 是因为，如之前所说的，这将成为一个临时的栈，而在 `x86_64` 架构下，栈是自顶向下生长的。所以我们的栈指针就会指向栈顶。接下来我们就可以看到我上面描述的过程。我们跳转到 `1f` 标签并且把该标签的地址放入 `ebp` 寄存器，因为在执行 `call` 指令之后我们把返回地址放到了栈顶。那么，目前我们拥有 `1f` 标签的地址，也能够很容易得到 `startup_32` 的地址。我们只需要把我们从栈里得到的地址减去标签的地址：
+回忆前一节， `esi` 寄存器包含了 [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) 结构的地址，这个结构在我们切换到保护模式之前已经被填充了。`bootparams` 这个结构体包含了一个特殊的字段 `scratch` ，其偏移量为 `0x1e4` 。这个 4 字节的区域将会成为 `call` 指令的临时栈。我们把 `scratch` 的地址加 4 存入 `esp` 寄存器。我们之所以在 `BP_scratch` 基础上加 `4` 是因为，如之前所说的，这将成为一个临时的栈，而在 `x86_64` 架构下，栈是自顶向下生长的。所以我们的栈指针就会指向栈顶。接下来我们就可以看到我上面描述的过程。我们跳转到 `1f` 标签并且把该标签的地址放入 `ebp` 寄存器，因为在执行 `call` 指令之后我们把返回地址放到了栈顶。那么，目前我们拥有 `1f` 标签的地址，也能够很容易得到 `startup_32` 的地址。我们只需要把我们从栈里得到的地址减去标签的地址：
 
 ```
 startup_32 (0x0)     +-----------------------+
@@ -212,7 +212,7 @@ startup_32 (0x0)     +-----------------------+
                      |                       |
                      |                       |
                      |                       |
-1f (0x0 + 1f offset) +-----------------------+ %ebp - real physical address
+1f (0x0 + 1f offset) +-----------------------+ %ebp - 实际物理地址
                      |                       |
                      |                       |
                      +-----------------------+
@@ -264,7 +264,7 @@ ebp            0x100000	0x100000
 栈的建立和 CPU 的确认
 --------------------------------------------------------------------------------
 
-如果不知道 `startup_32` 标签的地址，我们无法建立栈。我们可以把栈看作是一个数组，并且栈指针寄存器 `esp` 必须指向数组的底部。当然我们可以在自己的代码里定义一个数组，但是我们需要知道其真实地址来正确配置栈指针。让我们看一下代码：
+如果不知道 `startup_32` 标签的地址，我们就无法建立栈。我们可以把栈看作是一个数组，并且栈指针寄存器 `esp` 必须指向数组的底部。当然我们可以在自己的代码里定义一个数组，但是我们需要知道其真实地址来正确配置栈指针。让我们看一下代码：
 
 ```assembly
 	movl	$boot_stack_end, %eax
