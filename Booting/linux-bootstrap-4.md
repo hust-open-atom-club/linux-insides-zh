@@ -296,7 +296,7 @@ boot_stack_end:
 
 这个函数定义在 [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) 中，只是包含了几个对 [cpuid](https://en.wikipedia.org/wiki/CPUID) 指令的调用。该指令用于获取处理器的信息。在我们的情况下，它检查了对 `长模式` 和 `SSE` 的支持，通过 `eax` 寄存器返回0表示成功，1表示失败。
 
-如果 `eax` 的值不是 0 ，我们跳转到 `no_longmode` 标签，用 `hlt` 指令停止 CPU ，期间不会发生硬件中断：
+如果 `eax` 的值不是 0 ，我们就跳转到 `no_longmode` 标签，用 `hlt` 指令停止 CPU ，期间不会发生硬件中断：
 
 ```assembly
 no_longmode:
@@ -351,7 +351,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 	addl	$z_extract_offset, %ebx
 ```
 
-记住 `ebp` 寄存器的值就是 `startup_32` 标签的物理地址。如果在内核配置中 `CONFIG_RELOCATABLE` 内核配置项开启，我们就把这个地址放到 `ebx` 寄存器中，对齐到 `2M` ，然后和 `LOAD_PHYSICAL_ADDR` 的值比较。 `LOAD_PHYSICAL_ADDR` 宏在头文件 [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) 定义，如下：
+记住 `ebp` 寄存器的值就是 `startup_32` 标签的物理地址。如果在内核配置中 `CONFIG_RELOCATABLE` 内核配置项开启，我们就把这个地址放到 `ebx` 寄存器中，对齐到 `2M` ，然后和 `LOAD_PHYSICAL_ADDR` 的值比较。 `LOAD_PHYSICAL_ADDR` 宏定义在头文件 [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) 中，如下：
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -374,7 +374,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 	lgdt	gdt(%ebp)
 ```
 
-在这里我们把 `ebp` 寄存器加上 `gdt` 偏移存到 `eax` 寄存器。接下来我们把这个地址放到 `ebp` 加上 `gdt+2` 偏移的位置上，并且用 `lgdt` 指令载入 `全局描述符表` 。为了理解这个神奇的 `gdt` 偏移量，我们需要关注 `全局描述符表` 的定义。我们可以在同一个[源文件](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)中找到其定义：
+在这里我们把 `ebp` 寄存器加上 `gdt` 的偏移存到 `eax` 寄存器。接下来我们把这个地址放到 `ebp` 加上 `gdt+2` 偏移的位置上，并且用 `lgdt` 指令载入 `全局描述符表` 。为了理解这个神奇的 `gdt` 偏移量，我们需要关注 `全局描述符表` 的定义。我们可以在同一个[源文件](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)中找到其定义：
 
 ```assembly
 	.data
@@ -390,7 +390,7 @@ gdt:
 gdt_end:
 ```
 
-我们可以看到其位于 `.data` 段，并且包含了5个描述符： `null` 、内核代码段、内核数据段和其他两个任务描述符。我们已经在[上一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)载入了 `全局描述符表` ，和我们现在做的差不多，但是描述符改为 `CS.L = 1` `CS.D = 0` 从而在 `64` 位模式下执行。我们可以看到， `gdt` 的定义从两个字节开始： `gdt_end - gdt` ，代表了 `gdt` 表的最后一个字节，或者说表的范围。接下来的4个字节包含了 `gdt` 的基地址。记住 `全局描述符表` 保存在 `48位 GDTR-全局描述符表寄存器` 中，由两个部分组成：
+我们可以看到其位于 `.data` 段，并且包含了5个描述符： `null` 、内核代码段、内核数据段和其他两个任务描述符。我们已经在[上一章节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)载入了 `全局描述符表` ，和我们现在做的差不多，但是将描述符改为 `CS.L = 1` `CS.D = 0` 从而在 `64` 位模式下执行。我们可以看到， `gdt` 的定义从两个字节开始： `gdt_end - gdt` ，代表了 `gdt` 表的最后一个字节，或者说表的范围。接下来的4个字节包含了 `gdt` 的基地址。记住 `全局描述符表` 保存在 `48位 GDTR-全局描述符表寄存器` 中，由两个部分组成：
 
 * 全局描述符表的大小 (16位）
 * 全局描述符表的基址 (32位)
@@ -433,7 +433,7 @@ gdt_end:
 * 启用分页;
 
 
-我们已经通过设置 `cr4` 控制寄存器中的 `PAE` 位启动 `PAE` 了。在下一个段落，我们就要建立[分页](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)的结构了。
+我们已经通过设置 `cr4` 控制寄存器中的 `PAE` 位启动 `PAE` 了。在下一个段落，我们就要建立[页表](https://zh.wikipedia.org/wiki/%E5%88%86%E9%A0%81)的结构了。
 
 初期页表初始化
 --------------------------------------------------------------------------------
