@@ -1,6 +1,8 @@
 Linux Insides
 ===============
 
+[![Join the chat at https://gitter.im/MintCN/linux-insides-zh](https://badges.gitter.im/MintCN/linux-insides-zh.svg)](https://gitter.im/MintCN/linux-insides-zh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 一系列关于Linux内核和其内在机理的帖子。
 
 **目的很简单** - 分享我对Linux内核内在机理的一点知识，帮助对linux内核内在机理感兴趣的人，和其他低级话题。
