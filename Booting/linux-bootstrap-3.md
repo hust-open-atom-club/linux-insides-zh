@@ -570,7 +570,7 @@ movl	%edx, %cr0
 .section ".text32","ax"
 ```
 
-保护模式代码的第一步就是重置所有的段寄存器:
+保护模式代码的第一步就是重置所有的段寄存器（除了 `CS` 寄存器）:
 
 ```assembly
 GLOBAL(in_pm32)
