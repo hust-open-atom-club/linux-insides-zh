@@ -18,8 +18,8 @@ Linux Insides
 |├ 1.0|[@xinqiu](https://github.com/xinqiu)|已完成|
 |├ 1.1|[@hailincai](https://github.com/hailincai)|已完成|
 |├ 1.2|[@hailincai](https://github.com/hailincai)|已完成|
-|├ 1.3|[@hailincai](https://github.com/hailincai)|正在进行|
-|├ 1.4|[@zmj1316](https://github.com/zmj1316)|正在进行|
+|├ 1.3|[@hailincai](https://github.com/hailincai)|已完成|
+|├ 1.4|[@zmj1316](https://github.com/zmj1316)|已完成|
 |└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
 | 2. Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
 | 3. Interrupts||正在进行|
