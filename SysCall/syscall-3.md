@@ -1,32 +1,32 @@
-System calls in the Linux kernel. Part 3.
+Linux 内核系统调用 第三节
 ================================================================================
 
-vsyscalls and vDSO
+vsyscalls 和 vDSO
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) that describes system calls in the Linux kernel and we saw preparations after a system call caused by an userspace application and process of handling of a system call in the previous [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html). In this part we will look at two concepts that are very close to the system call concept, they are called `vsyscall` and `vdso`.
+这是讲解 Linux 内核中系统调用[章节](http://0xax.gitbooks.io/linux-insides/content/SysCall/index.html)的第三部分，[前一节](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html)讨论了用户空间应用程序发起的系统调用的准备工作及系统调用的处理过程。在这一节将讨论两个与系统调用十分相似的概念，这两个概念是`vsyscall` 和 `vdso`。
 
-We already know what is a `system call`. This is special routine in the Linux kernel which userspace application asks to do privileged tasks, like to read or to write to a file, to open a socket and etc. As you may know, invoking a system call is an expensive operation in the Linux kernel, because the processor must interrupt the currently executing task and switch context to kernel mode, subsequently jumping again into userspace after the system call handler finishes its work. These two mechanisms - `vsyscall` and `vdso` are designed to speed up this process for certain system calls and in this part we will try to understand how these mechanisms work.
+我们已经了解什么是`系统调用`。这是 Linux 内核一种特殊的运行机制，使得用户空间的应用程序可以请求，像写入文件和打开套接字等特权级下的任务。正如你所了解的，在 Linux 内核中发起一个系统调用是特别昂贵的操作，因为处理器需要中断当前正在执行的任务，切换内核模式的上下文，在系统调用处理完毕后跳转至用户空间。以下的两种机制  - `vsyscall` 和d `vdso` 被设计用来加速系统调用的处理，在这一节我们将了解两种机制的工作原理。
 
-Introduction to vsyscalls
+ vsyscalls 介绍
 --------------------------------------------------------------------------------
 
-The `vsyscall` or `virtual system call` is the first and oldest mechinism in the Linux kernel that is designed to accelerate execution of certain system calls. The principle of work of the `vsyscall` concept is simple. The Linux kernel maps into user space a page that contains some variables and the implementation of some system calls. We can find information about this memory space in the Linux kernel [documentation](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) for the [x86_64](https://en.wikipedia.org/wiki/X86-64):
+ `vsyscall` 或 `virtual system call` 是第一种也是最古老的一种用于加快系统调用的机制。 `vsyscall` 的工作原则其实十分简单。Linux 内核在用户空间映射一个包含一些变量及一些系统调用的实现的内存页。 对于 [X86_64](https://en.wikipedia.org/wiki/X86-64) 架构可以在 Linux 内核的 [文档] (https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) 找到关于这一内存区域的信息：
 
 ```
 ffffffffff600000 - ffffffffffdfffff (=8 MB) vsyscalls
 ```
 
-or:
+或:
 
 ```
 ~$ sudo cat /proc/1/maps | grep vsyscall
 ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 ```
 
-After this, these system calls will be executed in userspace and this means that there will not be [context switching](https://en.wikipedia.org/wiki/Context_switch). Mapping of the `vsyscall` page occurs in the `map_vsyscall` function that is defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file. This function is called during the Linux kernel intialization in the `setup_arch` function that is defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file (we saw this function in the fifth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) of the Linux kernel initialization process chapter).
+因此, 这些系统调用将在用户空间下执行，这意味着将不发生 [上下文切换](https://en.wikipedia.org/wiki/Context_switch)。 `vsyscall` 内存页的映射在 [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) 源代码中定义的 `map_vsyscall` 函数中实现。这一函数在 Linux 内核初始化时被 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码中定义的函数`setup_arch` (我们在[第五章](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html) Linux 内核的初始化中讨论过该函数)。
 
-Note that implementation of the `map_vsyscall` function depends on the `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option:
+注意 `map_vsyscall` 函数的实现依赖于内核配置选项 `CONFIG_X86_VSYSCALL_EMULATION` :
 
 ```C
 #ifdef CONFIG_X86_VSYSCALL_EMULATION
@@ -36,7 +36,7 @@ static inline void map_vsyscall(void) {}
 #endif
 ```
 
-As we can read in the help text, the `CONFIG_X86_VSYSCALL_EMULATION` configuration option: `Enable vsyscall emulation`. Why emulate `vsyscall`? Actually, the `vsyscall` is a legacy [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) due to security reasons. Virtual system calls have fixed addresses, meaning that `vsyscall` page is still at the same location every time and the location of this page is determined in the `map_vsyscall` function. Let's look on the implementation of this function: 
+正如帮助文档中所描述的,  `CONFIG_X86_VSYSCALL_EMULATION` 配置选项: `使能 vsyscall 模拟`. 为何模拟 `vsyscall`? 事实上,  `vsyscall` 由于安全原因是一种遗留 [ABI](https://en.wikipedia.org/wiki/Application_binary_interface) 。虚拟系统调用具有绑定的地址, 意味着 `vsyscall` 的内存页的位置在任何时刻是相同，这一位置是在  `map_vsyscall` 函数中指定的。这一函数的实现如下: 
 
 ```C
 void __init map_vsyscall(void)
@@ -49,19 +49,19 @@ void __init map_vsyscall(void)
 }
 ```
 
-As we can see, at the beginning of the `map_vsyscall` function we get the physical address of the `vsyscall` page with the `__pa_symbol` macro (we already saw implementation if this macro in the fourth [path](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process). The `__vsyscall_page` symbol defined in the [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) assembly source code file and have the following [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space):
+在 `map_vsyscall` 函数的开始，通过宏 `__pa_symbol` 获取了 `vsyscall` 内存页的物理地址(我们已在[第四章](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process)讨论了该宏的实现）。`__vsyscall_page` 在  [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) 汇编源代码文件中定义， 具有如下的 [虚拟地址](https://en.wikipedia.org/wiki/Virtual_address_space):
 
 ```
 ffffffff81881000 D __vsyscall_page
 ```
 
-in the `.data..page_aligned, aw` [section](https://en.wikipedia.org/wiki/Memory_segmentation) and contains call of the three folowing system calls: 
+在 `.data..page_aligned, aw` [段](https://en.wikipedia.org/wiki/Memory_segmentation) 中 包含如下三中系统调用: 
 
 * `gettimeofday`;
 * `time`;
 * `getcpu`.
 
-Or:
+或:
 
 ```assembly
 __vsyscall_page:
@@ -80,7 +80,7 @@ __vsyscall_page:
 	ret
 ```
 
-Let's go back to the implementation of the `map_vsyscall` function and return to the implementation of the `__vsyscall_page`, later. After we receiving the physical address of the `__vsyscall_page`, we check the value of the `vsyscall_mode` variable and set the [fix-mapped](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html) address for the `vsyscall` page with the `__set_fixmap` macro:
+回到 `map_vsyscall` 函数及 `__vsyscall_page` 的实现，在得到 `__vsyscall_page` 的物理地址之后，使用 `__set_fixmap` 为  `vsyscall` 内存页 检查设置 [fix-mapped](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-2.html)地址的变量`vsyscall_mode`:
 
 ```C
 if (vsyscall_mode != NONE)
@@ -105,14 +105,14 @@ enum fixed_addresses {
 ...
 ```
 
-It equal to the `511`. The second argument is the physical address of the the page that has to be mapped and the third argument is the flags of the page. Note that the flags of the `VSYSCALL_PAGE` depend on the `vsyscall_mode` variable. It will be `PAGE_KERNEL_VSYSCALL` if the `vsyscall_mode` variable is `NATIVE` and the `PAGE_KERNEL_VVAR` otherwise. Both macros (the `PAGE_KERNEL_VSYSCALL` and the `PAGE_KERNEL_VVAR`) will be expanded to the following flags:
+该变量值为 `511`。第二个参数为映射内存页的物理地址，第三个参数为内存页的标志位。注意 `VSYSCALL_PAGE` 标志位依赖于变量 `vsyscall_mode` 。当 `vsyscall_mode` 变量为 `NATIVE` 时，  标志位为 `PAGE_KERNEL_VSYSCALL`，其他情况则是`PAGE_KERNEL_VVAR` 。两个宏 ( `PAGE_KERNEL_VSYSCALL` 及 `PAGE_KERNEL_VVAR`) 都将被扩展以下标志:
 
 ```C
 #define __PAGE_KERNEL_VSYSCALL          (__PAGE_KERNEL_RX | _PAGE_USER)
 #define __PAGE_KERNEL_VVAR              (__PAGE_KERNEL_RO | _PAGE_USER)
 ```
 
-that represent access rights to the `vsyscall` page. Both flags have the same `_PAGE_USER` flags that means that the page can be accessed by a user-mode process running at lower privilege levels. The second flag depends on the value of the `vsyscall_mode` variable. The first flag (`__PAGE_KERNEL_VSYSCALL`) will be set in the case where `vsyscall_mode` is `NATIVE`. This means virtual system calls will be native `syscall` instructions. In other way the vsyscall will have `PAGE_KERNEL_VVAR` if the `vsyscall_mode` variable will be `emulate`. In this case virtual system calls will be turned into traps and are emulated reasonably. The `vsyscall_mode` variable gets its value in the `vsyscall_setup` function:
+标志反映了 `vsyscall` 内存页的访问权限。两个标志都带有 `_PAGE_USER` 标志， 这意味着内存页可被运行于低特权级的用户模式进程访问。第二个标志位取决于 `vsyscall_mode` 变量的值。第一个标志  (`__PAGE_KERNEL_VSYSCALL`) 在 `vsyscall_mode` 为 `NATIVE` 时被设定。这意味着虚拟系统调用将以本地 `syscall` 指令的方式执行。另一情况下，在 `vsyscall_mode` 为 `emulate` 时 vsyscall  为 `PAGE_KERNEL_VVAR`，此时系统调用将被置于陷阱并被合理的模拟。  `vsyscall_mode` 变量通过 `vsyscall_setup` 获取值： 
 
 ```C
 static int __init vsyscall_setup(char *str)
@@ -134,22 +134,22 @@ static int __init vsyscall_setup(char *str)
 }
 ```
 
-That will be called during early kernel parameters parsing:
+函数将在早期的内核分析时被调用：
 
 ```C
 early_param("vsyscall", vsyscall_setup);
 ```
 
-More about `early_param` macro you can read in the sixth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html) of the chapter that describes process of the initialization of the Linux kernel.
+关于 `early_param` 宏的更多信息可以在[第六章](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-6.html) Linux 内核初始化中找到。
 
-In the end of the `vsyscall_map` function we just check that virtual address of the `vsyscall` page is equal to the value of the `VSYSCALL_ADDR` with the [BUILD_BUG_ON](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) macro:
+在函数 `vsyscall_map` 的最后仅通过 [BUILD_BUG_ON](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) 宏检查  `vsyscall` 内存页的虚拟地址是否等于变量 `VSYSCALL_ADDR` :
 
 ```C
 BUILD_BUG_ON((unsigned long)__fix_to_virt(VSYSCALL_PAGE) !=
              (unsigned long)VSYSCALL_ADDR);
 ```
 
-That's all. `vsyscall` page is set up. The result of the all the above is the following: If we pass `vsyscall=native` parameter to the kernel command line, virtual system calls will be handled as native `syscall` instructions in the [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S). The [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows addresses of the virtual system call handlers. Note that virtual system call handlers are aligned by `1024` (or `0x400`) bytes:
+ 就这样`vsyscall` 内存页设置完毕。上述的结果如下： 若设置 `vsyscall=native` 内核命令行参数，虚拟内存调用将以 [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) 文件中本地 `系统调用` 指令的方式执行。  [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) 知道虚拟系统调用处理器的地址。注意虚拟系统调用的地址以 `1024` (或 `0x400`) 比特对齐。
 
 ```assembly
 __vsyscall_page:
@@ -168,7 +168,7 @@ __vsyscall_page:
 	ret
 ```
 
-And the start address of the `vsyscall` page is the `ffffffffff600000` everytime. So, the [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) knows the addresses of the all virutal system call handlers. You can find definition of these addresses in the `glibc` source code:
+ `vsyscall` 内存页的起始地址为 `ffffffffff600000` 。因此,  [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) 知道所有虚拟系统调用处理器的地址。可以在 `glibc` 源码中找到这些地址的定义：
 
 ```C
 #define VSYSCALL_ADDR_vgettimeofday   0xffffffffff600000
@@ -176,9 +176,9 @@ And the start address of the `vsyscall` page is the `ffffffffff600000` everytime
 #define VSYSCALL_ADDR_vgetcpu	      0xffffffffff600800
 ```
 
-All virtual system call requests will fall into the `__vsyscall_page` + `VSYSCALL_ADDR_vsyscall_name` offset, put the number of a virtual system call to the `rax` general purpose [register](https://en.wikipedia.org/wiki/Processor_register) and the native for the x86_64 `syscall` instruction will be executed.
+所有的虚拟系统调用请求都将映射至 `__vsyscall_page` + `VSYSCALL_ADDR_vsyscall_name` 偏置, 将虚拟内存系统调用的编号置于通用目的[寄存器](https://en.wikipedia.org/wiki/Processor_register)，本地的 x86_64 `系统调用`指令将被执行。
 
-In the second case, if we pass `vsyscall=emulate` parameter to the kernel command line, an attempt to perform virtual system call handler will cause a [page fault](https://en.wikipedia.org/wiki/Page_fault) exception. Of course, remember, the `vsyscall` page has `__PAGE_KERNEL_VVAR` access rights that forbid execution. The `do_page_fault` function is the `#PF` or page fault handler. It tries to understand the reason of the last page fault. And one of the reason can be situation when virtual system call called and `vsyscall` mode is `emulate`. In this case `vsyscall` will be handled by the `emulate_vsyscall` function that defined in the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) source code file.
+在第二种情况中, 若将 `vsyscall=emulate` 参数传递给内核命令行, 提升虚拟系统调用处理器的尝试导致一个 [page fault](https://en.wikipedia.org/wiki/Page_fault) 异常。 谨记,  `vsyscall` 内存页 具有 `__PAGE_KERNEL_VVAR` 的访问权限，这将禁止执行。 `do_page_fault` 函数是 `#PF` 或 page fault 的处理器。它将尝试了解最后一次 page fault 的原因。一种可能的场景是 `vsyscall` 模式为 `emulate` 情况下的虚拟系统调用。此时 `vsyscall` 将被 [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) 源码中定义的 `emulate_vsyscall` 函数处理。
 
 The `emulate_vsyscall` function gets the number of a virtual system call, checks it, prints error and sends [segementation fault](https://en.wikipedia.org/wiki/Segmentation_fault) single:
 
