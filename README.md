@@ -22,6 +22,8 @@ Linux Insides
 |├1.4|[@zmj1316](https://github.com/zmj1316)|正在进行|
 |├1.5|[@chengong](https://github.com/chengong)|正在进行|
 |Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
+|├2.0 介绍|[@lijiangsheng1](https://github.com/lijiangsheng1)|已完成|
+|├2.1|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
 |Interrupts||正在进行|
 |├3.0|[@littleneko](https://github.com/littleneko)|正在进行|
 |├3.1|[@littleneko](https://github.com/littleneko)|正在进行|
