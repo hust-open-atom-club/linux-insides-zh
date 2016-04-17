@@ -40,10 +40,10 @@ Linux Insides
 | 7. Memory management|[@choleraehyq](https://github.com/choleraehyq)|正在进行|
 | 8. SMP||未开始|
 | 9. Concepts||未开始|
-| 10. DataStructures||正在进行|
+| 10. DataStructures||已完成|
 |├ 10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 10.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
-|└ 10.2|[@Alick Guo](https://github.com/a1ickgu0)|正在进行|
+|└ 10.2|[@oska874](https://github.com/oska874)|已完成|
 | 11. Theory||已完成|
 |├ 11.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 11.1|[@mudongliang](https://github.com/mudongliang)|已完成|

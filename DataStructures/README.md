@@ -5,5 +5,5 @@ Linux内核对很多数据结构提供不同的实现方法，比如，双向链
 
 这部分考虑这些数据结构和算法。
 
-  * [双向链表](https://github.com/MintCN/linux-insides/blob/master/DataStructures/dlist.md)
-  * [基数树](https://github.com/MintCN/linux-insides/blob/master/DataStructures/radix-tree.md)
+  * [双向链表](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md)
+  * [基数树](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/radix-tree.md)
