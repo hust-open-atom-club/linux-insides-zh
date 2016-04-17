@@ -47,7 +47,7 @@ Linux Insides
 |├10.1|[@mudongliang](https://github.com/mudongliang)|已完成|
 |└10.2|[@mudongliang](https://github.com/mudongliang)|已完成|
 |Misc||正在进行|
-|├12.0||未开始|
+|├12.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├12.1|[@oska874](https://github.com/oska874)|已完成|
 |├12.2||未开始|
 |└12.3||未开始|
