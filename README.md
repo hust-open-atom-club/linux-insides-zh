@@ -42,7 +42,7 @@ Linux Insides
 |├9.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├9.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
 |└9.2|[@Alick Guo](https://github.com/a1ickgu0)|正在进行|
-|Theory||正在进行|
+|Theory||已完成|
 |├10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├10.1|[@mudongliang](https://github.com/mudongliang)|已完成|
 |└10.2|[@mudongliang](https://github.com/mudongliang)|已完成|
