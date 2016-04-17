@@ -30,7 +30,6 @@
 * [Memory management](mm/README.md)
    * [Memblock](mm/linux-mm-1.md)
    * [Fixmaps and ioremap](mm/linux-mm-2.md)
-* vsyscalls and vdso
 * SMP
 * [Concepts](Concepts/README.md)
    * [Per-CPU variables](Concepts/per-cpu.md)
