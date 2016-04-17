@@ -15,6 +15,7 @@ Linux Insides
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
 |Booting||正在进行|
+|├1.0|[@xinqiu](https://github.com/xinqiu)|已完成|
 |├1.1|[@hailincai](https://github.com/hailincai)|已完成|
 |├1.2|[@hailincai](https://github.com/hailincai)|已完成|
 |├1.3|[@hailincai](https://github.com/hailincai)|正在进行|
@@ -22,6 +23,7 @@ Linux Insides
 |├1.5|[@chengong](https://github.com/chengong)|正在进行|
 |Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
 |Interrupts||正在进行|
+|├3.0|[@littleneko](https://github.com/littleneko)|正在进行|
 |├3.1|[@littleneko](https://github.com/littleneko)|正在进行|
 |├3.2|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├3.3|[@cloudusers](https://github.com/cloudusers)|正在进行|
@@ -37,12 +39,15 @@ Linux Insides
 |Memory management|[@choleraehyq](https://github.com/choleraehyq)|正在进行|
 |Concepts||未开始|
 |DataStructures||正在进行|
+|├9.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├9.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
 |└9.2|[@Alick Guo](https://github.com/a1ickgu0)|正在进行|
 |Theory||正在进行|
+|├10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├10.1|[@mudongliang](https://github.com/mudongliang)|已完成|
 |└10.2|[@mudongliang](https://github.com/mudongliang)|已完成|
 |Misc||正在进行|
+|├12.0||未开始|
 |├12.1|[@oska874](https://github.com/oska874)|已完成|
 |├12.2||未开始|
 |└12.3||未开始|
