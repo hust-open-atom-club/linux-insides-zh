@@ -14,46 +14,46 @@ Linux Insides
 
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
-|1. Booting||正在进行|
-|├1.0|[@xinqiu](https://github.com/xinqiu)|已完成|
-|├1.1|[@hailincai](https://github.com/hailincai)|已完成|
-|├1.2|[@hailincai](https://github.com/hailincai)|已完成|
-|├1.3|[@hailincai](https://github.com/hailincai)|正在进行|
-|├1.4|[@zmj1316](https://github.com/zmj1316)|正在进行|
-|├1.5|[@chengong](https://github.com/chengong)|正在进行|
-|2. Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
-|3. Interrupts||正在进行|
-|├3.0|[@littleneko](https://github.com/littleneko)|正在进行|
-|├3.1|[@littleneko](https://github.com/littleneko)|正在进行|
-|├3.2|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├3.3|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├3.4|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├3.5|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├3.6|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├3.7|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├3.9||未开始|
-|└3.10||未开始|
-|4. System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
-|5. Timers and time management|[@icecoobe](https://github.com/icecoobe)|正在进行|
-|6. Synchronization primitives||未开始|
-|7. Memory management|[@choleraehyq](https://github.com/choleraehyq)|正在进行|
-|8. SMP||未开始|
-|9. Concepts||未开始|
-|10. DataStructures||正在进行|
-|├10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├10.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
-|└10.2|[@Alick Guo](https://github.com/a1ickgu0)|正在进行|
-|11. Theory||已完成|
-|├11.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├11.1|[@mudongliang](https://github.com/mudongliang)|已完成|
-|└11.2|[@mudongliang](https://github.com/mudongliang)|已完成|
-|12. Initial ram disk||未开始|
-|Misc||正在进行|
-|├13.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├13.1|[@oska874](https://github.com/oska874)|已完成|
-|├13.2||未开始|
-|└13.3||未开始|
+| 1. Booting||正在进行|
+|├ 1.0|[@xinqiu](https://github.com/xinqiu)|已完成|
+|├ 1.1|[@hailincai](https://github.com/hailincai)|已完成|
+|├ 1.2|[@hailincai](https://github.com/hailincai)|已完成|
+|├ 1.3|[@hailincai](https://github.com/hailincai)|正在进行|
+|├ 1.4|[@zmj1316](https://github.com/zmj1316)|正在进行|
+|└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
+| 2. Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
+| 3. Interrupts||正在进行|
+|├ 3.0|[@littleneko](https://github.com/littleneko)|正在进行|
+|├ 3.1|[@littleneko](https://github.com/littleneko)|正在进行|
+|├ 3.2|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ 3.3|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ 3.4|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ 3.5|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ 3.6|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ 3.7|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ 3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ 3.9||未开始|
+|└ 3.10||未开始|
+| 4. System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
+| 5. Timers and time management|[@icecoobe](https://github.com/icecoobe)|正在进行|
+| 6. Synchronization primitives||未开始|
+| 7. Memory management|[@choleraehyq](https://github.com/choleraehyq)|正在进行|
+| 8. SMP||未开始|
+| 9. Concepts||未开始|
+| 10. DataStructures||正在进行|
+|├ 10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 10.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
+|└ 10.2|[@Alick Guo](https://github.com/a1ickgu0)|正在进行|
+| 11. Theory||已完成|
+|├ 11.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 11.1|[@mudongliang](https://github.com/mudongliang)|已完成|
+|└ 11.2|[@mudongliang](https://github.com/mudongliang)|已完成|
+| 12. Initial ram disk||未开始|
+| 13. Misc||正在进行|
+|├ 13.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 13.1|[@oska874](https://github.com/oska874)|已完成|
+|├ 13.2||未开始|
+|└ 13.3||未开始|
 
 ##翻译认领规则
 
