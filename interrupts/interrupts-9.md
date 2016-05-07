@@ -1,7 +1,7 @@
 中断和中断处理。 第九部分。
 ================================================================================
 
-延后中断(软中断，Tasklets和Workqueues)介绍
+延后中断(软中断，Tasklets和工作队列)介绍
 --------------------------------------------------------------------------------
 
 这是[linux内核揭密](https://www.gitbook.com/book/xinqiu/linux-insides-cn/details)中断部分的第九小节，在[之前章节](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/interrupts-8.html)我们了解了源文件[arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c)中`init_IRQ`的实现。接下来的这一节我们将继续深入学习和外部硬件中断相关的初始化。
@@ -163,7 +163,7 @@ static void wakeup_softirqd(void)
 }
 ```
 
-每个`ksoftirqd`内核线程都运行`run_ksoftirqd`函数来检测是有有延后中断需要处理，如果有的话就会调用`__do_softirq`函数。`__do_softirq`读取当前处理器对应的`__softirq_pending`软中断标记，并调用所有已被标记中断对应的处理函数。在执行一个延后函数的同时，可能会发生新的软中断。这会导致用户态代码由于`__do_softirq`要处理很多延后中断而很长时间不能返回。为了解决这个问题，系统限制了延后中断处理的最大耗时：
+每个`ksoftirqd`内核线程都运行`run_ksoftirqd`函数来检测是否有延后中断需要处理，如果有的话就会调用`__do_softirq`函数。`__do_softirq`读取当前处理器对应的`__softirq_pending`软中断标记，并调用所有已被标记中断对应的处理函数。在执行一个延后函数的同时，可能会发生新的软中断。这会导致用户态代码由于`__do_softirq`要处理很多延后中断而很长时间不能返回。为了解决这个问题，系统限制了延后中断处理的最大耗时：
 
 ```C
 unsigned long end = jiffies + MAX_SOFTIRQ_TIME;
