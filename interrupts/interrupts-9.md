@@ -188,3 +188,21 @@ if (pending) {
 ...
 ```
 
+除周期性检测是否有延后中断需要执行之外，系统还会在一些关键时间点上检测。一个主要的检测时间点就是当定义在[arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c)的函数`do_IRQ`被调用时，这是Linux内核中执行延后中断的主要时机。在这个函数要完成中断处理时它会调用[arch/x86/include/asm/apic.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/apic.h)中定义的`exiting_irq`函数，`exiting_irq`又调用了`irq_exit`。`irq_exit`函数会检测当前处理器上下文是否有延后中断，有的话就会调用`invoke_softirq`：
+
+```C
+if (!in_interrupt() && local_softirq_pending())
+    invoke_softirq();
+```
+
+这样就调用到了我们上面提到的`__do_softirq`。每个`softirq`都有如下的阶段：通过`open_softirq`函数注册一个软中断，通过`raise_softirq`函数标记一个延后中断来激活它，然后所有被标记的软中断将会在Linux内核下一次执行周期性延后中断检测时得以调度，对应此类型中断的处理函数也就得以执行。
+
+如上所讲，软中断是静态分配的，但这对于后期加载的内核模块是一个问题。基于软中断的`tasklets`解决了这个问题。
+
+Tasklets
+--------------------------------------------------------------------------------
+
+
+
+工作队列
+--------------------------------------------------------------------------------
