@@ -202,6 +202,84 @@ if (!in_interrupt() && local_softirq_pending())
 Tasklets
 --------------------------------------------------------------------------------
 
+如果你阅读Linux内核源码中软中断相关的代码，你会发现它很少会被用到。内核中实现延后中断的主要途径是`tasklets`。正如上面说的，`tasklets`是构建于`softirq`中断之上，他是基于下面两个软中断实现的：
+
+* `TASKLET_SOFTIRQ`;
+* `HI_SOFTIRQ`.
+
+简而言之，`tasklets`是运行时分配和初始化的软中断。和软中断不同的是，同一类型的`tasklets`可以同一时间运行在不同的处理器上。我们已经了解到一些软中断的知识，当然上面的文字并不能详细讲解所有的细节，但我们现在可以通过直接阅读代码一步步的更深入了解软中断。我们返回到开始部分讨论的`softirq_init`函数实现，这个函数在[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中定义如下：
+
+```C
+void __init softirq_init(void)
+{
+        int cpu;
+
+        for_each_possible_cpu(cpu) {
+                per_cpu(tasklet_vec, cpu).tail =
+                        &per_cpu(tasklet_vec, cpu).head;
+                per_cpu(tasklet_hi_vec, cpu).tail =
+                        &per_cpu(tasklet_hi_vec, cpu).head;
+        }
+
+        open_softirq(TASKLET_SOFTIRQ, tasklet_action);
+        open_softirq(HI_SOFTIRQ, tasklet_hi_action);
+}
+```
+
+可以看到在函数开头定义了一个integer类型的变量cpu。接下来他会作为参数传递给宏`for_each_possible_cpu`来获得系统中所有的处理器。如果`possible_cpu`对你来说是一个新的术语，你可以阅读[CPU masks](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Concepts/cpumask.html)章节来了解更多知识。简单的说，`possible_cpu`是系统运行期间随时插入的处理器集合。所有的`possible processor`存储在`cpu_possible_bits`位图中，你可以在[kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c)中找到他的定义：
+
+```C
+static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
+...
+...
+...
+const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
+```
+
+好了，我们定义了integer类型变量`cpu`并且通过`for_each_possible_cpu`宏遍历了所有处理器，初始化了两个`per-cpu`变量：
+
+* `tasklet_vec`;
+* `tasklet_hi_vec`;
+
+这两个`per-cpu`变量和`softirq_init`函数都定义在[code](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中，他们被定义为`tasklet_head`类型：
+
+```C
+static DEFINE_PER_CPU(struct tasklet_head, tasklet_vec);
+static DEFINE_PER_CPU(struct tasklet_head, tasklet_hi_vec);
+```
+
+`tasklet_head`结构代表一组`Tasklets`，它包含两个成员，head和tail：
+
+```C
+struct tasklet_head {
+        struct tasklet_struct *head;
+        struct tasklet_struct **tail;
+};
+```
+
+`tasklet_struct`数据类型在[include/linux/interrupt.h](https://github.com/torvalds/linux/blob/master/include/linux/interrupt.h)中定义，它代表一个`Tasklet`。这本书之前部分我们没有见过这个单词，那我们先试着理解一下`Tasklet`究竟为何物。实际上，`Tasklet`是处理延后中断的一种机制，来看一下`tasklet_struct`的具体定义：
+
+```C
+struct tasklet_struct
+{
+        struct tasklet_struct *next;
+        unsigned long state;
+        atomic_t count;
+        void (*func)(unsigned long);
+        unsigned long data;
+};
+```
+
+这个数据结构包含有下面5个成员：
+
+* 调度队列中的下一个`Tasklet`;
+* 当前这个`Tasklet`的状态;
+* 代表这个`Tasklet`是否处于活动状态;
+* `Tasklet`的回调函数;
+* 回调的参数.
+
+
+
 
 
 工作队列
