@@ -278,8 +278,105 @@ struct tasklet_struct
 * `Tasklet`的回调函数;
 * 回调的参数.
 
+上面代码中，在`softirq_init`函数中初始化了两个tasklets数组：`tasklet_vec`和`tasklet_hi_vec`。Tasklets和高优先级Tasklets分别存储于这两个数组中。初始化完成后我们看到代码[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)在`softirq_init`函数的最后又两次调用了`open_softirq`：
 
+```C
+open_softirq(TASKLET_SOFTIRQ, tasklet_action);
+open_softirq(HI_SOFTIRQ, tasklet_hi_action);
+```
 
+`open_softirq`函数的主要作用是用软中断处理函数初始化软中断，接下来让我们看看它是怎么做的。和Tasklets相关的软中断处理函数有两个，分别是`tasklet_action`和`tasklet_hi_action`。其中`tasklet_hi_action`和`HI_SOFTIRQ`关联在一起，`tasklet_action`和`TASKLET_SOFTIRQ`关联在一起。
+
+Linux内核提供一些API供操作Tasklets之用。首先是`tasklet_init`函数，它接受一个`task_struct`数据结构，一个处理函数，和另外一个参数，并利用这些参数来初始化所给的`task_struct`结构：
+
+```C
+void tasklet_init(struct tasklet_struct *t,
+                  void (*func)(unsigned long), unsigned long data)
+{
+    t->next = NULL;
+    t->state = 0;
+    atomic_set(&t->count, 0);
+    t->func = func;
+    t->data = data;
+}
+```
+
+另外还有如下两个宏可以静态的初始化一个tasklet：
+
+```C
+DECLARE_TASKLET(name, func, data);
+DECLARE_TASKLET_DISABLED(name, func, data);
+```
+
+Linux内核提供三个函数标记一个tasklet已经准备就绪：
+
+```C
+void tasklet_schedule(struct tasklet_struct *t);
+void tasklet_hi_schedule(struct tasklet_struct *t);
+void tasklet_hi_schedule_first(struct tasklet_struct *t);
+```
+
+第一个函数使用普通优先级调度一个tasklet，第二个使用高优先级，第三个则用更高优先级。所有这三个函数的实现都很类似，所以我们只看一下第一个`tasklet_schedule`的实现：
+
+```C
+static inline void tasklet_schedule(struct tasklet_struct *t)
+{
+    if (!test_and_set_bit(TASKLET_STATE_SCHED, &t->state))
+        __tasklet_schedule(t);
+}
+
+void __tasklet_schedule(struct tasklet_struct *t)
+{
+        unsigned long flags;
+
+        local_irq_save(flags);
+        t->next = NULL;
+        *__this_cpu_read(tasklet_vec.tail) = t;
+        __this_cpu_write(tasklet_vec.tail, &(t->next));
+        raise_softirq_irqoff(TASKLET_SOFTIRQ);
+        local_irq_restore(flags);
+}
+```
+
+我们看到它检测并设置所给的tasklet为`TASKLET_STATE_SCHED`状态，然后以所给tasklet为参数执行了`__tasklet_schedule`函数。`__tasklet_schedule`看起来和前面见到的`raise_softirq`很像。一开始它保存中断标志并禁用中断，继而将新的tasklet添加到`tasklet_vec`，然后调用了我们前面见过的`raise_softirq_irqoff`函数。当Linux内核调度器决定去运行一个延后函数，`tasklet_action`函数会被被作为和`TASKLET_SOFTIRQ`相关联的延后函数调用。同样的，`tasklet_hi_action`会被作为和`HI_SOFTIRQ`相关联的延后函数调用。这些函数之所以如此相似是因为他们之间只有一个地方不同 --- `tasklet_action`使用`tasklet_vec`而`tasklet_hi_action`使用`tasklet_hi_vec`。
+
+让我们看下`tasklet_action`函数的实现：
+
+```C
+static void tasklet_action(struct softirq_action *a)
+{
+    local_irq_disable();
+    list = __this_cpu_read(tasklet_vec.head);
+    __this_cpu_write(tasklet_vec.head, NULL);
+    __this_cpu_write(tasklet_vec.tail, this_cpu_ptr(&tasklet_vec.head));
+    local_irq_enable();
+
+    while (list) {
+		if (tasklet_trylock(t)) {
+	        t->func(t->data);
+            tasklet_unlock(t);
+	    }
+		...
+		...
+		...
+    }
+}
+```
+
+在`tasklet_action`开始时利用`local_irq_disable`宏禁用了当前处理器的中断(你可以阅读本书[第二部分](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/interrupts-2.html)了解更多关于此宏的信息)。接下来获取到当前处理器对应的普通优先级tasklet列表并把它设置为`NULL`，这是因为所有的tasklet都将被执行。然后使能当前处理器的中断，循环遍历tasklet列表，每一次遍历都会对当前tasklet调用`tasklet_trylock`函数来更新它的状态为`TASKLET_STATE_RUN`：
+
+```C
+static inline int tasklet_trylock(struct tasklet_struct *t)
+{
+    return !test_and_set_bit(TASKLET_STATE_RUN, &(t)->state);
+}
+```
+
+如果这个操作成功了就会执行此tasklet的处理函数(我们在`tasklet_init`中所设置的)，然后调用`tasklet_unlock`函数清除他的`TASKLET_STATE_RUN`状态。
+
+通常情况下，这就是`tasklet`的所有概念。当然这些还不足以覆盖所有的`tasklets`，但是我想这是一个继续学习下去的很好的切入点。
+
+`tasklets`在Linux内核中是一个[广泛](http://lxr.free-electrons.com/ident?i=tasklet_init)使用的概念，但就像我在本章开头所写的，还有第三个延后延后函数 -- 工作队列。接下来我们将会看看它又是怎样一种机制。
 
 
 工作队列
