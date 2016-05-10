@@ -381,3 +381,99 @@ static inline int tasklet_trylock(struct tasklet_struct *t)
 
 工作队列
 --------------------------------------------------------------------------------
+
+`工作队列`是另外一个处理延后函数的概念，它大体上和`tasklets`类似。工作队列运行于内核进程上下文，而`tasklets`运行于软中断上下文。这意味着`工作队列`函数不必像`tasklets`一样必须是原子性的。Tasklets总是运行于它提交自的那个处理器，工作队列在默认情况下也是这样。`工作队列`在Linux内核代码[kernel/workqueue.c](https://github.com/torvalds/linux/blob/master/kernel/workqueue.c)中由如下的数据结构表示：
+
+```C
+struct worker_pool {
+    spinlock_t              lock;
+    int                     cpu;
+    int                     node;
+    int                     id;
+    unsigned int            flags;
+
+    struct list_head        worklist;
+    int                     nr_workers;
+...
+...
+...
+```
+
+因为这个结构有非常多的成员，这里就不把它们全部罗列出来，下面只讨论上面列出的这几个。
+
+工作队列最基础的用法，是作为创建内核线程的接口来处理提交到队列里的工作任务。所有这些内核线程称之为`worker thread`。工作队列内的任务是由代码[include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h)中定义的`work_struct`表示的，起定义如下：
+
+```C
+struct work_struct {
+    atomic_long_t data;
+    struct list_head entry;
+    work_func_t func;
+#ifdef CONFIG_LOCKDEP
+    struct lockdep_map lockdep_map;
+#endif
+};
+```
+
+这里有两个字段比较有意思：`func`--将被`工作队列`调度执行的函数，`data`--这个函数的参数。Linux内核提供了称之为`kworker`的特定于每个cpu的内核线程：
+
+```
+systemd-cgls -k | grep kworker
+├─    5 [kworker/0:0H]
+├─   15 [kworker/1:0H]
+├─   20 [kworker/2:0H]
+├─   25 [kworker/3:0H]
+├─   30 [kworker/4:0H]
+...
+...
+...
+```
+
+这些线程会被用来调度执行工作队列的延后函数(就像`ksoftirqd`之于`软中断`)。除此之外我们还可以为一个`工作队列`创建一个新的工作线程。Linux内核提供了如下宏静态创建一个队列：
+
+```C
+#define DECLARE_WORK(n, f) \
+    struct work_struct n = __WORK_INITIALIZER(n, f)
+```
+
+它需要两个参数：工作队列的名字和工作队列的函数。我们还可以在运行时动态创建：
+
+```C
+#define INIT_WORK(_work, _func)       \
+    __INIT_WORK((_work), (_func), 0)
+
+#define __INIT_WORK(_work, _func, _onstack)                     \
+    do {                                                        \
+            __init_work((_work), _onstack);                     \
+            (_work)->data = (atomic_long_t) WORK_DATA_INIT();   \
+            INIT_LIST_HEAD(&(_work)->entry);                    \
+             (_work)->func = (_func);                           \
+    } while (0)
+```
+
+这个宏需要一个`work_struct`数据结构作为将要创建的工作队列，和一个将在这个队列里调度运行的函数。通过这其中一个宏穿件一个`work`后，我们需要把它放到`工作队列`中去。可以通过`queue_work`或者`queue_delayed_work`来做到这一点：
+
+```C
+static inline bool queue_work(struct workqueue_struct *wq,
+                              struct work_struct *work)
+{
+    return queue_work_on(WORK_CPU_UNBOUND, wq, work);
+}
+```
+
+`queue_work`只是调用了`queue_work_on`函数指定相应的处理器。注意这里给`queue_work_on`函数传递了`WORK_CPU_UNBOUND`参数，它作为代表工作队列要绑定到哪一个处理器的枚举一员，定义于[include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h)。`queue_work_on`函数测试并设置所给`任务`的`WORK_STRUCT_PENDING_BIT`标志位，然后以所给的工作队列和工作任务为参数执行`__queue_work`函数：
+
+```C
+bool queue_work_on(int cpu, struct workqueue_struct *wq,
+           struct work_struct *work)
+{
+    bool ret = false;
+    ...
+    if (!test_and_set_bit(WORK_STRUCT_PENDING_BIT, work_data_bits(work))) {
+        __queue_work(cpu, wq, work);
+        ret = true;
+    }
+    ...
+    return ret;
+}
+```
+
