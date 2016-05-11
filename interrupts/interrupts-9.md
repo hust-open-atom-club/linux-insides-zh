@@ -1,4 +1,4 @@
-中断和中断处理。 第九部分。
+中断和中断处理(九)
 ================================================================================
 
 延后中断(软中断，Tasklets和工作队列)介绍
@@ -477,3 +477,50 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
 }
 ```
 
+`__queue_work`函数得到参数`work poll`。是的，是`work poll`而不是`workqueue`。实际上，所有的`works`都没有放在`workqueue`中，而是放在Linux内核中由`worker_pool`数据结构所定义的`work poll`。如上所述，`workqueue_struct`数据结构的`pwqs`成员代表一个`worker_pool`列表。当我们创建一个`workqueue`，？？？？。每一个和`worker_pool`相关联的`pool_workqueue`都分配在相同的处理器上对应的优先级队列。??????。在`__queue_work`函数里使用`raw_smp_processor_id`设置cpu为当前处理器在[第四章](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Initialization/linux-initialization-4.html)你可以找到更多相关信息)，得到与所给`work_struct`对应的`pool_workqueue`并将`work`插入到`workqueue`：
+
+```C
+static void __queue_work(int cpu, struct workqueue_struct *wq,
+                         struct work_struct *work)
+{
+...
+...
+...
+if (req_cpu == WORK_CPU_UNBOUND)
+    cpu = raw_smp_processor_id();
+
+if (!(wq->flags & WQ_UNBOUND))
+    pwq = per_cpu_ptr(wq->cpu_pwqs, cpu);
+else
+    pwq = unbound_pwq_by_node(wq, cpu_to_node(cpu));
+...
+...
+...
+insert_work(pwq, work, worklist, work_flags);
+```
+
+现在我们可以创建`works`和`workqueue`，我们需要知道他们究竟会在何时被执行。就像前面提到的，所有的`works`都会在内核线程中执行。当内核线程得到调度，它开始执行`workqueue`中的`works`。每一个工作队列内核线程都会在`worker_thread`函数里执行一个循环。这些内核线程会做很多不同的事情，其中一些和本章前面提到的很类似。当开始执行时，所有的`work_struct`和`works`都会从他的`workqueue`移除。
+
+
+总结
+--------------------------------------------------------------------------------
+
+现在结束了[中断和中断处理](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/index.html)的第九部分。这一节中我们继续讨论了外部硬件中断。在之前部分我们看到了`IRQs`的初始化和`irq_desc`数据结构。在这一节我们看到了用于延后函数的三个概念：`软中断`，`tasklet`和`工作队列`。
+
+下一节将是`中断和中断处理`的最后一节。我们将会了解真正的硬件驱动，并试着学习它是怎样和中断子系统一起工作的。
+
+如果你有任何问题或建议，请给我发评论或者给我发[Twitter](https://twitter.com/0xAX)。
+
+**请注意英语并不是我的母语，我为任何表达不清楚的地方感到抱歉。如果你发现任何错误请发PR到[linux-insides](https://github.com/0xAX/linux-insides)。(译者注：翻译问题请发PR到[linux-insides-cn](https://www.gitbook.com/book/xinqiu/linux-insides-cn))**
+
+
+链接
+--------------------------------------------------------------------------------
+
+* [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/index.html)
+* [IF](https://en.wikipedia.org/wiki/Interrupt_flag)
+* [eflags](https://en.wikipedia.org/wiki/FLAGS_register)
+* [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [Workqueue](https://github.com/torvalds/linux/blob/master/Documentation/workqueue.txt)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-8.html)
