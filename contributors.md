@@ -10,7 +10,7 @@
 
 [@icecoobe](https://github.com/icecoobe)
 
-[@choleraehyq](http://cholerae.com)
+[@choleraehyq](http://github.com/choleraehyq)
 
 [@mudongliang](https://github.com/mudongliang)
 

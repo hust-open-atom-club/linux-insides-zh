@@ -37,7 +37,7 @@ Linux Insides
 | 4. System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
 | 5. Timers and time management|[@icecoobe](https://github.com/icecoobe)|正在进行|
 | 6. Synchronization primitives||未开始|
-| 7. Memory management|[@choleraehyq](https://github.com/choleraehyq)|正在进行|
+| 7. Memory management|[@choleraehyq](https://github.com/choleraehyq)|已完成|
 | 8. SMP||未开始|
 | 9. Concepts||未开始|
 | 10. DataStructures||已完成|
