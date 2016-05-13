@@ -4,20 +4,9 @@
 延后中断(软中断，Tasklets和工作队列)介绍
 --------------------------------------------------------------------------------
 
-这是[linux内核揭密](https://www.gitbook.com/book/xinqiu/linux-insides-cn/details)中断部分的第九小节，在[之前章节](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/interrupts-8.html)我们了解了源文件[arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c)中`init_IRQ`的实现。接下来的这一节我们将继续深入学习和外部硬件中断相关的初始化。
+这是Linux内核[中断和中断处理](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/index.html)的第九节，在[上一节](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/interrupts-8.html)我们分析了源文件[arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c)中的`init_IRQ`实现。接下来的这一节我们将继续深入学习外部硬件中断的初始化。
 
-在[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c)中我们可以看到在`init_IRQ`函数后面调用了`softirq_init`函数。这个函数在源文件[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中定义，从名字我们可以看出，它的作用是初始化`软中断`或者也可以说是初始化`延后中断`。那么什么是延后中断？在讲解内核初始化过程的[部分](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Initialization/linux-initialization-9.html)第九小结我们已经对他有了一些了解，Linux内核中一共有三种'延后中断'：
-
-* `软中断`;
-* `tasklets`;
-* `工作队列`;
-
-在这一小节我们将详细介绍这三种实现。就像我说的，我们对这个主题有一些了解。那么，现在是时间深入了解一下了。
-
-延后中断
-----------------------------------------------------------------------------------
-
-对中断处理有一些严格的要求，总的来说有两种：
+中断处理会有一些特点，其中最主要的两个是：
 
 * 中断处理必须快速执行完毕
 * 有时中断处理必须做很多冗长的事情
@@ -27,9 +16,20 @@
 * 前半部
 * 后半部
 
-`后半部`曾经是Linux内核延后中断执行的一种方式，但现在的实际情况已经不是这样了。这种遗留称谓现在作为名词代表所有延后中断执行的方式。伴随着内核对并行处理的支持，出于性能考虑，所有新的下半部实现方案都基于被称之为`ksoftirqd`(稍后将详细讨论)的内核线程。`ksoftirqd`中断处理方式几乎和硬件中断处理一样重要。中断延后处理会在系统负载较低的时候才执行一个中断的具体实现行为。如你所知，中断处理代码运行于禁止响应后续中断的中断处理上下文中，所以要避免长时间执行。但有时中断处理却又有很多的工作需要执行，所以中断处理有时会被分为两部分。第一部分中，中断处理先只做少量的最重要工作，接下来提交第二部分到内核调度，然后就结束运行。当系统比较空闲并且处理器上下文允许处理中断时，第二部分就会开始执行被延后的剩余中断任务。以上是对延后中断处理的简要介绍。
+`后半部`曾经是Linux内核延后中断执行的一种方式，但现在的实际情况已经不是这样了。现在它已作为一个遗留称谓代表内核中所有延后中断的机制。如你所知，中断处理代码运行于中断处理上下文中，此时禁止响应后续的中断，所以要避免中断处理代码长时间执行。但有些中断却又需要执行很多工作，所以中断处理有时会被分为两部分。第一部分中，中断处理先只做尽量少的重要工作，接下来提交第二部分给内核调度，然后就结束运行。当系统比较空闲并且处理器上下文允许处理中断时，第二部分被延后的剩余任务就会开始执行。
 
-就像上面说的，延后中断(或者叫`软中断`)和`tasklets`是由一些内核线程(每个处理器一个线程)来执行的。每个处理器都有自己的内核线程，名字叫做`ksoftirqd/n`，n是处理器的编号。我们可以通过系统命令`systemd-cgls`看到它们：
+当前实现延后中断的有如下三种途径：
+
+* `软中断`;
+* `tasklets`;
+* `工作队列`;
+
+在这一小节我们将详细介绍这三种实现，现在是时间深入了解一下了。
+
+软中断
+----------------------------------------------------------------------------------
+
+伴随着内核对并行处理的支持，出于性能考虑，所有新的下半部实现方案都基于被称之为`ksoftirqd`(稍后将详细讨论)的内核线程。每个处理器都有自己的内核线程，名字叫做`ksoftirqd/n`，n是处理器的编号。我们可以通过系统命令`systemd-cgls`看到它们：
 
 ```
 $ systemd-cgls -k | grep ksoft
@@ -49,7 +49,7 @@ $ systemd-cgls -k | grep ksoft
 early_initcall(spawn_ksoftirqd);
 ```
 
-延后中断在Linux内核编译时就静态的确定了，`open_softirq`函数负责`softirq`初始化。`open_softirq`在[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中定义：
+软中断在Linux内核编译时就静态的确定了。`open_softirq`函数负责`softirq`初始化，它在[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中定义：
 
 ```C
 void open_softirq(int nr, void (*action)(struct softirq_action *))
@@ -69,7 +69,7 @@ void open_softirq(int nr, void (*action)(struct softirq_action *))
 static struct softirq_action softirq_vec[NR_SOFTIRQS] __cacheline_aligned_in_smp;
 ```
 
-它在同一个源文件中定义。`softirq_vec`数组包含了`NR_SOFTIRQS`(其值为10)个不同`softirq`类型的`softirq_action`。当前版本的Linux内核定义了十种软中断向量。其中两个tasklet相关，两个网络相关，两个块处理层相关，两个定时器相关，另外调度器和RCU也各占一个。所有这些都在一个枚举中定义：
+它在同一源文件中定义。`softirq_vec`数组包含了`NR_SOFTIRQS`(其值为10)个不同`softirq`类型的`softirq_action`。当前版本的Linux内核定义了十种软中断向量。其中两个tasklet相关，两个网络相关，两个块处理相关，两个定时器相关，另外调度器和RCU也各占一个。所有这些都在一个枚举中定义：
 
 ```C
 enum
@@ -114,7 +114,7 @@ BLOCK_IOPOLL:          0          0          0          0          0          0 
          RCU:     337707     289397     251874     239796     254377     254898     267497     256624
 ```
 
-可以看到`softirq_vec`数组的元素类型为`softirq_action`。这是软中断机制里一个重要的数据结构，它只有一个指向中断处理函数的成员：
+可以看到`softirq_vec`数组的类型为`softirq_action`。这是软中断机制里一个重要的数据结构，它只有一个指向中断处理函数的成员：
 
 ```C
 struct softirq_action
@@ -136,7 +136,7 @@ void raise_softirq(unsigned int nr)
 }
 ```
 
-可以看到在`local_irq_save`和`local_irq_restore`两个宏中间调用了`raise_softirq_irqoff`函数。`local_irq_save`的定义位于[include/linux/irqflags.h](https://github.com/torvalds/linux/blob/master/include/linux/irqflags.h)头文件，它保存了[eflags](https://en.wikipedia.org/wiki/FLAGS_register)寄存器中的[IF](https://en.wikipedia.org/wiki/Interrupt_flag)标志位并且禁用了当前处理器的中断。`local_irq_restore`宏定义于同一头文件中，它做了完全相反的事情：装回之前保存的中断标志位然后允许中断。这里之所以要禁用中断是因为`softirq`中断运行于中断上下文中，并且????????????????????
+可以看到在`local_irq_save`和`local_irq_restore`两个宏中间调用了`raise_softirq_irqoff`函数。`local_irq_save`的定义位于[include/linux/irqflags.h](https://github.com/torvalds/linux/blob/master/include/linux/irqflags.h)头文件，它保存了[eflags](https://en.wikipedia.org/wiki/FLAGS_register)寄存器中的[IF](https://en.wikipedia.org/wiki/Interrupt_flag)标志位并且禁用了当前处理器的中断。`local_irq_restore`宏定义于相同头文件中，它做了完全相反的事情：装回之前保存的中断标志位然后允许中断。这里之所以要禁用中断是因为将要运行的`softirq`中断处理运行于中断上下文中。
 
 `raise_softirq_irqoff`函数设置当前处理器上和nr参数对应的软中断标志位(`__softirq_pending`)。这是通过以下代码做到的：
 
@@ -144,7 +144,7 @@ void raise_softirq(unsigned int nr)
 __raise_softirq_irqoff(nr);
 ```
 
-然后，通过`in_interrupt`函数获得`irq_count`值。我们在这一章的第一[小节](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/interrupts-1.html)已经知道它是用来检测一个cpu是否已经有软中断需要处理。如果我们不处于中断上下文中，我们就退出`raise_softirq_irqoff`函数，装回`IF`标志位并允许当前处理器的中断。如果在中断上下文中，就会调用`wakeup_softirqd`函数：
+然后，通过`in_interrupt`函数获得`irq_count`值。我们在这一章的第一[小节](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/interrupts-1.html)已经知道它是用来检测一个cpu是否处于中断环境。如果我们处于中断上下文中，我们就退出`raise_softirq_irqoff`函数，装回`IF`标志位并允许当前处理器的中断。如果不在中断上下文中，就会调用`wakeup_softirqd`函数：
 
 ```C
 if (!in_interrupt())
@@ -188,26 +188,26 @@ if (pending) {
 ...
 ```
 
-除周期性检测是否有延后中断需要执行之外，系统还会在一些关键时间点上检测。一个主要的检测时间点就是当定义在[arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c)的函数`do_IRQ`被调用时，这是Linux内核中执行延后中断的主要时机。在这个函数要完成中断处理时它会调用[arch/x86/include/asm/apic.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/apic.h)中定义的`exiting_irq`函数，`exiting_irq`又调用了`irq_exit`。`irq_exit`函数会检测当前处理器上下文是否有延后中断，有的话就会调用`invoke_softirq`：
+除周期性检测是否有延后中断需要执行之外，系统还会在一些关键时间点上检测。一个主要的检测时间点就是当定义在[arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c)的`do_IRQ`函数被调用时，这是Linux内核中执行延后中断的主要时机。在这个函数将要完成中断处理时它会调用[arch/x86/include/asm/apic.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/apic.h)中定义的`exiting_irq`函数，`exiting_irq`又调用了`irq_exit`。`irq_exit`函数会检测当前处理器上下文是否有延后中断，有的话就会调用`invoke_softirq`：
 
 ```C
 if (!in_interrupt() && local_softirq_pending())
     invoke_softirq();
 ```
 
-这样就调用到了我们上面提到的`__do_softirq`。每个`softirq`都有如下的阶段：通过`open_softirq`函数注册一个软中断，通过`raise_softirq`函数标记一个延后中断来激活它，然后所有被标记的软中断将会在Linux内核下一次执行周期性延后中断检测时得以调度，对应此类型中断的处理函数也就得以执行。
+这样就调用到了我们上面提到的`__do_softirq`。每个`softirq`都有如下的阶段：通过`open_softirq`函数注册一个软中断，通过`raise_softirq`函数标记一个软中断来激活它，然后所有被标记的软中断将会在Linux内核下一次执行周期性软中断检测时得以调度，对应此类型软中断的处理函数也就得以执行。
 
-如上所讲，软中断是静态分配的，但这对于后期加载的内核模块是一个问题。基于软中断的`tasklets`解决了这个问题。
+从上述可看出，软中断是静态分配的，这对于后期加载的内核模块将是一个问题。基于软中断实现的`tasklets`解决了这个问题。
 
 Tasklets
 --------------------------------------------------------------------------------
 
-如果你阅读Linux内核源码中软中断相关的代码，你会发现它很少会被用到。内核中实现延后中断的主要途径是`tasklets`。正如上面说的，`tasklets`是构建于`softirq`中断之上，他是基于下面两个软中断实现的：
+如果你阅读Linux内核源码中软中断相关的代码，你会发现它很少会被用到。内核中实现延后中断的主要途径是`tasklets`。正如上面说的，`tasklets`构建于`softirq`中断之上，他是基于下面两个软中断实现的：
 
 * `TASKLET_SOFTIRQ`;
 * `HI_SOFTIRQ`.
 
-简而言之，`tasklets`是运行时分配和初始化的软中断。和软中断不同的是，同一类型的`tasklets`可以同一时间运行在不同的处理器上。我们已经了解到一些软中断的知识，当然上面的文字并不能详细讲解所有的细节，但我们现在可以通过直接阅读代码一步步的更深入了解软中断。我们返回到开始部分讨论的`softirq_init`函数实现，这个函数在[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中定义如下：
+简而言之，`tasklets`是运行时分配和初始化的软中断。和软中断不同的是，同一类型的`tasklets`可以在同一时间运行于不同的处理器上。我们已经了解到一些关于软中断的知识，当然上面的文字并不能详细讲解所有的细节，但我们现在可以通过直接阅读代码一步步的更深入了解软中断。我们返回到开始部分讨论的`softirq_init`函数实现，这个函数在[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中定义如下：
 
 ```C
 void __init softirq_init(void)
@@ -226,7 +226,7 @@ void __init softirq_init(void)
 }
 ```
 
-可以看到在函数开头定义了一个integer类型的变量cpu。接下来他会作为参数传递给宏`for_each_possible_cpu`来获得系统中所有的处理器。如果`possible_cpu`对你来说是一个新的术语，你可以阅读[CPU masks](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Concepts/cpumask.html)章节来了解更多知识。简单的说，`possible_cpu`是系统运行期间随时插入的处理器集合。所有的`possible processor`存储在`cpu_possible_bits`位图中，你可以在[kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c)中找到他的定义：
+可以看到在函数开头定义了一个名为cpu的integer类型变量。接下来他会作为参数传递给宏`for_each_possible_cpu`来获得系统中所有的处理器。如果`possible_cpu`对你来说是一个新的术语，你可以阅读[CPU masks](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Concepts/cpumask.html)章节来了解更多知识。简单的说，`possible_cpu`是系统运行期间插入的处理器集合。所有的`possible processor`存储在`cpu_possible_bits`位图中，你可以在[kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c)中找到他的定义：
 
 ```C
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
@@ -241,7 +241,7 @@ const struct cpumask *const cpu_possible_mask = to_cpumask(cpu_possible_bits);
 * `tasklet_vec`;
 * `tasklet_hi_vec`;
 
-这两个`per-cpu`变量和`softirq_init`函数都定义在[code](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中，他们被定义为`tasklet_head`类型：
+这两个`per-cpu`变量和`softirq_init`函数都定义在相同[代码](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)中，他们被定义为`tasklet_head`类型：
 
 ```C
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_vec);
@@ -274,9 +274,9 @@ struct tasklet_struct
 
 * 调度队列中的下一个`Tasklet`;
 * 当前这个`Tasklet`的状态;
-* 代表这个`Tasklet`是否处于活动状态;
+* 这个`Tasklet`是否处于活动状态;
 * `Tasklet`的回调函数;
-* 回调的参数.
+* 回调函数的参数;
 
 上面代码中，在`softirq_init`函数中初始化了两个tasklets数组：`tasklet_vec`和`tasklet_hi_vec`。Tasklets和高优先级Tasklets分别存储于这两个数组中。初始化完成后我们看到代码[kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c)在`softirq_init`函数的最后又两次调用了`open_softirq`：
 
@@ -285,7 +285,7 @@ open_softirq(TASKLET_SOFTIRQ, tasklet_action);
 open_softirq(HI_SOFTIRQ, tasklet_hi_action);
 ```
 
-`open_softirq`函数的主要作用是用软中断处理函数初始化软中断，接下来让我们看看它是怎么做的。和Tasklets相关的软中断处理函数有两个，分别是`tasklet_action`和`tasklet_hi_action`。其中`tasklet_hi_action`和`HI_SOFTIRQ`关联在一起，`tasklet_action`和`TASKLET_SOFTIRQ`关联在一起。
+`open_softirq`函数的主要作用是初始化软中断，接下来让我们看看它是怎么做的。和Tasklets相关的软中断处理函数有两个，分别是`tasklet_action`和`tasklet_hi_action`。其中`tasklet_hi_action`和`HI_SOFTIRQ`关联在一起，`tasklet_action`和`TASKLET_SOFTIRQ`关联在一起。
 
 Linux内核提供一些API供操作Tasklets之用。首先是`tasklet_init`函数，它接受一个`task_struct`数据结构，一个处理函数，和另外一个参数，并利用这些参数来初始化所给的`task_struct`结构：
 
@@ -338,7 +338,7 @@ void __tasklet_schedule(struct tasklet_struct *t)
 }
 ```
 
-我们看到它检测并设置所给的tasklet为`TASKLET_STATE_SCHED`状态，然后以所给tasklet为参数执行了`__tasklet_schedule`函数。`__tasklet_schedule`看起来和前面见到的`raise_softirq`很像。一开始它保存中断标志并禁用中断，继而将新的tasklet添加到`tasklet_vec`，然后调用了我们前面见过的`raise_softirq_irqoff`函数。当Linux内核调度器决定去运行一个延后函数，`tasklet_action`函数会被被作为和`TASKLET_SOFTIRQ`相关联的延后函数调用。同样的，`tasklet_hi_action`会被作为和`HI_SOFTIRQ`相关联的延后函数调用。这些函数之所以如此相似是因为他们之间只有一个地方不同 --- `tasklet_action`使用`tasklet_vec`而`tasklet_hi_action`使用`tasklet_hi_vec`。
+我们看到它检测并设置所给的tasklet为`TASKLET_STATE_SCHED`状态，然后以所给tasklet为参数执行了`__tasklet_schedule`函数。`__tasklet_schedule`看起来和前面见到的`raise_softirq`很像。一开始它保存中断标志并禁用中断，继而将新的tasklet添加到`tasklet_vec`，然后调用了我们前面见过的`raise_softirq_irqoff`函数。当Linux内核调度器决定去运行一个延后函数，`tasklet_action`函数会被作为和`TASKLET_SOFTIRQ`相关联的延后函数调用。同样的，`tasklet_hi_action`会被作为和`HI_SOFTIRQ`相关联的延后函数调用。这些函数之所以如此相似是因为他们之间只有一个地方不同 --- `tasklet_action`使用`tasklet_vec`而`tasklet_hi_action`使用`tasklet_hi_vec`。
 
 让我们看下`tasklet_action`函数的实现：
 
@@ -374,9 +374,9 @@ static inline int tasklet_trylock(struct tasklet_struct *t)
 
 如果这个操作成功了就会执行此tasklet的处理函数(我们在`tasklet_init`中所设置的)，然后调用`tasklet_unlock`函数清除他的`TASKLET_STATE_RUN`状态。
 
-通常情况下，这就是`tasklet`的所有概念。当然这些还不足以覆盖所有的`tasklets`，但是我想这是一个继续学习下去的很好的切入点。
+通常情况下，这就是`tasklet`的所有概念。当然这些还不足以覆盖所有的`tasklets`，但是我想大家可以以此为切入点继续学习下去。
 
-`tasklets`在Linux内核中是一个[广泛](http://lxr.free-electrons.com/ident?i=tasklet_init)使用的概念，但就像我在本章开头所写的，还有第三个延后延后函数 -- 工作队列。接下来我们将会看看它又是怎样一种机制。
+`tasklets`在Linux内核中是一个[广泛](http://lxr.free-electrons.com/ident?i=tasklet_init)使用的概念，但就像我在本章开头所写的，还有第三个延后中断机制 -- 工作队列。接下来我们将会看看它又是怎样一种机制。
 
 
 工作队列
@@ -428,7 +428,7 @@ systemd-cgls -k | grep kworker
 ...
 ```
 
-这些线程会被用来调度执行工作队列的延后函数(就像`ksoftirqd`之于`软中断`)。除此之外我们还可以为一个`工作队列`创建一个新的工作线程。Linux内核提供了如下宏静态创建一个队列：
+这些线程会被用来调度执行工作队列的延后函数(就像`ksoftirqd`之于`软中断`)。除此之外我们还可以为一个`工作队列`创建一个新的工作线程。Linux内核提供了如下宏静态创建一个队列任务：
 
 ```C
 #define DECLARE_WORK(n, f) \
@@ -450,7 +450,7 @@ systemd-cgls -k | grep kworker
     } while (0)
 ```
 
-这个宏需要一个`work_struct`数据结构作为将要创建的工作队列，和一个将在这个队列里调度运行的函数。通过这其中一个宏穿件一个`work`后，我们需要把它放到`工作队列`中去。可以通过`queue_work`或者`queue_delayed_work`来做到这一点：
+这个宏需要一个`work_struct`数据结构作为将要创建的队列任务，和一个将在这个任务里调度运行的函数。通过这两个宏的其中一个创建一个`work`后，我们需要把它放到`工作队列`中去。可以通过`queue_work`或者`queue_delayed_work`来做到这一点：
 
 ```C
 static inline bool queue_work(struct workqueue_struct *wq,
@@ -460,7 +460,7 @@ static inline bool queue_work(struct workqueue_struct *wq,
 }
 ```
 
-`queue_work`只是调用了`queue_work_on`函数指定相应的处理器。注意这里给`queue_work_on`函数传递了`WORK_CPU_UNBOUND`参数，它作为代表工作队列要绑定到哪一个处理器的枚举一员，定义于[include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h)。`queue_work_on`函数测试并设置所给`任务`的`WORK_STRUCT_PENDING_BIT`标志位，然后以所给的工作队列和工作任务为参数执行`__queue_work`函数：
+`queue_work`只是调用了`queue_work_on`函数指定相应的处理器。注意这里给`queue_work_on`函数传递了`WORK_CPU_UNBOUND`参数，它作为代表队列任务要绑定到哪一个处理器的枚举一员，定义于[include/linux/workqueue.h](https://github.com/torvalds/linux/blob/master/include/linux/workqueue.h)。`queue_work_on`函数测试并设置所给`任务`的`WORK_STRUCT_PENDING_BIT`标志位，然后以所给的工作队列和队列任务为参数执行`__queue_work`函数：
 
 ```C
 bool queue_work_on(int cpu, struct workqueue_struct *wq,
@@ -477,7 +477,7 @@ bool queue_work_on(int cpu, struct workqueue_struct *wq,
 }
 ```
 
-`__queue_work`函数得到参数`work poll`。是的，是`work poll`而不是`workqueue`。实际上，所有的`works`都没有放在`workqueue`中，而是放在Linux内核中由`worker_pool`数据结构所定义的`work poll`。如上所述，`workqueue_struct`数据结构的`pwqs`成员代表一个`worker_pool`列表。当我们创建一个`workqueue`，？？？？。每一个和`worker_pool`相关联的`pool_workqueue`都分配在相同的处理器上对应的优先级队列。??????。在`__queue_work`函数里使用`raw_smp_processor_id`设置cpu为当前处理器在[第四章](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Initialization/linux-initialization-4.html)你可以找到更多相关信息)，得到与所给`work_struct`对应的`pool_workqueue`并将`work`插入到`workqueue`：
+`__queue_work`函数得到参数`work poll`。是的，是`work poll`而不是`workqueue`。实际上，所有的`works`都没有放在`workqueue`中，而是放在Linux内核中由`worker_pool`数据结构所定义的`work poll`。如上所述，`workqueue_struct`数据结构的`pwqs`成员是一个`worker_pool`列表。当我们创建一个`workqueue`，他针对每一个处理器都创建了`worker_pool`。每一个和`worker_pool`相关联的`pool_workqueue`都分配在相同的处理器上对应的优先级队列，`workqueue`通过他们和`worker_pool`交互。在`__queue_work`函数里使用`raw_smp_processor_id`设置cpu为当前处理器在[第四章](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Initialization/linux-initialization-4.html)你可以找到更多相关信息)，得到与所给`work_struct`对应的`pool_workqueue`并将`work`插入到`workqueue`：
 
 ```C
 static void __queue_work(int cpu, struct workqueue_struct *wq,
@@ -505,7 +505,7 @@ insert_work(pwq, work, worklist, work_flags);
 总结
 --------------------------------------------------------------------------------
 
-现在结束了[中断和中断处理](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/index.html)的第九部分。这一节中我们继续讨论了外部硬件中断。在之前部分我们看到了`IRQs`的初始化和`irq_desc`数据结构。在这一节我们看到了用于延后函数的三个概念：`软中断`，`tasklet`和`工作队列`。
+现在结束了[中断和中断处理](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/index.html)的第九节。这一节中我们继续讨论了外部硬件中断。在之前部分我们看到了`IRQs`的初始化和`irq_desc`数据结构，在这一节我们看到了用于延后函数的三个概念：`软中断`，`tasklet`和`工作队列`。
 
 下一节将是`中断和中断处理`的最后一节。我们将会了解真正的硬件驱动，并试着学习它是怎样和中断子系统一起工作的。
 
