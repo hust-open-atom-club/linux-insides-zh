@@ -1,12 +1,12 @@
-内核引导过程. Part 1.
+内核引导过程. 第一部分.
 ================================================================================
 
 从引导加载程序内核
 --------------------------------------------------------------------------------
 
-如果你已经看过我之前的[文章](http://0xax.blogspot.com/search/label/asm)，就知道之前我开始和底层编程打交道。我写了一些关于Linux x86_64 汇编的文章。同时，我开始深入研究Linux源代码。底层是如果工作的，程序是如何在电脑上运行的，他们是如何在内存中定位的，内核是如何管理进程和内存，网络堆栈是如何在底层工作的等等，这些我都非常感兴趣。因此，我决定去写另外的一系列文章关于**x86_64**框架的Linux内核。
+如果你已经看过我之前的[文章](http://0xax.blogspot.com/search/label/asm)，就知道之前我开始和底层编程打交道。我写了一些关于 Linux x86_64  汇编的文章。同时，我开始深入研究 Linux 源代码。底层是如果工作的，程序是如何在电脑上运行的，他们是如何在内存中定位的，内核是如何管理进程和内存，网络堆栈是如何在底层工作的等等，这些我都非常感兴趣。因此，我决定去写另外的一系列文章关于 **x86_64** 框架的 Linux 内核。
 
-值得注意的是我不是一个专业的内核黑客并且我的工作不是为内核贡献代码。这只是小兴趣。我只是喜欢底层的东西，底层是如何工作的让我产生了很大的兴趣。如果你发现任何迷惑的地方或者你有任何问题/备注，[twitter](https://twitter.com/0xAX)，[email](anotherworldofworld@gmail.com)我或者提一个[issue](https://github.com/0xAX/linux-insides).(PS:翻译上的问题请mail我:xinqiu.94@gmail.com或github上@xinqiu)。我会很高兴。所有的文章也可以在[linux-insides](https://github.com/0xAX/linux-insides)上看，如果你发现哪里英文或内容错误，随意提个PR。(PS:中文版地址：https://github.com/xinqiu/linux-insides)
+请注意我不是一个专业的内核黑客并且我的工作不是为内核贡献代码。这只是小兴趣。我只是喜欢底层的东西，底层是如何工作的让我产生了很大的兴趣。如果你发现任何迷惑的地方或者你有任何问题/备注，[twitter](https://twitter.com/0xAX)，[email](anotherworldofworld@gmail.com)我或者提一个[issue](https://github.com/0xAX/linux-insides).(PS:翻译上的问题请mail我:xinqiu.94@gmail.com或github上@xinqiu)。我会很高兴。所有的文章也可以在[linux-insides](https://github.com/0xAX/linux-insides)上看，如果你发现哪里英文或内容错误，随意提个PR。(PS:中文版地址：https://github.com/xinqiu/linux-insides)
 
 
 *注意这不是官方文档，只是学习和分享知识*
@@ -18,12 +18,12 @@
 
 不管怎样，如果你才开始学一些，我会在这些文章中尝试去解释一些部分。好了，小的介绍结束，我们开始深入内核和底层。
 
-所有的代码实际上是内核 - 3.18.如果有任何改变，我将会做相应的更新。
+我们的文章是基于 Linux 内核 3.18 版本进行的，如果后续的内核版本有任何改变，我将作出相应的更新。
 
 神奇的电源按钮，接下来会发生什么？
 --------------------------------------------------------------------------------
 
-尽管这一系列文章关于 Linux 内核，我们还没有从内核代码（至少在这一章）开始。好了，当你按下你笔记本或台式机的神奇电源按钮，它开始工作。在主板发送一个信号给[电源](https://en.wikipedia.org/wiki/Power_supply)，电源提供电脑适当量的电力。一旦主板收到了[电源备妥信号](https://en.wikipedia.org/wiki/Power_good_signal),它会尝试运行 CPU 。CPU 复位寄存器里的所有剩余数据，设置预定义的值给每个寄存器。
+尽管这一系列文章关于 Linux 内核，我们还没有从内核代码（至少在这一章）开始。好了，当你按下你笔记本或台式机的神奇电源按钮，它开始工作。在主板发送一个信号给[电源](https://en.wikipedia.org/wiki/Power_supply)，电源提供电脑适当量的电力。一旦主板收到了[电源备妥信号](https://en.wikipedia.org/wiki/Power_good_signal),它会尝试启动 CPU 。CPU 复位寄存器里的所有剩余数据，设置预定义的值给每个寄存器。
 
 
 [80386](https://en.wikipedia.org/wiki/Intel_80386) 
@@ -35,7 +35,7 @@ CS selector 0xf000
 CS base     0xffff0000
 ```
 
-处理器开始在[实模式](https://en.wikipedia.org/wiki/Real_mode)工作，我们需要退回一点去理解在这种模式下的内存分割。所有 x86兼容处理器都支持实模式，从[8086](https://en.wikipedia.org/wiki/Intel_8086)到现在的Intel 64位 CPU。8086处理器有一个20位寻址总线，这意味着它可以对0到2^20 位地址空间进行操作(1Mb).不过它只有16位的寄存器，通过这个16位寄存器最大寻址是2^16即 0xffff(64 Kb)。[内存分配](http://en.wikipedia.org/wiki/Memory_segmentation) 被用来充分利用所有空闲地址空间。所有内存被分成固定的65535 字节或64 KB大小的小块。由于我们不能用16位寄存器寻址小于64KB的内存，一种替代的方法被设计出来了。一个地址包括两个部分：数据段起始地址和从该数据段起的偏移量。为了得到内存中的物理地址，我们要让数据段乘16并加上偏移量：
+处理器开始在[实模式](https://en.wikipedia.org/wiki/Real_mode)工作，我们需要退回一点去理解在这种模式下的内存分割。所有 x86兼容处理器都支持实模式，从 [8086](https://en.wikipedia.org/wiki/Intel_8086)到现在的 Intel 64 位  CPU。8086 处理器有一个20位寻址总线，这意味着它可以对0到 2^20  位地址空间进行操作（ 1Mb ）.不过它只有16位的寄存器，通过这个16位寄存器最大寻址是  2^16 即 0xffff （64 Kb）。实模式使用[段式内存管理](http://en.wikipedia.org/wiki/Memory_segmentation) 来管理整个内存空间。所有内存被分成固定的 64KB 大小的小块。由于我们不能用16位寄存器寻址大于 64KB 的内存，一种替代的方法被设计出来了。一个地址包括两个部分：数据段起始地址和从该数据段起的偏移量。为了得到内存中的物理地址，我们要让数据段乘16并加上偏移量：
 
 ```
 PhysicalAddress = Segment * 16 + Offset
@@ -48,31 +48,31 @@ PhysicalAddress = Segment * 16 + Offset
 '0x20010'
 ```
 
-不过如果我们让最大端进行偏移：`0xffff:0xffff`，将会是：
+不过如果我们使用16位2进制能表示的最大值进行寻址：`0xffff:0xffff`，根据上面的公式，结果将会是：
 
 ```python
 >>> hex((0xffff << 4) + 0xffff)
 '0x10ffef'
 ```
 
-这超出1MB65519字节。既然只有1MB在实模式中可以访问，`0x10ffef` 变成有[A20](https://en.wikipedia.org/wiki/A20_line)缺陷的 `0x00ffef`。
+这超出 1MB 65519 字节。既然实模式下， CPU 只能访问 1MB 地址空间，`0x10ffef` 变成有 [A20](https://en.wikipedia.org/wiki/A20_line) 缺陷的 `0x00ffef`。
 
-我们知道实模式和内存地址。回到复位后的寄存器值。
+我们了解了实模式和在实模式下的内存寻址方式，让我们来回头继续来看复位后的寄存器值。
 
-`CS` register consists of two parts: the visible segment selector and hidden base address. We know predefined `CS` base and `IP` value, logical address will be:
+`CS` 寄存器包含两个部分：可视段选择器和隐含基址。 结合之前定义的 `CS` 基址和 `IP` 值，逻辑地址应该是：
 
 ```
 0xffff0000:0xfff0
 ```
 
-In this way starting address formed by adding the base address to the value in the EIP register:
+这种形式的起始地址为EIP寄存器里的值加上基址地址：
 
 ```python
 >>> 0xffff0000 + 0xfff0
 '0xfffffff0'
 ```
 
-We get `0xfffffff0` which is 4GB - 16 bytes. This point is the [Reset vector](http://en.wikipedia.org/wiki/Reset_vector). This is the memory location at which CPU expects to find the first instruction to execute after reset. It contains a [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) instruction which usually points to the BIOS entry point. For example, if we look in [coreboot](http://www.coreboot.org/) source code, we will see it:
+得到的 `0xfffffff0` 是 4GB - 16 字节。 这个地方是 [复位向量(Reset vector)](http://en.wikipedia.org/wiki/Reset_vector) 。 这是CPU在重置后期望执行的第一条指令的内存地址。它包含一个 [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) 指令，这个指令通常指向BIOS入口点。举个例子，如果访问 [coreboot](http://www.coreboot.org/) 源代码，将看到：
 
 ```assembly
 	.section ".reset"
@@ -84,7 +84,8 @@ reset_vector:
 	...
 ```
 
-We can see here the jump instruction [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9 to the address `_start - ( . + 2)`. And we can see that `reset` section is 16 bytes and starts at `0xfffffff0`:
+上面的跳转指令（ [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9）跳转到地址  `_start - ( . + 2)` 去执行代码。 `reset` 段是16字节代码段， 起始于地址 
+`0xfffffff0`，因此 CPU 复位之后，就会跳到这个地址来执行相应的代码 ：
 
 ```
 SECTIONS {
@@ -98,7 +99,7 @@ SECTIONS {
 }
 ```
 
-Now the BIOS has started to work. After initializing and checking the hardware, it needs to find a bootable device. A boot order is stored in the BIOS configuration. The function of boot order is to control which devices the kernel attempts to boot. In the case of attempting to boot a hard drive, the BIOS tries to find a boot sector. On hard drives partitioned with an MBR partition layout, the boot sector is stored in the first 446 bytes of the first sector (512 bytes). The final two bytes of the first sector are `0x55` and `0xaa` which signals the BIOS that the device is bootable. For example:
+现在BIOS已经开始工作了。在初始化和检查硬件之后，需要寻找到一个可引导设备。可引导设备列表存储在在 BIOS 配置中, BIOS 将根据其中配置的顺序，尝试从不同的设备上寻找引导程序。对于硬盘，BIOS  将尝试寻找引导扇区。如果在硬盘上存在一个MBR分区，那么引导扇区储存在第一个扇区(512字节)的头446字节，引导扇区的最后必须是 `0x55` 和 `0xaa` ，这2个字节称为魔术字节，如果 BIOS 看到这2个字节，就知道这个设备是一个可引导设备。举个例子：
 
 ```assembly
 ;
@@ -122,45 +123,45 @@ db 0x55
 db 0xaa
 ```
 
-Build and run it with:
+构建并运行：
 
 ```
 nasm -f bin boot.nasm && qemu-system-x86_64 boot
 ```
 
-This will instruct [QEMU](http://qemu.org) to use the `boot` binary we just built as a disk image. Since the binary generated by the assembly code above fulfills the requirements of the boot sector (the origin is set to `0x7c00`, and we end with the magic sequence). QEMU will treat the binary as the master boot record(MBR) of a disk image.
+这让 [QEMU](http://qemu.org) 使用刚才新建的 `boot` 二进制文件作为磁盘镜像。由于这个二进制文件是由上述汇编语言产生，它满足引导扇区(起始设为 `0x7c00`, 用Magic Bytes结束)的需求。QEMU将这个二进制文件作为磁盘镜像的主引导记录(MBR)。
 
-We will see:
+将看到:
 
 ![Simple bootloader which prints only `!`](http://oi60.tinypic.com/2qbwup0.jpg)
 
-In this example we can see that this code will be executed in 16 bit real mode and will start at 0x7c00 in memory. After the start it calls the [0x10](http://www.ctyme.com/intr/rb-0106.htm) interrupt which just prints `!` symbol. It fills rest of 510 bytes with zeros and finish with two magic bytes `0xaa` and `0x55`.
+在这个例子中，这段代码被执行在16位的实模式，起始于内存0x7c00。之后调用 [0x10](http://www.ctyme.com/intr/rb-0106.htm) 中断打印 `!` 符号。用0填充剩余的510字节并用两个Magic Bytes `0xaa` 和 `0x55` 结束。
 
-You can see binary dump of it with `objdump` util:
+可以使用 `objdump` 工具来查看转储信息：
 
 ```
 nasm -f bin boot.nasm
 objdump -D -b binary -mi386 -Maddr16,data16,intel boot
 ```
 
-A real-world boot sector has code for continuing the boot process and the partition table instead of a bunch of 0's and an exclamation point :) Ok so, from this point onwards BIOS hands over the control to the bootloader and we can go ahead.
+一个真实的启动扇区包含了分区表，已经用来启动系统的指令，而不是像我们上面的程序，只是输出了一个感叹号就结束了。从启动扇区的代码被执行开始，BIOS 就将系统的控制权转移给了引导程序，让我们继续往下看看引导程序都做了些什么。
 
-**NOTE**: As you can read above the CPU is in real mode. In real mode, calculating the physical address in memory is done as following:
+**NOTE**: 强调一点，上面的引导程序是运行在实模式下的，因此 CPU 是使用下面的公式进行物理地址的计算的：
 
 ```
 PhysicalAddress = Segment * 16 + Offset
 ```
 
-Same as I mentioned before. But we have only 16 bit general purpose registers. The maximum value of 16 bit register is: `0xffff`; So if we take the biggest values the result will be:
+而且正如我前面所说的，在实模式下，CPU 只能使用16位的通用寄存器。16位寄存器能够表达的最大数值是：`0xffff` ，所以按照上面的公式计算出的最大物理地址是：
 
 ```python
 >>> hex((0xffff * 16) + 0xffff)
 '0x10ffef'
 ```
 
-Where `0x10ffef` is equal to `1MB + 64KB - 16b`. But a [8086](https://en.wikipedia.org/wiki/Intel_8086) processor, which was the first processor with real mode. It had 20 bit address line and `2^20 = 1048576.0` is 1MB. So, it means that the actual  memory available is 1MB.
+这个地址在 [8086](https://en.wikipedia.org/wiki/Intel_8086) 处理器下，将被转换成地址 `0x0ffef`, 原因是因为，8086 cpu 只有20位地址线，只能表示 `2^20 = 1MB` 的地址，而上面这个地址已经超出了 1MB 地址的范围，所以 CPU 就舍弃了最高位。
 
-General real mode's memory map is:
+实模式下的 1MB 地址空间分配表：
 
 ```
 0x00000000 - 0x000003FF - Real Mode Interrupt Vector Table
@@ -176,24 +177,24 @@ General real mode's memory map is:
 0x000F0000 - 0x000FFFFF - System BIOS
 ```
 
-But stop, at the beginning of post I wrote that first instruction executed by the CPU is located at the address `0xFFFFFFF0`, which is much bigger than `0xFFFFF` (1MB). How can CPU access it in real mode? As I write about it and you can read in [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) documentation:
+如果你的记性不错，在看到这张表的时候，一定会跳出来一个问题。在上面的章节中，我说了 CPU 执行的第一条指令是在地址 `0xFFFFFFF0` 处，这个地址远远大于 `0xFFFFF` ( 1MB )。那么实模式下的 CPU 是如何访问到这个地址的呢？文档 [coreboot](http://www.coreboot.org/Developer_Manual/Memory_map) 给出了答案:
 
 ```
 0xFFFE_0000 - 0xFFFF_FFFF: 128 kilobyte ROM mapped into address space
 ```
 
-At the start of execution BIOS is not in RAM, it is located in the ROM.
+`0xFFFFFFF0` 这个地址被映射到了 ROM，因此 CPU 执行的第一条指令来自于 ROM，而不是 RAM。
 
-Bootloader
+引导程序
 --------------------------------------------------------------------------------
 
-There are a number of bootloaders which can boot Linux, such as [GRUB 2](https://www.gnu.org/software/grub/) and [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project). The Linux kernel has a [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) which specifies the requirements for bootloaders to implement Linux support. This example will describe GRUB 2.
+在现实世界中，要启动 Linux 系统，有多种引导程序可以选择。比如 [GRUB 2](https://www.gnu.org/software/grub/) 和 [syslinux](http://www.syslinux.org/wiki/index.php/The_Syslinux_Project)。Linux内核通过 [Boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt) 来定义应该如何实现引导程序。在这里我们将只介绍 GRUB 2。
 
-Now that the BIOS has chosen a boot device and transferred control to the boot sector code, execution starts from [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD). This code is very simple due to the limited amount of space available, and contains a pointer that it uses to jump to the location of GRUB 2's core image. The core image begins with [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD), which is usually stored immediately after the first sector in the unused space before the first partition. The above code loads the rest of the core image into memory, which contains GRUB 2's kernel and drivers for handling filesystems. After loading the rest of the core image, it executes [grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c).
+现在 BIOS 已经选择了一个启动设备，并且将控制权转移给了启动扇区中的代码，在我们的例子中，启动扇区代码是 [boot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/boot.S;hb=HEAD)。因为这段代码只能占用一个扇区，因此非常简单，只做一些必要的初始化，然后就跳转到 GRUB 2's core image 去执行。 Core image 的代码请参考 [diskboot.img](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/boot/i386/pc/diskboot.S;hb=HEAD)，一般来说 core image 在磁盘上存储在启动扇区之后到第一个可用分区之前。core image 的初始化代码会把整个 core image （包括 GRUB 2的内核代码和文件系统驱动） 引导到内存中。 引导完成之后，[grub_main](http://git.savannah.gnu.org/gitweb/?p=grub.git;a=blob;f=grub-core/kern/main.c)将被调用。
 
-`grub_main` initializes console, gets base address for modules, sets root device, loads/parses grub configuration file, loads modules etc. At the end of execution, `grub_main` moves grub to normal mode. `grub_normal_execute` (from `grub-core/normal/main.c`) completes last preparation and shows a menu for selecting an operating system. When we select one of grub menu entries, `grub_menu_execute_entry` begins to be executed, which executes grub `boot` command. It starts to boot the selected operating system.
+`grub_main` 初始化控制台，计算模块基地址，设置 root 设备，读取 grub 配置文件，加载模块。最后，将 GRUB 置于 normal 模式，在这个模式中，`grub_normal_execute` (from `grub-core/normal/main.c`) 将被调用以完成最后的准备工作，然后显示一个菜单列出所用可用的操作系统。当某个操作系统被选择之后，`grub_menu_execute_entry` 开始执行，它将调用 GRUB 的 `boot` 命令，来引导被选中的操作系统。
 
-As we can read in the kernel boot protocol, the bootloader must read and fill some fields of kernel setup header which starts at `0x01f1` offset from the kernel setup code. Kernel header [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) starts from:
+就像 kernel boot protocol 所描述的，引导程序必须填充 kernel setup header （位于 kernel setup code 偏移 `0x01f1` 处）  的必要字段。kernel setup header的定义开始于 [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S)：
 
 ```assembly
 	.globl hdr
@@ -207,9 +208,9 @@ hdr:
 	boot_flag:   .word 0xAA55
 ```
 
-The bootloader must fill this and the rest of the headers (only marked as `write` in the Linux boot protocol, for example [this](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)) with values which it either got from command line or calculated. We will not see description and explanation of all fields of kernel setup header, we will get back to it when kernel uses it. Anyway, you can find description of any field in the [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156).
+bootloader必须填充在 Linux boot protocol 中标记为 `write` 的头信息，比如 [type_of_loader](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L354)，这些头信息可能来自命令行，或者通过计算得到。在这里我们不会详细介绍所有的 kernel setup header，我们将在需要的时候逐个介绍。不过，你可以自己通过 [boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156) 来了解这些设置。
 
-As we can see in kernel boot protocol, the memory map will be the following after kernel loading:
+通过阅读 kernel boot protocol，在内核被引导如内存后，内存使用情况将入下表所示：
 
 ```shell
          | Protected-mode kernel  |
@@ -236,34 +237,33 @@ X+08000  +------------------------+
 
 ```
 
-So after the bootloader transferred control to the kernel, it starts somewhere at:
+所以当 bootloader 完成任务，将执行权移交给 kernel，kernel 的代码从以下地址开始执行：
 
 ```
 0x1000 + X + sizeof(KernelBootSector) + 1
+个人以为应该是 X + sizeof(KernelBootSector) + 1 因为 X 已经是一个具体的物理地址了，不是一个偏移
 ```
 
-where `X` is the address of kernel bootsector loaded. In my case `X` is `0x10000`, we can see it in memory dump:
+上面的公式中， `X` 是 kernel bootsector 被引导如内存的位置。在我的机器上， `X` 的值是 `0x10000`，我们可以通过 memory dump 来检查这个地址：
 
 ![kernel first address](http://oi57.tinypic.com/16bkco2.jpg)
 
-Ok, now the bootloader has loaded Linux kernel into the memory, filled header fields and jumped to it. Now we can move directly to the kernel setup code.
+到这里，引导程序完成它的使命，并将控制权移交给了 Linux kernel。下面我们就来看看 kernel setup code 都做了些什么。
 
-Start of Kernel Setup
+内核设置
 --------------------------------------------------------------------------------
 
-Finally we are in the kernel. Technically kernel didn't run yet, first of all we need to setup kernel, memory manager, process manager etc. Kernel setup execution starts from [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) at the [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293). It is a little strange at the first look, there are many instructions before it.
+经过上面的一系列操作，我们终于进入到内核了。不过从技术上说，内核还没有被运行起来，因为首先我们需要正确设置内核，启动内存管理，进程管理等等。内核设置代码的运行起点是 [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S) 中定义的 [_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L293) 函数。 在 `_start` 函数开始之前，还有很多的代码，那这些代码是做什么的呢？
 
-Actually Long time ago Linux kernel had its own bootloader, but now if you run for example:
+实际上 `_start` 开始之前的代码是 kenerl 自带的 bootloader。在很久以前，是可以使用这个 bootloader 来启动 Linux 的。不过在新的 Linux 中，这个 bootloader 代码已经不再启动 Linux 内核，而只是输出一个错误信息。 如果你运行下面的命令，直接使用 Linux 内核来启动，你会看到下图所示的错误：
 
 ```
 qemu-system-x86_64 vmlinuz-3.18-generic
 ```
 
-You will see:
-
 ![Try vmlinuz in qemu](http://oi60.tinypic.com/r02xkz.jpg)
 
-Actually `header.S` starts from [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) (see image above), error message printing and following [PE](https://en.wikipedia.org/wiki/Portable_Executable) header:
+为了能够作为 bootloader 来使用, `header.S` 开始处定义了 [MZ] [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) 魔术数字, 并且定义了  [PE](https://en.wikipedia.org/wiki/Portable_Executable) 头，在 PE 头中定义了输出的字符串：
 
 ```assembly
 #ifdef CONFIG_EFI_STUB
@@ -279,9 +279,9 @@ pe_header:
 	.word 0
 ```
 
-It needs this for loading the operating system with [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface). Here we will not see how it works (we will these later in the next parts).
+之所以代码需要这样写，这个是因为遵从 [UEFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) 的硬件需要这样的结构才能正常引导操作系统。
 
-So the actual kernel setup entry point is:
+去除这些作为 bootloader 使用的代码，真正的内核代码就从 `_start` 开始了：
 
 ```
 // header.S line 292
@@ -289,7 +289,7 @@ So the actual kernel setup entry point is:
 _start:
 ```
 
-Bootloader (grub2 and others) knows about this point (`0x200` offset from `MZ`) and makes a jump directly to this point, despite the fact that `header.S` starts from `.bstext` section which prints error message:
+其他的 bootloader (grub2 and others) 知道 _start 所在的位置（ 从 `MZ` 头开始偏移 `0x200` 字节 ），所以这些 bootloader 就会忽略所有在这个位置前的代码（这些之前的代码位于 `.bstext` 段中）， 直接跳转到这个位置启动内核。
 
 ```
 //
@@ -299,8 +299,6 @@ Bootloader (grub2 and others) knows about this point (`0x200` offset from `MZ`) 
 .bstext : { *(.bstext) }  // put .bstext section to position 0
 .bsdata : { *(.bsdata) }
 ```
-
-So kernel setup entry point is:
 
 ```assembly
 	.globl _start
@@ -313,37 +311,33 @@ _start:
 	//
 ```
 
-Here we can see `jmp` instruction opcode - `0xeb` to the `start_of_setup-1f` point. `Nf` notation means following: `2f` refers to the next local `2:` label. In our case it is label `1` which goes right after jump. It contains rest of setup [header](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt#L156) and right after setup header we can see `.entrytext` section which starts at `start_of_setup` label.
+`_start` 开始就是一个 `jmp` 语句（`jmp` 语句的 opcode 是 `0xeb` ），这个跳转语句是一个短跳转，跟在后面的是一个相对地址 （ `start_of_setup - 1f ` ）。在汇编代码中 `Nf` 代表了当前代码之后第一个标号为 `N` 的代码段的地址。回到我们的代码，在 `_start` 标号之后的第一个标号为 `1` 的代码段中包含了剩下的 setup header 结构。在标号为 `1` 的代码段结束之后，紧接着就是标号为 `start_of_setup` 的代码段 （这个代码段位于 `.entrytext` 代码区，这个代码段中的第一条指令实际上是内核开始执行之后的第一条指令） 。
 
-Actually it's the first code which starts to execute besides previous jump instruction. After kernel setup got the control from bootloader, first `jmp` instruction is located at `0x200` (first 512 bytes) offset from the start of kernel real mode. This we can read in Linux kernel boot protocol and also see in grub2 source code:
+下面让我们来看一下 GRUB2 的代码是如何跳转到 `_start` 标号处的。从 Linux 内核代码中，我们知道 `_start` 标号的代码位于偏移 `0x200` 处。在 GRUB2 的源代码中我们可以看到下面的代码：
 
 ```C
   state.gs = state.fs = state.es = state.ds = state.ss = segment;
   state.cs = segment + 0x20;
 ```
 
-It means that segment registers will have following values after kernel setup starts to work:
+在我的机器上，因为我的内核代码被加载到了内存地址 `0x10000` 处，所以在上面的代码执行完成之后 `cs = 0x1020` （ 因此第一条指令的内存地址将是 `cs << 4 + 0 = 0x10200`，刚好是 `0x10000` 开始后的 `0x200` 处的指令）：
 
 ```
 fs = es = ds = ss = 0x1000
 cs = 0x1020
 ```
 
-for my case when kernel loaded at `0x10000`.
+从 `start_of_setup` 标号开是的代码需要完成下面这些事情：
 
-After jump to `start_of_setup`, it needs to do the following things:
+* 将所有段寄存器的值设置成一样的内容
+* 设置堆栈
+* 设置 [bss](https://en.wikipedia.org/wiki/.bss) （静态变量区）
+* 跳转到 [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c) 开始执行代码
 
-* Be sure that all values of all segment registers are equal
-* Setup correct stack if needed
-* Setup [bss](https://en.wikipedia.org/wiki/.bss)
-* Jump to C code at [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)
-
-Let's look at implementation.
-
-Segment registers align
+段寄存器设置
 --------------------------------------------------------------------------------
 
-First of all it ensures that `ds` and `es` segment registers point to the same address and enables interrupts with `sti` instruction:
+在代码的一开始，就将 `ds` 和 `es` 段寄存器的内容设置成一样，并且使用指令 `sti` 来允许中断发生：
 
 ```assembly
 	movw	%ds, %ax
@@ -351,15 +345,7 @@ First of all it ensures that `ds` and `es` segment registers point to the same a
 	sti
 ```
 
-As I wrote above, grub2 loads kernel setup code at `0x10000` address and `cs` at `0x1020` because execution doesn't start from the start of file, but from:
-
-```
-_start:
-	.byte 0xeb
-	.byte start_of_setup-1f
-```
-
-`jump`, which is 512 bytes offset from the [4d 5a](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L47). Also need to align `cs` from `0x10200` to `0x10000` as all other segment registers. After that we setup the stack:
+就像我在上面一节中所写的， 为了能够跳转到 `_start` 标号出执行代码，grub2 将 `cs` 段寄存器的值设置成了 `0x1020`，这个值和其他段寄存器都是不一样的，因此下面的代码就是将 `cs` 段寄存器的值和其他段寄存器一致：
 
 ```assembly
 	pushw	%ds
@@ -367,12 +353,12 @@ _start:
 	lretw
 ```
 
-push `ds` value to stack, and address of [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) label and execute `lretw` instruction. When we call `lretw`, it loads address of  label `6` to [instruction pointer](https://en.wikipedia.org/wiki/Program_counter) register and `cs` with value of `ds`. After it we will have `ds` and `cs` with the same values.
+上面的代码使用了一个小小的技巧来重置 `cs` 寄存器的内容，下面我们就来仔细分析。 这段代码首先将 `ds`寄存器的值入栈，然后将标号为 [6](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L494) 的代码段地址入栈 ，接着执行 `lretw` 指令，这条指令，将把标号为 `6` 的内存地址放入 `ip` 寄存器 （[instruction pointer](https://en.wikipedia.org/wiki/Program_counter)），将 `ds` 寄存器的值放入 `cs` 寄存器。 这样一来 `ds` 和 `cs` 段寄存器就拥有了相同的值。
 
-Stack Setup
+设置堆栈
 --------------------------------------------------------------------------------
 
-Actually, almost all of the setup code is preparation for C language environment in the real mode. The next [step](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L467) is checking of `ss` register value and making of correct stack if `ss` is wrong:
+绝大部分的 setup 代码都是为 C 语言运行环境做准备。在设置了 `ds` 和 `es` 寄存器之后，接下来 [step](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L467) 的代码将检查 `ss` 寄存器的内容，如果寄存器的内容不对，那么将进行更正：
 
 ```assembly
 	movw	%ss, %dx
@@ -381,15 +367,15 @@ Actually, almost all of the setup code is preparation for C language environment
 	je	2f
 ```
 
-Generally, it can be 3 different cases:
+当进入这段代码的时候， `ss` 寄存器的值可能是一下三种情况之一：
 
-* `ss` has valid value 0x10000 (as all other segment registers beside `cs`)
-* `ss` is invalid and `CAN_USE_HEAP` flag is set     (see below)
-* `ss` is invalid and `CAN_USE_HEAP` flag is not set (see below)
+* `ss` 寄存器的值是 0x10000 ( 和其他除了 `cs` 寄存器之外的所有寄存器的一样）
+* `ss` 寄存器的值不是 0x10000，但是 `CAN_USE_HEAP` 标志被设置了
+* `ss` 寄存器的值不是 0x10000，同时 `CAN_USE_HEAP` 标志没有被设置
 
-Let's look at all of these cases:
+下面我们就来分析在这三中情况下，代码都是如何工作的：
 
-1. `ss` has a correct address (0x10000). In this case we go to label [2](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L481):
+* `ss` 寄存器的值是 0x10000，在这种情况下，代码将直接跳转到标号为 `2` 的代码处执行:
 
 ```
 2: 	andw	$~3, %dx
@@ -400,20 +386,11 @@ Let's look at all of these cases:
 	sti
 ```
 
-Here we can see aligning of `dx` (contains `sp` given by bootloader) to 4 bytes and checking that it is not zero. If it is zero we put `0xfffc` (4 byte aligned address before maximum segment size - 64 KB) to `dx`. If it is not zero we continue to use `sp` given by bootloader (0xf7f4 in my case). After this we put `ax` value to `ss` which stores correct segment address `0x10000` and set up correct `sp`. After it we have correct stack:
+这段代码首先将 `dx` 寄存器的值（就是当前`sp` 寄存器的值）4字节对齐，然后检查是否为0（如果是0，堆栈就不对了，因为堆栈是从大地址向小地址发展的），如果是0，那么就将 `dx` 寄存器的值设置成 `0xfffc` （64KB地址段的最后一个4字节地址）。如果不是0，那么就保持当前值不变。接下来，就将 `ax` 寄存器的值（ 0x10000 ）设置到 `ss` 寄存器，并根据 `dx` 寄存器的值设置正确的 `sp`。这样我们就得到了正确的堆栈设置，具体请参考下图：
 
 ![stack](http://oi58.tinypic.com/16iwcis.jpg)
 
-2. In the second case (`ss` != `ds`), first of all put [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) (address of end of setup code) value in `dx`. And check `loadflags` header field with `testb` instruction too see if we can use heap or not. [loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) is a bitmask header which is defined as:
-
-```C
-#define LOADED_HIGH	    (1<<0)
-#define QUIET_FLAG	    (1<<5)
-#define KEEP_SEGMENTS	(1<<6)
-#define CAN_USE_HEAP	(1<<7)
-```
-
-And as we can read in the boot protocol:
+* 下面让我们来看 `ss` != `ds`的情况，首先将 setup code 的结束地址 [_end](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L52) 写入 `dx` 寄存器。然后检查 `loadflags` 中是否设置了 `CAN_USE_HEAP` 标志。   根据 kernel boot protocol 的定义，[loadflags](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321) 是一个标志字段。这个字段的 `Bit 7` 就是 `CAN_USE_HEAP` 标志：
 
 ```
 Field name:	loadflags
@@ -426,29 +403,36 @@ Field name:	loadflags
 	functionality will be disabled.
 ```
 
-If `CAN_USE_HEAP` bit is set, put `heap_end_ptr` to `dx` which points to `_end` and add `STACK_SIZE` (minimal stack size - 512 bytes) to it. After this if `dx` is not carry, jump to `2` (it will not be carry, dx = _end + 512) label as in previous case and make correct stack.
+`loadflags` 字段其他可以设置的标志包括：
+
+```C
+#define LOADED_HIGH	    (1<<0)
+#define QUIET_FLAG	    (1<<5)
+#define KEEP_SEGMENTS	(1<<6)
+#define CAN_USE_HEAP	(1<<7)
+```
+
+如果 `CAN_USE_HEAP` 被置位，那么将 `heap_end_ptr` 放入 `dx` 寄存器，然后加上 `STACK_SIZE` （最小堆栈大小是 512 bytes）。在加法完成之后，如果结果没有溢出（CF flag 没有置位，如果置位那么程序就出错了），那么就跳转到标号为 `2` 的代码处继续执行（这段代码的逻辑在1中已经详细介绍了），接着我们就得到了如下图所示的堆栈：
 
 ![stack](http://oi62.tinypic.com/dr7b5w.jpg)
 
-3. The last case when `CAN_USE_HEAP` is not set, we just use minimal stack from `_end` to `_end + STACK_SIZE`:
+* 最后一种情况就是 `CAN_USE_HEAP` 没有置位， 那么我们就将 `dx` 寄存器的值加上 `STACK_SIZE`，然后跳转到标号为 `2` 的代码处继续执行，接着我们就得到了如下图所示的堆栈：
 
 ![minimal stack](http://oi60.tinypic.com/28w051y.jpg)
 
-BSS Setup
+BSS段设置
 --------------------------------------------------------------------------------
 
-The last two steps that need to happen before we can jump to the main C code, are that we need to set up the [BSS](https://en.wikipedia.org/wiki/.bss) area, and check the "magic" signature. Firstly, signature checking:
+在我们正式执行 C 代码之前，我们还有2件事情需要完成。1）设置正确的 [BSS](https://en.wikipedia.org/wiki/.bss)段 ；2）检查 `magic` 签名。接下来的代码，首先检查 `magic` 签名 [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39)，如果签名不对，直接跳转到 `setup_bad` 部分执行代码：
 
 ```assembly
 cmpl	$0x5a5aaa55, setup_sig
 jne	setup_bad
 ```
 
-This simply consists of comparing the [setup_sig](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L39) against the magic number `0x5a5aaa55`. If they are not equal, a fatal error is reported.
+如果 `magic` 签名是对的， 那么我们只要设置好 `BSS` 段，就可以开始执行 C 代码了。
 
-But if the magic number matches, knowing we have a set of correct segment registers, and a stack, we need only setup the BSS section before jumping into the C code.
-
-The BSS section is used for storing statically allocated, uninitialized, data. Linux carefully ensures this area of memory is first blanked, using the following code:
+BSS 段用来存储那些没有被初始化的静态变量。对于这个段使用的内存， Linux 首先使用下面的代码将其全部清零：
 
 ```assembly
 	movw	$__bss_start, %di
@@ -459,29 +443,31 @@ The BSS section is used for storing statically allocated, uninitialized, data. L
 	rep; stosl
 ```
 
-First of all the [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) address is moved into `di`, and the `_end + 3` address (+3 - aligns to 4 bytes) is moved into `cx`. The `eax` register is cleared (using an `xor` instruction), and the bss section size (`cx`-`di`) is calculated and put into `cx`. Then, `cx` is divided by four (the size of a 'word'), and the `stosl` instruction is repeatedly used, storing the value of `eax` (zero) into the address pointed to by `di`, and automatically increasing `di` by four (this occurs until `cx` reaches zero). The net effect of this code, is that zeros are written through all words in memory from `__bss_start` to `_end`:
+在这段代码中，首先将 [__bss_start](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L47) 地址放入 `di` 寄存器，然后将 `_end + 3` （4字节对齐） 地址放入 `cx`，接着使用 `xor` 指令将 `ax` 寄存器清零，接着计算 BSS 段的大小 （ `cx` - `di` ），让后将大小放入 `cx` 寄存器。接下来将 `cx` 寄存器除4，最后使用 `rep; stosl` 指令将 `ax` 寄存器的值（0）写入 寄存器整个 BSS 段。 代码执行完成之后，我们将得到如下图所示的 BSS 段:
 
 ![bss](http://oi59.tinypic.com/29m2eyr.jpg)
 
-Jump to main
+跳转到 main 函数
 --------------------------------------------------------------------------------
 
-That's all, we have the stack, BSS and now we can jump to the `main()` C function:
+到目前为止，我们完成了堆栈和 BSS 的设置，现在我们可以正式跳入 `main()` 函数来执行 C 代码了：
 
 ```assembly
 	calll main
 ```
 
-The `main()` function is located in [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c). What will be there? We will see it in the next part.
+`main()` 函数定义在 [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)，我们将在下一章详细介绍这个函数做了什么事情。
 
-Conclusion
+结束语
 --------------------------------------------------------------------------------
 
-This is the end of the first part about Linux kernel internals. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-internals/issues/new). In the next part we will see first C code which executes in Linux kernel setup, implementation of memory routines as `memset`, `memcpy`, `earlyprintk` implementation and early console initialization and many more.
+本章到此结束了，在下一章中我们将详细介绍在 Linux 内核设置过程中调用的第一个 C 代码（ `main()` ），也将介绍诸如 `memset`, `memcpy`, `earlyprintk` 这些底层函数的实现，敬请期待。
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-internals](https://github.com/0xAX/linux-internals).**
+如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)。
 
-Links
+**英文不是我的母语。如果你发现我的英文描述有任何问题，请提交一个PR到[linux-insides](https://github.com/0xAX/linux-internals).**
+
+相关链接
 --------------------------------------------------------------------------------
 
   * [Intel 80386 programmer's reference manual 1986](http://css.csail.mit.edu/6.858/2014/readings/i386.pdf)

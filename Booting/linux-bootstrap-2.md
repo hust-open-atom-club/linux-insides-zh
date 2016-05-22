@@ -3,7 +3,7 @@
 内核启动的第一步  
 --------------------------------------------------------------------------------
 
-在[上一节中](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html)我们开始接触到内核启动代码，并且分析了初始化部分，最后我们停在了对`main`函数（`main`函数是第一个用C写的函数）的调用（`main`函数位于[arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)）。
+在[上一节中](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-1.html)我们开始接触到内核启动代码，并且分析了初始化部分，最后我们停在了对`main`函数（`main`函数是第一个用C写的函数）的调用（`main`函数位于[arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)）。
 
 在这一节中我们将继续对内核启动过程的研究，我们将  
 * 认识`保护模式` 
@@ -22,7 +22,7 @@
 
 淘汰[实模式](http://wiki.osdev.org/Real_Mode)的主要原因是因为在实模式下，系统能够访问的内存非常有限。如果你还记得我们在上一节说的，在实模式下，系统最多只能访问1M内存，而且在很多时候，实际能够访问的内存只有640K。
 
-保护模式带来了很多的改变，不过主要的改变都集中在内存管理方法。在保护模式中，实模式的20位地址线被替换成32位地址线，因此系统可以访问多大4GB的地址空间。另外，在保护模式中引入了[内存分页](http://en.wikipedia.org/wiki/Paging)功能，在后面的章节中我们将介绍这个功能。
+保护模式带来了很多的改变，不过主要的改变都集中在内存管理方法。在保护模式中，实模式的20位地址线被替换成32位地址线，因此系统可以访问多达4GB的地址空间。另外，在保护模式中引入了[内存分页](http://en.wikipedia.org/wiki/Paging)功能，在后面的章节中我们将介绍这个功能。
 
 保护模式提供了2种完全不同的内存管理机制：
 

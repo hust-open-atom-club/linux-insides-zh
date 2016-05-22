@@ -17,3 +17,7 @@
 [@oska874](https://github.com/oska874)
 
 [@cloudusers](https://github.com/cloudusers)
+
+[@hailincai](https://github.com/hailincai)
+
+[@zmj1316](https://github.com/zmj1316)
