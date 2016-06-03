@@ -1,53 +1,37 @@
 
-Synchronization primitives in the Linux kernel. Part 3.
 内核同步原语. 第三部分.
 ================================================================================
 
-Semaphores
 信号量
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous part we saw special type of [spinlocks](https://en.wikipedia.org/wiki/Spinlock) - `queued spinlocks`. The previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html) was the last part which describes `spinlocks` related stuff. So we need to go ahead.
-这是本章的第三部分 [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html)， 本章描述了内核中的同步原语，在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html) 是最后和 `自旋锁` 相关的描述。 所以我们将描述更多同步原语。
+这是本章的第三部分 [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html)，本章描述了内核中的同步原语,在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html) 是和 `自旋锁` 相关的描述。我们将描述更多同步原语。
 
-The next [synchronization primitive](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) after `spinlock` which we will see in this part is [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). Se will start from theoretical side and will learn what is it `semaphore` and only after this, we will see how it is implemented in the Linux kernel as we did in the previous part.
-在 `自旋锁` 之后的下一个我们将要讲到是 [内核同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)是 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)。我们会从理论角度开始学习什么是 `信号量`， 然后我们会像前几章一样讲到Linux内核是如何实现信号量的。
+在 `自旋锁` 之后的下一个我们将要讲到的 [内核同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)是 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)。我们会从理论角度开始学习什么是 `信号量`， 然后我们会像前几章一样讲到Linux内核是如何实现信号量的。
 
-So, let's start.
 好吧，现在我们开始。
 
-Introduction to the semaphores in the Linux kernel
 介绍Linux内核中的信号量
 --------------------------------------------------------------------------------
 
-So, what is it `semaphore`? As you may guess - `semaphore` is yet another mechanism for support of thread or process synchronization. The Linux kernel already provides implementation of one synchronization mechanism - `spinlocks`, why do we need in yet another one? To answer on this question we need to know details of both of these mechanisms. We already familiar with the `spinlocks`, so let's start from this mechanism.
-那么究竟什么是`信号量`？就像你可以猜到那样 - `信号量` 是另外一种支持线程或者进程的同步机制。Linux内核已经提供了一种同步机制 - `自旋锁`， 为什么我们还需要另外一种呢？为了回答这个问题，我们需要理解这两种机制。我们已经熟悉了 `自旋锁` ,因此我们从 `信号量` 机制开始。
+那么究竟什么是 `信号量` ？就像你可以猜到那样 - `信号量` 是另外一种支持线程或者进程的同步机制。Linux内核已经提供了一种同步机制 - `自旋锁`， 为什么我们还需要另外一种呢？为了回答这个问题，我们需要理解这两种机制。我们已经熟悉了 `自旋锁` ,因此我们从 `信号量` 机制开始。
 
-The main idea behind `spinlock` concept is a lock which will be acquired for a very short time. We can't sleep when a lock acquired by a process or thread, because other processes wait us. [Context switch](https://en.wikipedia.org/wiki/Context_switch) is not not allowed because [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) is disabled to avoid [deadlocks](https://en.wikipedia.org/wiki/Deadlock).
-`自旋锁` 之后的设计理念是它仅会被持有非常短的时间。 但持有自旋锁的时候我们不可以进入睡眠模式因为其他的进程在等待我们。 为了防止 [死锁](https://en.wikipedia.org/wiki/Deadlock) [上下文交换](https://en.wikipedia.org/wiki/Context_switch) 也是不允许的。
+`自旋锁` 的设计理念是它仅会被持有非常短的时间。 但持有自旋锁的时候我们不可以进入睡眠模式因为其他的进程在等待我们。为了防止 [死锁](https://en.wikipedia.org/wiki/Deadlock) [上下文交换](https://en.wikipedia.org/wiki/Context_switch) 也是不允许的。
 
-In this way, [semaphores](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) is a good solution for locks which may be acquired for a long time. In other way this mechanism is not optimal for locks that acquired for a short time. To understand this, we need to know what is `semaphore`.
-当需要长时间持有一个锁的时候 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)就是一个很好的解决方案。从另一个方面看，这个机制对于需要短期持有锁的应用并不是最优。为了理解这个问题，我们需要知道什么是 `信号量`。
+当需要长时间持有一个锁的时候 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) 就是一个很好的解决方案。从另一个方面看，这个机制对于需要短期持有锁的应用并不是最优。为了理解这个问题，我们需要知道什么是 `信号量`。
 
-As usual synchronization primitive, a `semaphore` is based on a variable. This variable may be incremented or decremented and it's state will represent ability to acquire lock. Notice that value of the variable is not limited to `0` and `1`. There are two types of `semaphores`:
-就像一般的同步原语， `信号量` 是基于变量的。这个变量可以变大或者减少，并且这个变量的状态代表了获取锁的能力。注意这个变量的值并不限于 `0` 和 `1`。有两种类型的 `信号量`：
+就像一般的同步原语，`信号量` 是基于变量的。这个变量可以变大或者减少，并且这个变量的状态代表了获取锁的能力。注意这个变量的值并不限于 `0` 和 `1`。有两种类型的 `信号量`：
 
-* `binary semaphore`;
 * `二值信号量`;
-* `normal semaphore`.
 * `普通信号量`.
 
-In the first case, value of `semaphore` may be only `1` or `0`. In the second case value of `semaphore` any non-negative number. If the value of `semaphore` is greater than `1` it is called as `counting semaphore` and it allows to acquire a lock to more than `1` process. This allows us to keep records of available resources, when `spinlock` allows to hold a lock only on one task. Besides all of this, one more important thing that `semaphore` allows to sleep. Moreover when processes waits for a lock which is acquired by other process, the [scheduler](https://en.wikipedia.org/wiki/Scheduling_%28computing%29) may switch on another process.
-第一种 `信号量` 的值可以为 `1` 或者 `0`。第二种 `信号量` 的值可以为任何非负数。如果 `信号量` 的值大于 `1` 那么它被叫做 `计数信号量`，并且它允许多余 `1` 个进程获取它。这种机制允许我们记录现有的资源，而 `自旋锁` 只允许我们为一个任务上锁。除了所有这些之外，另外一个重要的点是 `信号量` 允许进入睡眠状态。 另外当某进程在等待一个被其他进程获取的锁时， [调度器]https://en.wikipedia.org/wiki/Scheduling_%28computing%29)也许会将切换别的进程。
+第一种 `信号量` 的值可以为 `1` 或者 `0`。第二种 `信号量` 的值可以为任何非负数。如果 `信号量` 的值大于 `1` 那么它被叫做 `计数信号量`，并且它允许多于 `1` 个进程获取它。这种机制允许我们记录现有的资源，而 `自旋锁` 只允许我们为一个任务上锁。除了所有这些之外，另外一个重要的点是 `信号量` 允许进入睡眠状态。 另外当某进程在等待一个被其他进程获取的锁时， [调度器]https://en.wikipedia.org/wiki/Scheduling_%28computing%29) 也许会切换别的进程。
 
-Semaphore API
 信号量 API
 --------------------------------------------------------------------------------
 
-So, we know a little about `semaphores` from theoretical side, let's look on its implementation in the Linux kernel. All `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface) is located in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) header file.
 因此，我们从理论方面了解一些 `信号量`的知识，我们来看看它在Linux内核中是如何实现的。所有 `信号量` 相关的 [API](https://en.wikipedia.org/wiki/Application_programming_interface) 都在名为 [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) 的头文件中
 
-We may see that the `semaphore` mechanism is represented by the following structure:
 我们看到 `信号量` 机制是有以下的结构体表示的：
 
 ```C
@@ -58,28 +42,25 @@ struct semaphore {
 };
 ```
 
-in the Linux kernel. The `semaphore` structure consists of three fields:
 在内核中， `信号量` 结构体由三部分组成：
 
-* `lock` - `spinlock` for a `semaphore` data protection;
-[include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h)
-* `count` - amount available resources;
-* `wait_list` - list of processes which are waiting to acquire a lock.
+* `lock` - 保护 `信号量` 的 `自旋锁`;
+* `count` - 现有资源的数量;
+* `wait_list` - 等待获取此锁的进程序列.
 
-Before we will consider an [API](https://en.wikipedia.org/wiki/Application_programming_interface) of the `semaphore` mechanism in the Linux kernel, we need to know how to initialize a `semaphore`. Actually the Linux kernel provides two approaches to execute initialization of the given `semaphore` structure. These methods allows to initialize a `semaphore` in a:
+在我们考虑Linux内核的的 `信号量` [API](https://en.wikipedia.org/wiki/Application_programming_interface) 之前，我们需要知道如何初始化一个 `信号量`。事实上， Linux内核提供了两个 `信号量` 的初始函数。这些函数允许初始化一个 `信号量` 为：
 
-* `statically`;
-* `dynamically`.
+* `静态`;
+* `动态`.
 
-ways. Let's look at the first approach. We are able to initialize a `semaphore` statically with the `DEFINE_SEMAPHORE` macro:
+我们来看看第一个种初始化静态 `信号量`。我们可以使用 `DEFINE_SEMAPHORE` 宏将 `信号量` 静态初始化。
 
 ```C
 #define DEFINE_SEMAPHORE(name)  \
          struct semaphore name = __SEMAPHORE_INITIALIZER(name, 1)
 ```
 
-as we may see, the `DEFINE_SEMAPHORE` macro provides ability to initialize only `binary` semaphore. The `DEFINE_SEMAPHORE` macro expands to the definition of the `semaphore` structure which is initialized with the `__SEMAPHORE_INITIALIZER` macro. Let's look at the implementation of this macro:
-
+就像我们看到这样，`DEFINE_SEMAPHORE` 宏只提供了初始化 `二值` 信号量。 `DEFINE_SEMAPHORE` 宏展开到 `信号量` 结构体的定义。结构体通过 `__SEMAPHORE_INITIALIZER` 宏初始化。我们来看看这个宏的实现
 ```C
 #define __SEMAPHORE_INITIALIZER(name, n)              \
 {                                                                       \
@@ -89,15 +70,14 @@ as we may see, the `DEFINE_SEMAPHORE` macro provides ability to initialize only 
 }
 ```
 
-The `__SEMAPHORE_INITIALIZER` macro takes the name of the future `semaphore` structure and does initialization of the fields of this structure. First of all we initialize a `spinlock` of the given `semaphore` with the `__RAW_SPIN_LOCK_UNLOCKED` macro. As you may remember from the [previous](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) parts, the `__RAW_SPIN_LOCK_UNLOCKED` is defined in the [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) header file and expands to the `__ARCH_SPIN_LOCK_UNLOCKED` macro which just expands to zero or unlocked state:
+`__SEMAPHORE_INITIALIZER` 宏传入了 `信号量` 结构体的名字并且初始化这个结构体的各个域。首先我们使用 `__RAW_SPIN_LOCK_UNLOCKED` 宏对给予的 `信号量` 初始化一个 `自旋锁`。就像你从 [之前]https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) 的部分看到那样，`__RAW_SPIN_LOCK_UNLOCKED` 宏是在 [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) 头文件中定义，它展开到 `__ARCH_SPIN_LOCK_UNLOCKED` 宏，而 `__ARCH_SPIN_LOCK_UNLOCKED` 宏又展开到零或者无锁状态
 
 ```C
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
 ```
 
-The last two fields of the `semaphore` structure `count` and `wait_list` are initialized with the given value which represents count of available resources and empty [list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html).
-
-The second way to initialize a `semaphore` structure is to pass the `semaphore` and number of available resources to the `sema_init` function which is defined in the [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) header file:
+ `信号量` 的最后两个域 `count` 和 `wait_list` 是通过现有资源的数量和空 [链表](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html)来初始化。
+第二种初始化 `信号量` 的方式是将 `信号量` 和现有资源数目传送给 `sema_init` 函数。 这个函数是在 [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) 头文件中定义的。
 
 ```C
 static inline void sema_init(struct semaphore *sem, int val)
@@ -108,9 +88,8 @@ static inline void sema_init(struct semaphore *sem, int val)
 }
 ```
 
-Let's consider implementation of this function. It looks pretty easy and actually it does almost the same. Thus function executes initialization of the given `semaphore` with the `__SEMAPHORE_INITIALIZER` macro which we just saw. As I already wrote in the previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), we will skip the stuff which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel.
-
-So, from now we are able to initialize a `semaphore` let's look at how to lock and unlock. The Linux kernel provides following [API](https://en.wikipedia.org/wiki/Application_programming_interface) to manipulate `semaphores`:
+我们来看看这个函数是如何实现的。它看起来很简单。函数使用我们刚看到的 `__SEMAPHORE_INITIALIZER` 宏对传入的 `信号量` 进行初始化。就像我们在之前 [部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) 写的那样，我们将会跳过Linux内核关于 [锁验证](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) 的部分。
+从现在开始我们知道如何初始化一个 `信号量`，我们看看如何上锁和解锁。Linux内核提供了如下操作 `信号量` 的 [API](https://en.wikipedia.org/wiki/Application_programming_interface) 
 
 ```
 void down(struct semaphore *sem);
@@ -121,13 +100,13 @@ int  down_trylock(struct semaphore *sem);
 int  down_timeout(struct semaphore *sem, long jiffies);
 ```
 
-The first two functions: `down` and `up` are for acquiring and releasing of the given `semaphore`. The `down_interruptible` function tries to acquire a `semaphore`. If this try was successful, the value of the given `semaphore` will be decremented and lock will be acquired, in other way the task will be switched to the blocked state or in other words the `TASK_INTERRUPTIBLE` flag will be set. This `TASK_INTERRUPTIBLE` flag means that the process may returned to ruined state by [signal](https://en.wikipedia.org/wiki/Unix_signal).
+前两个函数： `down` 和 `up` 是用来获取或释放 `信号量`。 `down_interruptible`函数试图去获取一个 `信号量`。如果被成功获取，`信号量` 的计数就会被减少并且锁也会被获取。同时当前任务也会被调度到受阻状态，也就是说 `TASK_INTERRUPTIBLE` 标志将会被至位。`TASK_INTERRUPTIBLE` 表示这个进程也许可以通过 [信号](https://en.wikipedia.org/wiki/Unix_signal) 退回到销毁状态。
 
-The `down_killable` function does the same as the `down_interruptible` function, but set the `TASK_KILLABLE` flag for the current process. This means that the waiting process may be interrupted by the kill signal.
+`down_killable` 函数和 `down_interruptible` 函数提供类似的功能，但是它还将当前进程的 `TASK_KILLABLE` 标志置位。这表示等待的进程可以被杀死信号中断。
 
-The `down_trylock` function is similar on the `spin_trylock` function. This function tries to acquire a lock and exit if this operation was unsuccessful. In this case the process which wants to acquire a lock, will not wait. The last `down_timeout` function tries to acquire a lock. It will be interrupted in a waiting state when the given timeout will be expired. Additionally, you may notice that the timeout is in [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html)
+`down_trylock` 函数和 `spin_trylock` 函数相似。这个函数试图去获取一个锁并且退出如果这个操作是失败的。在这个例子中，想获取锁的进程不会等待。最后的 `down_timeout`函数试图去获取一个锁。当前进程将会被中断进入到等待状态当超过传入的可等待时间。除此之外你也许注意到，这个等待的时间是以 [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html)计数。
 
-We just saw definitions of the `semaphore` [API](https://en.wikipedia.org/wiki/Application_programming_interface). We will start from the `down` function. This function is defined in the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file. Let's look on the implementation function:
+我们刚刚看了 `信号量` [API](https://en.wikipedia.org/wiki/Application_programming_interface)的定义。我们从 `down` 函数开始看。这个函数是在 [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) 源代码定义的。我们来看看函数实现：
 
 ```C
 void down(struct semaphore *sem)
@@ -144,12 +123,10 @@ void down(struct semaphore *sem)
 EXPORT_SYMBOL(down);
 ```
 
-We may see the definition of the `flags` variable at the beginning of the `down` function. This variable will be passed to the `raw_spin_lock_irqsave` and `raw_spin_lock_irqrestore` macros which are defined in the [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock.h) header file and protect a counter of the given `semaphore` here. Actually both of these macro do the same that `spin_lock` and `spin_unlock` macros, but additionally they save/restore current value of interrupt flags and disables [interrupts](https://en.wikipedia.org/wiki/Interrupt).
+我们先看在 `down` 函数起始处定义的 `flags` 变量。这个变量将会传入到 `raw_spin_lock_irqsave` 和 `raw_spin_lock_irqrestore` 宏定义。这些宏是在 [include/linux/spinlock.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock.h)头文件定义的。这些宏用来保护当前 `信号量` 的计数器。事实上这两个宏的作用和 `spin_lock` 和 `spin_unlock` 宏相似。只不过这组宏会存储/重置当前中断标志并且禁止 [中断](https://en.wikipedia.org/wiki/Interrupt)。
 
-As you already may guess, the main work is done between the `raw_spin_lock_irqsave` and `raw_spin_unlock_irqrestore` macros in the `down` function. We compare the value of the `semaphore` counter with zero and if it is bigger than zero, we may decrement this counter. This means that we already acquired the lock. In other way counter is zero. This means that all available resources already finished and we need to wait to acquire this lock. As we may see, the `__down` function will be called in this case.
-
-The `__down` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c)) source code file and its implementation looks:
-
+就像你猜到那样， `down` 函数的主要就是通过 `raw_spin_lock_irqsave` 和 `raw_spin_unlock_irqrestore` 宏来实现的。我们通过将 `信号量` 的计数器和零对比，如果计数器大于零，我们可以减少这个计数器。这表示我们已经获取了这个锁。否则如果计数器是零，这表示所以的现有资源都已经被占用，我们需要等待以获取这个锁。就像我们看到那样， `__down` 函数将会被调用。
+ `__down` 函数是在 [相同](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c))的源代码定义的，它的实现看起来如下：
 ```C
 static noinline void __sched __down(struct semaphore *sem)
 {
@@ -157,13 +134,13 @@ static noinline void __sched __down(struct semaphore *sem)
 }
 ```
 
-The just calls the `__down_common` function with three parameters:
+ `__down` 函数仅仅调用了 `__down_common` 函数，并且传入了三个参数
 
 * `semaphore`;
-* `flag` - for the task;
-* `timeout` - maximum timeout to wait `semaphore`.
+* `flag` - 对当前任务;
+* `timeout` - 最长等待 `信号量` 的时间.
 
-Before we will consider implementation of the `__down_common` function, notice that implementation of the `down_trylock`, `down_timeout` and `down_killable` functions based on the `__down_common` too:
+在我们看  `__down_common` 函数之前，注意 `down_trylock`, `down_timeout` 和 `down_killable` 的实现也都是基于 `__down_common` 函数。
 
 ```C
 static noinline int __sched __down_interruptible(struct semaphore *sem)
@@ -172,7 +149,7 @@ static noinline int __sched __down_interruptible(struct semaphore *sem)
 }
 ```
 
-The `__down_killable`:
+`__down_killable` 函数：
 
 ```C
 static noinline int __sched __down_killable(struct semaphore *sem)
@@ -181,7 +158,7 @@ static noinline int __sched __down_killable(struct semaphore *sem)
 }
 ```
 
-And the `__down_timeout`:
+`__down_timeout` 函数:
 
 ```C
 static noinline int __sched __down_timeout(struct semaphore *sem, long timeout)
@@ -190,20 +167,21 @@ static noinline int __sched __down_timeout(struct semaphore *sem, long timeout)
 }
 ```
 
-Now let's look at the implementation of the `__down_common` function. This function is defined in the [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file too and starts from the definition of the two following local variables:
+现在我们来看看 `__down_common` 函数的实现。这个函数是在 [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c)源文件中定义的。这个函数的定义从以下两个本地变量开始。
 
 ```C
 struct task_struct *task = current;
 struct semaphore_waiter waiter;
 ```
 
-The first represents current task for the local processor which wants to acquire a lock. The `current` is a macro which is defined in the [arch/x86/include/asm/current.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/current.h) header file:
+第一个变量表示当前想获取本地处理器锁的任务。 `current` 宏是在 [arch/x86/include/asm/current.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/current.h) 头文件中定义的。
 
 ```C
 #define current get_current()
 ```
 
-Where the `get_current` function returns value of the `current_task` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variable:
+`get_current` 函数返回 `current_task` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) 变量的值。
+
 
 ```C
 DECLARE_PER_CPU(struct task_struct *, current_task);
@@ -214,7 +192,7 @@ static __always_inline struct task_struct *get_current(void)
 }
 ```
 
-The second variable is `waiter` represents an entry of a `semaphore.wait_list` list:
+第二个变量是 `waiter` 表示了一个 `semaphore.wait_list` 列表的入口：
 
 ```C
 struct semaphore_waiter {
@@ -224,7 +202,7 @@ struct semaphore_waiter {
 };
 ```
 
-Next we add current task to the `wait_list` and fill `waiter` fields after definition of these variables:
+下一步我们将当前进程加入到 `wait_list` 并且在定义如下变量后填充 `waiter` 域
 
 ```C
 list_add_tail(&waiter.list, &sem->wait_list);
@@ -232,7 +210,7 @@ waiter.task = task;
 waiter.up = false;
 ```
 
-In the next step we join into the following infinite loop:
+下一步我们进入到如下的无限循环：
 
 ```C
 for (;;) {
@@ -253,7 +231,7 @@ for (;;) {
 }
 ```
 
-In the previous piece of code we set `waiter.up` to `false`. So, a task will spin in this loop while `up` will not be set to `true`. This loop starts from the check that the current task is in the `pending` state or in other words flags of this task contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` flag. As I already wrote above a task may be interrupted by [signal](https://en.wikipedia.org/wiki/Unix_signal) during wait of ability to acquire a lock. The `signal_pending_state` function is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h) source code file and looks:
+在之前的代码中我们将 `waiter.up` 设置为 `false`。所以当 `up` 没有设置为 `true` 任务将会在这个无限循环中循环。这个循环从检查当前的任务是否处于 `pending` 状态开始，也就是说此任务的标志包含 `TASK_INTERRUPTIBLE` 或者 `TASK_WAKEKILL` 标志。我之前写到当一个任务在等待获取一个信号的时候任务也许可以被 ［信号］(https://en.wikipedia.org/wiki/Unix_signal) 中断。`signal_pending_state` 函数是在 [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h)原文件中定义的，它看起来如下：
 
 ```C
 static inline int signal_pending_state(long state, struct task_struct *p)
@@ -266,8 +244,7 @@ static inline int signal_pending_state(long state, struct task_struct *p)
          return (state & TASK_INTERRUPTIBLE) || __fatal_signal_pending(p);
 }
 ```
-
-We check that the `state` [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29) contains `TASK_INTERRUPTIBLE` or `TASK_WAKEKILL` bits and if the bitmask does not contain this bit we exit. At the next step we check that the given task has a pending signal and exit if there is no. In the end we just check `TASK_INTERRUPTIBLE` bit in the `state` bitmask again or the [SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL) signal. So, if our task has a pending signal, we will jump at the `interrupted` label:
+我们先会检测 `state` [位掩码](https://en.wikipedia.org/wiki/Mask_%28computing%29) 包含 `TASK_INTERRUPTIBLE` 或者 `TASK_WAKEKILL` 位，如果不包含这两个位，函数退出。下一步我们检测当前任务是否有一个挂起信号，如果没有挂起信号函数退出。最后我们就检测 `state` 位掩码的 `TASK_INTERRUPTIBLE` 位。如果，我们任务包含一个挂起信号，我们将会跳转到 `interrupted` 标签：
 
 ```C
 interrupted:
@@ -275,14 +252,14 @@ interrupted:
     return -EINTR;
 ```
 
-where we delete task from the list of lock waiters and return the `-EINTR` [error code](https://en.wikipedia.org/wiki/Errno.h). If a task has no pending signal, we check the given timeout and if it is less or equal zero:
+在这个标签中，我们会删除等待锁的列表，然后返回 `-EINTR` [错误码](https://en.wikipedia.org/wiki/Errno.h)。 如果一个任务没有挂起信号，我们检测超时是否小于等于零。
 
 ```C
 if (unlikely(timeout <= 0))
     goto timed_out;
 ```
 
-we jump at the `timed_out` label:
+我们跳转到 `timed_out` 标签：
 
 ```C
 timed_out:
@@ -290,13 +267,13 @@ timed_out:
     return -ETIME;
 ```
 
-Where we do almost the same that we did in the `interrupted` label. We delete task from the list of lock waiters, but return the `-ETIME` error code. If a task has no pending signal and the given timeout is not expired yet, the given `state` will be set in the given task:
+在这个标签里，我们继续做和 `interrupted` 一样的事情。我们将任务从锁等待者中删除，但是返回  `-ETIME` 错误码。如果一个任务没有挂起信号而且给予的超时也没有过期，当前的任务将会被设置为传入的 `state`：
 
 ```C
 __set_task_state(task, state);
 ```
 
-and call the `schedule_timeout` function:
+然后调用 `schedule_timeout` 函数：
 
 ```C
 raw_spin_unlock_irq(&sem->lock);
@@ -304,11 +281,11 @@ timeout = schedule_timeout(timeout);
 raw_spin_lock_irq(&sem->lock);
 ```
 
-which is defined in the [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) source code file. The `schedule_timeout` function makes the current task sleep until the given timeout.
+这个函数是在 [kernel/time/timer.c](https://github.com/torvalds/linux/blob/master/kernel/time/timer.c) 代码中定义的。`schedule_timeout` 函数将当前的任务置为休眠到设置的超时为止。 
 
-That is all about the `__down_common` function. A task which wants to acquire a lock which is already acquired by another task will be spun in the infinite loop while it will not be interrupted by a signal, the given timeout will not be expired or the task which holds a lock will not release it. Now let's look at the implementation of the `up` function.
+这就是所有关于 `__down_common` 函数。如果一个函数想要获取一个已经被其它任务获取的锁，它将会转入到无限循环。并且它不能被信号中断，当前设置的超时不会过期或者当前持有锁的任务不释放它。现在我们来看看 `up` 函数的实现。
 
-The `up` function is defined in the [same](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) source code file as `down` function. As we already know, the main purpose of this function is to release a lock. This function looks:
+`up` 函数和 `down` 函数定义在[同一个](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) 原文件。这个函数的主要功能是释放锁，这个函数看起来：
 
 ```C
 void up(struct semaphore *sem)
@@ -325,7 +302,7 @@ void up(struct semaphore *sem)
 EXPORT_SYMBOL(up);
 ```
 
-It looks almost the same as the `down` function. There are only two differences here. First of all we increment a counter of a `semaphore` if the list of waiters is empty. In other way we call the `__up` function from the same source code file. If the list of waiters is not empty we need to allow the first task from the list to acquire a lock: 
+它看起来和 `down` 函数相似。这里有两个不同点。首先我们增加 `semaphore` 的计数。如果等待列表是空的，我们调用在当前原文件中定义的 `__up` 函数。如果等待列表不是空的，我们需要允许列表中的第一个任务去获取一个锁：
 
 ```C
 static noinline void __sched __up(struct semaphore *sem)
@@ -338,20 +315,23 @@ static noinline void __sched __up(struct semaphore *sem)
 }
 ```
 
-Here we takes the first task from the list of waiters, delete it from the list, set its `waiter-up` to true. From this point the infinite loop from the `__down_common` function will be stopped. The `wake_up_process` function will be called in the end of the `__up` function. As you remember we called the `schedule_timeout` function in the infinite loop from the `__down_common` this function. The `schedule_timeout` function makes the current task sleep until the given timeout will not be expired. So, as our process may sleep right now, we need to wake it up. That's why we call the `wake_up_process` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/master/kernel/sched/core.c) source code file.
+在此我们获取待序列中的第一个任务，将它从列表中删除，将它的 `waiter-up` 设置为真。从此刻起 `__down_common` 函数中的无限循环将会被停止。 `wake_up_process` 函数将会在 `__up` 函数的结尾调用。我们从 `__down_common` 函数调用的 `schedule_timeout` 函数调用了  `schedule_timeout` 函数。`schedule_timeout` 函数将当前任务置于睡眠状态直到超时等待。现在我们进程也许会睡眠，我们需要唤醒。这就是为什么我们需要从 [kernel/sched/core.c](https://github.com/torvalds/linux/blob/master/kernel/sched/core.c) 源代码中调用 `wake_up_process` 函数
 
-That's all.
+这就是所有的信息了。
 
-Conclusion
+小结
 --------------------------------------------------------------------------------
 
-This is the end of the third part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the two previous parts we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock` and used for a very short time locks. In this part we saw yet another synchronization primitive - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) which is used for long time locks as it leads to [context switch](https://en.wikipedia.org/wiki/Context_switch). In the next part we will continue to dive into synchronization primitives in the Linux kernel and will see next synchronization primitive - [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion). 
+这就是Linux内核中关于 [同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) 的第三部分的终结。在之前的两个部分，我们已经见到了第一个Linux内核的同步原语 `自旋锁`，它是使用 `ticket spinlock` 实现并且用于很短时间的锁。在这个部分我们见到了另外一种同步原语 － [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)，信号量用于长时间的锁，因为它会导致 ［上下文切换](https://en.wikipedia.org/wiki/Context_switch)。 在下一部分，我们将会继续深入Linux内核的同步原语并且讨论另一个同步原语 － [互斥量］(https://en.wikipedia.org/wiki/Mutual_exclusion)。
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+如果你有问题或者建议，请在twitter [0xAX](https://twitter.com/0xAX)上联系我，通过 [email](anotherworldofworld@gmail.com)联系我，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+*请注意，英语不是我的第一语言所以我对一切不方便表示非常抱歉。如果你找到了任何错误请发 Pull request到 [linux-insides](https://github.com/0xAX/linux-insides).**
+
+
 
 Links
+链接
 --------------------------------------------------------------------------------
 
 * [spinlocks](https://en.wikipedia.org/wiki/Spinlock)
