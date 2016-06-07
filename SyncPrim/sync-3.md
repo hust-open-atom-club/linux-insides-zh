@@ -322,7 +322,7 @@ static noinline void __sched __up(struct semaphore *sem)
 小结
 --------------------------------------------------------------------------------
 
-这就是Linux内核中关于 [同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) 的第三部分的终结。在之前的两个部分，我们已经见到了第一个Linux内核的同步原语 `自旋锁`，它是使用 `ticket spinlock` 实现并且用于很短时间的锁。在这个部分我们见到了另外一种同步原语 － [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)，信号量用于长时间的锁，因为它会导致 ［上下文切换](https://en.wikipedia.org/wiki/Context_switch)。 在下一部分，我们将会继续深入Linux内核的同步原语并且讨论另一个同步原语 － [互斥量］(https://en.wikipedia.org/wiki/Mutual_exclusion)。
+这就是Linux内核中关于 [同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) 的第三部分的终结。在之前的两个部分，我们已经见到了第一个Linux内核的同步原语 `自旋锁`，它是使用 `ticket spinlock` 实现并且用于很短时间的锁。在这个部分我们见到了另外一种同步原语 － [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)，信号量用于长时间的锁，因为它会导致 [上下文切换](https://en.wikipedia.org/wiki/Context_switch)。 在下一部分，我们将会继续深入Linux内核的同步原语并且讨论另一个同步原语 － [互斥量](https://en.wikipedia.org/wiki/Mutual_exclusion)。
 
 如果你有问题或者建议，请在twitter [0xAX](https://twitter.com/0xAX)上联系我，通过 [email](anotherworldofworld@gmail.com)联系我，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)
 
