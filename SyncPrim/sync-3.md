@@ -326,11 +326,9 @@ static noinline void __sched __up(struct semaphore *sem)
 
 如果你有问题或者建议，请在twitter [0xAX](https://twitter.com/0xAX)上联系我，通过 [email](anotherworldofworld@gmail.com)联系我，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)
 
-*请注意，英语不是我的第一语言所以我对一切不方便表示非常抱歉。如果你找到了任何错误请发 Pull request到 [linux-insides](https://github.com/0xAX/linux-insides).**
 
 
 
-Links
 链接
 --------------------------------------------------------------------------------
 
