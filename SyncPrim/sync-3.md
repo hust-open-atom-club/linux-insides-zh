@@ -25,7 +25,7 @@
 * `二值信号量`;
 * `普通信号量`.
 
-第一种 `信号量` 的值可以为 `1` 或者 `0`。第二种 `信号量` 的值可以为任何非负数。如果 `信号量` 的值大于 `1` 那么它被叫做 `计数信号量`，并且它允许多于 `1` 个进程获取它。这种机制允许我们记录现有的资源，而 `自旋锁` 只允许我们为一个任务上锁。除了所有这些之外，另外一个重要的点是 `信号量` 允许进入睡眠状态。 另外当某进程在等待一个被其他进程获取的锁时， [调度器]https://en.wikipedia.org/wiki/Scheduling_%28computing%29) 也许会切换别的进程。
+第一种 `信号量` 的值可以为 `1` 或者 `0`。第二种 `信号量` 的值可以为任何非负数。如果 `信号量` 的值大于 `1` 那么它被叫做 `计数信号量`，并且它允许多于 `1` 个进程获取它。这种机制允许我们记录现有的资源，而 `自旋锁` 只允许我们为一个任务上锁。除了所有这些之外，另外一个重要的点是 `信号量` 允许进入睡眠状态。 另外当某进程在等待一个被其他进程获取的锁时， [调度器](https://en.wikipedia.org/wiki/Scheduling_%28computing%29) 也许会切换别的进程。
 
 信号量 API
 --------------------------------------------------------------------------------
@@ -70,13 +70,13 @@ struct semaphore {
 }
 ```
 
-`__SEMAPHORE_INITIALIZER` 宏传入了 `信号量` 结构体的名字并且初始化这个结构体的各个域。首先我们使用 `__RAW_SPIN_LOCK_UNLOCKED` 宏对给予的 `信号量` 初始化一个 `自旋锁`。就像你从 [之前]https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) 的部分看到那样，`__RAW_SPIN_LOCK_UNLOCKED` 宏是在 [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) 头文件中定义，它展开到 `__ARCH_SPIN_LOCK_UNLOCKED` 宏，而 `__ARCH_SPIN_LOCK_UNLOCKED` 宏又展开到零或者无锁状态
+`__SEMAPHORE_INITIALIZER` 宏传入了 `信号量` 结构体的名字并且初始化这个结构体的各个域。首先我们使用 `__RAW_SPIN_LOCK_UNLOCKED` 宏对给予的 `信号量` 初始化一个 `自旋锁`。就像你从 [之前](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-1.html) 的部分看到那样，`__RAW_SPIN_LOCK_UNLOCKED` 宏是在 [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) 头文件中定义，它展开到 `__ARCH_SPIN_LOCK_UNLOCKED` 宏，而 `__ARCH_SPIN_LOCK_UNLOCKED` 宏又展开到零或者无锁状态
 
 ```C
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
 ```
 
- `信号量` 的最后两个域 `count` 和 `wait_list` 是通过现有资源的数量和空 [链表](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html)来初始化。
+ `信号量` 的最后两个域 `count` 和 `wait_list` 是通过现有资源的数量和空 [链表](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)来初始化。
 第二种初始化 `信号量` 的方式是将 `信号量` 和现有资源数目传送给 `sema_init` 函数。 这个函数是在 [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) 头文件中定义的。
 
 ```C
@@ -88,7 +88,7 @@ static inline void sema_init(struct semaphore *sem, int val)
 }
 ```
 
-我们来看看这个函数是如何实现的。它看起来很简单。函数使用我们刚看到的 `__SEMAPHORE_INITIALIZER` 宏对传入的 `信号量` 进行初始化。就像我们在之前 [部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) 写的那样，我们将会跳过Linux内核关于 [锁验证](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) 的部分。
+我们来看看这个函数是如何实现的。它看起来很简单。函数使用我们刚看到的 `__SEMAPHORE_INITIALIZER` 宏对传入的 `信号量` 进行初始化。就像我们在之前 [部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/index.html) 写的那样，我们将会跳过Linux内核关于 [锁验证](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) 的部分。
 从现在开始我们知道如何初始化一个 `信号量`，我们看看如何上锁和解锁。Linux内核提供了如下操作 `信号量` 的 [API](https://en.wikipedia.org/wiki/Application_programming_interface) 
 
 ```
@@ -104,7 +104,7 @@ int  down_timeout(struct semaphore *sem, long jiffies);
 
 `down_killable` 函数和 `down_interruptible` 函数提供类似的功能，但是它还将当前进程的 `TASK_KILLABLE` 标志置位。这表示等待的进程可以被杀死信号中断。
 
-`down_trylock` 函数和 `spin_trylock` 函数相似。这个函数试图去获取一个锁并且退出如果这个操作是失败的。在这个例子中，想获取锁的进程不会等待。最后的 `down_timeout`函数试图去获取一个锁。当前进程将会被中断进入到等待状态当超过传入的可等待时间。除此之外你也许注意到，这个等待的时间是以 [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html)计数。
+`down_trylock` 函数和 `spin_trylock` 函数相似。这个函数试图去获取一个锁并且退出如果这个操作是失败的。在这个例子中，想获取锁的进程不会等待。最后的 `down_timeout`函数试图去获取一个锁。当前进程将会被中断进入到等待状态当超过传入的可等待时间。除此之外你也许注意到，这个等待的时间是以 [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-1.html)计数。
 
 我们刚刚看了 `信号量` [API](https://en.wikipedia.org/wiki/Application_programming_interface)的定义。我们从 `down` 函数开始看。这个函数是在 [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) 源代码定义的。我们来看看函数实现：
 
@@ -180,7 +180,7 @@ struct semaphore_waiter waiter;
 #define current get_current()
 ```
 
-`get_current` 函数返回 `current_task` [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) 变量的值。
+`get_current` 函数返回 `current_task` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 变量的值。
 
 
 ```C
