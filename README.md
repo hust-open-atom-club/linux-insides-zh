@@ -9,7 +9,6 @@ Linux Insides
 
 **问题/建议**: 通过在 twitter 上 [@0xAX](https://twitter.com/0xAX) ，直接添加 [issue](https://github.com/0xAX/linux-insides/issues/new) 或者直接给我发[邮件](mailto:anotherworldofworld@gmail.com),请自由地向我提出任何问题或者建议。
 
-
 ##翻译进度
 
 | 章节|译者|翻译进度|
@@ -45,7 +44,12 @@ Linux Insides
 |├ 3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.9|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
 |└ 3.10||未开始|
-| 4. System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
+| 4. System calls||正在进行|
+|├ 4.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 4.1|[@qianmoke](https://github.com/qianmoke)|已完成|
+|├ 4.2|[@qianmoke](https://github.com/qianmoke)|已完成|
+|├ 4.3||未开始|
+|└ 4.4||未开始|
 | 5. Timers and time management|[@icecoobe](https://github.com/icecoobe)|正在进行|
 | 6. Synchronization primitives|[@huxq](https://github.com/huxq)|正在进行|
 |├ 6.1||未开始|
