@@ -50,8 +50,17 @@ Linux Insides
 |├ 4.2|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ 4.3||未开始|
 |└ 4.4||未开始|
-| 5. Timers and time management|[@icecoobe](https://github.com/icecoobe)|正在进行|
-| 6. Synchronization primitives|[@huxq](https://github.com/huxq)|正在进行|
+| 5. Timers and time management||正在进行|
+|├ 5.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 5.1||未开始|
+|├ 5.2||未开始|
+|├ 5.3||未开始|
+|├ 5.4||未开始|
+|├ 5.5||未开始|
+|├ 5.6||未开始|
+|└ 5.7||未开始|
+| 6. Synchronization primitives||正在进行|
+|├ 6.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 6.1||未开始|
 |├ 6.2||未开始|
 |├ 6.3|[@huxq](https://github.com/huxq)|已完成|
