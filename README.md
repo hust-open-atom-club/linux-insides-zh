@@ -67,6 +67,9 @@ Linux Insides
 |├ 6.4|[@huxq](https://github.com/huxq)|正在进行|
 |└ 6.5||未开始|
 | 7. Memory management|[@choleraehyq](https://github.com/choleraehyq)|正在进行|
+|├ 7.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 7.1||未开始|
+|├ 7.2||未开始|
 | 8. SMP||未开始|
 | 9. Concepts||未开始|
 | 10. DataStructures||已完成|
