@@ -21,7 +21,18 @@ Linux Insides
 |├ 1.3|[@hailincai](https://github.com/hailincai)|已完成|
 |├ 1.4|[@zmj1316](https://github.com/zmj1316)|已完成|
 |└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
-| 2. Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
+| 2. Initialization||正在进行|
+|├ 2.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 2.1||未开始|
+|├ 2.2||未开始|
+|├ 2.3||未开始|
+|├ 2.4||未开始|
+|├ 2.5||未开始|
+|├ 2.6||未开始|
+|├ 2.7||未开始|
+|├ 2.8||未开始|
+|├ 2.9||未开始|
+|└ 2.10||未开始|
 | 3. Interrupts||正在进行|
 |├ 3.0|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ 3.1|[@littleneko](https://github.com/littleneko)|正在进行|
