@@ -409,7 +409,7 @@ static u64 __init get_ramdisk_image(void)
 }
 ```
 
-Here we get the address of the ramdisk from the `boot_params` and shift left it on `32`. We need to do it because as you can read in the [Documentation/x86/zero-page.txt](https://github.com/MintCN/linux-insides-zh/blob/master/Documentation/x86/zero-page.txt):
+Here we get the address of the ramdisk from the `boot_params` and shift left it on `32`. We need to do it because as you can read in the [Documentation/x86/zero-page.txt](https://github.com/0xAX/linux/blob/master/Documentation/x86/zero-page.txt):
 
 ```
 0C0/004	ALL	ext_ramdisk_image ramdisk_image high 32bits
