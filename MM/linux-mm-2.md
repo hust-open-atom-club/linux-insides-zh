@@ -4,7 +4,7 @@
 固定映射地址和输入输出重映射
 --------------------------------------------------------------------------------
 
-固定映射地址是一组特殊的编译时确定的地址，它们与物理地址不一定具有减 `__START_KERNEL_map` 的线性映射关系。每一个固定映射的地址都会映射到一个内存页，内核会像指针一样使用它们，但是绝不会修改它们的地址。这是这种地址的主要特点。就像注释所说的那样，“在编译期就获得一个常量地址，只有在引导阶段才会被设定上物理地址。”你在本书的[前面部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)可以看到，我们已经设定了 `level2_fixmap_pgt` ：
+固定映射地址是一组特殊的编译时确定的地址，它们与物理地址不一定具有减 `__START_KERNEL_map` 的线性映射关系。每一个固定映射的地址都会映射到一个内存页，内核会像指针一样使用它们，但是绝不会修改它们的地址。这是这种地址的主要特点。就像注释所说的那样，“在编译期就获得一个常量地址，只有在引导阶段才会被设定上物理地址。”你在本书的[前面部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)可以看到，我们已经设定了 `level2_fixmap_pgt` ：
 
 ```assembly
 NEXT_PAGE(level2_fixmap_pgt)
@@ -79,7 +79,7 @@ static inline unsigned long virt_to_fix(const unsigned long vaddr)
 
 一个 PFN 是一块页大小物理内存的下标。一个物理地址的 PFN 可以简单地定义为 (page_phys_addr >> PAGE_SHIFT)；
 
-`__virt_to_fix` 会清空给定地址的前 12 位，然后用固定映射区域的末地址(`FIXADDR_TOP`)减去它并右移 `PAGE_SHIFT` 即 12 位。让我们来解释它的工作原理。就像我已经写的那样，这个宏会使用 `x & PAGE_MASK` 来清空前 12 位。然后我们用 `FIXADDR_TOP` 减去它，就会得到 `FIXADDR_TOP` 的后 12 位。我们知道虚拟地址的前 12 位代表这个页的偏移量，当我们右移 `PAGE_SHIFT` 后就会得到 `Page frame number` ，即虚拟地址的所有位，包括最开始的 12 个偏移位。固定映射地址在[内核中多处使用](http://lxr.free-electrons.com/ident?i=fix_to_virt)。 `IDT` 描述符保存在这里，[英特尔可信赖执行技术](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID 储存在固定映射区域，以 `FIX_TBOOT_BASE` 下标开始。另外， [Xen](http://en.wikipedia.org/wiki/Xen) 引导映射等也储存在这个区域。我们已经在[内核初始化的第五部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html)看到了一部分关于固定映射地址的知识。接下来让我们看看什么是 `ioremap`，看看它是怎样实现的，与固定映射地址又有什么关系呢？
+`__virt_to_fix` 会清空给定地址的前 12 位，然后用固定映射区域的末地址(`FIXADDR_TOP`)减去它并右移 `PAGE_SHIFT` 即 12 位。让我们来解释它的工作原理。就像我已经写的那样，这个宏会使用 `x & PAGE_MASK` 来清空前 12 位。然后我们用 `FIXADDR_TOP` 减去它，就会得到 `FIXADDR_TOP` 的后 12 位。我们知道虚拟地址的前 12 位代表这个页的偏移量，当我们右移 `PAGE_SHIFT` 后就会得到 `Page frame number` ，即虚拟地址的所有位，包括最开始的 12 个偏移位。固定映射地址在[内核中多处使用](http://lxr.free-electrons.com/ident?i=fix_to_virt)。 `IDT` 描述符保存在这里，[英特尔可信赖执行技术](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID 储存在固定映射区域，以 `FIX_TBOOT_BASE` 下标开始。另外， [Xen](http://en.wikipedia.org/wiki/Xen) 引导映射等也储存在这个区域。我们已经在[内核初始化的第五部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html)看到了一部分关于固定映射地址的知识。接下来让我们看看什么是 `ioremap`，看看它是怎样实现的，与固定映射地址又有什么关系呢？
 
 输入输出重映射
 --------------------------------------------------------------------------------
@@ -133,7 +133,7 @@ $ cat /proc/ioports
 * `n`     - 区域的长度;
 * `name`  - 区域需求者的名字。
 
-`request_region` 分配 I/O 端口区域。通常在 `request_region` 之前会调用 `check_region` 来检查传入的地址区间是否可用，然后 `release_region` 会释放这个内存区域。`request_region` 返回指向 `resource` 结构体的指针。 `resource` 结构体是对系统资源的树状子集的抽象。我们已经在[内核初始化的第五部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html)见到过它了，它的定义是这样的：
+`request_region` 分配 I/O 端口区域。通常在 `request_region` 之前会调用 `check_region` 来检查传入的地址区间是否可用，然后 `release_region` 会释放这个内存区域。`request_region` 返回指向 `resource` 结构体的指针。 `resource` 结构体是对系统资源的树状子集的抽象。我们已经在[内核初始化的第五部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html)见到过它了，它的定义是这样的：
 
 ```C
 struct resource {
@@ -258,13 +258,13 @@ static inline const char *e820_type_to_string(int e820_type)
 
 我们可以在 `/proc/iomem` 中看到它们。
 
-现在让我们尝试着理解 `ioremap` 是如何工作的。我们已经了解了一部分 `ioremap` 的知识，我们在[内核初始化的第五部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html)见过它。如果你读了那个章节，你就会记得 [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c) 文件中对 `early_ioremap_init` 函数的调用。对 `ioremap` 的初始化分为两个部分：有一部分在我们正常使用 `ioremap` 之前，但是要首先进行 `vmalloc` 的初始化并调用 `paging_init` 才能进行正常的 `ioremap` 调用。我们现在还不了解 `vmalloc` 的知识，先看看第一部分的初始化。首先 `early_ioremap_init` 会检查固定映射是否与页中部目录对齐：
+现在让我们尝试着理解 `ioremap` 是如何工作的。我们已经了解了一部分 `ioremap` 的知识，我们在[内核初始化的第五部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html)见过它。如果你读了那个章节，你就会记得 [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ioremap.c) 文件中对 `early_ioremap_init` 函数的调用。对 `ioremap` 的初始化分为两个部分：有一部分在我们正常使用 `ioremap` 之前，但是要首先进行 `vmalloc` 的初始化并调用 `paging_init` 才能进行正常的 `ioremap` 调用。我们现在还不了解 `vmalloc` 的知识，先看看第一部分的初始化。首先 `early_ioremap_init` 会检查固定映射是否与页中部目录对齐：
 
 ```C
 BUILD_BUG_ON((fix_to_virt(0) + PAGE_SIZE) & ((1 << PMD_SHIFT) - 1));
 ```
 
-更多关于 `BUILD_BUG_ON` 的内容你可以在[内核初始化的第一部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)看到。如果给定的表达式为真，`BUILD_BUG_ON` 宏就会抛出一个编译时错误。在检查后的下一步，我们可以看到对 `early_ioremap_setup` 函数的调用，这个函数定义在 [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/master/mm/early_ioremap.c) 文件中。这个函数代表了对 `ioremap` 的大体初始化。`early_ioremap_setup` 函数用初期固定映射的地址填充了 `slot_virt` 数组。所有初期固定映射地址在内存中都在 `__end_of_permanent_fixed_addresses` 后面，它们从 `FIX_BITMAP_BEGIN` 开始，到 `FIX_BITMAP_END` 结束。实际上初期 `ioremap` 会使用 `512` 个临时引导时映射：
+更多关于 `BUILD_BUG_ON` 的内容你可以在[内核初始化的第一部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)看到。如果给定的表达式为真，`BUILD_BUG_ON` 宏就会抛出一个编译时错误。在检查后的下一步，我们可以看到对 `early_ioremap_setup` 函数的调用，这个函数定义在 [mm/early_ioremap.c](https://github.com/torvalds/linux/blob/master/mm/early_ioremap.c) 文件中。这个函数代表了对 `ioremap` 的大体初始化。`early_ioremap_setup` 函数用初期固定映射的地址填充了 `slot_virt` 数组。所有初期固定映射地址在内存中都在 `__end_of_permanent_fixed_addresses` 后面，它们从 `FIX_BITMAP_BEGIN` 开始，到 `FIX_BITMAP_END` 结束。实际上初期 `ioremap` 会使用 `512` 个临时引导时映射：
 
 ```
 #define NR_FIX_BTMAPS		64
@@ -319,7 +319,7 @@ pmd_populate_kernel(&init_mm, pmd, bm_pte);
 
 `pmd_populate_kernel` 函数有三个参数:
 
-* `init_mm` - `init` 进程的内存描述符 (你可以在[前文](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-5.html)中看到)；
+* `init_mm` - `init` 进程的内存描述符 (你可以在[前文](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html)中看到)；
 * `pmd`     - `ioremap` 固定映射开始处的页中部目录；
 * `bm_pte`  - 初期 `ioremap` 页表入口数组定义为：
 
@@ -519,5 +519,5 @@ prev_map[slot] = NULL;
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit)
 * [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
-* [内核内存管理第一部分](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html)
+* [Paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
+* [内核内存管理第一部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-1.html)
