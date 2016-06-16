@@ -613,7 +613,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [Model Specific Register](http://en.wikipedia.org/wiki/Model-specific_register)
-* [Paging](http://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)
+* [Paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
 * [Previous part - Kernel decompression](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)
 * [NX](http://en.wikipedia.org/wiki/NX_bit)
 * [ASLR](http://en.wikipedia.org/wiki/Address_space_layout_randomization)
