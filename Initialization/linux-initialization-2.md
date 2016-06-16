@@ -4,9 +4,9 @@ Kernel initialization. Part 2.
 Early interrupt and exception handling
 --------------------------------------------------------------------------------
 
-In the previous [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) we stopped before setting of early interrupt handlers. At this moment we are in the decompressed Linux kernel, we have basic [paging](https://en.wikipedia.org/wiki/Page_table) structure for early boot and our current goal is to finish early preparation before the main kernel code will start to work.
+In the previous [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html) we stopped before setting of early interrupt handlers. At this moment we are in the decompressed Linux kernel, we have basic [paging](https://en.wikipedia.org/wiki/Page_table) structure for early boot and our current goal is to finish early preparation before the main kernel code will start to work.
 
-We already started to do this preparation in the previous [first](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) part of this [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html). We continue in this part and will know more about interrupt and exception handling.
+We already started to do this preparation in the previous [first](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html) part of this [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html). We continue in this part and will know more about interrupt and exception handling.
 
 Remember that we stopped before following loop:
 
@@ -479,7 +479,7 @@ After page fault handler finished it's work and as result our `early_level4_pgt`
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part about linux kernel insides. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new). In the next part we will see all steps before kernel entry point - `start_kernel` function.
+This is the end of the second part about linux kernel insides. If you have questions or suggestions, ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new). In the next part we will see all steps before kernel entry point - `start_kernel` function.
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
@@ -492,4 +492,4 @@ Links
 * [Page table](https://en.wikipedia.org/wiki/Page_table)
 * [Interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler)
 * [Page Fault](https://en.wikipedia.org/wiki/Page_fault),
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)
+* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)
