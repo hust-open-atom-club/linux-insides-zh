@@ -365,7 +365,7 @@ Links
 * [linked data structures](https://en.wikipedia.org/wiki/Linked_data_structure)
 * [tree data structures](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) 
 * [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [cpumasks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [atomic operations](https://en.wikipedia.org/wiki/Linearizability)
