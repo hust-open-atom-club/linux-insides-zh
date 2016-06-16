@@ -68,8 +68,8 @@ Linux Insides
 |└ 6.5||未开始|
 | 7. Memory management||正在进行|
 |├ 7.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├ 7.1||未开始|
-|└ 7.2||未开始|
+|├ 7.1|[@choleraehyq](https://github.com/choleraehyq)|已完成|
+|└ 7.2||[@choleraehyq](https://github.com/choleraehyq)|已完成|
 | 8. SMP||未开始|
 | 9. Concepts||正在进行|
 |├ 9.0|[@mudongliang](https://github.com/mudongliang)|已完成|
