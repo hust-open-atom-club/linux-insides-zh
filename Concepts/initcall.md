@@ -374,7 +374,7 @@ Conclusion
 
 In this part we saw the important mechanism of the Linux kernel which allows to call a function which depends on the current state of the Linux kernel during its initialization.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**.
 
@@ -387,9 +387,9 @@ Links
 * [symbols concatenation](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html)
 * [GCC](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
 * [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization)
-* [Introduction to linkers](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)
+* [Introduction to linkers](https://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html)
 * [Linux kernel command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)
 * [Process identifier](https://en.wikipedia.org/wiki/Process_identifier)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [rootfs](https://en.wikipedia.org/wiki/Initramfs)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
