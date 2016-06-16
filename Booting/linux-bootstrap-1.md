@@ -465,7 +465,7 @@ BSS 段用来存储那些没有被初始化的静态变量。对于这个段使�
 
 如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)。
 
-**英文不是我的母语。如果你发现我的英文描述有任何问题，请提交一个PR到[linux-insides](https://github.com/0xAX/linux-internals).**
+**如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 。**
 
 相关链接
 --------------------------------------------------------------------------------
