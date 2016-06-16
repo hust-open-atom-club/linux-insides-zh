@@ -4,7 +4,7 @@ Kernel initialization. Part 4.
 Kernel entry point
 ================================================================================
 
-If you have read the previous part - [Last preparations before the kernel entry point](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md), you can remember that we finished all pre-initialization stuff and stopped right before the call to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). The `start_kernel` is the entry of the generic and architecture independent kernel code, although we will return to the `arch/` folder many times. If you look inside of the `start_kernel` function, you will see that this function is very big. For this moment it contains about `86` calls of functions. Yes, it's very big and of course this part will not cover all the processes that occur in this function. In the current part we will only start to do it. This part and all the next which will be in the [Kernel initialization process](https://github.com/0xAX/linux-insides/blob/master/Initialization/README.md) chapter will cover it.
+If you have read the previous part - [Last preparations before the kernel entry point](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md), you can remember that we finished all pre-initialization stuff and stopped right before the call to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). The `start_kernel` is the entry of the generic and architecture independent kernel code, although we will return to the `arch/` folder many times. If you look inside of the `start_kernel` function, you will see that this function is very big. For this moment it contains about `86` calls of functions. Yes, it's very big and of course this part will not cover all the processes that occur in this function. In the current part we will only start to do it. This part and all the next which will be in the [Kernel initialization process](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md) chapter will cover it.
 
 The main purpose of the `start_kernel` to finish kernel initialization process and launch the first `init` process. Before the first process will be started, the `start_kernel` must do many things such as: to enable [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), to initialize processor id, to enable early [cgroups](http://en.wikipedia.org/wiki/Cgroups) subsystem, to setup per-cpu areas, to initialize different caches in [vfs](http://en.wikipedia.org/wiki/Virtual_file_system), to initialize memory manager, rcu, vmalloc, scheduler, IRQs, ACPI and many many more. Only after these steps will we see the launch of the first `init` process in the last part of this chapter. So much kernel code awaits us, let's start.
 
@@ -51,7 +51,7 @@ The first represents a pointer to the kernel command line and the second will co
 lockdep_init();
 ```
 
-function. `lockdep_init` initializes [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). Its implementation is pretty simple, it just initializes two [list_head](https://github.com/0xAX/linux-insides/blob/master/DataStructures/dlist.md) hashes and sets the `lockdep_initialized` global variable to `1`. Lock validator detects circular lock dependencies and is called when any [spinlock](http://en.wikipedia.org/wiki/Spinlock) or [mutex](http://en.wikipedia.org/wiki/Mutual_exclusion) is acquired.
+function. `lockdep_init` initializes [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). Its implementation is pretty simple, it just initializes two [list_head](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md) hashes and sets the `lockdep_initialized` global variable to `1`. Lock validator detects circular lock dependencies and is called when any [spinlock](http://en.wikipedia.org/wiki/Spinlock) or [mutex](http://en.wikipedia.org/wiki/Mutual_exclusion) is acquired.
 
 The next function is `set_task_stack_end_magic` which takes address of the `init_task` and sets `STACK_END_MAGIC` (`0x57AC6E9D`) as canary for it. `init_task` represents the initial task structure:
 
@@ -210,7 +210,7 @@ For now it is just zero. If the `CONFIG_DEBUG_PREEMPT` configuration option is d
 #define raw_smp_processor_id() (this_cpu_read(cpu_number))
 ```
 
-`this_cpu_read` as many other function like this (`this_cpu_write`, `this_cpu_add` and etc...) defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) and presents `this_cpu` operation. These operations provide a way of optimizing access to the [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Theory/per-cpu.html) variables which are associated with the current processor. In our case it is `this_cpu_read`:
+`this_cpu_read` as many other function like this (`this_cpu_write`, `this_cpu_add` and etc...) defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) and presents `this_cpu` operation. These operations provide a way of optimizing access to the [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/per-cpu.html) variables which are associated with the current processor. In our case it is `this_cpu_read`:
 
 ```
 __pcpu_size_call_return(this_cpu_read_, pcp)
@@ -315,7 +315,7 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 
 Yeah, it just returns `1` every time. Actually we need in it here only for one purpose: at compile time it checks that the given `bitmap` is a bitmap, or in other words it checks that the given `bitmap` has a type of `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting the array of `unsigned long` to the `struct cpumask *`. Now we can call `cpumask_set_cpu` function with the `cpu` - 0 and `struct cpumask *cpu_possible_bits`. This function makes only one call of the `set_bit` function which sets the given `cpu` in the cpumask. All of these `set_cpu_*` functions work on the same principle.
 
-If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. You can get more info by reading the special part about it - [cpumask](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).
+If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. You can get more info by reading the special part about it - [cpumask](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).
 
 As we activated the bootstrap processor, it's time to go to the next function in the `start_kernel.` Now it is `page_address_init`, but this function does nothing in our case, because it executes only when all `RAM` can't be mapped directly.
 
@@ -352,7 +352,7 @@ This function starts from the reserving memory block for the kernel `_text` and 
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-You can read about `memblock` in the [Linux kernel memory management Part 1.](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
+You can read about `memblock` in the [Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
 
 * base physical address of a memory block;
 * size of a memory block.
@@ -384,7 +384,7 @@ u64 ramdisk_size  = get_ramdisk_size();
 u64 ramdisk_end   = PAGE_ALIGN(ramdisk_image + ramdisk_size);
 ```
 
-All of these parameters are taken from `boot_params`. If you have read the chapter about [Linux Kernel Booting Process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html), you must remember that we filled the `boot_params` structure during boot time. The kernel setup header contains a couple of fields which describes ramdisk, for example:
+All of these parameters are taken from `boot_params`. If you have read the chapter about [Linux Kernel Booting Process](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html), you must remember that we filled the `boot_params` structure during boot time. The kernel setup header contains a couple of fields which describes ramdisk, for example:
 
 ```
 Field name:	ramdisk_image
@@ -409,7 +409,7 @@ static u64 __init get_ramdisk_image(void)
 }
 ```
 
-Here we get the address of the ramdisk from the `boot_params` and shift left it on `32`. We need to do it because as you can read in the [Documentation/x86/zero-page.txt](https://github.com/0xAX/linux/blob/master/Documentation/x86/zero-page.txt):
+Here we get the address of the ramdisk from the `boot_params` and shift left it on `32`. We need to do it because as you can read in the [Documentation/x86/zero-page.txt](https://github.com/MintCN/linux-insides-zh/blob/master/Documentation/x86/zero-page.txt):
 
 ```
 0C0/004	ALL	ext_ramdisk_image ramdisk_image high 32bits
@@ -436,7 +436,7 @@ It is the end of the fourth part about the Linux kernel initialization process. 
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me a PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me a PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
 
 Links
 --------------------------------------------------------------------------------
@@ -449,4 +449,4 @@ Links
 * [stack buffer overflow](http://en.wikipedia.org/wiki/Stack_buffer_overflow)
 * [IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [initrd](http://en.wikipedia.org/wiki/Initrd)
-* [Previous part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-3.md)
+* [Previous part](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)
