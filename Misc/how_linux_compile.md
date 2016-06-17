@@ -680,7 +680,7 @@ Kernel: arch/x86/boot/bzImage is ready  (#5)
 * [Relocation](https://en.wikipedia.org/wiki/Relocation_%28computing%29)
 
 --------------------------------------------------------------------------------
-via: https://github.com/0xAX/linux-insides/blob/master/Misc/how_kernel_compiled.md
+via: https://github.com/MintCN/linux-insides-zh/blob/master/Misc/how_kernel_compiled.md
 
 译者：[oska874](https://github.com/oska874)
 校对：[wxy](https://github.com/wxy)
