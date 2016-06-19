@@ -5,7 +5,7 @@
 信号量
 --------------------------------------------------------------------------------
 
-这是本章的第三部分 [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html)，本章描述了内核中的同步原语,在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html) 是和 `自旋锁` 相关的描述。我们将描述更多同步原语。
+这是本章的第三部分 [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/index.html)，本章描述了内核中的同步原语,在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-2.html) 是和 `自旋锁` 相关的描述。我们将描述更多同步原语。
 
 在 `自旋锁` 之后的下一个我们将要讲到的 [内核同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)是 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)。我们会从理论角度开始学习什么是 `信号量`， 然后我们会像前几章一样讲到Linux内核是如何实现信号量的。
 
@@ -324,7 +324,7 @@ static noinline void __sched __up(struct semaphore *sem)
 
 这就是Linux内核中关于 [同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) 的第三部分的终结。在之前的两个部分，我们已经见到了第一个Linux内核的同步原语 `自旋锁`，它是使用 `ticket spinlock` 实现并且用于很短时间的锁。在这个部分我们见到了另外一种同步原语 － [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)，信号量用于长时间的锁，因为它会导致 [上下文切换](https://en.wikipedia.org/wiki/Context_switch)。 在下一部分，我们将会继续深入Linux内核的同步原语并且讨论另一个同步原语 － [互斥量](https://en.wikipedia.org/wiki/Mutual_exclusion)。
 
-如果你有问题或者建议，请在twitter [0xAX](https://twitter.com/0xAX)上联系我，通过 [email](anotherworldofworld@gmail.com)联系我，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)
+如果你有问题或者建议，请在twitter [0xAX](https://twitter.com/0xAX)上联系我，通过 [email](anotherworldofworld@gmail.com)联系我，或者创建一个 [issue](https://github.com/MintCN/linux-insides-zh/issues/new)
 
 
 
@@ -339,14 +339,14 @@ static noinline void __sched __up(struct semaphore *sem)
 * [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [deadlocks](https://en.wikipedia.org/wiki/Deadlock)
 * [scheduler](https://en.wikipedia.org/wiki/Scheduling_%28computing%29)
-* [Doubly linked list in the Linux kernel](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html)
-* [jiffies](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-1.html)
+* [Doubly linked list in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)
+* [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-1.html)
 * [interrupts](https://en.wikipedia.org/wiki/Interrupt)
-* [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
+* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
 * [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29)
 * [SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL)
 * [errno](https://en.wikipedia.org/wiki/Errno.h)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-2.html)
+* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-2.html)
 
