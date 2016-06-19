@@ -4,16 +4,16 @@ Timers and time management in the Linux kernel. Part 1.
 Introduction
 --------------------------------------------------------------------------------
 
-This is yet another post that opens new chapter in the [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book. The previous [part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html) was a list part of the chapter that describes [system call](https://en.wikipedia.org/wiki/System_call) concept and now time is to start new chapter. As you can understand from the post's title, this chapter will be devoted to the `timers` and `time management` in the Linux kernel. The choice of topic for the current chapter is not accidental. Timers and generally time management are very important and widely used in the Linux kernel. The Linux kernel uses timers for various tasks, different timeouts for example in [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) implementation, the kernel must know current time, scheduling asynchronous functions, next event interrupt scheduling and many many more.
+This is yet another post that opens new chapter in the [linux-insides](http://xinqiu.gitbooks.io/linux-insides-cn/content/) book. The previous [part](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-4.html) was a list part of the chapter that describes [system call](https://en.wikipedia.org/wiki/System_call) concept and now time is to start new chapter. As you can understand from the post's title, this chapter will be devoted to the `timers` and `time management` in the Linux kernel. The choice of topic for the current chapter is not accidental. Timers and generally time management are very important and widely used in the Linux kernel. The Linux kernel uses timers for various tasks, different timeouts for example in [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) implementation, the kernel must know current time, scheduling asynchronous functions, next event interrupt scheduling and many many more.
 
-So, we will start to learn implementation of the different time management related stuff in this part. We will see different types of timers and how do different Linux kernel subsystems use them. As always we will start from the earliest part of the Linux kernel and will go through initialization process of the Linux kernel. We already did it in the special [chapter](https://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) which describes initialization process of the Linux kernel, but as you may remember we missed some things there. And one of them is the initialization of timers.
+So, we will start to learn implementation of the different time management related stuff in this part. We will see different types of timers and how do different Linux kernel subsystems use them. As always we will start from the earliest part of the Linux kernel and will go through initialization process of the Linux kernel. We already did it in the special [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html) which describes initialization process of the Linux kernel, but as you may remember we missed some things there. And one of them is the initialization of timers.
 
 Let's start.
 
 Initialization of non-standard PC hardware clock
 --------------------------------------------------------------------------------
 
-After the Linux kernel was decompressed (more about this you can read in the [Kernel decompression](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) part) the architecture non-specific code starts to work in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. After initialization of the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), initialization of [cgroups](https://en.wikipedia.org/wiki/Cgroups) and setting [canary](https://en.wikipedia.org/wiki/Buffer_overflow_protection) value we can see the call of the `setup_arch` function.
+After the Linux kernel was decompressed (more about this you can read in the [Kernel decompression](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html) part) the architecture non-specific code starts to work in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file. After initialization of the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), initialization of [cgroups](https://en.wikipedia.org/wiki/Cgroups) and setting [canary](https://en.wikipedia.org/wiki/Buffer_overflow_protection) value we can see the call of the `setup_arch` function.
 
 As you may remember this function defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L842) source code file and prepares/initializes architecture-specific stuff (for example it reserves place for [bss](https://en.wikipedia.org/wiki/.bss) section, reserves place for [initrd](https://en.wikipedia.org/wiki/Initrd), parses kernel command line and many many other things). Besides this, we can find some time management related functions there.
 
@@ -408,9 +408,9 @@ Conclusion
 
 This concludes the first part covering time and time management related concepts in the Linux kernel. We met first two concepts and its initialization in this part: `jiffies` and `clocksource`. In the next part we will continue to dive into this interesting theme and as I already wrote in this part we will acquainted and try to understand insides of these and other time management concepts in the Linux kernel.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
 
 Links
 --------------------------------------------------------------------------------
@@ -433,4 +433,4 @@ Links
 * [Intel 8253](https://en.wikipedia.org/wiki/Intel_8253)
 * [seqlocks](https://en.wikipedia.org/wiki/Seqlock)
 * [cloksource documentation](https://www.kernel.org/doc/Documentation/timers/timekeeping.txt)
-* [Previous chapter](https://0xax.gitbooks.io/linux-insides/content/SysCall/index.html)
+* [Previous chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html)
