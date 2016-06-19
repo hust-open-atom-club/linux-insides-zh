@@ -4,7 +4,7 @@ Linux 内核系统调用 第一节
 简介
 --------------------------------------------------------------------------------
 
-这次提交为 [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) 添加一个新的章节，从标题就可以知道, 这一章节将介绍Linux 内核中 [System Call](https://en.wikipedia.org/wiki/System_call) 的概念。章节内容的选择并非偶然。在前一[章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html)我们了解了中断及中断处理。系统调用的概念与中断非常相似，这是因为软件中断是执行系统调用最常见的方式。我们将讨论系统调用概念的各个方面。例如，用户空间发起系统调用的细节，内核中一组系统调用处理器的执行过程, [VDSO](https://en.wikipedia.org/wiki/VDSO) 和 [vsyscall](https://lwn.net/Articles/446528/) 概念以及其他信息。
+这次提交为 [linux-insides](http://xinqiu.gitbooks.io/linux-insides-cn/content/) 添加一个新的章节，从标题就可以知道, 这一章节将介绍Linux 内核中 [System Call](https://en.wikipedia.org/wiki/System_call) 的概念。章节内容的选择并非偶然。在前一[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)我们了解了中断及中断处理。系统调用的概念与中断非常相似，这是因为软件中断是执行系统调用最常见的方式。我们将讨论系统调用概念的各个方面。例如，用户空间发起系统调用的细节，内核中一组系统调用处理器的执行过程, [VDSO](https://en.wikipedia.org/wiki/VDSO) 和 [vsyscall](https://lwn.net/Articles/446528/) 概念以及其他信息。
 
 在了解 Linux 内核系统调用执行过程之前，了解一些系统调用的原理是有帮助的。我们从下面的段落开始。
 
@@ -371,9 +371,9 @@ fdput_pos(f);
 
 总结Linux内核中关于系统调用概念的 the first part covering system call concepts in the Linux kernel. 本节中讨论了系统调用的原理，接下来的一节将深入该主题，了解 Linux 内核系统调用相关代码。
 
-若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new).
+若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/MintCN/linux-insides-zh/new).
 
-**由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/0xAX/linux-insides).**
+**由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/MintCN/linux-insides-zh).**
 
 链接
 --------------------------------------------------------------------------------
@@ -403,4 +403,4 @@ fdput_pos(f);
 * [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system)
 * [systemd](https://en.wikipedia.org/wiki/Systemd)
 * [epoll](https://en.wikipedia.org/wiki/Epoll)
-* [Previous chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html)
+* [Previous chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)
