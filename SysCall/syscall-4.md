@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 4.
 How does the Linux kernel run a program
 --------------------------------------------------------------------------------
 
-This is the fourth part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/SysCall/index.html) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-3.html) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
+This is the fourth part of the [chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-3.html) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
 
 * `vsyscall`;
 * `vDSO`;
@@ -73,7 +73,7 @@ So, an user application (`bash` in our case) calls the system call and as we alr
 execve system call
 --------------------------------------------------------------------------------
 
-We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
+We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
 
 ```
 SYSCALL_DEFINE3(execve,
@@ -334,7 +334,7 @@ if (!elf_phdata)
 	goto out;
 ```
 
-that describes [segments](https://en.wikipedia.org/wiki/Memory_segmentation). Read the `program interpreter` and libraries that linked with the our executable binary file from disk and load it to memory. The `program interpreter` specified in the `.interp` section of the executable file and as you can read in the part that describes [Linkers](http://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html) it is - `/lib64/ld-linux-x86-64.so.2` for the `x86_64`. It setups the stack and map `elf` binary into the correct location in memory. It maps the [bss](https://en.wikipedia.org/wiki/.bss) and the [brk](http://man7.org/linux/man-pages/man2/sbrk.2.html) sections and does many many other different things to prepare executable file to execute.
+that describes [segments](https://en.wikipedia.org/wiki/Memory_segmentation). Read the `program interpreter` and libraries that linked with the our executable binary file from disk and load it to memory. The `program interpreter` specified in the `.interp` section of the executable file and as you can read in the part that describes [Linkers](http://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html) it is - `/lib64/ld-linux-x86-64.so.2` for the `x86_64`. It setups the stack and map `elf` binary into the correct location in memory. It maps the [bss](https://en.wikipedia.org/wiki/.bss) and the [brk](http://man7.org/linux/man-pages/man2/sbrk.2.html) sections and does many many other different things to prepare executable file to execute.
 
 In the end of the execution of the `load_elf_binary` we call the `start_thread` function and pass three arguments to it:
 
@@ -396,9 +396,9 @@ Conclusion
 
 This is the end of the fourth and last part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from an user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run an user program.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
 
 Links
 --------------------------------------------------------------------------------
@@ -424,7 +424,7 @@ Links
 * [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha)
 * [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF)
 * [segments](https://en.wikipedia.org/wiki/Memory_segmentation)
-* [Linkers](http://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)
+* [Linkers](http://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-3.html)
+* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-3.html)
