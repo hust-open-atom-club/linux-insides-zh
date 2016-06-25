@@ -10,7 +10,7 @@
 
 [@icecoobe](https://github.com/icecoobe)
 
-[@choleraehyq](http://cholerae.com)
+[@choleraehyq](http://github.com/choleraehyq)
 
 [@mudongliang](https://github.com/mudongliang)
 
@@ -21,3 +21,7 @@
 [@hailincai](https://github.com/hailincai)
 
 [@zmj1316](https://github.com/zmj1316)
+
+[@zhangyangjing](https://github.com/zhangyangjing)
+
+[@huxq](https://github.com/huxq)

@@ -9,7 +9,6 @@ Linux Insides
 
 **问题/建议**: 通过在 twitter 上 [@0xAX](https://twitter.com/0xAX) ，直接添加 [issue](https://github.com/0xAX/linux-insides/issues/new) 或者直接给我发[邮件](mailto:anotherworldofworld@gmail.com),请自由地向我提出任何问题或者建议。
 
-
 ##翻译进度
 
 | 章节|译者|翻译进度|
@@ -21,7 +20,18 @@ Linux Insides
 |├ 1.3|[@hailincai](https://github.com/hailincai)|已完成|
 |├ 1.4|[@zmj1316](https://github.com/zmj1316)|已完成|
 |└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
-| 2. Initialization|[@lijiangsheng1](https://github.com/lijiangsheng1)|正在进行|
+| 2. Initialization||正在进行|
+|├ 2.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 2.1||未开始|
+|├ 2.2||未开始|
+|├ 2.3||未开始|
+|├ 2.4||未开始|
+|├ 2.5||未开始|
+|├ 2.6||未开始|
+|├ 2.7||未开始|
+|├ 2.8||未开始|
+|├ 2.9||未开始|
+|└ 2.10||未开始|
 | 3. Interrupts||正在进行|
 |├ 3.0|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ 3.1|[@littleneko](https://github.com/littleneko)|正在进行|
@@ -32,22 +42,50 @@ Linux Insides
 |├ 3.6|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.7|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├ 3.9|[@zhangyangjing](https://github.com/zhangyangjing)|正在进行|
+|├ 3.9|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
 |└ 3.10||未开始|
-| 4. System calls|[@qianmoke](https://github.com/qianmoke)|正在进行|
-| 5. Timers and time management|[@icecoobe](https://github.com/icecoobe)|正在进行|
-| 6. Synchronization primitives||未开始|
-| 7. Memory management|[@choleraehyq](https://github.com/choleraehyq)|正在进行|
+| 4. System calls||正在进行|
+|├ 4.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 4.1|[@qianmoke](https://github.com/qianmoke)|已完成|
+|├ 4.2|[@qianmoke](https://github.com/qianmoke)|已完成|
+|├ 4.3||未开始|
+|└ 4.4||未开始|
+| 5. Timers and time management||正在进行|
+|├ 5.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 5.1||未开始|
+|├ 5.2||未开始|
+|├ 5.3||未开始|
+|├ 5.4||未开始|
+|├ 5.5||未开始|
+|├ 5.6||未开始|
+|└ 5.7||未开始|
+| 6. Synchronization primitives||正在进行|
+|├ 6.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 6.1||未开始|
+|├ 6.2||未开始|
+|├ 6.3|[@huxq](https://github.com/huxq)|已完成|
+|├ 6.4|[@huxq](https://github.com/huxq)|正在进行|
+|└ 6.5||未开始|
+| 7. Memory management||正在进行|
+|├ 7.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 7.1|[@choleraehyq](https://github.com/choleraehyq)|已完成|
+|└ 7.2|[@choleraehyq](https://github.com/choleraehyq)|已完成|
 | 8. SMP||未开始|
-| 9. Concepts||未开始|
-| 10. DataStructures||已完成|
+| 9. Concepts||正在进行|
+|├ 9.0|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 9.1||未开始|
+|├ 9.2||未开始|
+|└ 9.3||未开始|
+| 10. DataStructures||正在进行|
 |├ 10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 10.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
-|└ 10.2|[@oska874](https://github.com/oska874)|已完成|
-| 11. Theory||已完成|
+|├ 10.2|[@oska874](https://github.com/oska874)|已完成|
+|└ 10.3||未开始|
+| 11. Theory||正在进行|
 |├ 11.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 11.1|[@mudongliang](https://github.com/mudongliang)|已完成|
-|└ 11.2|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ 11.2|[@mudongliang](https://github.com/mudongliang)|已完成|
+|└ 11.3||未开始|
 | 12. Initial ram disk||未开始|
 | 13. Misc||正在进行|
 |├ 13.0|[@mudongliang](https://github.com/mudongliang)|已完成|
