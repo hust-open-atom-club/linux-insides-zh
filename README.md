@@ -22,9 +22,9 @@ Linux Insides
 |└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
 | 2. Initialization||正在进行|
 |├ 2.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├ 2.1||未开始|
-|├ 2.2||未开始|
-|├ 2.3||未开始|
+|├ 2.1|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
+|├ 2.2|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
+|├ 2.3|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
 |├ 2.4||未开始|
 |├ 2.5||未开始|
 |├ 2.6||未开始|
