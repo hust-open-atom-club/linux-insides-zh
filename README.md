@@ -25,13 +25,13 @@ Linux Insides
 |├ 2.1|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
 |├ 2.2|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
 |├ 2.3|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
-|├ 2.4||未开始|
-|├ 2.5||未开始|
-|├ 2.6||未开始|
-|├ 2.7||未开始|
-|├ 2.8||未开始|
-|├ 2.9||未开始|
-|└ 2.10||未开始|
+|├ 2.4|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.5|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.6|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.7|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.8|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.9|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|└ 2.10|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
 | 3. Interrupts||正在进行|
 |├ 3.0|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ 3.1|[@littleneko](https://github.com/littleneko)|正在进行|
