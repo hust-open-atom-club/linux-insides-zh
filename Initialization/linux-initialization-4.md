@@ -447,4 +447,4 @@ memblock_reserve(ramdisk_image, ramdisk_end - ramdisk_image);
 * [stack buffer overflow](http://en.wikipedia.org/wiki/Stack_buffer_overflow)
 * [IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [initrd](http://en.wikipedia.org/wiki/Initrd)
-* [Previous part](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)
+* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-3.html)
