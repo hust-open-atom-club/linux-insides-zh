@@ -25,7 +25,7 @@ Linux Insides
 |├ 2.1|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
 |├ 2.2|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
 |├ 2.3|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
-|├ 2.4|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.4|[@bjwrkj](https://github.com/bjwrkj)|已完成|
 |├ 2.5|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
 |├ 2.6|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
 |├ 2.7|[@bjwrkj](https://github.com/bjwrkj)|正在进行|

@@ -1,73 +1,71 @@
-Kernel initialization. Part 4.
+内核初始化. Part 4.
 ================================================================================
 
 Kernel entry point
 ================================================================================
 
-If you have read the previous part - [Last preparations before the kernel entry point](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md), you can remember that we finished all pre-initialization stuff and stopped right before the call to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). The `start_kernel` is the entry of the generic and architecture independent kernel code, although we will return to the `arch/` folder many times. If you look inside of the `start_kernel` function, you will see that this function is very big. For this moment it contains about `86` calls of functions. Yes, it's very big and of course this part will not cover all the processes that occur in this function. In the current part we will only start to do it. This part and all the next which will be in the [Kernel initialization process](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md) chapter will cover it.
+还记得上一章的内容吗 - [跳转到内核入口之前的最后准备](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)？你应该还记得我们已经完成一系列初始化操作停在了`start_kernel`函数位于`init/main.c`.`start_kernel`函数是于体系架构无关的通用处理入口函数，尽管我们在此初始化过程中要无数次的返回arch/ 文件夹。如果你仔细看看`start_kernel`函数的内容，你将发现此函数涉及内容非常广泛。在此过程中约包含了86个调用函数，是的，你发现它真的是非常庞大但是此部分并不是全部的初始化过程，在当前阶段我们只看这些就可以了。此章节以及后续所有的内容章节[内核初始化过程](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md)我们都将涉及并详述。
 
-The main purpose of the `start_kernel` to finish kernel initialization process and launch the first `init` process. Before the first process will be started, the `start_kernel` must do many things such as: to enable [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), to initialize processor id, to enable early [cgroups](http://en.wikipedia.org/wiki/Cgroups) subsystem, to setup per-cpu areas, to initialize different caches in [vfs](http://en.wikipedia.org/wiki/Virtual_file_system), to initialize memory manager, rcu, vmalloc, scheduler, IRQs, ACPI and many many more. Only after these steps will we see the launch of the first `init` process in the last part of this chapter. So much kernel code awaits us, let's start.
+`start_kernel`函数的主要目的是完成内核初始化并启动祖先进程(1号进程)。在祖先进程启动之前`start_kernel`函数做了很多事情，如[锁验证器](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt),根据处理器标识ID初始化处理器，开启cgroups子系统，设置每CPU区域环境，初始化[VFS](http://en.wikipedia.org/wiki/Virtual_file_system) Cache机制，初始化内存管理，rcu,vmalloc,scheduler(调度器),IRQs(中断向量表),ACPI(中断可编程控制器)以及其它很多子系统。只有经过这些步骤我们才看到本章最后一部分祖先进程启动的过程；同志们，如此复杂的内核子系统，有没有勾起你的学习欲望，有这么多的内核代码等着我们去征服，让我们开始吧。
 
-**NOTE: All parts from this big chapter `Linux Kernel initialization process` will not cover anything about debugging. There will be a separate chapter about kernel debugging tips.**
+**注意:在此大章节的所有内容 `Linux Kernel initialization process`，并不涉及内核调试相关，关于内核调试部分会有一个单独的章节来进行描述**
 
-A little about function attributes
+关于 `__attribute__` 
 ---------------------------------------------------------------------------------
 
-As I wrote above, the `start_kernel` function is defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c). This function defined with the `__init` attribute and as you already may know from other parts, all functions which are defined with this attribute are necessary during kernel initialization.
+正如我上述所写，`start_kernel`函数是定义在[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c).从已知代码中我们能看到此函数使用了`__init`特性，你也许从其它地方了解过关于GCC `__attribute__`相关的内容。在内核初始化阶段这个机制在所有的函数中都是有必要的。
 
 ```C
-#define __init      __section(.init.text) __cold notrace
+	#define __init      __section(.init.text) __cold notrace
 ```
 
-After the initialization process have finished, the kernel will release these sections with a call to the `free_initmem` function. Note also that `__init` is defined with two attributes: `__cold` and `notrace`. The purpose of the first `cold` attribute is to mark that the function is rarely used and the compiler must optimize this function for size. The second `notrace` is defined as:
+在初始化过程完成后，内核将通过调用`free_initmem`释放这些sections(段)。注意`__init`属性是通过`__cold`和`notrace`两个属性来定义的。第一个属性`cold`的目的是标记此函数很少使用所以编译器必须优化此函数的大小，第二个属性`notrace`定义如下：
 
 ```C
-#define notrace __attribute__((no_instrument_function))
+	#define notrace __attribute__((no_instrument_function))
 ```
 
-where `no_instrument_function` says to the compiler not to generate profiling function calls.
+含有`no_instrument_function`意思就是告诉编译器函数调用不产生环境变量(堆栈空间)。
 
-In the definition of the `start_kernel` function, you can also see the `__visible` attribute which expands to the:
+在`start_kernel`函数的定义中，你也可以看到`__visible` 属性的扩展：
 
 ```
-#define __visible __attribute__((externally_visible))
+	#define __visible __attribute__((externally_visible))
 ```
 
-where `externally_visible` tells to the compiler that something uses this function or variable, to prevent marking this function/variable as `unusable`. You can find the definition of this and other macro attributes in [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h).
+含有`externally_visible`意思就是告诉编译器有一些过程在使用该函数或者变量，为了放至标记这个函数/变量是`unusable`。你可以在此[include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h)处查到这些属性表达式的含义。
 
-First steps in the start_kernel
+start_kernel 初始化
 --------------------------------------------------------------------------------
-
-At the beginning of the `start_kernel` you can see the definition of these two variables:
+在start_kernel的初始之初你可以看到这两个变量：
 
 ```C
 char *command_line;
 char *after_dashes;
 ```
-
-The first represents a pointer to the kernel command line and the second will contain the result of the `parse_args` function which parses an input string with parameters in the form `name=value`, looking for specific keywords and invoking the right handlers. We will not go into the details related with these two variables at this time, but will see it in the next parts. In the next step we can see a call to the:
+第一个变量表示内核命令行的全局指针，第二个变量将包含`parse_args`函数通过输入字符串中的参数'name=value'，寻找特定的关键字和调用正确的处理程序。我们不想在这个时候参与这两个变量的相关细节，但是会在接下来的章节看到。我们接着往下走，下一步我们看到了此函数:
 
 ```C
 lockdep_init();
 ```
 
-function. `lockdep_init` initializes [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). Its implementation is pretty simple, it just initializes two [list_head](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md) hashes and sets the `lockdep_initialized` global variable to `1`. Lock validator detects circular lock dependencies and is called when any [spinlock](http://en.wikipedia.org/wiki/Spinlock) or [mutex](http://en.wikipedia.org/wiki/Mutual_exclusion) is acquired.
+`lockdep_init` 初始化 [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). 其实现是相当简单的，它只是初始化了两个哈希表 [list_head](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md)并设置`lockdep_initialized` 全局变量为`1`。
+关于自旋锁 [spinlock](http://en.wikipedia.org/wiki/Spinlock)以及互斥锁[mutex](http://en.wikipedia.org/wiki/Mutual_exclusion) 如何获取请参考链接.
 
-The next function is `set_task_stack_end_magic` which takes address of the `init_task` and sets `STACK_END_MAGIC` (`0x57AC6E9D`) as canary for it. `init_task` represents the initial task structure:
+下一个函数是`set_task_stack_end_magic`，参数为`init_task`和设置`STACK_END_MAGIC` (`0x57AC6E9D`)。`init_task`代表初始化进程(任务)数据结构:
 
 ```C
 struct task_struct init_task = INIT_TASK(init_task);
 ```
+`task_struct` 存储了进程的所有相关信息。因为它很庞大，我在这本书并不会去介绍，详细信息你可以查看调度相关数据结构定义头文件 [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h#L1278)。在此刻`task_sreuct`包含了超过`100`个字段！虽然你不会看到`task_struct`是在这本书中的解释，但是我们会经常使用它，因为它是介绍在Linux内核`进程`的基本知识。我将描述这个结构中字段的一些含义，因为我们在后面的实践中见到它们。
 
-where `task_struct` stores all the information about a process. I will not explain this structure in this book because it's very big. You can find its definition in [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h#L1278). At this moment `task_struct` contains more than `100` fields! Although you will not see the explanation of the `task_struct` in this book, we will use it very often since it is the fundamental structure which describes the `process` in the Linux kernel. I will describe the meaning of the fields of this structure as we meet them in practice.
+你也可以查看`init_task`的相关定义以及宏指令`INIT_TASK`的初始化流程。这个宏指令来自于[include/linux/init_task.h](https://github.com/torvalds/linux/blob/master/include/linux/init_task.h)在此刻只是设置和初始化了第一个进程来(0号进程)的值。例如这么设置：
+* 初始化进程状态为 zero 或者 `runnable`. 一个可运行进程即为等待CPU去运行;
+* 初始化仅存的标志位 - `PF_KTHREAD` 意思为 - 内核线程;
+* 一个可运行的任务列表;
+* 进程地址空间;
+* 初始化进程堆栈 `&init_thread_info`  - `init_thread_union.thread_info` 和 `initthread_union` 使用共用体 - `thread_union` 包含了 `thread_info`进程信息以及进程栈:。
 
-You can see the definition of the `init_task` and it initialized by the `INIT_TASK` macro. This macro is from [include/linux/init_task.h](https://github.com/torvalds/linux/blob/master/include/linux/init_task.h) and it just fills the `init_task` with the values for the first process. For example it sets:
-
-* init process state to zero or `runnable`. A runnable process is one which is waiting only for a CPU to run on;
-* init process flags - `PF_KTHREAD` which means - kernel thread;
-* a list of runnable task;
-* process address space;
-* init process stack to the `&init_thread_info` which is `init_thread_union.thread_info` and `initthread_union` has type - `thread_union` which contains `thread_info` and process stack:
 
 ```C
 union thread_union {
@@ -75,8 +73,7 @@ union thread_union {
     unsigned long stack[THREAD_SIZE/sizeof(long)];
 };
 ```
-
-Every process has its own stack and it is 16 kilobytes or 4 page frames. in `x86_64`. We can note that it is defined as array of `unsigned long`. The next field of the `thread_union` is - `thread_info` defined as:
+每个进程都有其自己的堆栈，`x86_64`架构的CPU一般支持的页表是16KB or 4个页框大小。我们注意stack变量被定义为数据并且类型是`unsigned long`。`thread_union`结构的下一个字段为`thread_union` 定义如下：
 
 ```C
 struct thread_info {
@@ -93,10 +90,8 @@ struct thread_info {
         unsigned int            uaccess_err:1;
 };
 ```
-
-and occupies 52 bytes. The `thread_info` structure contains architecture-specific information on the thread. We know that on `x86_64` the stack grows down and `thread_union.thread_info` is stored at the bottom of the stack in our case. So the process stack is 16 kilobytes and `thread_info` is at the bottom. The remaining thread_size will be `16 kilobytes - 62 bytes = 16332 bytes`. Note that `thread_union` represented as the [union](http://en.wikipedia.org/wiki/Union_type) and not structure, it means that `thread_info` and stack share the memory space.
-
-Schematically it can be represented as follows:
+此结构占用52个字节。`thread_info`结构包含了特定体系架构相关的线程信息，我们都知道在`X86_64`架构上内核栈是逆生成而`thread_union.thread_info`结构则是正生长。所以进程进程栈是16KB并且`thread_info`是在栈底。还需我们处理`16 kilobytes - 62 bytes = 16332 bytes`.注意 `thread_union`代表一个联合体[union](http://en.wikipedia.org/wiki/Union_type)而不是结构体，用一张图来描述栈内存空间。
+如下图所示:
 
 ```C
 +-----------------------+
@@ -117,9 +112,10 @@ Schematically it can be represented as follows:
 
 http://www.quora.com/In-Linux-kernel-Why-thread_info-structure-and-the-kernel-stack-of-a-process-binds-in-union-construct
 
-So the `INIT_TASK` macro fills these `task_struct's` fields and many many more. As I already wrote above, I will not describe all the fields and values in the `INIT_TASK` macro but we will see them soon.
+所以`INIT_TASK`宏指令就是`task_struct's`'结构。正如我上述所写，我并不会去描述这些字段的含义和值，在`INIT_TASK`赋值处理的时候我们很快能看到这些。
 
-Now let's go back to the `set_task_stack_end_magic` function. This function defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c#L297) and sets a [canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow) to the `init` process stack to prevent stack overflow.
+现在让我们回到`set_task_stack_end_magic`函数，这个函数被定义在[kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c#L297)功能为设置[canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow) `init` 进程堆栈以检测堆栈溢出。
+
 
 ```C
 void set_task_stack_end_magic(struct task_struct *tsk)
@@ -130,19 +126,20 @@ void set_task_stack_end_magic(struct task_struct *tsk)
 }
 ```
 
-Its implementation is simple. `set_task_stack_end_magic` gets the end of the stack for the given `task_struct` with the `end_of_stack` function. The end of a process stack depends on the `CONFIG_STACK_GROWSUP` configuration option. As we learn in `x86_64` architecture, the stack grows down. So the end of the process stack will be:
+上述函数比较简单，`set_task_stack_end_magic`函数的作用是先通过`end_of_stack`函数获取堆栈并赋给 `task_struct`。
+关于检测配置需要打开内核配置宏`CONFIG_STACK_GROWSUP`。因为我们学习的是x86架构的初始化，堆栈是逆生成，所以堆栈底部为：
 
 ```C
 (unsigned long *)(task_thread_info(p) + 1);
 ```
 
-where `task_thread_info` just returns the stack which we filled with the `INIT_TASK` macro:
+`task_thread_info`的定义如下，返回一个当前的堆栈；
 
 ```C
 #define task_thread_info(task)  ((struct thread_info *)(task)->stack)
 ```
 
-As we got the end of the init process stack, we write `STACK_END_MAGIC` there. After `canary` is set, we can check it like this:
+进程的栈底，我们写`STACK_END_MAGIC`这个值。如果设置`canary`，我们可以像这样子去检测堆栈：
 
 ```C
 if (*end_of_stack(task) != STACK_END_MAGIC) {
@@ -152,7 +149,7 @@ if (*end_of_stack(task) != STACK_END_MAGIC) {
 }
 ```
 
-The next function after the `set_task_stack_end_magic` is `smp_setup_processor_id`. This function has an empty body for `x86_64`:
+`set_task_stack_end_magic` 初始化完毕后的下一个函数是 `smp_setup_processor_id`.此函数在`x86_64`架构上是空函数：
 
 ```C
 void __init __weak smp_setup_processor_id(void)
@@ -160,11 +157,12 @@ void __init __weak smp_setup_processor_id(void)
 }
 ```
 
-as it not implemented for all architectures, but some such as [s390](http://en.wikipedia.org/wiki/IBM_ESA/390) and [arm64](http://en.wikipedia.org/wiki/ARM_architecture#64.2F32-bit_architecture).
+在此架构上没有实现此函数，但在别的体系架构的实现可以参考[s390](http://en.wikipedia.org/wiki/IBM_ESA/390) and [arm64](http://en.wikipedia.org/wiki/ARM_architecture#64.2F32-bit_architecture).
 
-The next function in `start_kernel` is `debug_objects_early_init`. Implementation of this function is almost the same as `lockdep_init`, but fills hashes for object debugging. As I wrote above, we will not see the explanation of this and other functions which are for debugging purposes in this chapter.
+我们接着往下走，下一个函数是`debug_objects_early_init`。此函数的执行几乎和`lockdep_init`是一样的，但是填充的哈希对象是调试相关。上述我已经表明，关于内核调试部分会在后续专门有一个章节来完成。
 
-After the `debug_object_early_init` function we can see the call of the `boot_init_stack_canary` function which fills `task_struct->canary` with the canary value for the `-fstack-protector` gcc feature. This function depends on the `CONFIG_CC_STACKPROTECTOR` configuration option and if this option is disabled, `boot_init_stack_canary` does nothing, otherwise it generates random numbers based on random pool and the [TSC](http://en.wikipedia.org/wiki/Time_Stamp_Counter):
+`debug_object_early_init`函数之后我们看到调用了`boot_init_stack_canary`函数。`task_struct->canary` 的值利用了GCC特性，但是此特性需要先使能内核`CONFIG_CC_STACKPROTECTOR`宏后才可以使用。
+ `boot_init_stack_canary` 什么也没有做， 否则基于随机数和随机池产生 [TSC](http://en.wikipedia.org/wiki/Time_Stamp_Counter):
 
 ```C
 get_random_bytes(&canary, sizeof(canary));
@@ -172,19 +170,19 @@ tsc = __native_read_tsc();
 canary += tsc + (tsc << 32UL);
 ```
 
-After we got a random number, we fill the `stack_canary` field of `task_struct` with it:
+我们要获取随机数, 我们可以给`stack_canary` 字段 `task_struct`赋值：
 
 ```C
 current->stack_canary = canary;
 ```
 
-and write this value to the top of the IRQ stack with the:
+然后将此值写入IRQ堆栈的顶部:
 
 ```C
 this_cpu_write(irq_stack_union.stack_canary, canary); // read below about this_cpu_write
 ```
 
-Again, we will not dive into details here, we will cover it in the part about [IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29). As canary is set, we disable local and early boot IRQs and register the bootstrap CPU in the CPU maps. We disable local IRQs (interrupts for current CPU) with the `local_irq_disable` macro which expands to the call of the `arch_local_irq_disable` function from [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h):
+关于IRQ的章节我们这里也不会详细刨析, 关于这部分介绍看这里[IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29).如果canary被设置, 关闭本地中断注册bootstrap CPU以及CPU maps. 我们关闭本地中断 (interrupts for current CPU) 使用 `local_irq_disable` 函数，展开后原型为 `arch_local_irq_disable` 函数[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h):
 
 ```C
 static inline notrace void arch_local_irq_enable(void)
@@ -192,31 +190,30 @@ static inline notrace void arch_local_irq_enable(void)
         native_irq_enable();
 }
 ```
+如果`native_irq_enable`通过`cli`指令判断架构，这里是`X86_64`，
+Where `native_irq_enable` is `cli` instruction for `x86_64`.中断的关闭(屏蔽)我们可以通过注册当前CPU ID到CPU bitmap来实现。 
 
-Where `native_irq_enable` is `cli` instruction for `x86_64`. As interrupts are disabled we can register the current CPU with the given ID in the CPU bitmap.
-
-The first processor activation
+激活第一个CPU
 ---------------------------------------------------------------------------------
 
-The current function from the `start_kernel` is `boot_cpu_init`. This function initializes various CPU masks for the bootstrap processor. First of all it gets the bootstrap processor id with a call to:
+当前已经走到`start_kernel`函数中的`boot_cpu_init`函数，此函数主要为了通过掩码初始化每一个CPU。首先我们需要获取当前处理器的ID通过下面函数：
 
 ```C
 int cpu = smp_processor_id();
 ```
 
-For now it is just zero. If the `CONFIG_DEBUG_PREEMPT` configuration option is disabled, `smp_processor_id` just expands to the call of `raw_smp_processor_id` which expands to the:
+现在是0. 如果`CONFIG_DEBUG_PREEMPT` 宏配置了那么 `smp_processor_id` 的值就来自于 `raw_smp_processor_id` 函数，原型如下:
 
 ```C
 #define raw_smp_processor_id() (this_cpu_read(cpu_number))
 ```
 
-`this_cpu_read` as many other function like this (`this_cpu_write`, `this_cpu_add` and etc...) defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) and presents `this_cpu` operation. These operations provide a way of optimizing access to the [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/per-cpu.html) variables which are associated with the current processor. In our case it is `this_cpu_read`:
+`this_cpu_read` 函数与其它很多函数一样如(`this_cpu_write`, `this_cpu_add` 等等...) 被定义在[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 此部分函数主要为对 `this_cpu` 进行操作. 这些操作提供不同的对每cpu[per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/per-cpu.html) 变量相关访问方式. 譬如让我们来看看这个函数 `this_cpu_read`:
 
 ```
 __pcpu_size_call_return(this_cpu_read_, pcp)
 ```
-
-Remember that we have passed `cpu_number` as `pcp` to the `this_cpu_read` from the `raw_smp_processor_id`. Now let's look at the `__pcpu_size_call_return` implementation:
+还记得上面我们所写，每cpu变量`cpu_number` 的值是`this_cpu_read`通过`raw_smp_processor_id`来得到，现在让我们看看 `__pcpu_size_call_return`的执行：
 
 ```C
 #define __pcpu_size_call_return(stem, variable)                         \
@@ -234,40 +231,40 @@ Remember that we have passed `cpu_number` as `pcp` to the `this_cpu_read` from t
         pscr_ret__;                                                     \
 }) 
 ```
-
-Yes, it looks a little strange but it's easy. First of all we can see the definition of the `pscr_ret__` variable with the `int` type. Why int? Ok, `variable` is `common_cpu` and it was declared as per-cpu int variable:
+是的，此函数虽然看起起奇怪但是它的实现是简单的，我们看到`pscr_ret__` 变量的定义是`int`类型，为什么是int类型呢？好吧，`变量`是`common_cpu` 它声明了每cpu(per-cpu)变量:
 
 ```C
 DECLARE_PER_CPU_READ_MOSTLY(int, cpu_number);
 ```
 
-In the next step we call `__verify_pcpu_ptr` with the address of `cpu_number`. `__veryf_pcpu_ptr` used to verify that the given parameter is a per-cpu pointer. After that we set `pscr_ret__` value which depends on the size of the variable. Our `common_cpu` variable is `int`, so it 4 bytes in size. It means that we will get `this_cpu_read_4(common_cpu)` in `pscr_ret__`. In the end of the `__pcpu_size_call_return` we just call it. `this_cpu_read_4` is a macro:
+在下一个步骤中我们调用了`__verify_pcpu_ptr`通过使用一个有效的每cpu变量指针来取地址得到`cpu_number`。之后我们通过`pscr_ret__` 函数设置变量的大小，`common_cpu`变量是`int`,所以它的大小是4字节。意思就是我们通过`this_cpu_read_4(common_cpu)`获取cpu变量其大小被`pscr_ret__`决定。在`__pcpu_size_call_return`的结束 我们调用了__pcpu_size_call_return：
 
 ```C
 #define this_cpu_read_4(pcp)       percpu_from_op("mov", pcp)
 ```
 
-which calls `percpu_from_op` and pass `mov` instruction and per-cpu variable there. `percpu_from_op` will expand to the inline assembly call:
+需要调用`percpu_from_op` 并且通过`mov`指令来传递每cpu变量，`percpu_from_op`的内联扩展如下：
+
 
 ```C
 asm("movl %%gs:%1,%0" : "=r" (pfo_ret__) : "m" (common_cpu))
 ```
 
-Let's try to understand how it works and what it does. The `gs` segment register contains the base of per-cpu area. Here we just copy `common_cpu` which is in memory to the `pfo_ret__` with the `movl` instruction. Or with another words:
+让我们尝试理解此函数是如果工作的，`gs`段寄存器包含每个CPU区域的初始值，这里我们通过`mov`指令copy `common_cpu`到内存中去，此函数还有另外的形式：
 
 ```C
 this_cpu_read(common_cpu)
 ```
 
-is the same as:
+等价于:
 
 ```C
 movl %gs:$common_cpu, $pfo_ret__
 ```
 
-As we didn't setup per-cpu area, we have only one - for the current running CPU, we will get `zero` as a result of the `smp_processor_id`.
+由于我们没有设置每个CPU的区域,我们只有一个 - 为当前CPU的值`zero` 通过此函数 `smp_processor_id`返回.
 
-As we got the current processor id, `boot_cpu_init` sets the given CPU online, active, present and possible with the:
+返回的ID表示我们处于哪一个CPU上, `boot_cpu_init` 函数设置了CPU的在线, 激活, 当前的设置为:
 
 ```C
 set_cpu_online(cpu, true);
@@ -276,27 +273,26 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-All of these functions use the concept - `cpumask`. `cpu_possible` is a set of CPU ID's which can be plugged in at any time during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depend on the `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. Implementation of the all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` or `cpumask_clear_cpu` otherwise.
+上述我们所有使用的这些CPU的配置我们称之为- CPU掩码`cpumask`. `cpu_possible` 则是设置支持CPU热插拔时候的CPU ID. `cpu_present` 表示当前热插拔的CPU. `cpu_online`表示当前所有在线的CPU以及通过 `cpu_present` 来决定被调度出去的CPU. CPU热插拔的操作需要打开内核配置宏`CONFIG_HOTPLUG_CPU`并且将 `possible == present` 以及`active == online`选项禁用。这些功能都非常相似，每个函数都需要检查第二个参数，如果设置为`true`，需要通过调用`cpumask_set_cpu` or `cpumask_clear_cpu`来改变状态。
 
-For example let's look at `set_cpu_possible`. As we passed `true` as the second parameter, the:
+譬如我们可以通过true或者第二个参数来这么调用：
 
 ```C
 cpumask_set_cpu(cpu, to_cpumask(cpu_possible_bits));
 ```
 
-will be called. First of all let's try to understand the `to_cpumask` macro. This macro casts a bitmap to a `struct cpumask *`. CPU masks provide a bitmap suitable for representing the set of CPU's in a system, one bit position per CPU number. CPU mask presented by the `cpu_mask` structure:
+ 让我们继续尝试理解`to_cpumask`宏指令，此宏指令转化为一个位图通过`struct cpumask *`，CPU掩码提供了位图集代表了当前系统中所有的CPU's，每CPU都占用1bit，CPU掩码相关定义通过`cpu_mask`结构定义:
 
 ```C
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 ```
-
-which is just bitmap declared with the `DECLARE_BITMAP` macro:
+在来看下面一组函数定义了位图宏指令。
 
 ```C
 #define DECLARE_BITMAP(name, bits) unsigned long name[BITS_TO_LONGS(bits)]
 ```
 
-As we can see from its definition, the `DECLARE_BITMAP` macro expands to the array of `unsigned long`. Now let's look at how the `to_cpumask` macro is implemented:
+正如我们看到的定义一样， `DECLARE_BITMAP`宏指令的原型是一个`unsigned long`的数组，现在让我们查看如何执行`to_cpumask`:
 
 ```C
 #define to_cpumask(bitmap)                                              \
@@ -304,7 +300,7 @@ As we can see from its definition, the `DECLARE_BITMAP` macro expands to the arr
                             : (void *)sizeof(__check_is_bitmap(bitmap))))
 ```
 
-I don't know about you, but it looked really weird for me at the first time. We can see a ternary operator here which is `true` every time, but why the `__check_is_bitmap` here? It's simple, let's look at it:
+我不知道你是怎么想的, 但是我是这么想的，我看到此函数其实就是一个条件判断语句当条件为真的时候，但是为什么执行`__check_is_bitmap`？让我们看看`__check_is_bitmap`的定义：
 
 ```C
 static inline int __check_is_bitmap(const unsigned long *bitmap)
@@ -313,70 +309,72 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 }
 ```
 
-Yeah, it just returns `1` every time. Actually we need in it here only for one purpose: at compile time it checks that the given `bitmap` is a bitmap, or in other words it checks that the given `bitmap` has a type of `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting the array of `unsigned long` to the `struct cpumask *`. Now we can call `cpumask_set_cpu` function with the `cpu` - 0 and `struct cpumask *cpu_possible_bits`. This function makes only one call of the `set_bit` function which sets the given `cpu` in the cpumask. All of these `set_cpu_*` functions work on the same principle.
+原来此函数始终返回1，事实上我们需要这样的函数才达到我们的目的： 它在编译时给定一个`bitmap`，换句话将就是检查`bitmap`的类型是否是`unsigned long *`,因此我们仅仅通过`to_cpumask`宏指令将类型为`unsigned long`的数组转化为`struct cpumask *`。现在我们可以调用`cpumask_set_cpu` 函数，这个函数仅仅是一个 `set_bit`给CPU掩码的功能函数。所有的这些`set_cpu_*`函数的原理都是一样的。
 
-If you're not sure that this `set_cpu_*` operations and `cpumask` are not clear for you, don't worry about it. You can get more info by reading the special part about it - [cpumask](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).
+如果你还不确定`set_cpu_*`这些函数的操作并且不能理解 `cpumask`的概念，不要担心。你可以通过读取这些章节[cpumask](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).来继续了解和学习这些函数的原理。
 
-As we activated the bootstrap processor, it's time to go to the next function in the `start_kernel.` Now it is `page_address_init`, but this function does nothing in our case, because it executes only when all `RAM` can't be mapped directly.
+现在我们已经激活第一个CPU，我们继续接着start_kernel函数往下走，下面的函数是`page_address_init`,但是此函数不执行任何操作，因为只有当所有内存不能直接映射的时候才会执行。
 
-Print linux banner
+Linux 内核的第一条打印信息
 ---------------------------------------------------------------------------------
 
-The next call is `pr_notice`:
+下面调用了pr_notice函数。
 
 ```C
 #define pr_notice(fmt, ...) \
     printk(KERN_NOTICE pr_fmt(fmt), ##__VA_ARGS__)
 ```
 
-as you can see it just expands to the `printk` call. At this moment we use `pr_notice` to print the Linux banner:
+
+pr_notice其实是printk的扩展，这里我们使用它打印了Linux 的banner。
 
 ```C
 pr_notice("%s", linux_banner);
 ```
 
-which is just the kernel version with some additional parameters:
+打印的是内核的版本号以及编译环境信息:
 
 ```
 Linux version 4.0.0-rc6+ (alex@localhost) (gcc version 4.9.1 (Ubuntu 4.9.1-16ubuntu6) ) #319 SMP
 ```
 
-Architecture-dependent parts of initialization
+依赖于体系结构的初始化部分
 ---------------------------------------------------------------------------------
 
-The next step is architecture-specific initialization. The Linux kernel does it with the call of the `setup_arch` function. This is a very big function like `start_kernel` and we do not have time to consider all of its implementation in this part. Here we'll only start to do it and continue in the next part. As it is `architecture-specific`, we need to go again to the `arch/` directory. The `setup_arch` function defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file and takes only one argument - address of the kernel command line.
+下个步骤我们就要进入到指定的体系架构的初始函数，Linux 内核初始化体系架构相关调用`setup_arch`函数，这又是一个类型于`start_kernel`一版的庞大函数，这里我们仅仅简单描述，在下一个章节我们将继续深入。指定体系架构的内容，我们需要再一次阅读`arch/`目录，`setup_arch`函数定义在[arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 文件中，此函数就一个参数-内核命令行。
 
-This function starts from the reserving memory block for the kernel `_text` and `_data` which starts from the `_text` symbol (you can remember it from the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S#L46)) and ends before `__bss_stop`. We are using `memblock` for the reserving of memory block:
+此函数解析内核的段`_text`和`_data`来自于`_text`符号和`_bss_stop`(你应该还记得此文件[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S#L46))。我们使用`memblock`来解析内存块。
 
 ```C
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-You can read about `memblock` in the [Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-1.html). As you can remember `memblock_reserve` function takes two parameters:
+你可以阅读关于`memblock`的相关内容在[Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-1.html)，你应该还记得`memblock_reserve`函数的两个参数：
 
 * base physical address of a memory block;
 * size of a memory block.
 
-We can get the base physical address of the `_text` symbol with the `__pa_symbol` macro:
+我们可以通过`__pa_symbol`宏指令来获取符号表`_text`段中的物理地址
 
 ```C
 #define __pa_symbol(x) \
 	__phys_addr_symbol(__phys_reloc_hide((unsigned long)(x)))
 ```
 
-First of all it calls `__phys_reloc_hide` macro on the given parameter. The `__phys_reloc_hide` macro does nothing for `x86_64` and just returns the given parameter. Implementation of the `__phys_addr_symbol` macro is easy. It just subtracts the symbol address from the base address of the kernel text mapping base virtual address (you can remember that it is `__START_KERNEL_map`) and adds `phys_base` which is the base address of `_text`:
+上述宏指令调用 `__phys_reloc_hide` 宏指令来填充参数，`__phys_reloc_hide`宏指令在`x86_64`上返回的参数是给定的。宏指令 `__phys_addr_symbol`的执行是简单的，只是减去从`_text`符号表中读到的内核的符号映射地址并且加上物理地址的基地址。
 
 ```C
 #define __phys_addr_symbol(x) \
  ((unsigned long)(x) - __START_KERNEL_map + phys_base)
 ```
 
-After we got the physical address of the `_text` symbol, `memblock_reserve` can reserve a memory block from the `_text` to the `__bss_stop - _text`.
+`memblock_reserve`函数对内存页进行分配。
 
-Reserve memory for initrd
+
+保留可用内存初始化initrd
 ---------------------------------------------------------------------------------
 
-In the next step after we reserved place for the kernel text and data is reserving place for the [initrd](http://en.wikipedia.org/wiki/Initrd). We will not see details about `initrd` in this post, you just may know that it is temporary root file system stored in memory and used by the kernel during its startup. The `early_reserve_initrd` function does all work. First of all this function gets the base address of the ram disk, its size and the end address with:
+之后我们保留替换内核的text和data段用来初始化[initrd](http://en.wikipedia.org/wiki/Initrd),我们暂时不去了解initrd的详细信息，你仅仅只需要知道根文件系统就是通过这方式来进行初始化这就是`early_reserve_initrd` 函数的工作，此函数获取RAM DISK的基地址以及大小以及大小加偏移。
 
 ```C
 u64 ramdisk_image = get_ramdisk_image();
@@ -384,8 +382,7 @@ u64 ramdisk_size  = get_ramdisk_size();
 u64 ramdisk_end   = PAGE_ALIGN(ramdisk_image + ramdisk_size);
 ```
 
-All of these parameters are taken from `boot_params`. If you have read the chapter about [Linux Kernel Booting Process](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html), you must remember that we filled the `boot_params` structure during boot time. The kernel setup header contains a couple of fields which describes ramdisk, for example:
-
+如果你阅读过这些章节[Linux Kernel Booting Process](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)，你就知道所有的这些啊参数都来自于`boot_params`，时刻谨记`boot_params`在boot期间已经被赋值，内核启动头包含了一下几个字段用来描述RAM DISK：
 ```
 Field name:	ramdisk_image
 Type:		write (obligatory)
@@ -396,7 +393,8 @@ Protocol:	2.00+
   zero if there is no initial ramdisk/ramfs.
 ```
 
-So we can get all the information that interests us from `boot_params`. For example let's look at `get_ramdisk_image`:
+
+我们可以得到关于 `boot_params`的一些信息. 具体查看`get_ramdisk_image`:
 
 ```C
 static u64 __init get_ramdisk_image(void)
@@ -409,13 +407,13 @@ static u64 __init get_ramdisk_image(void)
 }
 ```
 
-Here we get the address of the ramdisk from the `boot_params` and shift left it on `32`. We need to do it because as you can read in the [Documentation/x86/zero-page.txt](https://github.com/0xAX/linux/blob/master/Documentation/x86/zero-page.txt):
+关于32位的ramdisk的地址，我们可以阅读此部分内容来获取[Documentation/x86/zero-page.txt](https://github.com/0xAX/linux/blob/master/Documentation/x86/zero-page.txt):
 
 ```
 0C0/004	ALL	ext_ramdisk_image ramdisk_image high 32bits
 ```
 
-So after shifting it on 32, we're getting a 64-bit address in `ramdisk_image` and we return it. `get_ramdisk_size` works on the same principle as `get_ramdisk_image`, but it used `ext_ramdisk_size` instead of `ext_ramdisk_image`. After we got ramdisk's size, base address and end address, we check that bootloader provided ramdisk with the:
+32位变化后，我们获取64位的ramdisk原理一样，为此我们可以检查bootloader 提供的ramdisk信息：
 
 ```C
 if (!boot_params.hdr.type_of_loader ||
@@ -423,22 +421,22 @@ if (!boot_params.hdr.type_of_loader ||
 	return;
 ```
 
-and reserve memory block with the calculated addresses for the initial ramdisk in the end:
+并保留内存块将ramdisk传输到最终的内存地址，然后进行初始化：
 
 ```C
 memblock_reserve(ramdisk_image, ramdisk_end - ramdisk_image);
 ```
 
-Conclusion
+结束语
 ---------------------------------------------------------------------------------
 
-It is the end of the fourth part about the Linux kernel initialization process. We started to dive in the kernel generic code from the `start_kernel` function in this part and stopped on the architecture-specific initialization in the `setup_arch`. In the next part we will continue with architecture-dependent initialization steps.
+以上就是第四部分关于内核初始化的部分内容，我们从`start_kernel`函数开始一直到指定体系架构初始化`setup_arch`的过程中停止，那么在下一个章节我们将继续研究体系架构相关的初始化内容。
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)。
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me a PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
+**很抱歉，英语并不是我的母的，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides](https://github.com/MintCN/linux-insides-zh).**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [GCC function attributes](https://gcc.gnu.org/onlinedocs/gcc/Function-Attributes.html)
