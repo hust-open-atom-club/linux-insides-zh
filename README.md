@@ -43,7 +43,7 @@ Linux Insides
 |├ 3.7|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.9|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
-|└ 3.10|[@worldwar](https://github.com/worldwar)|正在进行|
+|└ 3.10|[@worldwar](https://github.com/worldwar)|已完成|
 | 4. System calls||正在进行|
 |├ 4.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 4.1|[@qianmoke](https://github.com/qianmoke)|已完成|
