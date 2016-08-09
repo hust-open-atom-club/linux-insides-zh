@@ -213,30 +213,30 @@ struct gdt_ptr {
 
 就像我们所看到的一样，在表中的 `IDT` 条目由下面的域组成：
 
-* `0-15` bits  - offset from the segment selector which is used by the processor as the base address of the entry point of the interrupt handler;
-* `16-31` bits - base address of the segment select which contains the entry point of the interrupt handler;
-* `IST` - a new special mechanism in the `x86_64`, will see it later;
-* `DPL` - Descriptor Privilege Level;
-* `P` - Segment Present flag;
-* `48-63` bits - second part of the handler base address;
-* `64-95` bits - third part of the base address of the handler;
-* `96-127` bits - and the last bits are reserved by the CPU.
+* `0-15` bits  - 段选择器偏移，处理器用它作为中断处理程序的入口指针基址；
+* `16-31` bits - 段选择器基址，包含中断处理程序入口指针；
+* `IST` - 在 `x86_64` 上的一个新的机制，下面我们会介绍它；
+* `DPL` - 描述符特权级；
+* `P` - 段存在标志；
+* `48-63` bits - 中断处理程序基址的第二部分；
+* `64-95` bits - 中断处理程序基址的第三部分；
+* `96-127` bits - CPU 保留位.
 
-And the last `Type` field describes the type of the `IDT` entry. There are three different kinds of handlers for interrupts:
+`Type` 域描述了 `IDT` 条目的类型。有三种不同的中断处理程序：
 
-* Interrupt gate
-* Trap gate
-* Task gate
+* 中断门（Interrupt gate）
+* 陷入门（Trap gate）
+* 任务门（Task gate）
 
-The `IST` or `Interrupt Stack Table` is a new mechanism in the `x86_64`. It is used as an alternative to the the legacy stack-switch mechanism. Previously The `x86` architecture provided a mechanism to automatically switch stack frames in response to an interrupt. The `IST` is a modified version of the `x86` Stack switching mode. This mechanism unconditionally switches stacks when it is enabled and can be enabled for any interrupt in the `IDT` entry related with the certain interrupt (we will soon see it). From this we can understand that `IST` is not necessary for all interrupts. Some interrupts can continue to use the legacy stack switching mode. The `IST` mechanism provides up to seven `IST` pointers in the [Task State Segment](http://en.wikipedia.org/wiki/Task_state_segment) or `TSS` which is the special structure which contains information about a process. The `TSS` is used for stack switching during the execution of an interrupt or exception handler in the Linux kernel. Each pointer is referenced by an interrupt gate from the `IDT`.
+`IST` 或者说是 `Interrupt Stack Table` 是 `x86_64` 中的新机制，它用来代替传统的栈切换机制。之前的 `x86` 架构提供的机制可以在响应中断时自动切换站帧。`IST` 是 `x86` 栈切换模式的一个修改版，在它使能之后可以无条件地切换栈，并且可以被任何与确定中断（我们将在下面介绍它）关联的 `IDT` 条目中的中断使能。从这里可以看出，`IST` 并不是所有的中断必须的，一些中断可以继续使用传统的栈切换模式。`IST` 机制在[任务状态段（Task State Segment）](http://en.wikipedia.org/wiki/Task_state_segment)或者 `TSS` 中提供了 7 个 `IST` 指针。`TSS` 是一个包含进程信息的特殊结构，用来在执行中断或者处理 Linux 内核异常的时候做栈切换。每一个指针都被 `IDT` 中的中断门引用。
 
-The `Interrupt Descriptor Table` represented by the array of the `gate_desc` structures:
+`中断描述符表` 使用 `gate_desc` 的数组描述：
 
 ```C
 extern gate_desc idt_table[];
 ```
 
-where `gate_desc` is:
+`gate_desc` 定义如下：
 
 ```C
 #ifdef CONFIG_X86_64
@@ -250,7 +250,7 @@ typedef struct gate_struct64 gate_desc;
 #endif
 ```
 
-and `gate_struct64` defined as:
+`gate_struct64` 定义如下：
 
 ```C
 struct gate_struct64 {
@@ -263,7 +263,7 @@ struct gate_struct64 {
 } __attribute__((packed));
 ```
 
-Each active thread has a large stack in the Linux kernel for the `x86_64` architecture. The stack size is defined as `THREAD_SIZE` and is equal to:
+在 `x86_64` 架构中，每一个活动的线程在 Linux 内核中都有一个很大的栈。这个栈的大小由 `THREAD_SIZE` 定义，而且与下面的定义相等：
 
 ```C
 #define PAGE_SHIFT      12
@@ -275,7 +275,7 @@ Each active thread has a large stack in the Linux kernel for the `x86_64` archit
 #define THREAD_SIZE  (PAGE_SIZE << THREAD_SIZE_ORDER)
 ```
 
-The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASAN_STACK_ORDER`. As we can see, the `KASAN_STACK` depends on the `CONFIG_KASAN` kernel configuration parameter and is defined as:
+`PAGE_SIZE` 是 `4096` 字节，`THREAD_SIZE_ORDER` 的值依赖于 `KASAN_STACK_ORDER`。就像我们看到的，`KASAN_STACK` 依赖于 `CONFIG_KASAN` 内核配置参数，它定义如下：
 
 ```C
 #ifdef CONFIG_KASAN
@@ -285,14 +285,14 @@ The `PAGE_SIZE` is `4096`-bytes and the `THREAD_SIZE_ORDER` depends on the `KASA
 #endif
 ```
 
-`KASan` is a runtime memory [debugger](http://lwn.net/Articles/618180/). So... the `THREAD_SIZE` will be `16384` bytes if `CONFIG_KASAN` is disabled or `32768` if this kernel configuration option is enabled. These stacks contain useful data as long as a thread is alive or in a zombie state. While the thread is in user-space, the kernel stack is empty except for the `thread_info` structure (details about this structure are available in the fourth [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process) at the bottom of the stack. The active or zombie threads aren't the only threads with their own stack. There also exist specialized stacks that are associated with each available CPU. These stacks are active when the kernel is executing on that CPU. When the user-space is executing on the CPU, these stacks do not contain any useful information. Each CPU has a few special per-cpu stacks as well. The first is the `interrupt stack` used for the external hardware interrupts. Its size is determined as follows:
+`KASan` 是一个运行时内存[调试器](http://lwn.net/Articles/618180/)。所以，如果 `CONFIG_KASAN` 被禁用，`THREAD_SIZE` 是 `16384` ；如果内核配置选项打开，`THREAD_SIZE` 的值是 `32768`。这块栈空间保存着有用的数据，只要线程是活动状态或者僵尸状态。但是当线程在用户空间的时候，这个内核栈是空的，除非 `thread_info` 结构（关于这个结构的详细信息在 Linux 内核初始程序的第四[部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)）在这个栈空间的底部。活动的或者僵尸线程并不是在他们栈中的唯一的线程，与每一个 CPU 关联的特殊栈也存在于这个空间。当内核在这个 CPU 上执行代码的时候，这些栈处于活动状态；当在这个 CPU 上执行用户空间代码时，这些栈不包含任何有用的信息。每一个 CPU 也有一个特殊的 per-cpu 栈。首先是给外部中断使用的 `中断栈（interrupt stack）`。它的大小定义如下： 
 
 ```C
 #define IRQ_STACK_ORDER (2 + KASAN_STACK_ORDER)
 #define IRQ_STACK_SIZE (PAGE_SIZE << IRQ_STACK_ORDER)
 ```
 
-or `16384` bytes. The per-cpu interrupt stack represented by the `irq_stack_union` union in the Linux kernel for `x86_64`:
+或者是 `16384` 字节。Per-cpu 的中断栈在 `x86_64` 架构中使用 `irq_stack_union` 联合描述:
 
 ```C
 union irq_stack_union {
@@ -305,9 +305,9 @@ union irq_stack_union {
 };
 ```
 
-The first `irq_stack` field is a 16 kilobytes array. Also you can see that `irq_stack_union` contains a structure with the two fields:
+第一个 `irq_stack` 域是一个 16KB 的数组。然后你可以看到 `irq_stack_union` 联合包含了一个结构体，这个结构体有两个域：
 
-* `gs_base` - The `gs` register always points to the bottom of the `irqstack` union. On the `x86_64`, the `gs` register is shared by per-cpu area and stack canary (more about `per-cpu` variables you can read in the special [part](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)).  All per-cpu symbols are zero based and the `gs` points to the base of the per-cpu area. You already know that [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation) is abolished in the long mode, but we can set the base address for the two segment registers - `fs` and `gs` with the [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register) and these registers can be still be used as address registers. If you remember the first [part](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) of the Linux kernel initialization process, you can remember that we have set the `gs` register:
+* `gs_base` - 总是指向 `irqstack` 联合底部的 `gs` 寄存器。在 `x86_64` 中， per-cpu（更多关于 `per-cpu` 变量的信息可以阅读特定的[章节](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)） 和 stack canary 共享 `gs` 寄存器。所有的 per-cpu 标志初始值为零，并且 `gs` 指向 per-cpu 区域的开始。你已经知道[段内存模式](http://en.wikipedia.org/wiki/Memory_segmentation)已经废除很长时间了，但是我们可以使用[特殊模块寄存器（Model specific registers）](http://en.wikipedia.org/wiki/Model-specific_register)给这两个段寄存器 - `fs` 和 `gs` 设置基址，并且这些寄存器仍然可以被用作地址寄存器。如果你记得 Linux 内核初始程序的第一[部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)，你会记起我们设置了 `gs` 寄存器：
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -316,17 +316,16 @@ The first `irq_stack` field is a 16 kilobytes array. Also you can see that `irq_
 	wrmsr
 ```
 
-where `initial_gs` points to the `irq_stack_union`:
+`initial_gs` 指向 `irq_stack_union`:
 
 ```assembly
 GLOBAL(initial_gs)
 .quad	INIT_PER_CPU_VAR(irq_stack_union)
 ```
 
-* `stack_canary` - [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) for the interrupt stack is a `stack protector`
-to verify that the stack hasn't been overwritten. Note that `gs_base` is a 40 bytes array. `GCC` requires that stack canary will be on the fixed offset from the base of the `gs` and its value must be `40` for the `x86_64` and `20` for the `x86`.
+* `stack_canary` - [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) 对于中断栈来说是一个用来验证栈是否已经被修改的 `栈保护者（stack protector）`。`gs_base` 是一个 40 字节的数组，`GCC` 要求 stack canary 在被修正过的偏移量上，并且 `gs` 的值在 `x86_64` 架构上必须是 `40`，在 `x86` 架构上必须是 `20`。 
 
-The `irq_stack_union` is the first datum in the `percpu` area, we can see it in the `System.map`:
+`irq_stack_union` 是 `percpu` 的第一个数据, 我们可以在 `System.map`中看到它：
 
 ```
 0000000000000000 D __per_cpu_start
@@ -338,20 +337,20 @@ The `irq_stack_union` is the first datum in the `percpu` area, we can see it in 
 ...
 ```
 
-We can see its definition in the code:
+我们可以看到它在代码中的定义:
 
 ```C
 DECLARE_PER_CPU_FIRST(union irq_stack_union, irq_stack_union) __visible;
 ```
 
-Now, it's time to look at the initialization of the `irq_stack_union`. Besides the `irq_stack_union` definition, we can see the definition of the following per-cpu variables in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h):
+现在，是时候来看 `irq_stack_union` 的初始化过程了。除了 `irq_stack_union` 的定义，我们可以在[arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/processor.h)中查看下面的 per-cpu 变量
 
 ```C
 DECLARE_PER_CPU(char *, irq_stack_ptr);
 DECLARE_PER_CPU(unsigned int, irq_count);
 ```
 
-The first is the `irq_stack_ptr`. From the variable's name, it is obvious that this is a pointer to the top of the stack. The second - `irq_count` is used to check if a CPU is already on an interrupt stack or not. Initialization of the `irq_stack_ptr` is located in the `setup_per_cpu_areas` function in [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c):
+第一个就是 `irq_stack_ptr`。从这个变量的名字中可以知道，它显然是一个指向这个栈顶的指针。第二个 `irq_count` 用来检查 CPU 是否已经在中断栈。`irq_stack_ptr` 的初始化在[arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c)的 `setup_per_cpu_areas` 函数中：
 
 ```C
 void __init setup_per_cpu_areas(void)
@@ -375,7 +374,7 @@ for_each_possible_cpu(cpu) {
 }
 ```
 
-Here we go over all the CPUs one-by-one and setup `irq_stack_ptr`. This turns out to be equal to the top of the interrupt stack minus `64`. Why `64`?TODO  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c) source code file is following:
+现在，我们一个一个查看所有 CPU，并且设置 `irq_stack_ptr`。事实证明它等于中断栈的顶减去 `64`。为什么是 `64`？TODO [[arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/cpu/common.c)] 代码如下：
 
 ```C
 void load_percpu_segment(int cpu)
@@ -388,7 +387,7 @@ void load_percpu_segment(int cpu)
 }
 ```
 
-and as we already know the `gs` register points to the bottom of the interrupt stack:
+就像我们所知道的一样，`gs` 寄存器指向中断栈的栈底：
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -400,16 +399,17 @@ and as we already know the `gs` register points to the bottom of the interrupt s
 	.quad	INIT_PER_CPU_VAR(irq_stack_union)
 ```
 
-Here we can see the `wrmsr` instruction which loads the data from `edx:eax` into the [Model specific register](http://en.wikipedia.org/wiki/Model-specific_register) pointed by the `ecx` register. In our case the model specific register is `MSR_GS_BASE` which contains the base address of the memory segment pointed by the `gs` register. `edx:eax` points to the address of the `initial_gs` which is the base address of our `irq_stack_union`.
+现在我们可以看到 `wrmsr` 指令，这个指令从 `edx:eax` 加载数据到 被 `ecx` 指向的[MSR寄存器]((http://en.wikipedia.org/wiki/Model-specific_register))。在这里MSR寄存器是 `MSR_GS_BASE`，它保存了被 `gs` 寄存器指向的内存段的基址。`edx:eax` 指向 `initial_gs` 的地址，它就是 `irq_stack_union`	的基址。
 
-We already know that `x86_64` has a feature called `Interrupt Stack Table` or `IST` and this feature provides the ability to switch to a new stack for events non-maskable interrupt, double fault and etc... There can be up to seven `IST` entries per-cpu. Some of them are:
+我们还知道，`x86_64` 有一个叫 `中断栈表（Interrupt Stack Table）` 或者 `IST` 的组件，当发生不可屏蔽中断、双重错误等等的时候，这个组件提供了切换到新栈的功能。这可以到达7个 `IST` per-cpu 入口。其中一些如下;
+There can be up to seven `IST` entries per-cpu. Some of them are:
 
 * `DOUBLEFAULT_STACK`
 * `NMI_STACK`
 * `DEBUG_STACK`
 * `MCE_STACK`
 
-or
+或者
 
 ```C
 #define DOUBLEFAULT_STACK 1
@@ -418,7 +418,7 @@ or
 #define MCE_STACK 4
 ```
 
-All interrupt-gate descriptors which switch to a new stack with the `IST` are initialized with the `set_intr_gate_ist` function. For example:
+所有被 `IST` 切换到新栈的中断门描述符都由 `set_intr_gate_ist` 函数初始化。例如:
 
 ```C
 set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
@@ -428,14 +428,14 @@ set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
 set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
 ```
 
-where `&nmi` and `&double_fault` are addresses of the entries to the given interrupt handlers:
+其中 `&nmi` 和 `&double_fault` 是中断函数的入口地址：
 
 ```C
 asmlinkage void nmi(void);
 asmlinkage void double_fault(void);
 ```
 
-defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S)
+定义在 [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S)中
 
 ```assembly
 idtentry double_fault do_double_fault has_error_code=1 paranoid=2
@@ -449,7 +449,7 @@ ENTRY(nmi)
 END(nmi)
 ```
 
-When an interrupt or an exception occurs, the new `ss` selector is forced to `NULL` and the `ss` selector’s `rpl` field is set to the new `cpl`. The old `ss`, `rsp`, register flags, `cs`, `rip` are pushed onto the new stack. In 64-bit mode, the size of interrupt stack-frame pushes is fixed at 8-bytes, so we will get the following stack:
+当一个中断或者异常发生时，新的 `ss` 选择器被强制置为 `NULL`，并且 `ss` 选择器的 `rpl` 域被设置为新的 `cpl`。旧的 `ss`、`rsp`、寄存器标志、`cs`、`rip` 被压入新栈。在 64 位模型下，中断栈帧大小固定为 8 字节，所以我们可以得到下面的栈:
 
 ```
 +---------------+
@@ -464,20 +464,21 @@ When an interrupt or an exception occurs, the new `ss` selector is forced to `NU
 +---------------+
 ```
 
-If the `IST` field in the interrupt gate is not `0`, we read the `IST` pointer into `rsp`. If the interrupt vector number has an error code associated with it, we then push the error code onto the stack. If the interrupt vector number has no error code, we go ahead and push the dummy error code on to the stack. We need to do this to ensure stack consistency. Next we load the segment-selector field from the gate descriptor into the CS register and must verify that the target code-segment is a 64-bit mode code segment by the checking bit `21` i.e. the `L` bit in the `Global Descriptor Table`. Finally we load the offset field from the gate descriptor into `rip` which will be the entry-point of the interrupt handler. After this the interrupt handler begins to execute. After an interrupt handler finishes its execution, it must return control to the interrupted process with the `iret` instruction. The `iret` instruction unconditionally pops the stack pointer (`ss:rsp`) to restore the stack of the interrupted process and does not depend on the `cpl` change.
+如果在中断门中 `IST` 域不是 `0`，我们把 `IST` 读到 `rsp` 中。如果它关联了一个中断向量错误码，我们再把这个错误码压入栈。如果中断向量没有错误码，就继续并且把虚拟错误码压入栈。我们必须做以上的步骤以确保栈一致性。接下来我们从门描述符中加载段选择器域到 CS 寄存器中，并且通过验证第 `21` 位的值来验证目标代码是一个 64 位代码段，例如 `L` 位在 `全局描述符表（Global Descriptor Table）`。最后我们从门描述符中加载偏移域到 `rip` 中，`rip` 是中断处理函数的入口指针。然后中断函数开始执行，在中断函数执行结束后，它必须通过 `iret` 指令把控制权交还给被中断进程。`iret` 指令无条件地弹出栈指针（`ss:rsp`）来恢复被中断的进程，并且不会依赖于 `cpl` 改变。
 
-That's all.
+这就是中断的所有过程。
 
-Conclusion
+总结
 --------------------------------------------------------------------------------
 
-It is the end of the first part about interrupts and interrupt handling in the Linux kernel. We saw some theory and the first steps of the initialization of stuff related to interrupts and exceptions. In the next part we will continue to dive into interrupts and interrupts handling - into the more practical aspects of it.
+关于 Linux 内核的中断和中断处理的第一部分至此结束。我们初步了解了一些理论和与中断和异常相关的初始化条件。在下一部分，我会接着深入了解中断和中断处理 - 更深入了解她真实的样子。
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+如果你有任何问题或建议，请给我发评论或者给我发 [Twitter](https://twitter.com/0xAX)。
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me a PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**请注意英语并不是我的母语，我为任何表达不清楚的地方感到抱歉。如果你发现任何错误请发 PR 到 [linux-insides](https://github.com/MintCN/linux-insides-zh)。(译者注：翻译问题请发 PR 到 [linux-insides-cn](https://www.gitbook.com/book/xinqiu/linux-insides-cn))**
 
-Links
+
+链接
 --------------------------------------------------------------------------------
 
 * [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller)
