@@ -22,16 +22,16 @@ Linux Insides
 |└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
 | 2. Initialization||正在进行|
 |├ 2.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├ 2.1||未开始|
-|├ 2.2||未开始|
-|├ 2.3||未开始|
-|├ 2.4||未开始|
-|├ 2.5||未开始|
-|├ 2.6||未开始|
-|├ 2.7||未开始|
-|├ 2.8||未开始|
-|├ 2.9||未开始|
-|└ 2.10||未开始|
+|├ 2.1|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
+|├ 2.2|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
+|├ 2.3|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
+|├ 2.4|[@bjwrkj](https://github.com/bjwrkj)|已完成|
+|├ 2.5|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.6|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.7|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.8|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ 2.9|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|└ 2.10|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
 | 3. Interrupts||正在进行|
 |├ 3.0|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ 3.1|[@littleneko](https://github.com/littleneko)|正在进行|
@@ -43,7 +43,7 @@ Linux Insides
 |├ 3.7|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.9|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
-|└ 3.10||未开始|
+|└ 3.10|[@worldwar](https://github.com/worldwar)|已完成|
 | 4. System calls||正在进行|
 |├ 4.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 4.1|[@qianmoke](https://github.com/qianmoke)|已完成|

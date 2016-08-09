@@ -479,4 +479,4 @@ Links
 * [vsyscalls](https://lwn.net/Articles/446528/)
 * [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
 * [jiffy](http://en.wikipedia.org/wiki/Jiffy_%28time%29)
-* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/%20linux-initialization-6.html)
+* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-6.html)
