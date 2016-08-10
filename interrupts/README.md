@@ -3,12 +3,12 @@
 在 linux 内核中你会发现很多关于中断和异常处理的话题
 
 * [中断和中断处理 Part 1.](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-1.md) - 描述中断处理主题
-* [Start to dive into interrupts in the Linux kernel](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-2.md) - this part starts to describe interrupts and exceptions handling related stuff from the early stage.
-* [Early interrupt handlers](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-3.md) - third part describes early interrupt handlers.
-* [Interrupt handlers](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-4.md) - fourth part describes first non-early interrupt handlers.
-* [Implementation of exception handlers](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-5.md) - descripbes implementation of some exception handlers as double fault, divide by zero and etc.
-* [Handling Non-Maskable interrupts](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-6.md) - describes handling of non-maskable interrupts and the rest of interrupts handlers from the architecture-specific part.
-* [Dive into external hardware interrupts](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-7.md) - this part describes early initialization of code which is related to handling of external hardware interrupts.
-* [Non-early initialization of the IRQs](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-8.md) - this part describes non-early initialization of code which is related to handling of external hardware interrupts.
-* [Softirq, Tasklets and Workqueues](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-9.md) - this part describes softirqs, tasklets and workqueues concepts.
-* [](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-10.md) - this is the last part of the interrupts and interrupt handling chapter and here we will see a real hardware driver and interrupts related stuff.
+* [深入 Linux 内核中的中断](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-2.md) - 这部分开始描述和初步步骤相关的中断和异常处理。
+* [初步中断处理](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-3.md) - 描述初步中断处理。
+* [中断处理](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-4.md) - fourth part describes first non-early interrupt handlers.
+* [异常处理的实现](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-5.md) - 一些异常处理的实现，比如双重错误、除零等等。
+* [处理不可屏蔽中断](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-6.md) - 描述了如何处理不可屏蔽的中断和剩下的一些与特定架构相关的中断。
+* [深入外部硬件中断](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-7.md) - 这部分讲述了关于处理外部硬件中断的一些早期初始化代码。
+* [IRQs的非早期初始化](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-8.md) - 这部分讲述了处理外部硬件中断的非早期初始化代码。
+* [Softirq, Tasklets and Workqueues](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-9.md) - 这部分讲述了softirqs、tasklets 和 workqueues 的内容.
+* [](https://github.com/0xAX/linux-insides/blob/master/interrupts/interrupts-10.md) - 这是中断和中断处理的最后一部分，并且我们将会看到一个真实的硬件驱动和中断。
