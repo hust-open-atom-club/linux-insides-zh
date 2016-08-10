@@ -4,26 +4,26 @@
 Introduction
 --------------------------------------------------------------------------------
 
-这是 [linux 内核揭密](http://0xax.gitbooks.io/linux-insides/content/) 新章节的第一部分。我们已经在这本书前面的[章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html)中走过了漫长的道路。开始于内核初始化的[第一步](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)，结束于[启动](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-10.html)第一个 `init` 程序 。我们见证了一系列与各种内核子系统相关的初始化步骤，但是我们并没有深入这些子系统。在这一章节中，我们将会试着去了解这些内核子系统是如何工作和实现的。就像你在这章标题中看到的，第一个子系统是[中断](http://en.wikipedia.org/wiki/Interrupt)。
+这是 [linux 内核揭密](http://0xax.gitbooks.io/linux-insides/content/) 这本书最新章节的第一部分。我们已经在这本书前面的[章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html)中走过了漫长的道路。从内核初始化的[第一步](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html)开始，结束于第一个 `init` 程序的[启动](https://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-10.html)。我们见证了一系列与各种内核子系统相关的初始化步骤，但是我们并没有深入这些子系统。在这一章中，我们将会试着去了解这些内核子系统是如何工作和实现的。就像你在这章标题中看到的，第一个子系统是[中断（interrupts）](http://en.wikipedia.org/wiki/Interrupt)。
 
 什么是中断？
 --------------------------------------------------------------------------------
 
-我们已经在这本书的很多地方听到过 `中断（interrupts）` 这个词，也看到过很多关于中断的例子。在这一节中我们将会从下面的主题开始：
+我们已经在这本书的很多地方听到过 `中断（interrupts）` 这个词，也看到过很多关于中断的例子。在这一章中我们将会从下面的主题开始：
 
-* 什么是 `中断` ？
-* 什么是 `中断处理`？
+* 什么是 `中断（interrupts）` ？
+* 什么是 `中断处理（interrupt handlers）` ？
 
-我们将会继续深入探讨 `中断` 的细节和 Linux 内核如何处理他们。
+我们将会继续深入探讨 `中断` 的细节和 Linux 内核如何处理这些中断。
 
-所以，首先什么是中断？中断就是当软件或者硬件需要使用 CPU 时引发的 `事件（event）` 。比如，当我们在键盘上按下一个键的时候，我们下一步期望做什么？操作系统和电脑应该怎么做？做一个简单的假设，每一个物理硬件都有一根连接 CPU 的中断线，设备可以通过它对 CPU 发起中断信号。但是中断并不是直接通知给 CPU。在老机器上中断通知给 [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) ，它是一个顺序处理各种设备的各种中断请求的芯片。在新机器上，则是[高级程序中断控制器（Advanced Programmable Interrupt Controller）](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)，即我们熟知的 `APIC`。一个 APIC 包括两个独立的设备：
+所以，首先什么是中断？中断就是当软件或者硬件需要使用 CPU 时引发的 `事件（event）`。比如，当我们在键盘上按下一个键的时候，我们下一步期望做什么？操作系统和电脑应该怎么做？做一个简单的假设，每一个物理硬件都有一根连接 CPU 的中断线，设备可以通过它对 CPU 发起中断信号。但是中断信号并不是直接发送给 CPU。在老机器上中断信号发送给 [PIC](http://en.wikipedia.org/wiki/Programmable_Interrupt_Controller) ，它是一个顺序处理各种设备的各种中断请求的芯片。在新机器上，则是[高级程序中断控制器（Advanced Programmable Interrupt Controller）](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)做这件事情，即我们熟知的 `APIC`。一个 APIC 包括两个独立的设备：
 
 * `Local APIC`
 * `I/O APIC`
 
-第一个设备 -  `Local APIC ` 存在于每个CPU核心中，Local APIC 负责处理 CPU-specific 的中断配置。Local APIC 常被用于管理来自 APIC 时钟（APIC-timer），热敏元件和其他与 I/O 设备连接的设备的中断。
+第一个设备 -  `Local APIC ` 存在于每个CPU核心中，Local APIC 负责处理特定于 CPU 的中断配置。Local APIC 常被用于管理来自 APIC 时钟（APIC-timer）、热敏元件和其他与 I/O 设备连接的设备的中断。
 
-第二个设备 -  `I/O APIC` 提供了多核处理器的中断管理。它被用来在所有的 CPU 核心中分发外部中断。更多关于 local 和 I/O APIC 的内容将会在这一节的下面讲到。就如你所知道的，中断可以在任何时间发生。当一个中断发生时，操作系统必须立刻处理它。但是 `处理一个中断` 是什么意思呢？当一个中断发生时，操作系统必须确保下面的步骤：
+第二个设备 -  `I/O APIC` 提供了多核处理器的中断管理。它被用来在所有的 CPU 核心中分发外部中断。更多关于 local 和 I/O APIC 的内容将会在这一节的下面讲到。就如你所知道的，中断可以在任何时间发生。当一个中断发生时，操作系统必须立刻处理它。但是 `处理一个中断` 是什么意思呢？当一个中断发生时，操作系统必须确保下面的步骤顺序：
 
 * 内核必须暂停执行当前进程(取代当前的任务)；
 * 内核必须搜索中断处理程序并且转交控制权(执行中断处理程序)；
@@ -37,14 +37,14 @@ Introduction
 BUG_ON((unsigned)n > 0xFF);
 ```
 
-你可以在 Linux 内核源码中关于中断设置的地方找到这个检查(例如：`set_intr_gate`, `void set_system_intr_gate` 在 [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)中)。最开始从 `0` 到 `31` 的 32 个中断标识码被处理器保留，用作处理架构定义的异常和中断。你可以在 Linux 内核初始化程序的第二部分 - [早期中断和异常处理](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)中找到这个表和关于这些中断标识码的描述。从 `32` 到 `255` 的中断标识码设计为用户定义中断并且不被系统保留。这些中断通常分配给外部 I/O 设备，使这些设备可以发送中断给处理器。
+你可以在 Linux 内核源码中关于中断设置的地方找到这个检查(例如：`set_intr_gate`, `void set_system_intr_gate` 在 [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)中)。从 `0` 到 `31` 的 32 个中断标识码被处理器保留，用作处理架构定义的异常和中断。你可以在 Linux 内核初始化程序的第二部分 - [早期中断和异常处理](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)中找到这个表和关于这些中断标识码的描述。从 `32` 到 `255` 的中断标识码设计为用户定义中断并且不被系统保留。这些中断通常分配给外部 I/O 设备，使这些设备可以发送中断给处理器。
 
 现在，我们来讨论中断的类型。笼统地来讲，我们可以把中断分为两个主要类型：
 
 * 外部或者硬件引起的中断；
 * 软件引起的中断。
 
-第一种类型 - 外部中断，由 `Local APIC` 或者与 `Local APIC` 连接的处理器针脚接收。第二种类型 - 软件引起的中断，由处理器特殊的情况引起(有时使用特殊架构的指令)。一个常见的关于特殊情况的例子就是 `除零`。另一个例子就是使用 `系统调用（syscall）` 退出程序。
+第一种类型 - 外部中断，由 `Local APIC` 或者与 `Local APIC` 连接的处理器针脚接收。第二种类型 - 软件引起的中断，由处理器自身的特殊情况引起(有时使用特殊架构的指令)。一个常见的关于特殊情况的例子就是 `除零`。另一个例子就是使用 `系统调用（syscall）` 退出程序。
 
 就如之前提到过的，中断可以在任何时间因为超出代码和 CPU 控制的原因而发生。另一方面，异常和程序执行 `同步（synchronous）` ，并且可以被分为 3 类：
 
@@ -135,14 +135,13 @@ static inline void native_irq_enable(void)
 +--------------+-------------------------------------------------+
 ```
 
-现在我们了解了一些关于各种类型的中断和异常的内容，是时候转到更实用的部分了。我们从 `中断描述符表` 开始。就如之前所提到的，`IDT` 保存了中断和异常处理程序的入口指针。`IDT` 是一个类似于 `全局描述符表（Global Descriptor Table）`的结构，我们在[内核启动程序](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html)的第二部分已经介绍过。但是他们确实有一些不同，`IDT` 的表项被称为 `门（gates）`，而不是 `描述符（descriptors）`。
-
+现在我们了解了一些关于各种类型的中断和异常的内容，是时候转到更实用的部分了。我们从 `中断描述符表（IDT）` 开始。就如之前所提到的，`IDT` 保存了中断和异常处理程序的入口指针。`IDT` 是一个类似于 `全局描述符表（Global Descriptor Table）`的结构，我们在[内核启动程序](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html)的第二部分已经介绍过。但是他们确实有一些不同，`IDT` 的表项被称为 `门（gates）`，而不是 `描述符（descriptors）`。它可以包含下面的一种：
 
 * 中断门（Interrupt gates）
 * 任务门（Task gates）
 * 陷阱门（Trap gates）
 
-在 `x86` 架构中，只有 [long mode](http://en.wikipedia.org/wiki/Long_mode) 中断门和陷阱中断门可以在 `x86_64` 中引用。就像 `全局描述符表`，`中断描述符表` 在 `x86` 上是一个 8 字节数组门，而在 `x86_64` 上是一个16字节数组门。让我们回忆在[内核启动程序](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html)的第二部分，`全局描述符表` 必须包含 `NULL` 描述符作为它的第一个元素。与 `全局描述符表` 不一样的是，`中断描述符表` 的第一个元素可以是一个门。它并不是强制要求的。比如，你可能还记得我们只是在早期的章节中过渡到[保护模式](http://en.wikipedia.org/wiki/Protected_mode)时用 `NULL` 门加载过中断描述符表：
+在 `x86` 架构中，只有 [long mode](http://en.wikipedia.org/wiki/Long_mode) 中断门和陷阱门可以在 `x86_64` 中引用。就像 `全局描述符表`，`中断描述符表` 在 `x86` 上是一个 8 字节数组门，而在 `x86_64` 上是一个 16 字节数组门。让我们回忆在[内核启动程序](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html)的第二部分，`全局描述符表` 必须包含 `NULL` 描述符作为它的第一个元素。与 `全局描述符表` 不一样的是，`中断描述符表` 的第一个元素可以是一个门。它并不是强制要求的。比如，你可能还记得我们只是在早期的章节中过渡到[保护模式](http://en.wikipedia.org/wiki/Protected_mode)时用 `NULL` 门加载过中断描述符表：
 
 ```C
 /*
@@ -228,7 +227,7 @@ struct gdt_ptr {
 * 陷入门（Trap gate）
 * 任务门（Task gate）
 
-`IST` 或者说是 `Interrupt Stack Table` 是 `x86_64` 中的新机制，它用来代替传统的栈切换机制。之前的 `x86` 架构提供的机制可以在响应中断时自动切换站帧。`IST` 是 `x86` 栈切换模式的一个修改版，在它使能之后可以无条件地切换栈，并且可以被任何与确定中断（我们将在下面介绍它）关联的 `IDT` 条目中的中断使能。从这里可以看出，`IST` 并不是所有的中断必须的，一些中断可以继续使用传统的栈切换模式。`IST` 机制在[任务状态段（Task State Segment）](http://en.wikipedia.org/wiki/Task_state_segment)或者 `TSS` 中提供了 7 个 `IST` 指针。`TSS` 是一个包含进程信息的特殊结构，用来在执行中断或者处理 Linux 内核异常的时候做栈切换。每一个指针都被 `IDT` 中的中断门引用。
+`IST` 或者说是 `Interrupt Stack Table` 是 `x86_64` 中的新机制，它用来代替传统的栈切换机制。之前的 `x86` 架构提供的机制可以在响应中断时自动切换栈帧。`IST` 是 `x86` 栈切换模式的一个修改版，在它使能之后可以无条件地切换栈，并且可以被任何与确定中断（我们将在下面介绍它）关联的 `IDT` 条目中的中断使能。从这里可以看出，`IST` 并不是所有的中断必须的，一些中断可以继续使用传统的栈切换模式。`IST` 机制在[任务状态段（Task State Segment）](http://en.wikipedia.org/wiki/Task_state_segment)或者 `TSS` 中提供了 7 个 `IST` 指针。`TSS` 是一个包含进程信息的特殊结构，用来在执行中断或者处理 Linux 内核异常的时候做栈切换。每一个指针都被 `IDT` 中的中断门引用。
 
 `中断描述符表` 使用 `gate_desc` 的数组描述：
 
