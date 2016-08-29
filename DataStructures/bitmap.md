@@ -1,44 +1,44 @@
-Data Structures in the Linux Kernel
+Linux 内核里的数据结构——位数组
 ================================================================================
 
-Bit arrays and bit operations in the Linux kernel
+Linux 内核中的位数组和位操作
 --------------------------------------------------------------------------------
 
-Besides different [linked](https://en.wikipedia.org/wiki/Linked_data_structure) and [tree](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) based data structures, the Linux kernel provides [API](https://en.wikipedia.org/wiki/Application_programming_interface) for [bit arrays](https://en.wikipedia.org/wiki/Bit_array) or `bitmap`. Bit arrays are heavily used in the Linux kernel and following source code files contain common `API` for work with such structures:
+除了不同的基于[链式](https://en.wikipedia.org/wiki/Linked_data_structure)和[树](https://en.wikipedia.org/wiki/Tree_%28data_structure%29)的数据结构以外，Linux 内核也为[位数组](https://en.wikipedia.org/wiki/Bit_array)（或称为位图（bitmap））提供了 [API](https://en.wikipedia.org/wiki/Application_programming_interface)。位数组在 Linux 内核里被广泛使用，并且在以下的源代码文件中包含了与这样的结构搭配使用的通用 `API`：
 
 * [lib/bitmap.c](https://github.com/torvalds/linux/blob/master/lib/bitmap.c)
 * [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h)
 
-Besides these two files, there is also architecture-specific header file which provides optimized bit operations for certain architecture. We consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, so in our case it will be: 
+除了这两个文件之外，还有体系结构特定的头文件，它们为特定的体系结构提供优化的位操作。我们将探讨 [x86_64](https://en.wikipedia.org/wiki/X86-64) 体系结构，因此在我们的例子里，它会是
 
 * [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h)
 
-header file. As I just wrote above, the `bitmap` is heavily used in the Linux kernel. For example a `bit array` is used to store set of online/offline processors for systems which support [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) cpu (more about this you can read in the [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) part), a `bit array` stores set of allocated [irqs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) during initialization of the Linux kernel and etc.
+头文件。正如我上面所写的，`位图`在 Linux 内核中被广泛地使用。例如，`位数组`常常用于保存一组在线/离线处理器，以便系统支持[热插拔](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)的 CPU（你可以在 [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) 部分阅读更多相关知识 ），一个位数组（bit array）可以在 Linux 内核初始化等期间保存一组已分配的[中断处理](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)。
 
-So, the main goal of this part is to see how `bit arrays` are implemented in the Linux kernel. Let's start.
+因此，本部分的主要目的是了解位数组（bit array）是如何在 Linux 内核中实现的。让我们现在开始吧。
 
-Declaration of bit array
+位数组声明
 ================================================================================
 
-Before we will look on `API` for bitmaps manipulation, we must know how to declare it in the Linux kernel. There are two common method to declare own bit array. The first simple way to declare a bit array is to array of `unsigned long`. For example:
+在我们开始查看`位图`操作的 `API` 之前，我们必须知道如何在 Linux 内核中声明它。有两种声明位数组的通用方法。第一种简单的声明一个位数组的方法是，定义一个 `unsigned long` 的数组，例如：
 
 ```C
 unsigned long my_bitmap[8]
 ```
 
-The second way is to use the `DECLARE_BITMAP` macro which is defined in the [include/linux/types.h](https://github.com/torvalds/linux/blob/master/include/linux/types.h) header file:
+第二种方法，是使用 `DECLARE_BITMAP` 宏，它定义于 [include/linux/types.h](https://github.com/torvalds/linux/blob/master/include/linux/types.h) 头文件：
 
 ```C
 #define DECLARE_BITMAP(name,bits) \
     unsigned long name[BITS_TO_LONGS(bits)]
 ```
 
-We can see that `DECLARE_BITMAP` macro takes two parameters:
+我们可以看到 `DECLARE_BITMAP` 宏使用两个参数：
 
-* `name` - name of bitmap;
-* `bits` - amount of bits in bitmap;
+* `name` - 位图名称;
+* `bits` - 位图中位数;
 
-and just expands to the definition of `unsigned long` array with `BITS_TO_LONGS(bits)` elements, where the `BITS_TO_LONGS` macro converts a given number of bits to number of `longs` or in other words it calculates how many `8` byte elements in `bits`:
+并且只是使用 `BITS_TO_LONGS(bits)` 元素展开 `unsigned long` 数组的定义。 `BITS_TO_LONGS` 宏将一个给定的位数转换为 `long` 的个数，换言之，就是计算 `bits` 中有多少个 `8` 字节元素：
 
 ```C
 #define BITS_PER_BYTE           8
@@ -46,36 +46,36 @@ and just expands to the definition of `unsigned long` array with `BITS_TO_LONGS(
 #define BITS_TO_LONGS(nr)       DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
 ```
 
-So, for example `DECLARE_BITMAP(my_bitmap, 64)` will produce:
+因此，例如 `DECLARE_BITMAP(my_bitmap, 64)` 将产生：
 
 ```python
 >>> (((64) + (64) - 1) / (64))
 1
 ```
 
-and:
+与：
 
 ```C
 unsigned long my_bitmap[1];
 ```
 
-After we are able to declare a bit array, we can start to use it.
+在能够声明一个位数组之后，我们便可以使用它了。
 
-Architecture-specific bit operations
+体系结构特定的位操作
 ================================================================================
 
-We already saw above a couple of source code and header files which provide [API](https://en.wikipedia.org/wiki/Application_programming_interface) for manipulation of bit arrays. The most important and widely used API of bit arrays is architecture-specific and located as we already know in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file.
+我们已经看了上面提及的一对源文件和头文件，它们提供了位数组操作的 [API](https://en.wikipedia.org/wiki/Application_programming_interface)。其中重要且广泛使用的位数组 API 是体系结构特定的且位于已提及的头文件中 [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h)。
 
-First of all let's look at the two most important functions:
+首先让我们查看两个最重要的函数：
 
 * `set_bit`;
 * `clear_bit`.
 
-I think that there is no need to explain what these function do. This is already must be clear from their name. Let's look on their implementation. If you will look into the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file, you will note that each of these functions represented by two variants: [atomic](https://en.wikipedia.org/wiki/Linearizability) and not. Before we will start to dive into implementations of these functions, first of all we must to know a little about `atomic` operations.
+我认为没有必要解释这些函数的作用。从它们的名字来看，这已经很清楚了。让我们直接查看它们的实现。如果你浏览 [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) 头文件，你将会注意到这些函数中的每一个都有[原子性](https://en.wikipedia.org/wiki/Linearizability)和非原子性两种变体。在我们开始深入这些函数的实现之前，首先，我们必须了解一些有关原子（atomic）操作的知识。
 
-In simple words atomic operations guarantees that two or more operations will not be performed on the same data concurrently. The `x86` architecture provides a set of atomic instructions, for example [xchg](http://x86.renejeschke.de/html/file_module_x86_id_328.html) instruction, [cmpxchg](http://x86.renejeschke.de/html/file_module_x86_id_41.html) instruction and etc. Besides atomic instructions, some of non-atomic instructions can be made atomic with the help of the [lock](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction. It is enough to know about atomic operations for now, so we can begin to consider implementation of `set_bit` and `clear_bit` functions.
+简而言之，原子操作保证两个或以上的操作不会并发地执行同一数据。`x86` 体系结构提供了一系列原子指令，例如， [xchg](http://x86.renejeschke.de/html/file_module_x86_id_328.html)、[cmpxchg](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 等指令。除了原子指令，一些非原子指令可以在 [lock](http://x86.renejeschke.de/html/file_module_x86_id_159.html) 指令的帮助下具有原子性。现在你已经对原子操作有了足够的了解，我们可以接着探讨 `set_bit` 和 `clear_bit` 函数的实现。
 
-First of all, let's start to consider `non-atomic` variants of this function. Names of non-atomic `set_bit` and `clear_bit` starts from double underscore. As we already know, all of these functions are defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file and the first function is `__set_bit`:
+我们先考虑函数的非原子性（non-atomic）变体。非原子性的 `set_bit` 和 `clear_bit` 的名字以双下划线开始。正如我们所知道的，所有这些函数都定义于 [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) 头文件，并且第一个函数就是 `__set_bit`:
 
 ```C
 static inline void __set_bit(long nr, volatile unsigned long *addr)
@@ -84,27 +84,27 @@ static inline void __set_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-As we can see it takes two arguments:
+正如我们所看到的，它使用了两个参数：
 
-* `nr` - number of bit in a bit array.
-* `addr` - address of a bit array where we need to set bit.
+* `nr` - 位数组中的位号（LCTT 译注：从 0开始）
+* `addr` - 我们需要置位的位数组地址
 
-Note that the `addr` parameter is defined with `volatile` keyword which tells to compiler that value maybe changed by the given address. The implementation of the `__set_bit` is pretty easy. As we can see, it just contains one line of [inline assembler](https://en.wikipedia.org/wiki/Inline_assembler) code. In our case we are using the [bts](http://x86.renejeschke.de/html/file_module_x86_id_25.html) instruction which selects a bit which is specified with the first operand (`nr` in our case) from the bit array, stores the value of the selected bit in the [CF](https://en.wikipedia.org/wiki/FLAGS_register) flags register and set this bit.
+注意，`addr` 参数使用 `volatile` 关键字定义，以告诉编译器给定地址指向的变量可能会被修改。 `__set_bit` 的实现相当简单。正如我们所看到的，它仅包含一行[内联汇编代码](https://en.wikipedia.org/wiki/Inline_assembler)。在我们的例子中，我们使用 [bts](http://x86.renejeschke.de/html/file_module_x86_id_25.html) 指令，从位数组中选出一个第一操作数（我们的例子中的 `nr`）所指定的位，存储选出的位的值到 [CF](https://en.wikipedia.org/wiki/FLAGS_register) 标志寄存器并设置该位（LCTT 译注：即 `nr` 指定的位置为 1）。
 
-Note that we can see usage of the `nr`, but there is `addr` here. You already might guess that the secret is in `ADDR`. The `ADDR` is the macro which is defined in the same header code file and expands to the string which contains value of the given address and `+m` constraint:
+注意，我们了解了 `nr` 的用法，但这里还有一个参数 `addr` 呢！你或许已经猜到秘密就在 `ADDR`。 `ADDR` 是一个定义在同一个头文件中的宏，它展开为一个包含给定地址和 `+m` 约束的字符串：
 
 ```C
 #define ADDR				BITOP_ADDR(addr)
 #define BITOP_ADDR(x) "+m" (*(volatile long *) (x))
 ```
 
-Besides the `+m`, we can see other constraints in the `__set_bit` function. Let's look on they and try to understand what do they mean:
+除了 `+m` 之外，在 `__set_bit` 函数中我们可以看到其他约束。让我们查看并试着理解它们所表示的意义：
 
-* `+m` - represents memory operand where `+` tells that the given operand will be input and output operand;
-* `I` - represents integer constant;
-* `r` - represents register operand
+* `+m` - 表示内存操作数，这里的 `+` 表明给定的操作数为输入输出操作数；
+* `I` - 表示整型常量；
+* `r` - 表示寄存器操作数
 
-Besides these constraint, we also can see - the `memory` keyword which tells compiler that this code will change value in memory. That's all. Now let's look at the same function but at `atomic` variant. It looks more complex that its `non-atomic` variant:
+除了这些约束之外，我们也能看到 `memory` 关键字，其告诉编译器这段代码会修改内存中的变量。到此为止，现在我们看看相同的原子性（atomic）变体函数。它看起来比非原子性（non-atomic）变体更加复杂：
 
 ```C
 static __always_inline void
@@ -122,32 +122,34 @@ set_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-First of all note that this function takes the same set of parameters that `__set_bit`, but additionally marked with the `__always_inline` attribute. The `__always_inline` is macro which defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) and just expands to the `always_inline` attribute:
+（LCTT 译注：BITOP_ADDR 的定义为：`#define BITOP_ADDR(x) "=m" (*(volatile long *) (x))`，ORB 为字节按位或。）
+
+首先注意，这个函数使用了与 `__set_bit` 相同的参数集合，但额外地使用了 `__always_inline` 属性标记。 `__always_inline` 是一个定义于 [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) 的宏，并且只是展开为 `always_inline` 属性：
 
 ```C
 #define __always_inline inline __attribute__((always_inline))
 ```
 
-which means that this function will be always inlined to reduce size of the Linux kernel image. Now let's try to understand implementation of the `set_bit` function. First of all we check a given number of bit at the beginning of the `set_bit` function. The `IS_IMMEDIATE` macro defined in the same [header](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) file and expands to the call of the builtin [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) function:
+其意味着这个函数总是内联的，以减少 Linux 内核映像的大小。现在让我们试着了解下 `set_bit` 函数的实现。首先我们在 `set_bit` 函数的开头检查给定的位的数量。`IS_IMMEDIATE` 宏定义于相同的[头文件](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h)，并展开为 [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) 内置函数的调用：
 
 ```C
 #define IS_IMMEDIATE(nr)		(__builtin_constant_p(nr))
 ```
 
-The `__builtin_constant_p` builtin function returns `1` if the given parameter is known to be constant at compile-time and returns `0` in other case. We no need to use slow `bts` instruction to set bit if the given number of bit is known in compile time constant. We can just apply [bitwise or](https://en.wikipedia.org/wiki/Bitwise_operation#OR) for byte from the give address which contains given bit and masked number of bits where high bit is `1` and other is zero. In other case if the given number of bit is not known constant at compile-time, we do the same as we did in the `__set_bit` function. The `CONST_MASK_ADDR` macro:
+如果给定的参数是编译期已知的常量，`__builtin_constant_p` 内置函数则返回 `1`，其他情况返回 `0`。假若给定的位数是编译期已知的常量，我们便无须使用效率低下的 `bts` 指令去设置位。我们可以只需在给定地址指向的字节上执行 [按位或](https://en.wikipedia.org/wiki/Bitwise_operation#OR) 操作，其字节包含给定的位，掩码位数表示高位为 `1`，其他位为 0 的掩码。在其他情况下，如果给定的位号不是编译期已知常量，我们便做和 `__set_bit` 函数一样的事。`CONST_MASK_ADDR` 宏：
 
 ```C
 #define CONST_MASK_ADDR(nr, addr)	BITOP_ADDR((void *)(addr) + ((nr)>>3))
 ```
 
-expands to the give address with offset to the byte which contains a given bit. For example we have address `0x1000` and the number of bit is `0x9`. So, as `0x9` is `one byte + one bit` our address with be `addr + 1`:
+展开为带有到包含给定位的字节偏移的给定地址，例如，我们拥有地址 `0x1000` 和位号 `0x9`。因为 `0x9` 代表 `一个字节 + 一位`，所以我们的地址是 `addr + 1`:
 
 ```python
 >>> hex(0x1000 + (0x9 >> 3))
 '0x1001'
 ```
 
-The `CONST_MASK` macro represents our given number of bit as byte where high bit is `1` and other bits are `0`:
+`CONST_MASK` 宏将我们给定的位号表示为字节，位号对应位为高位 `1`，其他位为 `0`：
 
 ```C
 #define CONST_MASK(nr)			(1 << ((nr) & 7))
@@ -158,7 +160,7 @@ The `CONST_MASK` macro represents our given number of bit as byte where high bit
 '0b10'
 ```
 
-In the end we just apply bitwise `or` for these values. So, for example if our address will be `0x4097` and we need to set `0x9` bit:
+最后，我们应用 `按位或` 运算到这些变量上面，因此，假如我们的地址是 `0x4097` ，并且我们需要置位号为 `9` 的位为 1：
 
 ```python
 >>> bin(0x4097)
@@ -167,11 +169,11 @@ In the end we just apply bitwise `or` for these values. So, for example if our a
 '0b100010'
 ```
 
-the `ninth` bit will be set.
+`第 9 位` 将会被置位。（LCTT 译注：这里的 9 是从 0 开始计数的，比如0010，按照作者的意思，其中的 1 是第 1 位）
 
-Note that all of these operations are marked with `LOCK_PREFIX` which is expands to the [lock](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction which guarantees atomicity of this operation.
+注意，所有这些操作使用 `LOCK_PREFIX` 标记，其展开为 [lock](http://x86.renejeschke.de/html/file_module_x86_id_159.html) 指令，保证该操作的原子性。
 
-As we already know, besides the `set_bit` and `__set_bit` operations, the Linux kernel provides two inverse functions to clear bit in atomic and non-atomic context. They are `clear_bit` and `__clear_bit`. Both of these functions are defined in the same [header file](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) and takes the same set of arguments. But not only arguments are similar. Generally these functions are very similar on the `set_bit` and `__set_bit`. Let's look on the implementation of the non-atomic `__clear_bit` function:
+正如我们所知，除了 `set_bit` 和 `__set_bit` 操作之外，Linux 内核还提供了两个功能相反的函数，在原子性和非原子性的上下文中清位。它们是 `clear_bit` 和 `__clear_bit`。这两个函数都定义于同一个[头文件](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) 并且使用相同的参数集合。不仅参数相似，一般而言，这些函数与  `set_bit` 和 `__set_bit` 也非常相似。让我们查看非原子性 `__clear_bit` 的实现吧： 
 
 ```C
 static inline void __clear_bit(long nr, volatile unsigned long *addr)
@@ -180,9 +182,9 @@ static inline void __clear_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-Yes. As we see, it takes the same set of arguments and contains very similar block of inline assembler. It just uses the [btr](http://x86.renejeschke.de/html/file_module_x86_id_24.html) instruction instead of `bts`. As we can understand form the function's name, it clears a given bit by the given address. The `btr` instruction acts like `btr`. This instruction also selects a given bit which is specified in the first operand, stores its value in the `CF` flag register and clears this bit in the given bit array which is specified with second operand.
+没错，正如我们所见，`__clear_bit` 使用相同的参数集合，并包含极其相似的内联汇编代码块。它只是使用 [btr](http://x86.renejeschke.de/html/file_module_x86_id_24.html) 指令替换了 `bts`。正如我们从函数名所理解的一样，通过给定地址，它清除了给定的位。`btr` 指令表现得像 `bts`（LCTT 译注：原文这里为 btr，可能为笔误，修正为 bts）。该指令选出第一操作数所指定的位，存储它的值到 `CF` 标志寄存器，并且清除第二操作数指定的位数组中的对应位。
 
-The atomic variant of the `__clear_bit` is `clear_bit`:
+`__clear_bit` 的原子性变体为 `clear_bit`：
 
 ```C
 static __always_inline void
@@ -200,11 +202,11 @@ clear_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-and as we can see it is very similar on `set_bit` and just contains two differences. The first difference it uses `btr` instruction to clear bit when the `set_bit` uses `bts` instruction to set bit. The second difference it uses negated mask and `and` instruction to clear bit in the given byte when the `set_bit` uses `or` instruction.
+并且正如我们所看到的，它与 `set_bit` 非常相似，只有两处不同。第一处差异为 `clear_bit` 使用 `btr` 指令来清位，而 `set_bit` 使用 `bts` 指令来置位。第二处差异为 `clear_bit` 使用否定的位掩码和 `按位与` 在给定的字节上置位，而 `set_bit` 使用 `按位或` 指令。
 
-That's all. Now we can set and clear bit in any bit array and and we can go to other operations on bitmasks.
+到此为止，我们可以在任意位数组置位和清位了，我们将看看位掩码上的其他操作。
 
-Most widely used operations on a bit arrays are set and clear bit in a bit array in the Linux kernel. But besides this operations it is useful to do additional operations on a bit array. Yet another widely used operation in the Linux kernel - is to know is a given bit set or not in a bit array. We can achieve this with the help of the `test_bit` macro. This macro is defined in the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file and expands to the call of the `constant_test_bit` or `variable_test_bit` depends on bit number:
+在 Linux 内核中对位数组最广泛使用的操作是设置和清除位，但是除了这两个操作外，位数组上其他操作也是非常有用的。Linux 内核里另一种广泛使用的操作是知晓位数组中一个给定的位是否被置位。我们能够通过 `test_bit` 宏的帮助实现这一功能。这个宏定义于 [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) 头文件，并根据位号分别展开为 `constant_test_bit` 或 `variable_test_bit` 调用。
 
 ```C
 #define test_bit(nr, addr)			\
@@ -213,7 +215,7 @@ Most widely used operations on a bit arrays are set and clear bit in a bit array
 	 : variable_test_bit((nr), (addr)))
 ```
 
-So, if the `nr` is known in compile time constant, the `test_bit` will be expanded to the call of the `constant_test_bit` function or `variable_test_bit` in other case. Now let's look at implementations of these functions. Let's start from the `variable_test_bit`:
+因此，如果 `nr` 是编译期已知常量，`test_bit` 将展开为 `constant_test_bit` 函数的调用，而其他情况则为 `variable_test_bit`。现在让我们看看这些函数的实现，让我们从 `variable_test_bit` 开始看起：  
 
 ```C
 static inline int variable_test_bit(long nr, volatile const unsigned long *addr)
@@ -229,9 +231,9 @@ static inline int variable_test_bit(long nr, volatile const unsigned long *addr)
 }
 ```
 
-The `variable_test_bit` function takes similar set of arguments as `set_bit` and other function take. We also may see inline assembly code here which executes [bt](http://x86.renejeschke.de/html/file_module_x86_id_22.html) and [sbb](http://x86.renejeschke.de/html/file_module_x86_id_286.html) instruction. The `bt` or `bit test` instruction selects a given bit which is specified with first operand from the bit array which is specified with the second operand and stores its value in the [CF](https://en.wikipedia.org/wiki/FLAGS_register) bit of flags register. The second `sbb` instruction subtracts first operand from second and subtracts value of the `CF`. So, here write a value of a given bit number from a given bit array to the `CF` bit of flags register and execute `sbb` instruction which calculates: `00000000 - CF` and writes the result to the `oldbit`.
+`variable_test_bit` 函数使用了与 `set_bit` 及其他函数使用的相似的参数集合。我们也可以看到执行 [bt](http://x86.renejeschke.de/html/file_module_x86_id_22.html) 和 [sbb](http://x86.renejeschke.de/html/file_module_x86_id_286.html) 指令的内联汇编代码。`bt` （或称 `bit test`）指令从第二操作数指定的位数组选出第一操作数指定的一个指定位，并且将该位的值存进标志寄存器的 [CF](https://en.wikipedia.org/wiki/FLAGS_register) 位。第二个指令 `sbb` 从第二操作数中减去第一操作数，再减去 `CF` 的值。因此，这里将一个从给定位数组中的给定位号的值写进标志寄存器的 `CF` 位，并且执行 `sbb` 指令计算： `00000000 - CF`，并将结果写进 `oldbit` 变量。
 
-The `constant_test_bit` function does the same as we saw in the `set_bit`:
+`constant_test_bit` 函数做了和我们在 `set_bit` 所看到的一样的事：
 
 ```C
 static __always_inline int constant_test_bit(long nr, const volatile unsigned long *addr)
@@ -241,14 +243,14 @@ static __always_inline int constant_test_bit(long nr, const volatile unsigned lo
 }
 ```
 
-It generates a byte where high bit is `1` and other bits are `0` (as we saw in `CONST_MASK`) and applies bitwise [and](https://en.wikipedia.org/wiki/Bitwise_operation#AND) to the byte which contains a given bit number.
+它生成了一个位号对应位为高位 `1`，而其他位为 `0` 的字节（正如我们在 `CONST_MASK` 所看到的），并将 [按位与](https://en.wikipedia.org/wiki/Bitwise_operation#AND) 应用于包含给定位号的字节。
 
-The next widely used bit array related operation is to change bit in a bit array. The Linux kernel provides two helper for this:
+下一个被广泛使用的位数组相关操作是改变一个位数组中的位。为此，Linux 内核提供了两个辅助函数：
 
 * `__change_bit`;
 * `change_bit`.
 
-As you already can guess, these two variants are atomic and non-atomic as for example `set_bit` and `__set_bit`. For the start, let's look at the implementation of the `__change_bit` function:
+你可能已经猜测到，就拿 `set_bit` 和 `__set_bit` 例子说，这两个变体分别是原子和非原子版本。首先，让我们看看 `__change_bit` 函数的实现：
 
 ```C
 static inline void __change_bit(long nr, volatile unsigned long *addr)
@@ -257,7 +259,7 @@ static inline void __change_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-Pretty easy, is not it? The implementation of the `__change_bit` is the same as `__set_bit`, but instead of `bts` instruction, we are using [btc](http://x86.renejeschke.de/html/file_module_x86_id_23.html). This instruction selects a given bit from a given bit array, stores its value in the `CF` and changes its value by the applying of complement operation. So, a bit with value `1` will be `0` and vice versa:
+相当简单，不是吗？ `__change_bit` 的实现和 `__set_bit` 一样，只是我们使用 [btc](http://x86.renejeschke.de/html/file_module_x86_id_23.html) 替换 `bts` 指令而已。 该指令从一个给定位数组中选出一个给定位，将该为位的值存进 `CF` 并使用求反操作改变它的值，因此值为 `1` 的位将变为 `0`，反之亦然：
 
 ```python
 >>> int(not 1)
@@ -266,7 +268,7 @@ Pretty easy, is not it? The implementation of the `__change_bit` is the same as 
 1
 ```
 
-The atomic version of the `__change_bit` is the `change_bit` function:
+`__change_bit` 的原子版本为 `change_bit` 函数：
 
 ```C
 static inline void change_bit(long nr, volatile unsigned long *addr)
@@ -283,23 +285,23 @@ static inline void change_bit(long nr, volatile unsigned long *addr)
 }
 ```
 
-It is similar on `set_bit` function, but also has two differences. The first difference is `xor` operation instead of `or` and the second is `bts` instead of `bts`.
+它和 `set_bit` 函数很相似，但也存在两点不同。第一处差异为 `xor` 操作而不是 `or`。第二处差异为 `btc`（ LCTT 译注：原文为 `bts`，为作者笔误） 而不是 `bts`。
 
-For this moment we know the most important architecture-specific operations with bit arrays. Time to look at generic bitmap API.
+目前，我们了解了最重要的体系特定的位数组操作，是时候看看一般的位图 API 了。
 
-Common bit operations
+通用位操作
 ================================================================================
 
-Besides the architecture-specific API from the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) header file, the Linux kernel provides common API for manipulation of bit arrays. As we know from the beginning of this part, we can find it in the  [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) header file and additionally in the * [lib/bitmap.c](https://github.com/torvalds/linux/blob/master/lib/bitmap.c)  source code file. But before these source code files let's look into the [include/linux/bitops.h](https://github.com/torvalds/linux/blob/master/include/linux/bitops.h) header file which provides a set of useful macro. Let's look on some of they.
+除了 [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) 中体系特定的 API 外，Linux 内核提供了操作位数组的通用 API。正如我们本部分开头所了解的一样，我们可以在 [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 头文件和 [lib/bitmap.c](https://github.com/torvalds/linux/blob/master/lib/bitmap.c)  源文件中找到它。但在查看这些源文件之前，我们先看看 [include/linux/bitops.h](https://github.com/torvalds/linux/blob/master/include/linux/bitops.h) 头文件，其提供了一系列有用的宏，让我们看看它们当中一部分。
 
-First of all let's look at following four macros:
+首先我们看看以下 4 个 宏：
 
 * `for_each_set_bit`
 * `for_each_set_bit_from`
 * `for_each_clear_bit`
 * `for_each_clear_bit_from`
 
-All of these macros provide iterator over certain set of bits in a bit array. The first macro iterates over bits which are set, the second does the same, but starts from a certain bits. The last two macros do the same, but iterates over clear bits. Let's look on implementation of the `for_each_set_bit` macro:
+所有这些宏都提供了遍历位数组中某些位集合的迭代器。第一个宏迭代那些被置位的位。第二个宏也是一样，但它是从某一个确定的位开始。最后两个宏做的一样，但是迭代那些被清位的位。让我们看看 `for_each_set_bit` 宏：
 
 ```C
 #define for_each_set_bit(bit, addr, size) \
@@ -308,16 +310,16 @@ All of these macros provide iterator over certain set of bits in a bit array. Th
 	     (bit) = find_next_bit((addr), (size), (bit) + 1))
 ```
 
-As we may see it takes three arguments and expands to the loop from first set bit which is returned as result of the `find_first_bit` function and to the last bit number while it is less than given size.
+正如我们所看到的，它使用了三个参数，并展开为一个循环，该循环从作为 `find_first_bit` 函数返回结果的第一个置位开始，到小于给定大小的最后一个置位为止。
 
-Besides these four macros, the [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) provides API for rotation of `64-bit` or `32-bit` values and etc.
+除了这四个宏， [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h) 也提供了 `64-bit` 或 `32-bit` 变量循环的 API 等等。
 
-The next [header](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) file which provides API for manipulation with a bit arrays. For example it provides two functions:
+下一个 [头文件](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 提供了操作位数组的 API。例如，它提供了以下两个函数： 
 
 * `bitmap_zero`;
 * `bitmap_fill`.
 
-To clear a bit array and fill it with `1`. Let's look on the implementation of the `bitmap_zero` function:
+它们分别可以清除一个位数组和用 `1` 填充位数组。让我们看看 `bitmap_zero` 函数的实现：
 
 ```C
 static inline void bitmap_zero(unsigned long *dst, unsigned int nbits)
@@ -331,16 +333,16 @@ static inline void bitmap_zero(unsigned long *dst, unsigned int nbits)
 }
 ```
 
-First of all we can see the check for `nbits`. The `small_const_nbits` is macro which defined in the same header [file](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) and looks:
+首先我们可以看到对 `nbits` 的检查。 `small_const_nbits` 是一个定义在同一个[头文件](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 的宏：
 
 ```C
 #define small_const_nbits(nbits) \
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 ```
 
-As we may see it checks that `nbits` is known constant in compile time and `nbits` value does not overflow `BITS_PER_LONG` or `64`. If bits number does not overflow amount of bits in a `long` value we can just set to zero. In other case we need to calculate how many `long` values do we need to fill our bit array and fill it with [memset](http://man7.org/linux/man-pages/man3/memset.3.html).
+正如我们可以看到的，它检查 `nbits` 是否为编译期已知常量，并且其值不超过 `BITS_PER_LONG` 或 `64`。如果位数目没有超过一个 `long` 变量的位数，我们可以仅仅设置为 0。在其他情况，我们需要计算有多少个需要填充位数组的 `long` 变量并且使用 [memset](http://man7.org/linux/man-pages/man3/memset.3.html) 进行填充。
 
-The implementation of the `bitmap_fill` function is similar on implementation of the `biramp_zero` function, except we fill a given bit array with `0xff` values or `0b11111111`:
+`bitmap_fill` 函数的实现和 `biramp_zero` 函数很相似，除了我们需要在给定的位数组中填写 `0xff` 或 `0b11111111`：
 
 ```C
 static inline void bitmap_fill(unsigned long *dst, unsigned int nbits)
@@ -354,18 +356,20 @@ static inline void bitmap_fill(unsigned long *dst, unsigned int nbits)
 }
 ```
 
-Besides the `bitmap_fill` and `bitmap_zero` functions, the [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) header file provides `bitmap_copy` which is similar on the `bitmap_zero`, but just uses [memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html) instead of [memset](http://man7.org/linux/man-pages/man3/memset.3.html). Also it provides bitwise operations for bit array like `bitmap_and`, `bitmap_or`, `bitamp_xor` and etc. We will not consider implementation of these functions because it is easy to understand implementations of these functions if you understood all from this part. Anyway if you are interested how did these function implemented, you may open [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) header file and start to research.
+除了 `bitmap_fill` 和 `bitmap_zero`，[include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 头文件也提供了和 `bitmap_zero` 很相似的 `bitmap_copy`，只是仅仅使用 [memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html) 而不是  [memset](http://man7.org/linux/man-pages/man3/memset.3.html) 这点差异而已。它也提供了位数组的按位操作，像 `bitmap_and`, `bitmap_or`, `bitamp_xor`等等。我们不会探讨这些函数的实现了，因为如果你理解了本部分的所有内容，这些函数的实现是很容易理解的。无论如何，如果你对这些函数是如何实现的感兴趣，你可以打开并研究 [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 头文件。
 
-That's all.
+本部分到此为止。
 
-Links
+注： 本文由 [LCTT](https://github.com/LCTT/TranslateProject) 原创翻译，[Linux中国](https://linux.cn/) 荣誉推出
+
+链接
 ================================================================================
 
 * [bitmap](https://en.wikipedia.org/wiki/Bit_array)
 * [linked data structures](https://en.wikipedia.org/wiki/Linked_data_structure)
 * [tree data structures](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) 
 * [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [cpumasks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
+* [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [atomic operations](https://en.wikipedia.org/wiki/Linearizability)
