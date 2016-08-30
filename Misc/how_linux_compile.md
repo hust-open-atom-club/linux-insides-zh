@@ -662,6 +662,9 @@ Kernel: arch/x86/boot/bzImage is ready  (#5)
 
 这就是本文的结尾部分。本文我们了解了编译内核的全部步骤：从执行 `make` 命令开始，到最后生成 `bzImage` 。我知道，linux 内核的 Makefile 和构建 linux 的过程第一眼看起来可能比较迷惑，但是这并不是很难。希望本文可以帮助你理解构建 linux 内核的整个流程。
 
+
+注： 本文由 [LCTT](https://github.com/LCTT/TranslateProject) 原创翻译，[Linux中国](https://linux.cn/) 荣誉推出
+
 ###链接
 
 * [GNU make util](https://en.wikipedia.org/wiki/Make_%28software%29)
@@ -678,11 +681,3 @@ Kernel: arch/x86/boot/bzImage is ready  (#5)
 * [Documentation](https://github.com/torvalds/linux/blob/master/Documentation/kbuild/makefiles.txt)
 * [System.map](https://en.wikipedia.org/wiki/System.map)
 * [Relocation](https://en.wikipedia.org/wiki/Relocation_%28computing%29)
-
---------------------------------------------------------------------------------
-via: https://github.com/MintCN/linux-insides-zh/blob/master/Misc/how_kernel_compiled.md
-
-译者：[oska874](https://github.com/oska874)
-校对：[wxy](https://github.com/wxy)
-
-本文由 [LCTT](https://github.com/LCTT/TranslateProject) 原创翻译，[Linux中国](https://linux.cn/) 荣誉推出
