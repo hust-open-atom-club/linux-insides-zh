@@ -99,7 +99,7 @@ Linux Insides
 
 * 在 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中查看你想翻译的章节的状态；
 * 在确认想翻译的章节没有被翻译之后，开一个 issue ，告诉大家你想翻译哪一章节，同时提交申请翻译的 PR ，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“正在进行”；
-* 首先，从上游的[英文库](https://github.com/0xAX/linux-insides)中卸载该章节的最新版本，将修改提交到我们的中文库中；
+* 首先，从上游的[英文库](https://github.com/0xAX/linux-insides)中得到该章节的最新版本，将修改提交到我们的中文库中；
 * 然后翻译你认领的章节；
 * 完成翻译之后，提交翻译内容的 PR ，待 PR 被 merge 之后，关闭 issue ；
 * 最后，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“已完成”，同时不要忘记把自己添加到 [contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md) 中。
