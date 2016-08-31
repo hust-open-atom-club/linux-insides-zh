@@ -61,7 +61,7 @@ Linux Insides
 |└ 5.7||未开始|
 | 6. Synchronization primitives||正在进行|
 |├ 6.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├ 6.1|[@keltoy](https://github.com/keltoy)|正在进行|
+|├ 6.1|[@keltoy](https://github.com/keltoy)|已完成|
 |├ 6.2||未开始|
 |├ 6.3|[@huxq](https://github.com/huxq)|已完成|
 |├ 6.4|[@huxq](https://github.com/huxq)|正在进行|
