@@ -90,7 +90,7 @@ Linux Insides
 | 13. Misc||正在进行|
 |├ 13.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 13.1|[@oska874](https://github.com/oska874)|已完成|
-|├ 13.2||未开始|
+|├ 13.2|[@zmj1316](https://github.com/zmj1316)|正在进行|
 |└ 13.3||未开始|
 
 ##翻译认领规则
