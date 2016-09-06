@@ -78,17 +78,17 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-注意 `$(obj)/head_$(BITS).o` 。这意味着我们将会选择基于 `$(BITS)` 所设置的文件执行链接操作，即 head_32.o 或者 head_64.o。`$(BITS)` 在 [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/Makefile) 之中根据 .config 文件另外定义：
+注意 `$(obj)/head_$(BITS).o` 。这意味着我们将会选择基于 `$(BITS)` 所设置的文件执行链接操作，即 head_32.o 或者 head_64.o。`$(BITS)` 在 [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) 之中根据 .config 文件另外定义：
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
-	    BITS := 32
+        BITS := 32
         ...
 		...
 else
-		...
-		...
         BITS := 64
+		...
+		...
 endif
 ```
 
@@ -272,7 +272,7 @@ ebp            0x100000	0x100000
 	movl	%eax, %esp
 ```
 
- `boots_stack_end` 被定义在同一个汇编文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中，位于 [.bss](https://en.wikipedia.org/wiki/.bss) 段：
+ `boots_stack_end` 标签被定义在同一个汇编文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中，位于 [.bss](https://en.wikipedia.org/wiki/.bss) 段：
 
 ```assembly
 	.bss
@@ -284,7 +284,7 @@ boot_stack:
 boot_stack_end:
 ```
 
-首先，我们把 `boot_stack_end` 放到 `eax` 寄存器中。现在 `eax` 寄存器将包含 `boot_stack_end` 链接后的地址或者说 `0x0 + boot_stack_end` 。为了得到 `boot_stack_end` 的实际地址，我们需要加上 `startup_32` 的实际地址。回忆一下，前面我们找到了这个地址并且把它存到了 `ebp` 寄存器中。最后，`eax` 寄存器将会包含 `boot_stack_end` 的实际地址，我们只需要将其加到栈指针上。
+首先，我们把 `boot_stack_end` 放到 `eax` 寄存器中。那么 `eax` 寄存器将包含 `boot_stack_end` 链接后的地址或者说 `0x0 + boot_stack_end` 。为了得到 `boot_stack_end` 的实际地址，我们需要加上 `startup_32` 的实际地址。回忆一下，前面我们找到了这个地址并且把它存到了 `ebp` 寄存器中。最后，`eax` 寄存器将会包含 `boot_stack_end` 的实际地址，我们只需要将其加到栈指针上。
 
 在外面建立了栈之后，下一步是 CPU 的确认。既然我们将要切换到 `长模式` ，我们需要检查 CPU 是否支持 `长模式` 和 `SSE`。我们将会在跳转到 `verify_cpu` 函数之后执行：
 
@@ -351,7 +351,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 	addl	$z_extract_offset, %ebx
 ```
 
-记住 `ebp` 寄存器的值就是 `startup_32` 标签的物理地址。如果在内核配置中 `CONFIG_RELOCATABLE` 内核配置项开启，我们就把这个地址放到 `ebx` 寄存器中，对齐到 `2M` ，然后和 `LOAD_PHYSICAL_ADDR` 的值比较。 `LOAD_PHYSICAL_ADDR` 宏定义在头文件 [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) 中，如下：
+记住 `ebp` 寄存器的值就是 `startup_32` 标签的物理地址。如果在内核配置中 `CONFIG_RELOCATABLE` 内核配置项开启，我们就把这个地址放到 `ebx` 寄存器中，对齐到 `2M` 的整数倍 ，然后和 `LOAD_PHYSICAL_ADDR` 的值比较。 `LOAD_PHYSICAL_ADDR` 宏定义在头文件 [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) 中，如下：
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -446,7 +446,7 @@ Linux 内核使用 `4级` 页表，通常我们会建立6个页表：
 
 * 1 个 `PML4` 或称为 `4级页映射` 表，包含 1 个项；
 * 1 个 `PDP` 或称为 `页目录指针` 表，包含 4 个项；
-* 4 个 页目录表，包含 `2048` 个项；
+* 4 个 页目录表，一共包含 `2048` 个项；
 
 让我们看看其实现方式。首先我们在内存中为页表清理一块缓存。每个表都是 `4096` 字节，所以我们需要 `24` KB 的空间：
 
