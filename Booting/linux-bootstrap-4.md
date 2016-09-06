@@ -310,7 +310,7 @@ no_longmode:
 计算重定位地址
 --------------------------------------------------------------------------------
 
-下一步是在必要的时候计算解压缩之后的地址。首先，我们需要知道内核重定位的意义。我们已经知道 Linux 内核的32位入口点地址位于 `0x100000` 。但是那是一个32位的入口。默认的内核基地址由内核配置项 `CONFIG_PHYSICAL_START` 的值所确定，其默认值为 `0x100000` 或 `1 MB` 。这里的主要问题是如果内核崩溃了，内核开发者需要一个配置于不同地址加载的 `救援内核` 来进行 [kdump](https://www.kernel.org/doc/Documentation/kdump/kdump.txt)。Linux 内核提供了特殊的配置选项以解决此问题 - `CONFIG_RELOCATABLE` 。我们可以在内核文档中找到：
+下一步是在必要的时候计算解压缩之后的地址。首先，我们需要知道内核重定位的意义。我们已经知道 Linux 内核的32位入口点地址位于 `0x100000` 。但是那是一个32位的入口。默认的内核基地址由内核配置项 `CONFIG_PHYSICAL_START` 的值所确定，其默认值为 `0x1000000` 或 `16 MB` 。这里的主要问题是如果内核崩溃了，内核开发者需要一个配置于不同地址加载的 `救援内核` 来进行 [kdump](https://www.kernel.org/doc/Documentation/kdump/kdump.txt)。Linux 内核提供了特殊的配置选项以解决此问题 - `CONFIG_RELOCATABLE` 。我们可以在内核文档中找到：
 
 ```
 This builds a kernel image that retains relocation information
