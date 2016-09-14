@@ -674,7 +674,11 @@ SECTIONS
 
 On the first three lines you can see a comment written in `C` style. After it the `OUTPUT` and the `OUTPUT_FORMAT` commands specify the name of our executable file and its format. The next command, `INPUT`, specifies the input file to the `ld` linker. Then, we can see the main `SECTIONS` command, which, as I already wrote, must be present in every linker script. The `SECTIONS` command represents the set and order of the sections which will be in the output file. At the beginning of the `SECTIONS` command we can see following line `. = 0x200000`. I already wrote above that `.` command points to the current position of the output. This line says that the code should be loaded at address `0x200000` and the line `. = 0x400000` says that data section should be loaded at address `0x400000`. The second line after the `. = 0x200000` defines `.text` as an output section. We can see `*(.text)` expression inside it. The `*` symbol is wildcard that matches any file name. In other words, the `*(.text)` expression says all `.text` input sections in all input files. We can rewrite it as `hello.o(.text)` for our example. After the following location counter `. = 0x400000`, we can see definition of the data section.
 
+在前三行你可以看到 `C` 风格的注释。之后是 `OUTPUT` 和 `OUTPUT_FORMAT` 命令，指定了我们的可执行文件名称和格式。下一个指令，`INPUT`，指定了给 `ld` 的输入文件。接下来，我们可以看到主要的 `SECTIONS` 指令，正如我写的，它是必须存在于每个链接器脚本中。`SECTIONS` 命令表示了输出文件中的段的集合和顺序。在 `SECTIONS` 命令的开头，我们可以看到一行 `. = 0x200000` 。我上面已经写过，`.` 命令指向输出中的当前位置。这一行说明代码段应该被加载到地址 `0x200000`。`. = 0x400000`一行说明数据段应该被加载到地址`0x400000` 。`. = 0x200000`之后的第二行定义 `.text` 作为输出段。我们可以看到其中的 `*(.text)` 表达式。 `*` 符号是一个匹配任意文件名的通配符。换句话说，`*(.text)` 表达式代表所有输入文件中的所有 `.text` 输入段。在我们的样例中，我们可以将其重写为 `hello.o(.text)` 。在地址计数器 `. = 0x400000` 之后，我们可以看到数据段的定义。
+
 We can compile and link it with the:
+
+我们可以用以下语句进行编译和链接：
 
 ```
 $ nasm  -f elf64 -o hello.o hello.S && ld -T linker.script && ./hello
@@ -682,6 +686,8 @@ hello, world!
 ```
 
 If we will look inside it with the `objdump` util, we can see that `.text` section starts from the address `0x200000` and the `.data` sections starts from the address `0x400000`:
+
+如果我们用 `objdump` 工具深入查看，我们可以看到 `.text` 段从地址 `0x200000` 开始， `.data` 段从 `0x400000` 开始：
 
 ```
 $ objdump -D hello
@@ -700,6 +706,8 @@ Disassembly of section .data:
 ```
 
 Apart from the commands we have already seen, there are a few others. The first is the `ASSERT(exp, message)` that ensures that given expression is not zero. If it is zero, then exit the linker with an error code and print the given error message. If you've read about Linux kernel booting process in the [linux-insides](http://0xax.gitbooks.io/linux-insides/content/) book, you may know that the setup header of the Linux kernel has offset `0x1f1`. In the linker script of the Linux kernel we can find a check for this:
+
+除了我们已经看到的命令，另外还有一些。首先是 `ASSERT(exp, message)` ，保证给定的表达式不为零。如果为零，那么链接器会退出同时返回错误码，打印错误信息。如果你已经阅读了 [linux-insides](https://xinqiu.gitbooks.io/linux-insides-cn/content/) 的 Linux 内核启动流程，你或许知道 Linux 内核的设置头的偏移为 `0x1f1`。在 Linux 内核的链接器脚本中，我们可以看到下面的校验：
 
 ```
 . = ASSERT(hdr == 0x1f1, "The setup header has the wrong offset!");
