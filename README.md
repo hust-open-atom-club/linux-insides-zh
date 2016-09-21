@@ -73,9 +73,9 @@ Linux Insides
 | 8. SMP||未开始|
 | 9. Concepts||正在进行|
 |├ 9.0|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├ 9.1||未开始|
-|├ 9.2||未开始|
-|└ 9.3||未开始|
+|├ 9.1|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ 9.2|[@up2wing](https://github.com/up2wing)|正在进行|
+|└ 9.3|[@up2wing](https://github.com/up2wing)|正在进行|
 | 10. DataStructures||正在进行|
 |├ 10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 10.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
