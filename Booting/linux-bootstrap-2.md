@@ -3,7 +3,7 @@
 内核启动的第一步  
 --------------------------------------------------------------------------------
 
-在[上一节中](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-1.html)我们开始接触到内核启动代码，并且分析了初始化部分，最后我们停在了对`main`函数（`main`函数是第一个用C写的函数）的调用（`main`函数位于[arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)）。
+在[上一节中](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-1.html)我们开始接触到内核启动代码，并且分析了初始化部分，最后我们停在了对`main`函数（`main`函数是第一个用C写的函数）的调用（`main`函数位于[arch/x86/boot/main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18)）。
 
 在这一节中我们将继续对内核启动过程的研究，我们将  
 * 认识`保护模式` 
@@ -174,20 +174,20 @@ lgdt gdt
 
 在后面的章节中，我们将看到Linux 内核中完整的转换代码。不过在系统进入保护模式之前，内核有很多的准备工作需要进行。
 
-让我们代开C文件 [arch/x86/boot/main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c)。这个文件包含了很多的函数，这些函数分别会执行键盘初始化，内存堆初始化等等操作...，下面让我们来具体看一些重要的函数。
+让我们代开C文件 [arch/x86/boot/main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18)。这个文件包含了很多的函数，这些函数分别会执行键盘初始化，内存堆初始化等等操作...，下面让我们来具体看一些重要的函数。
 
 将启动参数拷贝到"zeropage"
 --------------------------------------------------------------------------------
 
-让我们从`main`函数开始看起，这个函数中，首先调用了[`copy_boot_params(void)`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L30)。 
+让我们从`main`函数开始看起，这个函数中，首先调用了[`copy_boot_params(void)`](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L30)。 
 
-这个函数将内核设置信息拷贝到`boot_params`结构的相应字段。大家可以在[arch/x86/include/uapi/asm/bootparam.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113)找到`boot_params`结构的定义。
+这个函数将内核设置信息拷贝到`boot_params`结构的相应字段。大家可以在[arch/x86/include/uapi/asm/bootparam.h](http://lxr.free-electrons.com/source/arch/x86/include/uapi/asm/bootparam.h?v=3.18#L113)找到`boot_params`结构的定义。
 
-1. 将[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L281)中定义的 `hdr` 结构中的内容拷贝到 `boot_params` 结构的字段 `struct setup_header hdr` 中。
+1. 将[header.S](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18#L281)中定义的 `hdr` 结构中的内容拷贝到 `boot_params` 结构的字段 `struct setup_header hdr` 中。
 
 2. 如果内核是通过老的命令行协议运行起来的，那么就更新内核的命令行指针。
 
-这里需要注意的是拷贝 `hdr` 数据结构的 `memcpy` 函数不是C语言中的函数，而是定义在 [copy.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S)。让我们来具体分析一下这段代码：
+这里需要注意的是拷贝 `hdr` 数据结构的 `memcpy` 函数不是C语言中的函数，而是定义在 [copy.S](http://lxr.free-electrons.com/source/arch/x86/boot/copy.S?v=3.18)。让我们来具体分析一下这段代码：
 
 ```assembly
 GLOBAL(memcpy)
@@ -209,7 +209,7 @@ ENDPROC(memcpy)
 
 在`copy.S`文件中，你可以看到所有的方法都开始于 `GLOBAL` 宏定义，而结束于 `ENDPROC` 宏定义。 
 
-你可以在 [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h)中找到 `GLOBAL` 宏定义。这个宏给代码段分配了一个名字标签，并且让这个名字全局可用。 
+你可以在 [arch/x86/include/asm/linkage.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/linkage.h?v=3.18)中找到 `GLOBAL` 宏定义。这个宏给代码段分配了一个名字标签，并且让这个名字全局可用。 
 
 ```assembly
 #define GLOBAL(name)	\
@@ -217,7 +217,7 @@ ENDPROC(memcpy)
 	name:
 ```
 
-你可以在[include/linux/linkage.h](https://github.com/torvalds/linux/blob/master/include/linux/linkage.h)中找到 `ENDPROC` 宏的定义。 这个宏通过 `END(name)` 代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
+你可以在[include/linux/linkage.h](http://lxr.free-electrons.com/source/include/linux/linkage.h?v=3.18)中找到 `ENDPROC` 宏的定义。 这个宏通过 `END(name)` 代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
 
 ```assembly
 #define ENDPROC(name) \
@@ -242,7 +242,7 @@ memcpy(&boot_params.hdr, &hdr, sizeof hdr);
 控制台初始化
 --------------------------------------------------------------------------------
 
-在 `hdr` 结构体被拷贝到 `boot_params.hdr` 成员之后，系统接下来将进行控制台的初始化。控制台初始化时通过调用[arch/x86/boot/early_serial_console.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/early_serial_console.c)中定义的 `console_init` 函数实现的。
+在 `hdr` 结构体被拷贝到 `boot_params.hdr` 成员之后，系统接下来将进行控制台的初始化。控制台初始化时通过调用[arch/x86/boot/early_serial_console.c](http://lxr.free-electrons.com/source/arch/x86/boot/early_serial_console.c?v=3.18)中定义的 `console_init` 函数实现的。
 
 这个函数首先查看命令行参数是否包含 `earlyprintk` 选项。如果命令行参数包含该选项，那么函数将分析这个选项的内容。得到控制台将使用的串口信息，然后进行串口的初始化。以下是 `earlyprintk` 选项可能的取值：
 
@@ -257,7 +257,7 @@ if (cmdline_find_option_bool("debug"))
     puts("early console in setup code\n");
 ```
 
-`puts` 函数定义在[tty.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c)。这个函数只是简单的调用 `putchar` 函数将输入字符串中的内容按字节输出。下面让我们来看看  `putchar`函数的实现：
+`puts` 函数定义在[tty.c](http://lxr.free-electrons.com/source/arch/x86/boot/tty.c?v=3.18)。这个函数只是简单的调用 `putchar` 函数将输入字符串中的内容按字节输出。下面让我们来看看  `putchar`函数的实现：
 
 ```C
 void __attribute__((section(".inittext"))) putchar(int ch)
@@ -272,7 +272,7 @@ void __attribute__((section(".inittext"))) putchar(int ch)
 }
 ```
 
-`__attribute__((section(".inittext")))` 说明这段代码将被放入 `.inittext` 代码段。关于 `.inittext` 代码段的定义你可以在 [setup.ld](https://github.com/torvalds/linux/blob/master/arch/x86/boot/setup.ld#L19)中找到。
+`__attribute__((section(".inittext")))` 说明这段代码将被放入 `.inittext` 代码段。关于 `.inittext` 代码段的定义你可以在 [setup.ld](http://lxr.free-electrons.com/source/arch/x86/boot/setup.ld?v=3.18#L19)中找到。
 
 如果需要输出的字符是 `\n` ，那么 `putchar` 函数将调用自己首先输出一个字符 `\r`。接下来，就调用 `bios_putchar` 函数将字符输出到显示器（使用bios int10中断）：
 
@@ -301,7 +301,7 @@ static void __attribute__((section(".inittext"))) bios_putchar(int ch)
     reg->gs = gs();
 ```
 
-下面让我们来看看[memset](https://github.com/torvalds/linux/blob/master/arch/x86/boot/copy.S#L36)函数的实现 :
+下面让我们来看看[memset](http://lxr.free-electrons.com/source/arch/x86/boot/copy.S?v=3.18#L36)函数的实现 :
 
 ```assembly
 GLOBAL(memset)
@@ -326,14 +326,14 @@ ENDPROC(memset)
 
 接下来的 `imull` 指令将 `eax` 寄存器的值乘上 `0x01010101`。这么做的原因是代码每次将尝试拷贝4个字节内存的内容。下面让我们来看一个具体的例子，假设我们需要将 `0x7` 这个数值放到内存中，在执行 `imull` 指令之前，`eax` 寄存器的值是 `0x7`，在 `imull` 指令被执行之后，`eax` 寄存器的内容变成了 `0x07070707`（4个字节的 `0x7`）。在 `imull` 指令之后，代码使用 `rep; stosl` 指令将 `eax` 寄存器的内容拷贝到 `es:di` 指向的内存。
 
-在 `bisoregs` 结构体被 `initregs` 函数正确填充之后，`bios_putchar` 调用中断 [0x10](http://www.ctyme.com/intr/rb-0106.htm) 在显示器上输出一个字符。接下来 `putchar` 函数检查是否初始化了串口，如果串口被初始化了，那么将调用[serial_putchar](https://github.com/torvalds/linux/blob/master/arch/x86/boot/tty.c#L30)将字符输出到串口。
+在 `bisoregs` 结构体被 `initregs` 函数正确填充之后，`bios_putchar` 调用中断 [0x10](http://www.ctyme.com/intr/rb-0106.htm) 在显示器上输出一个字符。接下来 `putchar` 函数检查是否初始化了串口，如果串口被初始化了，那么将调用[serial_putchar](http://lxr.free-electrons.com/source/arch/x86/boot/tty.c?v=3.18#L30)将字符输出到串口。
 
 堆初始化
 --------------------------------------------------------------------------------
 
-当堆栈和bss段在[header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S)中被初始化之后 (细节请参考上一篇[part](linux-bootstrap-1.md))， 内核需要初始化全局堆，全局堆的初始化是通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数实现的。
+当堆栈和bss段在[header.S](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18)中被初始化之后 (细节请参考上一篇[part](linux-bootstrap-1.md))， 内核需要初始化全局堆，全局堆的初始化是通过 [`init_heap`](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L116) 函数实现的。
 
-代码首先检查内核设置头中的[`loadflags`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S#L321)是否设置了 [`CAN_USE_HEAP`](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L21)标志。 如果该标记被设置了，那么代码将计算堆栈的结束地址：:
+代码首先检查内核设置头中的[`loadflags`](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18#L321)是否设置了 [`CAN_USE_HEAP`](http://lxr.free-electrons.com/source/arch/x86/include/uapi/asm/bootparam.h?v=3.18#L21)标志。 如果该标记被设置了，那么代码将计算堆栈的结束地址：:
 
 ```C
     char *stack_end;
@@ -361,9 +361,9 @@ ENDPROC(memset)
 检查CPU类型
 --------------------------------------------------------------------------------
 
-在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpu.c)提供的 `validate_cpu` 方法检查CPU级别以确定系统是否能够在当前的CPU上运行。
+在堆栈初始化之后，内核代码通过调用[arch/x86/boot/cpu.c](http://lxr.free-electrons.com/source/arch/x86/boot/cpu.c?v=3.18)提供的 `validate_cpu` 方法检查CPU级别以确定系统是否能够在当前的CPU上运行。
 
-`validate_cpu` 调用了[`check_cpu`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cpucheck.c#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。
+`validate_cpu` 调用了[`check_cpu`](http://lxr.free-electrons.com/source/arch/x86/boot/cpucheck.c?v=3.18#L102)方法得到当前系统的CPU级别，并且和系统预设的最低CPU级别进行比较。如果不满足条件，则不允许系统运行。
 
 ```c
 /*from cpu.c*/
@@ -381,7 +381,7 @@ if (cpu_level < req_level) {
 内存分布侦测
 --------------------------------------------------------------------------------
 
-接下来，内核调用 `detect_memory` 方法进行内存侦测，以得到系统当前内存的使用分布。该方法使用多种编程接口，包括 `0xe820`（获取全部内存分配），`0xe801` 和 `0x88`（获取临近内存大小），进行内存分布侦测。在这里我们只介绍[arch/x86/boot/memory.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/memory.c)中提供的 `detect_memory_e820` 方法。
+接下来，内核调用 `detect_memory` 方法进行内存侦测，以得到系统当前内存的使用分布。该方法使用多种编程接口，包括 `0xe820`（获取全部内存分配），`0xe801` 和 `0x88`（获取临近内存大小），进行内存分布侦测。在这里我们只介绍[arch/x86/boot/memory.c](http://lxr.free-electrons.com/source/arch/x86/boot/memory.c?v=3.18)中提供的 `detect_memory_e820` 方法。
 
 该方法首先调用 `initregs` 方法初始化 `biosregs` 数据结构，然后向该数据结构填入 `0xe820` 编程接口所要求的参数：
 
@@ -427,7 +427,7 @@ if (cpu_level < req_level) {
 键盘初始化
 --------------------------------------------------------------------------------
 
-接下来内核调用[`keyboard_init()`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L65) 方法进行键盘初始化操作。 首先，方法调用`initregs`初始化寄存器结构，然后调用[0x16](http://www.ctyme.com/intr/rb-1756.htm)中断来获取键盘状态。
+接下来内核调用[`keyboard_init()`](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L65) 方法进行键盘初始化操作。 首先，方法调用`initregs`初始化寄存器结构，然后调用[0x16](http://www.ctyme.com/intr/rb-1756.htm)中断来获取键盘状态。
 
 ```c
     initregs(&ireg);
@@ -448,7 +448,7 @@ if (cpu_level < req_level) {
 
 接下来内核将进行一系列的参数查询。我们在这里将不深入介绍所有这些查询，我们将在后续章节中在进行详细介绍。在这里我们将简单介绍一些系统参数查询:
 
-[query_mca](https://github.com/torvalds/linux/blob/master/arch/x86/boot/mca.c#L18) 方法调用[0x15](http://www.ctyme.com/intr/rb-1594.htm)中断来获取机器的型号信息，BIOS版本以及其他一些硬件相关的属性：
+[query_mca](http://lxr.free-electrons.com/source/arch/x86/boot/mca.c?v=3.18#L18) 方法调用[0x15](http://www.ctyme.com/intr/rb-1594.htm)中断来获取机器的型号信息，BIOS版本以及其他一些硬件相关的属性：
 
 ```c
 int query_mca(void)
@@ -512,13 +512,13 @@ static inline void set_fs(u16 seg)
 }
 ```
 
-在[boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h) 存在很多类似于 `set_fs` 的方法, 比如 `set_gs`。
+在[boot.h](http://lxr.free-electrons.com/source/arch/x86/boot/boot.h?v=3.18) 存在很多类似于 `set_fs` 的方法, 比如 `set_gs`。
 
 在 `query_mca` 的最后，代码将 `es:bx` 指向的内存地址的内容拷贝到 `boot_params.sys_desc_table`。
 
 接下来，内核调用 `query_ist` 方法获取[Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)信息。这个方法首先检查CPU类型，然后调用 `0x15` 中断获得这个信息并放入 `boot_params` 中。
 
-接下来，内核会调用[query_apm_bios](https://github.com/torvalds/linux/blob/master/arch/x86/boot/apm.c#L21) 方法从BIOS获得 [高级电源管理](http://en.wikipedia.org/wiki/Advanced_Power_Management) 信息。`query_apm_bios` 也是调用 `0x15` 中断，只不过将 `ax` 设置成 `0x5300` 以得到APM设置信息。中断调用返回之后，代码将检查 `bx` 和 `cx` 的值，如果 `bx` 不是 `0x504d` ( PM 标记 )，或者 `cx` 不是 `0x02` (0x02，表示支持32位模式)，那么代码直接返回错误。否则，将进行下面的步骤。
+接下来，内核会调用[query_apm_bios](http://lxr.free-electrons.com/source/arch/x86/boot/apm.c?v=3.18#L21) 方法从BIOS获得 [高级电源管理](http://en.wikipedia.org/wiki/Advanced_Power_Management) 信息。`query_apm_bios` 也是调用 `0x15` 中断，只不过将 `ax` 设置成 `0x5300` 以得到APM设置信息。中断调用返回之后，代码将检查 `bx` 和 `cx` 的值，如果 `bx` 不是 `0x504d` ( PM 标记 )，或者 `cx` 不是 `0x02` (0x02，表示支持32位模式)，那么代码直接返回错误。否则，将进行下面的步骤。
 
 接下来，代码使用 `ax = 0x5304` 来调用 `0x15` 中断，以断开 `APM` 接口；然后使用 `ax = 0x5303` 调用 `0x15` 中断，使用32位接口重新连接 `APM`；最后使用 `ax = 0x5300` 调用 `0x15` 中断再次获取APM设置，然后将信息写入 `boot_params.apm_bios_info`。
 
@@ -530,9 +530,9 @@ static inline void set_fs(u16 seg)
 #endif
 ```
 
-最后是[`query_edd`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/edd.c#L122) 方法调用, 这个方法从BIOS中查询 `Enhanced Disk Drive` 信息。下面让我们看看 `query_edd` 方法的实现。
+最后是[`query_edd`](http://lxr.free-electrons.com/source/arch/x86/boot/edd.c?v=3.18#L122) 方法调用, 这个方法从BIOS中查询 `Enhanced Disk Drive` 信息。下面让我们看看 `query_edd` 方法的实现。
 
-首先，代码检查内核命令行参数是否设置了[edd](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt#L1023) 选项，如果edd选项设置成 `off`，`query_edd` 不做任何操作，直接返回。
+首先，代码检查内核命令行参数是否设置了[edd](http://lxr.free-electrons.com/source/Documentation/kernel-parameters.txt?v=3.18#L1023) 选项，如果edd选项设置成 `off`，`query_edd` 不做任何操作，直接返回。
 
 如果EDD被激活了，`query_edd` 遍历所有BIOS支持的硬盘，并获取相应硬盘的EDD信息：
 
@@ -548,7 +548,7 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
     ...
 ```
 
-在代码中 `0x80` 是第一块硬盘，`EDD_MBR_SIG_MAX` 是一个宏，值为16。代码把获得的信息放入数组[edd_info](https://github.com/torvalds/linux/blob/master/include/uapi/linux/edd.h#L172)中。`get_edd_info` 方法通过调用 `0x13` 中断调用（设置 `ah = 0x41` ) 来检查EDD是否被硬盘支持。如果EDD被支持，代码将再次调用 `0x13` 中断，在这次调用中 `ah = 0x48`，并且 `si` 指向一个数据缓冲区地址。中断调用之后，EDD信息将被保存到 `si` 指向的缓冲区地址。
+在代码中 `0x80` 是第一块硬盘，`EDD_MBR_SIG_MAX` 是一个宏，值为16。代码把获得的信息放入数组[edd_info](http://lxr.free-electrons.com/source/include/uapi/linux/edd.h?v=3.18#L172)中。`get_edd_info` 方法通过调用 `0x13` 中断调用（设置 `ah = 0x41` ) 来检查EDD是否被硬盘支持。如果EDD被支持，代码将再次调用 `0x13` 中断，在这次调用中 `ah = 0x48`，并且 `si` 指向一个数据缓冲区地址。中断调用之后，EDD信息将被保存到 `si` 指向的缓冲区地址。
 
 结束语
 --------------------------------------------------------------------------------
@@ -567,9 +567,9 @@ for (devno = 0x80; devno < 0x80+EDD_MBR_SIG_MAX; devno++) {
 * [Long mode](http://en.wikipedia.org/wiki/Long_mode)
 * [Nice explanation of CPU Modes with code](http://www.codeproject.com/Articles/45788/The-Real-Protected-Long-mode-assembly-tutorial-for)
 * [How to Use Expand Down Segments on Intel 386 and Later CPUs](http://www.sudleyplace.com/dpmione/expanddown.html)
-* [earlyprintk documentation](http://lxr.free-electrons.com/source/Documentation/x86/earlyprintk.txt)
-* [Kernel Parameters](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
-* [Serial console](https://github.com/torvalds/linux/blob/master/Documentation/serial-console.txt)
+* [earlyprintk documentation](http://lxr.free-electrons.com/source/Documentation/x86/earlyprintk.txt?v=3.18)
+* [Kernel Parameters](http://lxr.free-electrons.com/source/Documentation/kernel-parameters.txt?v=3.18)
+* [Serial console](http://lxr.free-electrons.com/source/Documentation/serial-console.txt?v=3.18)
 * [Intel SpeedStep](http://en.wikipedia.org/wiki/SpeedStep)
 * [APM](https://en.wikipedia.org/wiki/Advanced_Power_Management)
 * [EDD specification](http://www.t13.org/documents/UploadedDocuments/docs2004/d1572r3-EDD3.pdf)
