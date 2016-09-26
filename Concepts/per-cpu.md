@@ -1,24 +1,24 @@
-Per-CPU variables
+每CPU变量
 ================================================================================
 
-Per-CPU variables are one of the kernel features. You can understand the meaning of this feature by reading its name. We can create a variable and each processor core will have its own copy of this variable. In this part, we take a closer look at this feature and try to understand how it is implemented and how it works.
+每CPU变量是一项内核特性。从它的名字你就可以理解这项特性的意义了。我们可以创建一个变量，然后每个CPU上都会有一个此变量的拷贝。本节我们来看下这个特性，并试着去理解它是如何实现以及工作的。
 
-The kernel provides an API for creating per-cpu variables - the `DEFINE_PER_CPU` macro:
+内核提供了一个创建每CPU变量的API - `DEFINE_PER_CPU` 宏：
 
 ```C
 #define DEFINE_PER_CPU(type, name) \
         DEFINE_PER_CPU_SECTION(type, name, "")
 ```
 
-This macro defined in the [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) as many other macros for work with per-cpu variables. Now we will see how this feature is implemented.
+像其它许多每CPU变量一样，这个宏定义在 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 中。现在我们来看下这个特性是如何实现的。
 
-Take a look at the `DECLARE_PER_CPU` definition. We see that it takes 2 parameters: `type` and `name`, so we can use it to create per-cpu variables, for example like this:
+看下 `DECLARE_PER_CPU` 的定义，可以看到它使用了 2 个参数：`type` 和 `name`，因此我们可以这样创建每CPU变量：
 
 ```C
 DEFINE_PER_CPU(int, per_cpu_n)
 ```
 
-We pass the type and the name of our variable. `DEFINE_PER_CPU` calls the `DEFINE_PER_CPU_SECTION` macro and passes the same two parameters and empty string to it. Let's look at the definition of the `DEFINE_PER_CPU_SECTION`:
+我们传入要创建变量的类型和名字，`DEFINE_PER_CPU` 调用 `DEFINE_PER_CPU_SECTION`，将两个参数和空字符串传递给后者。让我们来看下 `DEFINE_PER_CPU_SECTION` 的定义：
 
 ```C
 #define DEFINE_PER_CPU_SECTION(type, name, sec)    \
@@ -32,34 +32,35 @@ We pass the type and the name of our variable. `DEFINE_PER_CPU` calls the `DEFIN
          PER_CPU_ATTRIBUTES
 ```
 
-where `section` is:
+其中 `section` 是:
 
 ```C
 #define PER_CPU_BASE_SECTION ".data..percpu"
 ```
 
-After all macros are expanded we will get a global per-cpu variable:
+展开所有的宏，我们得到一个全局的每CPU变量：
 
 ```C
 __attribute__((section(".data..percpu"))) int per_cpu_n
 ```
 
-It means that we will have a `per_cpu_n` variable in the `.data..percpu` section. We can find this section in the `vmlinux`:
+这意味着我们在 `.data..percpu` 段有了一个 `per_cpu_n` 变量，可以在 `vmlinux` 中找到它：
 
 ```
 .data..percpu 00013a58  0000000000000000  0000000001a5c000  00e00000  2**12
               CONTENTS, ALLOC, LOAD, DATA
 ```
 
-Ok, now we know that when we use the `DEFINE_PER_CPU` macro, a per-cpu variable in the `.data..percpu` section will be created. When the kernel initializes it calls the `setup_per_cpu_areas` function which loads the `.data..percpu` section multiple times, one section per CPU.
+好，现在我们知道了，当我们使用 `DEFINE_PER_CPU` 宏时，一个在 `.data..percpu` 段中的每CPU变量就被创建了。当内核初始化时，调用 `setup_per_cpu_areas` 函数加载几次 `.data..percpu` 段，每个CPU上对每个段都加载一次。
 
-Let's look at the per-CPU areas initialization process. It starts in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) from the call of the `setup_per_cpu_areas` function which is defined in the [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c).
+让我们来看下每CPU区域初始化流程。它从 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中调用 `setup_per_cpu_areas` 函数开始，这个函数定义在 [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c) 中。
 
 ```C
 pr_info("NR_CPUS:%d nr_cpumask_bits:%d nr_cpu_ids:%d nr_node_ids:%d\n",
         NR_CPUS, nr_cpumask_bits, nr_cpu_ids, nr_node_ids);
 ```
 
+ `setup_per_cpu_areas` 以输出CPUs集合的最大个数开始，在内核配置中以 `CONFIG_NR_CPUS` 配置项设置，实际的CPU个数，`nr_cpumask_bits` 对于新的 `cpumask` 操作来说和 `NR_CPUS` 是一样的，最后是 `NUMA` 节点个数。
 The `setup_per_cpu_areas` starts from the output information about the maximum number of CPUs set during kernel configuration with the `CONFIG_NR_CPUS` configuration option, actual number of CPUs, `nr_cpumask_bits` is the same that `NR_CPUS` bit for the new `cpumask` operators and number of `NUMA` nodes.
 
 We can see this output in the dmesg:
