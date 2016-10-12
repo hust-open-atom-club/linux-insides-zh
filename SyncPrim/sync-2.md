@@ -47,12 +47,12 @@ static __always_inline void arch_spin_lock(arch_spinlock_t *lock)
 #define arch_spin_unlock_wait(l)        queued_spin_unlock_wait(l)
 ```
 
-Before we will consider how queued spinlocks and their [API](https://en.wikipedia.org/wiki/Application_programming_interface) are implemented, we take a look on theoretical part at first.
+在我们考虑怎么排列自旋锁和实现他们的 [API](https://en.wikipedia.org/wiki/Application_programming_interface)，我们首先看看理论部分。
 
-Introduction to queued spinlocks
+介绍队列自旋锁
 -------------------------------------------------------------------------------
 
-Queued spinlocks is a [locking mechanism](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) in the Linux kernel which is replacement for the standard `spinlocks`. At least this is true for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture. If we will look at the following kernel configuration file - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks), we will see following configuration entries:
+队列自旋锁是 Linux 内核的[锁机制](https://en.wikipedia.org/wiki/Lock_%28computer_science%29)，是标准`自旋锁`的代替物。至少对 [x86_64](https://en.wikipedia.org/wiki/X86-64) 架构是真的。如果我们查看了以下内核配置文件 - [kernel/Kconfig.locks](https://github.com/torvalds/linux/blob/master/kernel/Kconfig.locks)，我们将会发现以下配置入口：
 
 ```
 config ARCH_USE_QUEUED_SPINLOCKS
@@ -62,8 +62,7 @@ config QUEUED_SPINLOCKS
 	def_bool y if ARCH_USE_QUEUED_SPINLOCKS
 	depends on SMP
 ```
-
-This means that the `CONFIG_QUEUED_SPINLOCKS` kernel configuration option will be enabled by default if the `ARCH_USE_QUEUED_SPINLOCKS` is enabled. We may see that the `ARCH_USE_QUEUED_SPINLOCKS` is enabled by default in the `x86_64` specific kernel configuration file - [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig):
+这意味着如果 `ARCH_USE_QUEUED_SPINLOCKS` 启用，那么 `CONFIG_QUEUED_SPINLOCKS` 内核配置选项将默认启用。 我们能够看到 `ARCH_USE_QUEUED_SPINLOCKS` 在 `x86_64` 特定内核配置文件 - [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig) 默认开启：
 
 ```
 config X86
