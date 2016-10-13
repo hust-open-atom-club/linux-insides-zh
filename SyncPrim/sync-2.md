@@ -4,7 +4,7 @@ Linux 内核的同步原语. 第二部分.
 队列自旋锁
 --------------------------------------------------------------------------------
 
-这是本[章节](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html)的第二部分，这部分描述 Linux 内核的和我们在本章的第一[部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html)所见到的－－[自旋锁](https://en.wikipedia.org/wiki/Spinlock)的同步原语。在这个部分我们将继续学习自旋锁的同步原语。 如果阅读了上一部分的相关内容，你可能记得除了普通自旋锁，Linux 内核还提供`自旋锁`的一种特殊类型 - `队列自旋锁`。 在这个部分我们将尝试理解此概念锁代表的含义。
+这是本[章节](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html)的第二部分，这部分描述 Linux 内核的和我们在本章的第一[部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html)所见到的－－[自旋锁](https://en.wikipedia.org/wiki/Spinlock)的同步原语。在这个部分我们将继续学习自旋锁的同步原语。 如果阅读了上一部分的相关内容，你可能记得除了正常自旋锁，Linux 内核还提供`自旋锁`的一种特殊类型 - `队列自旋锁`。 在这个部分我们将尝试理解此概念锁代表的含义。
 
 我们在上一[部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html)已知`自旋锁`的 [API](https://en.wikipedia.org/wiki/Application_programming_interface):
 
@@ -75,7 +75,7 @@ config X86
     ...
 ```
 
-Before we will start to consider what is it queued spinlock concept, let's look on other types of `spinlocks`. For the start let's consider how `normal` spinlocks is implemented. Usually, implementation of `normal` spinlock is based on the [test and set](https://en.wikipedia.org/wiki/Test-and-set) instruction. Principle of work of this instruction is pretty simple. This instruction writes a value to the memory location and returns old value from this memory location. Both of these operations are in atomic context i.e. this instruction is non-interruptible. So if the first thread started to execute this instruction, second thread will wait until the first processor will not finish. Basic lock can be built on top of this mechanism. Schematically it may look like this:
+在开始考虑什么是队列自旋锁概念之前，让我们看看其他`自旋锁`的类型。一开始我们考虑`正常`自旋锁是如何实现的。通常，`正常`自旋锁的实现是基于 [test and set](https://en.wikipedia.org/wiki/Test-and-set) 指令。这个指令的工作原则真的很简单。该指令写入一个值到内存地址然后返回该地址原来的旧值。这些操作都是在院子的上下文中完成的。也就是说，这个指令是不可中断的。因此如果第一个线程开始执行这个指令，第二个线程将会等待，直到第一个线程完成。基本锁可以在这个机制之上建立。可能开起来如下所示：
 
 ```C
 int lock(lock)
@@ -93,7 +93,7 @@ int unlock(lock)
 }
 ```
 
-The first thread will execute the `test_and_set` which will set the `lock` to `1`. When the second thread will call the `lock` function, it will spin in the `while` loop, until the first thread will not call the `unlock` function and the `lock` will be equal to `0`. This implementation is not very good for performance, because it has at least two problems. The first problem is that this implementation may be unfair and the thread from one processor may have long waiting time, even if it called the `lock` before other threads which are waiting for free lock too. The second problem is that all threads which want to acquire a lock, must to execute many `atomic` operations like `test_and_set` on a variable which is in shared memory. This leads to the cache invalidation as the cache of the processor will store `lock=1`, but the value of the `lock` in memory may be `1` after a thread will release this lock.
+第一个线程将执行 `test_and_set` 指令设置 `lock` 为 `1`。当第二个线程调用 `lock` 函数，它将在 `while` 循环中自旋，直到第一个线程调用 `unlock` 函数而且 `lock` 等于 `0`。这个实现对于执行不是很好，因为该实现至少有两个问题。第一个问题是该实现可能是非公平的而且一个处理器的线程可能有很长的等待时间，即使有其他线程也在等待释放锁，它还是调用了 `lock`。第二个问题是所有想要获取锁的线程，必须在共享内存的变量上执行很多类似`test_and_set` 这样的`原子`操作。这导致缓存失效，因为处理器缓存会存储 `lock=1`，但是在线程释放锁之后，内存中 `lock`可能只是`1`。
 
 In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) we saw the second type of spinlock implementation - `ticket spinlock`. This approach solves the first problem and may guarantee order of threads which want to acquire a lock, but still has a second problem.
 
