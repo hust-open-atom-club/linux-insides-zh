@@ -715,6 +715,8 @@ Apart from the commands we have already seen, there are a few others. The first 
 
 The `INCLUDE filename` command allows to include external linker script symbols in the current one. In a linker script we can assign a value to a symbol. `ld` supports a couple of assignment operators:
 
+`INCLUDE filename` 允许我们在当前的链接器脚本中包含外部符号。我们可以在一个链接器脚本中给一个符号赋值。 `ld` 支持一些赋值操作符：
+
 * symbol = expression   ;
 * symbol += expression  ;
 * symbol -= expression  ;
@@ -726,6 +728,8 @@ The `INCLUDE filename` command allows to include external linker script symbols 
 * symbol |= expression  ;
 
 As you can note all operators are C assignment operators. For example we can use it in our linker script as:
+
+正如你注意到的，所有操作符都是 C 赋值操作符。比如我们可以在我们的链接器脚本中使用：
 
 ```
 START_ADDRESS = 0x200000;
@@ -747,6 +751,8 @@ SECTIONS
 
 As you already may noted the syntax for expressions in the linker script language is identical to that of C expressions. Besides this the control language of the linking supports following builtin functions:
 
+你可能已经注意到了链接器脚本中表达式的语法和 C 表达式相同。除此之外，这个链接控制语言还支持如下内嵌函数：
+
 * `ABSOLUTE` - returns absolute value of the given expression;
 * `ADDR` - takes the section and returns its address;
 * `ALIGN` - returns the value of the location counter (`.` operator) that aligned by the boundary of the next expression after the given expression;
@@ -755,18 +761,32 @@ As you already may noted the syntax for expressions in the linker script languag
 * `NEXT` - returns the next unallocated address that is a multiple of the give expression;
 * `SIZEOF` - returns the size in bytes of the given named section.
 
+* `ABSOLUTE` - 返回给定表达式的绝对值；
+* `ADDR` - 接受段，返回其地址；
+* `ALIGN` - 返回和给定表达式下一句的边界对齐的位置计数器（ `.` 操作符）的值；
+* `DEFINED` - 如果给定符号在全局符号表中，返回 `1`，否则 `0`；
+* `MAX` and `MIN` - 返回两个给定表达式中的最大、最小值；
+* `NEXT` - 返回一个是当前表达式倍数的未分配地址；
+* `SIZEOF` - 返回给定名字的段以字节计数的大小。
+
 That's all.
 
-Conclusion
+以上就是全部了。
+
+总结
 -----------------
 
 This is the end of the post about linkers. We learned many things about linkers in this post, such as what is a linker and why it is needed, how to use it, etc..
 
+这是关于链接器文章的结尾。在这篇文章中，我们已经学习了很多关于链接器的知识，比如什么是链接器、为什么需要他、如何使用它等等...
+
 If you have any questions or suggestions, write me an [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
+
+如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 。
 
 Please note that English is not my first language, and I am really sorry for any inconvenience. If you find any mistakes please let me know via email or send a PR.
 
-Links
+相关链接
 -----------------
 
 * [Book about Linux kernel insides](http://0xax.gitbooks.io/linux-insides/content/)
