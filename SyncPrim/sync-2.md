@@ -75,7 +75,7 @@ config X86
     ...
 ```
 
-在开始考虑什么是队列自旋锁概念之前，让我们看看其他`自旋锁`的类型。一开始我们考虑`正常`自旋锁是如何实现的。通常，`正常`自旋锁的实现是基于 [test and set](https://en.wikipedia.org/wiki/Test-and-set) 指令。这个指令的工作原则真的很简单。该指令写入一个值到内存地址然后返回该地址原来的旧值。这些操作都是在院子的上下文中完成的。也就是说，这个指令是不可中断的。因此如果第一个线程开始执行这个指令，第二个线程将会等待，直到第一个线程完成。基本锁可以在这个机制之上建立。可能开起来如下所示：
+在开始考虑什么是队列自旋锁概念之前，让我们看看其他`自旋锁`的类型。一开始我们考虑`正常`自旋锁是如何实现的。通常，`正常`自旋锁的实现是基于 [test and set](https://en.wikipedia.org/wiki/Test-and-set) 指令。这个指令的工作原则真的很简单。该指令写入一个值到内存地址然后返回该地址原来的旧值。这些操作都是在院子的上下文中完成的。也就是说，这个指令是不可中断的。因此如果第一个线程开始执行这个指令，第二个线程将会等待，直到第一个线程完成。基本锁可以在这个机制之上建立。可能看起来如下所示：
 
 ```C
 int lock(lock)
@@ -95,17 +95,18 @@ int unlock(lock)
 
 第一个线程将执行 `test_and_set` 指令设置 `lock` 为 `1`。当第二个线程调用 `lock` 函数，它将在 `while` 循环中自旋，直到第一个线程调用 `unlock` 函数而且 `lock` 等于 `0`。这个实现对于执行不是很好，因为该实现至少有两个问题。第一个问题是该实现可能是非公平的而且一个处理器的线程可能有很长的等待时间，即使有其他线程也在等待释放锁，它还是调用了 `lock`。第二个问题是所有想要获取锁的线程，必须在共享内存的变量上执行很多类似`test_and_set` 这样的`原子`操作。这导致缓存失效，因为处理器缓存会存储 `lock=1`，但是在线程释放锁之后，内存中 `lock`可能只是`1`。
 
-In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) we saw the second type of spinlock implementation - `ticket spinlock`. This approach solves the first problem and may guarantee order of threads which want to acquire a lock, but still has a second problem.
+在上一[部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) 我们了解了自旋锁的第二种实现 -
+`排队自旋锁(ticket spinlock)`。这一方法解决了第一个问题而且能够保证想要获取锁的线程的顺序，但是仍然存在第二个问题。
 
-The topic of this part is `queued spinlocks`. This approach may help to solve both of these problems. The `queued spinlocks` allows to each processor to use its own memory location to spin. The basic principle of a queue-based spinlock can best be understood by studying a classic queue-based spinlock implementation called the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock. Before we will look at implementation of the `queued spinlocks` in the Linux kernel, we will try to understand what is it `MCS` lock.
+这一部分的主旨是 `队列自旋锁`。这个方法能够帮助解决上述的两个问题。`队列自旋锁`允许每个处理器对自旋过程使用他自己的内存地址。通过学习名为 [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) 锁的这种基于队列自旋锁的实现，能够最好理解基于队列自旋锁的基本原则。在了解`队列自旋锁`的实现之前，我们先尝试理解什么是 `MCS` 锁。
 
-The basic idea of the `MCS` lock is in that as I already wrote in the previous paragraph, a thread spins on a local variable and each processor in the system has its own copy of these variable. In other words this concept is built on top of the [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) variables concept in the Linux kernel.
+`MCS`锁的基本理念就在上一段已经写到了，一个线程在本地变量上自旋然后每个系统的处理器自己拥有这些变量的拷贝。换句话说这个概念建立在 Linux 内核中的 [per-cpu](https://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) 变量概念之上。
 
-When the first thread wants to acquire a lock, it registers itself in the `queue` or in other words it will be added to the special `queue` and will acquire lock, because it is free for now. When the second thread will want to acquire the same lock before the first thread will release it, this thread adds its own copy of the lock variable into this `queue`. In this case the first thread will contain a `next` field which will point to the second thread. From this moment, the second thread will wait until the first thread will release its lock and notify `next` thread about this event. The first thread will be deleted from the `queue` and the second thread will be owner of a lock.
+当第一个线程想要获取锁，线程在`队列`中注册了自身，或者换句话说，因为线程现在是闲置的，线程要加入特殊`队列`并且获取锁。当第二个线程想要在第一个线程释放锁之前获取相同锁，这个线程就会把他自身的所变量的拷贝加入到这个特殊`队列`中。这个例子中第一个线程会包含一个 `next` 字段指向第二个线程。从这一时刻，第二个线程会等待直到第一个线程释放它的锁并且关于这个事件通知给 `next` 线程。第一个线程从`队列`中删除而第二个线程持有该锁。
 
-Schematically we can represent it like:
+我们可以这样代表示意一下：
 
-Empty queue:
+空队列：
 
 ```
 +---------+
@@ -115,7 +116,7 @@ Empty queue:
 +---------+
 ```
 
-First thread tries to acquire a lock:
+第一个线程尝试获取锁：
 
 ```
 +---------+     +----------------------------+
@@ -125,7 +126,7 @@ First thread tries to acquire a lock:
 +---------+     +----------------------------+
 ```
 
-Second thread tries to acquire a lock:
+第二个队列尝试获取锁
 
 ```
 +---------+     +----------------------------------------+     +-------------------------+
@@ -135,7 +136,7 @@ Second thread tries to acquire a lock:
 +---------+     +----------------------------------------+     +-------------------------+
 ```
 
-Or the pseudocode:
+为代码描述为：
 
 ```C
 void lock(...)
