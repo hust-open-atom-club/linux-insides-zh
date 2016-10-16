@@ -179,14 +179,15 @@ void unlock(...)
 }
 ```
 
-The idea is simple, but the implementation of the `queued spinlocks` is must complex than this pseudocode. As I already wrote above, the `queued spinlock` mechanism is planned to be replacement for `ticket spinlocks` in the Linux kernel. But as you may remember, the usual `spinlock` fit into `32-bit` [word](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29). But the `MCS` based lock does not fit to this size. As you may know `spinlock_t` type is [widely](http://lxr.free-electrons.com/ident?i=spinlock_t) used in the Linux kernel. In this case would have to rewrite a significant part of the Linux kernel, but this is unacceptable. Beside this, some kernel structures which contains a spinlock for protection can't grow. But anyway, implementation of the `queued spinlocks` in the Linux kernel based on this concept with some modifications which allows to fit it into `32` bits.
+想法很简单，但是`队列自旋锁`的实现一定是比为代码复杂。就如同我上面写到的，`队列自旋锁`机制计划在 Linux 内核中成为`排队自旋锁`的替代品。但你们可能还记得，常用`自旋锁`适用于`32位(32-bit)`的 [字(word)](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29)。而基于`MCS`的锁不能使用这个大小，你们卡能知道 `spinlock_t` 类型在 Linux 内核中的使用是[宽字符(widely)](http://lxr.free-electrons.com/ident?i=spinlock_t)的。这种情况下可能不得不重写 Linux 内核中重要的组成部分，但这是不可接受的。除了这一点，一些包含自旋锁用于保护的内核结构不能适配(can't grow)。但无论怎样，基于这一概念的 Linux 内核中的`队列自旋锁`实现有一些修改，可以适应`32`位的字。
 
-That's all about theory of the `queued spinlocks`, now let's consider how this mechanism is implemented in the Linux kernel. Implementation of the `queued spinlocks` looks more complex and tangled than implementation of `ticket spinlocks`, but the study with attention will lead to success.
+这就是所有有关`队列自旋锁`的理论，现在让我们考虑以下在 Linux 内核中这个机制是如何实现的。`队列自旋锁`的实现看起来比`排队自旋锁`的实现更加复杂和混乱，但是关注研究它将会有收获
+(原句：but the study with attention will lead to success.)。
 
-API of queued spinlocks
+队列自旋锁的API
 -------------------------------------------------------------------------------
 
-Now we know a little about `queued spinlocks` from the theoretical side, time to see the implementation of this mechanism in the Linux kernel. As we saw above, the [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h#L126) header files provides a set of macro which are represent API for  a spinlock acquiring, releasing and etc:
+现在我们从原理角度了解了一些`队列自旋锁`，是时候了解 Linux 内核中这一机制的实现了。就想我们之前了解的那样 [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h#L126) 头文件提供一套宏，代表API中的自旋锁的获取、释放等等。
 
 ```C
 #define arch_spin_is_locked(l)          queued_spin_is_locked(l)
