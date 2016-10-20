@@ -200,7 +200,7 @@ void unlock(...)
 #define arch_spin_unlock_wait(l)        queued_spin_unlock_wait(l)
 ```
 
-All of these macros expand to the call of functions from the same header file. Additionally, we saw the `qspinlock` structure from the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) header file which represents a queued spinlock in the Linux kernel:
+这些所有的宏扩展了同一头文件下的函数的调用。此外，我们发现 [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) 头文件的 `qspinlock` 结构代表了 Linux 内核队列自旋锁。
 
 ```C
 typedef struct qspinlock {
@@ -208,16 +208,16 @@ typedef struct qspinlock {
 } arch_spinlock_t;
 ```
 
-As we may see, the `qspinlock` structure contains only one field - `val`. This field represents the state of a given `spinlock`. This `4` bytes field consists from following four parts:
+如我们所了解的，`qspinlock` 结构只包含了一个字段 - `val`。这个字段代表给定`自旋锁`的状态。`4` 个字节字段包括如下 4 个部分：
 
-* `0-7` - locked byte;
-* `8` - pending bit;
-* `16-17` - two bit index which represents entry of the `per-cpu` array of the `MCS` lock (will see it soon);
-* `18-31` - contains number of processor which indicates tail of the queue.
+* `0-7` - 上锁字节(locked byte);
+* `8` - 未决位(pending bit);
+* `16-17` - 这两位代表了 `MCS` 锁的 `per_cpu` 数组(马上就会了解)；
+* `18-31` - 包括表明队列尾部的处理器数。
 
-and the `9-15` bytes are not used.
+`9-15` 字节没有被使用。
 
-As we already know, each processor in the system has own copy of the lock. The lock is represented by the following structure:
+就像我们已经知道的，系统中每个处理器有自己的锁拷贝。这个锁由以下结构所表示：
 
 ```C
 struct mcs_spinlock {
@@ -227,7 +227,7 @@ struct mcs_spinlock {
 };
 ```
 
-from the [kernel/locking/mcs_spinlock.h](https://github.com/torvalds/linux/blob/master/kernel/locking/mcs_spinlock.h) header file. The first field represents a pointer to the next thread in the `queue`. The second field represents the state of the current thread in the `queue`, where `1` is `lock` already acquired and `0` in other way. And the last field of the `mcs_spinlock` structure represents nested locks. To understand what is it nested lock, imagine situation when a thread acquired lock, but was interrupted by the hardware [interrupt](https://en.wikipedia.org/wiki/Interrupt) and an [interrupt handler](https://en.wikipedia.org/wiki/Interrupt_handler) tries to take a lock too. For this case, each processor has not just copy of the `mcs_spinlock` structure but array of these structures:
+来自 [kernel/locking/mcs_spinlock.h](https://github.com/torvalds/linux/blob/master/kernel/locking/mcs_spinlock.h) 头文件。第一个字段代表了指向`队列`中下一个线程的指针。第二个字段代表了`队列`中当前线程的状态，其中 `1` 是 `锁`已经获取而 `0` 相反。然后最后一个 `mcs_spinlock` 字段 结构代表嵌套锁 (nested locks)，了解什么是嵌套锁，就像想象一下当线程已经获取锁的情况，而被硬件[中断](https://en.wikipedia.org/wiki/Interrupt) 所中断，然后[中断处理程序](https://en.wikipedia.org/wiki/Interrupt_handler)又尝试获取锁。这个例子里，每个处理器不只是 `mcs_spinlock` 结构的拷贝，也是这些结构的数组：
 
 ```C
 static DEFINE_PER_CPU_ALIGNED(struct mcs_spinlock, mcs_nodes[4]);
