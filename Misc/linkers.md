@@ -528,7 +528,7 @@ main.o: ELF 64-bit LSB relocatable, x86-64, version 1 (SYSV), not stripped
 
 and after this we link object files of our program with the needed system object files and libraries. We just saw a simple example of how to compile and link a C program with the `gcc` compiler and `GNU ld` linker. In this example we have used a couple command line options of the `GNU linker`, but it supports much more command line options than `-o`, `-dynamic-linker`, etc... Moreover `GNU ld` has its own language that allows to control the linking process. In the next two paragraphs we will look into it.
 
-在这之后，我们用所需的系统目标文件和库连链接我们的程序。我们刚看了一个简单的关于如何用 `gcc` 编译器和 `GNU ld` 链接器编译和链接一个 C 程序的样例。在这个样例中，我们使用了一些 `GNU linker` 的命令行选项，但是除了 `-o`、`-dynamic-linker` 等，它还支持其他很多选项。此外，`GNU ld` 还拥有其自己的语言来控制链接过程。在接下来的两个段落中我们深入讨论。。
+在这之后，我们用所需的系统目标文件和库连链接我们的程序。我们刚看了一个简单的关于如何用 `gcc` 编译器和 `GNU ld` 链接器编译和链接一个 C 程序的样例。在这个样例中，我们使用了一些 `GNU linker` 的命令行选项，但是除了 `-o`、`-dynamic-linker` 等，它还支持其他很多选项。此外，`GNU ld` 还拥有其自己的语言来控制链接过程。在接下来的两个段落中我们深入讨论。
 
 实用的 GNU 链接器命令行选项
 ----------------------------------------------
@@ -622,18 +622,22 @@ Commands written in the linker control language are usually placed in a file cal
 用链接器控制语言编写的命令通常被放在一个被称作链接器脚本的文件中。我们可以通过命令行选项 `-T` 将其传递给 `ld` 。一个链接器脚本的主要命令是 `SECTIONS` 指令。每个链接器脚本必须包含这个指令，并且其决定了输出文件的 `映射` 。特殊变量 `.` 包含了当前输出的位置。让我们写一个简单的汇编程序，然后看看如何使用链接器脚本来控制程序的链接。我们将会使用一个 hello world 程序作为样例。
 
 ```assembly
-section .data
-	msg	db "hello, world!",`\n`
-section .text
+.data
+	msg	.ascii "hello, world!",`\n`
+
+.text
+
 	global	_start
+  
 _start:
-	mov	rax, 1
-	mov	rdi, 1
-	mov	rsi, msg
-	mov	rdx, 14
+	mov    $1,%rax
+	mov    $1,%rdi
+	mov    $msg,%rsi
+	mov    $14,%rdx
 	syscall
-	mov	rax, 60
-	mov	rdi, 0
+
+	mov    $60,%rax
+	mov    $0,%rdi
 	syscall
 ```
 
@@ -642,7 +646,7 @@ We can compile and link it with the following commands:
 我们可以用以下命令编译并链接：
 
 ```
-$ nasm -f elf64 -o hello.o hello.asm
+$ as -o hello.o hello.asm
 $ ld -o hello hello.o
 ```
 
@@ -681,7 +685,7 @@ We can compile and link it with the:
 我们可以用以下语句进行编译和链接：
 
 ```
-$ nasm  -f elf64 -o hello.o hello.S && ld -T linker.script && ./hello
+$ as -o hello.o hello.S && ld -T linker.script && ./hello
 hello, world!
 ```
 
@@ -695,7 +699,7 @@ $ objdump -D hello
 Disassembly of section .text:
 
 0000000000200000 <_start>:
-  200000:	b8 01 00 00 00       	mov    $0x1,%eax
+  200000:	48 c7 c0 01 00 00 00 	mov    $0x1,%rax
   ...
 
 Disassembly of section .data:
