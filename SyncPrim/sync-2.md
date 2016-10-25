@@ -233,14 +233,14 @@ struct mcs_spinlock {
 static DEFINE_PER_CPU_ALIGNED(struct mcs_spinlock, mcs_nodes[4]);
 ```
 
-This array allows to make four attempts of a lock acquisition for the four events in following contexts:
+此数组允许以下情况的四个事件的锁获取的四个尝试(原文：This array allows to make four attempts of a lock acquisition for the four events in following contexts:
+)：
+* 普通任务上下文；
+* 硬件中断上下文；
+* 软件中断上下文；
+* 屏蔽中断上下文。
 
-* normal task context;
-* hardware interrupt context;
-* software interrupt context;
-* non-maskable interrupt context.
-
-Now let's return to the `qspinlock` structure and the `API` of the `queued spinlocks`. Before we will move to consider `API` of `queued spinlocks`, notice the `val` field of the `qspinlock` structure has type - `atomic_t` which represents atomic variable or one operation at a time variable. So, all operations with this field will be [atomic](https://en.wikipedia.org/wiki/Linearizability). For example let's look at the reading value of the `val` API:
+现在让我们返回 `qspinlock` 结构和`队列自旋锁`的 `API` 中来。在我们考虑`队列自旋锁`的 `API` 之前，请注意 `qspinlock` 结构的 `val` 字段有类型 - `atomic_t`，此类型代表原子变量或者变量的一次操作(原文：one operation at a time variable)。一次，所有这个字段的操作都是[原子的](https://en.wikipedia.org/wiki/Linearizability)。比如说让我们看看 `val` API 的值：
 
 ```C
 static __always_inline int queued_spin_is_locked(struct qspinlock *lock)
