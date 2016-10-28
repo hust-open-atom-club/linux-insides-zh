@@ -94,7 +94,7 @@ Linux Insides
 |├ 13.1|[@oska874](https://github.com/oska874)|已完成|
 |├ 13.2|[@zmj1316](https://github.com/zmj1316)|已完成|
 |├ 13.3||未开始|
-|└ 13.4||未开始|
+|└ 13.4|[@mudongliang](https://github.com/mudongliang)|正在进行|
 
 ##翻译认领规则
 
