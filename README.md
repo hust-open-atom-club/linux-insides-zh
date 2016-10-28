@@ -65,11 +65,13 @@ Linux Insides
 |├ 6.2|[@keltoy](https://github.com/keltoy)|正在进行|
 |├ 6.3|[@huxq](https://github.com/huxq)|已完成|
 |├ 6.4|[@huxq](https://github.com/huxq)|正在进行|
-|└ 6.5||未开始|
+|├ 6.5||未开始|
+|└ 6.6||未开始|
 | 7. Memory management||正在进行|
 |├ 7.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 7.1|[@choleraehyq](https://github.com/choleraehyq)|已完成|
-|└ 7.2|[@choleraehyq](https://github.com/choleraehyq)|已完成|
+|├ 7.2|[@choleraehyq](https://github.com/choleraehyq)|已完成|
+|└ 7.3||未开始|
 | 8. SMP||未开始|
 | 9. Concepts||正在进行|
 |├ 9.0|[@mudongliang](https://github.com/mudongliang)|已完成|
@@ -91,7 +93,8 @@ Linux Insides
 |├ 13.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 13.1|[@oska874](https://github.com/oska874)|已完成|
 |├ 13.2|[@zmj1316](https://github.com/zmj1316)|已完成|
-|└ 13.3||未开始|
+|├ 13.3||未开始|
+|└ 13.4||未开始|
 
 ##翻译认领规则
 
