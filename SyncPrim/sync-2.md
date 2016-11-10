@@ -249,13 +249,13 @@ static __always_inline int queued_spin_is_locked(struct qspinlock *lock)
 }
 ```
 
-Ok, now we know data structures which represents queued spinlock in the Linux kernel and now time is to look at the implementation of the `main` function from the `queued spinlocks` [API](https://en.wikipedia.org/wiki/Application_programming_interface).
+Ok，现在我们知道 Linux 内核的代表队列自旋锁数据结构，那么是时候看看`队列自旋锁`[API](https://en.wikipedia.org/wiki/Application_programming_interface)中`主要（main）`函数的实现。
 
 ```C
 #define arch_spin_lock(l)               queued_spin_lock(l)
 ```
 
-Yes, this function is - `queued_spin_lock`. As we may understand from the function's name, it allows to acquire lock by the thread. This function is defined in the [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) header file and its implementation looks:
+没错，这个函数是 - `queued_spin_lock`。正如我们可能从函数名中所了解的一样，函数允许通过线程获取锁。这个函数在 [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) 头文件中定义，它的实现看起来是这样：
 
 ```C
 static __always_inline void queued_spin_lock(struct qspinlock *lock)
@@ -269,15 +269,14 @@ static __always_inline void queued_spin_lock(struct qspinlock *lock)
 }
 ```
 
-Looks pretty easy, except the `queued_spin_lock_slowpath` function. We may see that it takes only one parameter. In our case this parameter will represent `queued spinlock` which will be locked. Let's consider the situation that `queue` with locks is empty for now and the first thread wanted to acquire lock. As we may see the `queued_spin_lock` function starts from the call of the `atomic_cmpxchg_acquire` macro. As you may guess from the name of this macro, it executes atomic [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) instruction which compares value of the second parameter (zero in our case) with the value of the first parameter (current state of the given spinlock) and if they are identical, it stores value of the `_Q_LOCKED_VAL` in the memory location which is pointed by the `&lock->val` and return the initial value from this memory location.
+看起来很简单，除了 `queued_spin_lock_slowpath` 函数。 我们可能发现它只有一个参数。在我们的例子中这个参数代表 `队列自旋锁` 被上锁。让我们考虑`队列`锁为空，现在第一个线程想要获取锁的情况。正如我们可能了解的 `queued_spin_lock` 函数从调用 `atomic_cmpxchg_acquire` 宏开始。就像你们可能从宏的名字猜到的那样，它执行原子的 [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 指令，使用第一个参数（当前给定自旋锁的状态）比较第二个参数（在我们的例子为零）的值，如果他们相等，那么第二个参数在存储位置保存 `_Q_LOCKED_VAL` 的值，该存储位置通过 `&lock->val` 指向并且返回这个存储位置的初始值。
 
-The `atomic_cmpxchg_acquire` macro is defined in the [include/linux/atomic.h](https://github.com/torvalds/linux/blob/master/include/linux/atomic.h) header file and expands to the call of the `atomic_cmpxchg` function:
+`atomic_cmpxchg_acquire` 宏定义在 [include/linux/atomic.h](https://github.com/torvalds/linux/blob/master/include/linux/atomic.h) 头文件中并且扩展了 `atomic_cmpxchg` 函数的调用：
 
 ```C
 #define  atomic_cmpxchg_acquire         atomic_cmpxchg
 ```
-
-which is architecture specific. We consider [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture, so in our case this header file will be [arch/x86/include/asm/atomic.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/atomic.h) and the implementation of the `atomic_cmpxchg` function is just returns the result of the `cmpxchg` macro:
+这实现是架构所指定的。我们考虑 [x86_64](https://en.wikipedia.org/wiki/X86-64) 架构，因此在我们的例子中这个头文件在 [arch/x86/include/asm/atomic.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/atomic.h) 并且`atomic_cmpxchg` 函数的实现只是返回 `cmpxchg` 宏的结果：
 
 ```C
 static __always_inline int atomic_cmpxchg(atomic_t *v, int old, int new)
@@ -286,7 +285,7 @@ static __always_inline int atomic_cmpxchg(atomic_t *v, int old, int new)
 }
 ```
 
-This macro is defined in the [arch/x86/include/asm/cmpxchg.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/cmpxchg.h) header file and looks:
+这个宏在[arch/x86/include/asm/cmpxchg.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/cmpxchg.h)头文件中定义，看上去是这样：
 
 ```C
 #define cmpxchg(ptr, old, new) \
@@ -296,7 +295,7 @@ This macro is defined in the [arch/x86/include/asm/cmpxchg.h](https://github.com
     __raw_cmpxchg((ptr), (old), (new), (size), LOCK_PREFIX)
 ```
 
-As we may see, the `cmpxchg` macro expands to the `__cpmxchg` macro with the almost the same set of parameters. New additional parameter is the size of the atomic value. The `__cmpxchg` macro adds `LOCK_PREFIX` and expands to the `__raw_cmpxchg` macro where `LOCK_PREFIX` just [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction. After all, the `__raw_cmpxchg` does all job for us:
+就像我们可能了解的那样，`cmpxchg` 宏使用几乎相同的参数集合扩展了 `__cpmxchg` 宏。新添加的参数是原子值的大小。`__cpmxchg` 宏添加了 `LOCK_PREFIX`，还扩展了 `__raw_cmpxchg` 宏中 `LOCK_PREFIX`的 [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html)指令。毕竟 `__raw_cmpxchg` 对我们来说做了所有的的工作：
 
 ```C
 #define __raw_cmpxchg(ptr, old, new, size, lock) \
@@ -315,7 +314,7 @@ As we may see, the `cmpxchg` macro expands to the `__cpmxchg` macro with the alm
 })
 ```
 
-After the `atomic_cmpxchg_acquire` macro will be executed, it returns the previous value of the memory location. Now only one thread tried to acquire a lock, so the `val` will be zero and we will return from the `queued_spin_lock` function:
+在 `atomic_cmpxchg_acquire` 宏被执行后，该宏返回内存地址之前的值。现在只有一个线程尝试获取锁，因此 `val` 将会置为零然后我们从 `queued_spin_lock` 函数返回：
 
 ```C
 val = atomic_cmpxchg_acquire(&lock->val, 0, _Q_LOCKED_VAL);
@@ -323,9 +322,10 @@ if (likely(val == 0))
     return;
 ```
 
-From this moment, our first thread will hold a lock. Notice that this behavior differs from the behavior which was described in the `MCS` algorithm. The thread acquired lock, but we didn't add it to the `queue`. As I already wrote the implementation of `queued spinlocks` concept is based on the `MCS` algorithm in the Linux kernel, but in the same time it has some difference like this for optimization purpose.
+此时此刻，我们的第一个线程持有锁。注意这个行为与在 `MCS` 算法的描述有所区别。线程获取锁，但是我们不添加此线程入`队列`。就像我之前已经写到的，`队列自旋锁` 概念的实现在 Linux 内核中基于 `MCS` 算法，但是于此同时它对优化目的有一些差异。
 
-So the first thread have acquired lock and now let's consider that the second thread tried to acquire the same lock. The second thread will start from the same `queued_spin_lock` function, but the `lock->val` will contain `1` or `_Q_LOCKED_VAL`, because first thread already holds lock. So, in this case the `queued_spin_lock_slowpath` function will be called. The `queued_spin_lock_slowpath` function is defined in the [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/master/kernel/locking/qspinlock.c) source code file and starts from the following checks:
+所以第一个线程已经获取了锁然后现在让我们考虑第二个线程尝试获取相同的锁的情况。第二个线程将从同样的 `queued_spin_lock` 函数开始，但是 `lock->val` 会包含
+`1` 或者 `_Q_LOCKED_VAL`，因为第一个线程已经持有了锁。因此，在本例中 `queued_spin_lock_slowpath` 函数将会被调用。`queued_spin_lock_slowpath`函数定义在 [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/master/kernel/locking/qspinlock.c) 源码文件中并且从以下的检查开始：
 
 ```C
 void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
@@ -342,7 +342,7 @@ void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
 }
 ```
 
-which check the state of the `pvqspinlock`. The `pvqspinlock` is `queued spinlock` in [paravirtualized](https://en.wikipedia.org/wiki/Paravirtualization) environment. As this chapter is related only to synchronization primitives in the Linux kernel, we skip these and other parts which are not directly related to the topic of this chapter. After these checks we compare our value which represents lock with the value of the `_Q_PENDING_VAL` macro and do nothing while this is true:
+这些检查操作检查了 `pvqspinlock` 的状态。`pvqspinlock` 是在[准虚拟化（paravirtualized）](https://en.wikipedia.org/wiki/Paravirtualization)环境中的`队列自旋锁`。就像这一章节只相关 Linux 内核同步原语一样，我们跳过这些和其他不直接相关本章节主题的部分。这些检查之后我们比较使用 `_Q_PENDING_VAL` 宏的值所代表的锁，然后什么都不做直到该比较为真（原文：After these checks we compare our value which represents lock with the value of the `_Q_PENDING_VAL` macro and do nothing while this is true）：
 
 ```C
 if (val == _Q_PENDING_VAL) {
