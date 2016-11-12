@@ -207,7 +207,7 @@ hdr:
 
 bootloader必须填充在 Linux boot protocol 中标记为 `write` 的头信息，比如 [type_of_loader](http://lxr.free-electrons.com/source/Documentation/x86/boot.txt?v=3.18#L354)，这些头信息可能来自命令行，或者通过计算得到。在这里我们不会详细介绍所有的 kernel setup header，我们将在需要的时候逐个介绍。不过，你可以自己通过 [boot protocol](http://lxr.free-electrons.com/source/Documentation/x86/boot.txt?v=3.18#L156) 来了解这些设置。
 
-通过阅读 kernel boot protocol，在内核被引导如内存后，内存使用情况将入下表所示：
+通过阅读 kernel boot protocol，在内核被引导入内存后，内存使用情况将入下表所示：
 
 ```shell
          | Protected-mode kernel  |
@@ -241,7 +241,7 @@ X+08000  +------------------------+
 个人以为应该是 X + sizeof(KernelBootSector) + 1 因为 X 已经是一个具体的物理地址了，不是一个偏移
 ```
 
-上面的公式中， `X` 是 kernel bootsector 被引导如内存的位置。在我的机器上， `X` 的值是 `0x10000`，我们可以通过 memory dump 来检查这个地址：
+上面的公式中， `X` 是 kernel bootsector 被引导入内存的位置。在我的机器上， `X` 的值是 `0x10000`，我们可以通过 memory dump 来检查这个地址：
 
 ![kernel first address](http://oi57.tinypic.com/16bkco2.jpg)
 
