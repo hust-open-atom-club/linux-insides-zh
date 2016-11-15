@@ -4,14 +4,14 @@
 显示模式初始化和进入保护模式
 --------------------------------------------------------------------------------
 
-这一章是`内核启动过程`的第三部分，在[前一章](linux-bootstrap-2.md#kernel-booting-process-part-2)中，我们的内核启动过程之旅停在了对 `set_video` 函数的调用（这个函数定义在 [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L181)）。在这一章中，我们将接着上一章继续我们的内核启动之旅。在这一章你将读到下面的内容：
+这一章是`内核启动过程`的第三部分，在[前一章](linux-bootstrap-2.md#kernel-booting-process-part-2)中，我们的内核启动过程之旅停在了对 `set_video` 函数的调用（这个函数定义在 [main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L181)）。在这一章中，我们将接着上一章继续我们的内核启动之旅。在这一章你将读到下面的内容：
 - 显示模式的初始化，
 - 在进入保护模式之前的准备工作，
 - 正式进入保护模式
 
 **注意** 如果你对保护模式一无所知，你可以查看[前一章](linux-bootstrap-2.md#protected-mode) 的相关内容。另外，你也可以查看下面这些[链接](linux-bootstrap-2.md#links) 以了解更多关于保护模式的内容。
 
-就像我们前面所说的，我们将从 `set_video` 函数开始我们这章的内容，你可以在 [arch/x86/boot/video.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/video.c#L315) 找到这个函数的定义。 这个函数首先从 `boot_params.hdr` 数据结构获取显示模式设置：
+就像我们前面所说的，我们将从 `set_video` 函数开始我们这章的内容，你可以在 [arch/x86/boot/video.c](http://lxr.free-electrons.com/source/arch/x86/boot/video.c?v=3.18#L315) 找到这个函数的定义。 这个函数首先从 `boot_params.hdr` 数据结构获取显示模式设置：
 
 ```C
 u16 mode = boot_params.hdr.vid_mode;
@@ -59,13 +59,13 @@ vga=<mode>
 堆操作 API
 --------------------------------------------------------------------------------
 
-在 `set_video` 函数将 `vid_mod` 的值设置完成之后，将调用 `RESET_HEAP` 宏将 HEAP 头指向 `_end` 符号。`RESET_HEAP` 宏定义在  [boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/boot/boot.h#L199)：
+在 `set_video` 函数将 `vid_mod` 的值设置完成之后，将调用 `RESET_HEAP` 宏将 HEAP 头指向 `_end` 符号。`RESET_HEAP` 宏定义在  [boot.h](http://lxr.free-electrons.com/source/arch/x86/boot/boot.h?v=3.18#L199)：
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
 ```
 
-如果你阅读过第二部分，你应该还记得在第二部分中，我们通过 [`init_heap`](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L116) 函数完成了 HEAP 的初始化。在 `boot.h` 中定义了一系列的方法来操作被初始化之后的 HEAP。这些操作包括：
+如果你阅读过第二部分，你应该还记得在第二部分中，我们通过 [`init_heap`](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L116) 函数完成了 HEAP 的初始化。在 `boot.h` 中定义了一系列的方法来操作被初始化之后的 HEAP。这些操作包括：
 
 ```C
 #define RESET_HEAP() ((void *)( HEAP = _end ))
@@ -288,9 +288,9 @@ static int vga_set_mode(struct mode_info *mode)
 在切换到保护模式之前的最后的准备工作
 --------------------------------------------------------------------------------
 
-在进入保护模式之前的最后一个函数调用发生在 [main.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/main.c#L184) 中的 `go_to_protected_mode` 函数，就像这个函数的注释说的，这个函数将进行最后的准备工作然后进入保护模式，下面就让我们来具体看看最后的准备工作是什么，以及系统是如何切换如保护模式的。
+在进入保护模式之前的最后一个函数调用发生在 [main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L184) 中的 `go_to_protected_mode` 函数，就像这个函数的注释说的，这个函数将进行最后的准备工作然后进入保护模式，下面就让我们来具体看看最后的准备工作是什么，以及系统是如何切换如保护模式的。
 
-`go_to_protected_mode` 函数本身定义在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pm.c#L104)。 这个函数调用了一些其他的函数进行最后的准备工作，下面就让我们来具体看看这些函数。
+`go_to_protected_mode` 函数本身定义在 [arch/x86/boot/pm.c](http://lxr.free-electrons.com/source/arch/x86/boot/pm.c?v=3.18#L104)。 这个函数调用了一些其他的函数进行最后的准备工作，下面就让我们来具体看看这些函数。
 
 `go_to_protected_mode` 函数首先调用的是 `realmode_switch_hook` 函数，后者如果发现 `realmode_switch` hook， 那么将调用它并禁止 [NMI](http://en.wikipedia.org/wiki/Non-maskable_interrupt) 中断，反之将直接禁止 NMI 中断。只有当 bootloader 运行在宿主环境下（比如在 DOS 下运行 ）， hook 才会被使用。你可以在 [boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt) (see **ADVANCED BOOT LOADER HOOKS**) 中详细了解 hook 函数的信息。
 
@@ -337,7 +337,7 @@ static inline void io_delay(void)
 
 对 I/O 端口 `0x80` 写入任何的字节都将得到 1 ms 的延时。在上面的代码中，代码将 `al` 寄存器中的值写到了这个端口。在这个 `io_delay` 调用完成之后， `realmode_switch_hook` 函数就完成了所有工作，下面让我们进入下一个函数。
 
-下一个函数调用是 `enable_a20`，这个函数使能 [A20 line](http://en.wikipedia.org/wiki/A20_line)，你可以在 [arch/x86/boot/a20.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/a20.c) 找到这个函数的定义，这个函数会尝试使用不同的方式来使能 A20 地址线。首先这个函数将调用 `a20_test_short`（该函数将调用 `a20_test` 函数） 来检测 A20 地址线是否已经被激活了：
+下一个函数调用是 `enable_a20`，这个函数使能 [A20 line](http://en.wikipedia.org/wiki/A20_line)，你可以在 [arch/x86/boot/a20.c](http://lxr.free-electrons.com/source/arch/x86/boot/a20.c?v=3.18) 找到这个函数的定义，这个函数会尝试使用不同的方式来使能 A20 地址线。首先这个函数将调用 `a20_test_short`（该函数将调用 `a20_test` 函数） 来检测 A20 地址线是否已经被激活了：
 
 ```C
 static int a20_test(int loops)
@@ -367,7 +367,7 @@ static int a20_test(int loops)
 
 接下来我们使用 `wrfs32` 函数将更新过的 `ctr` 的值写入 `fs:gs` ，接着延时 1ms， 然后从 `GS:A20_TEST_ADDR+0x10` 读取内容，如果该地址内容不为0，那么 A20 已经被激活。如果 A20 没有被激活，代码将尝试使用多种方法进行 A20 地址激活。其中的一种方法就是调用 BIOS `0X15` 中断激活 A20 地址线。
 
-如果 `enabled_a20` 函数调用失败，显示一个错误消息并且调用 `die` 函数结束操作系统运行。`die` 函数定义在 [arch/x86/boot/header.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/header.S):
+如果 `enabled_a20` 函数调用失败，显示一个错误消息并且调用 `die` 函数结束操作系统运行。`die` 函数定义在 [arch/x86/boot/header.S](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18):
 
 ```assembly
 die:
@@ -525,7 +525,7 @@ asm volatile("lgdtl %0" : : "m" (gdt));
 protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4));
 ```
 
-`protected_mode_jump` 函数定义在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S#L26)，它接受下面2个参数:
+`protected_mode_jump` 函数定义在 [arch/x86/boot/pmjump.S](http://lxr.free-electrons.com/source/arch/x86/boot/pmjump.S?v=3.18#L26)，它接受下面2个参数:
 
 * 保护模式代码的入口
 * `boot_params` 结构的地址
