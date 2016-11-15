@@ -8,7 +8,7 @@
 
 **注意：这部分将会有大量的汇编代码，如果你不熟悉汇编，建议你找本书参考一下。**
 
-在[前一章节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，我们停在了跳转到位于 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 的 32 位入口点这一步：
+在[前一章节](linux-bootstrap-3.md)，我们停在了跳转到位于 [arch/x86/boot/pmjump.S](http://lxr.free-electrons.com/source/arch/x86/boot/pmjump.S?v=3.18) 的 32 位入口点这一步：
 
 ```assembly
 jmpl	*%eax
@@ -51,7 +51,7 @@ gs             0x18	24
 32 位入口点
 --------------------------------------------------------------------------------
 
-我们可以在汇编源码 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中找到 32 位入口点的定义。
+我们可以在汇编源码 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 中找到 32 位入口点的定义。
 
 ```assembly
 	__HEAD
@@ -67,10 +67,10 @@ ENDPROC(startup_32)
 
 在 `arch/x86/boot/compressed` 目录下有两个文件：
 
-* [head_32.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_32.S)
-* [head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)
+* [head_32.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_32.S?v=3.18)
+* [head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18)
 
-但是，你可能还记得我们这本书只和 `x86_64` 有关，所以我们只会关注 `head_64.S` ；在我们这里 `head_32.S` 没有被用到。让我们看一下 [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile)。在那里我们可以看到以下目标：
+但是，你可能还记得我们这本书只和 `x86_64` 有关，所以我们只会关注 `head_64.S` ；在我们这里 `head_32.S` 没有被用到。让我们看一下 [arch/x86/boot/compressed/Makefile](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/Makefile?v=3.18)。在那里我们可以看到以下目标：
 
 ```Makefile
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
@@ -78,7 +78,7 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 	$(obj)/piggy.o $(obj)/cpuflags.o
 ```
 
-注意 `$(obj)/head_$(BITS).o` 。这意味着我们将会选择基于 `$(BITS)` 所设置的文件执行链接操作，即 head_32.o 或者 head_64.o。`$(BITS)` 在 [arch/x86/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) 之中根据 .config 文件另外定义：
+注意 `$(obj)/head_$(BITS).o` 。这意味着我们将会选择基于 `$(BITS)` 所设置的文件执行链接操作，即 head_32.o 或者 head_64.o。`$(BITS)` 在 [arch/x86/Makefile](http://lxr.free-electrons.com/source/arch/x86/Makefile?v=3.18) 之中根据 .config 文件另外定义：
 
 ```Makefile
 ifeq ($(CONFIG_X86_32),y)
@@ -97,7 +97,7 @@ endif
 必要时重新加载内存段寄存器
 --------------------------------------------------------------------------------
 
-正如上面阐述的，我们先从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 这个汇编文件开始。首先我们看到了在 `startup_32` 之前的特殊段属性定义：
+正如上面阐述的，我们先从 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 这个汇编文件开始。首先我们看到了在 `startup_32` 之前的特殊段属性定义：
 
 ```assembly
     __HEAD
@@ -105,13 +105,13 @@ endif
 ENTRY(startup_32)
 ```
 
-这个 `__HEAD` 是一个定义在头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 中的宏，展开后就是下面这个段的定义：
+这个 `__HEAD` 是一个定义在头文件 [include/linux/init.h](http://lxr.free-electrons.com/source/include/linux/init.h?v=3.18) 中的宏，展开后就是下面这个段的定义：
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
 
-其拥有 `.head.text` 的命名和 `ax` 标记。在这里，这些标记告诉我们这个段是[可执行的](https://en.wikipedia.org/wiki/Executable)或者换种说法，包含了代码。我们可以在 [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) 这个链接脚本里找到这个段的定义： 
+其拥有 `.head.text` 的命名和 `ax` 标记。在这里，这些标记告诉我们这个段是[可执行的](https://en.wikipedia.org/wiki/Executable)或者换种说法，包含了代码。我们可以在 [arch/x86/boot/compressed/vmlinux.lds.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/vmlinux.lds.S?v=3.18) 这个链接脚本里找到这个段的定义： 
 
 ```
 SECTIONS
@@ -138,7 +138,7 @@ Be careful parts of head_64.S assume startup_32 is at address 0.
 
 在 `startup_32` 函数的开始，我们可以看到 `cld` 指令将[标志寄存器](http://baike.baidu.com/view/1845107.htm)的 `DF` （方向标志）位清空。当方向标志被清空，所有的串操作指令像[stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html)， [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html)等等将会增加索引寄存器 `esi` 或者 `edi` 的值。我们需要清空方向标志是因为接下来我们会使用汇编的串操作指令来做为页表腾出空间等工作。
 
-在我们清空 `DF` 标志后，下一步就是从内核加载头中的 `loadflags` 字段来检查 `KEEP_SEGMENTS` 标志。你是否还记得在本书的[最初一节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-1.md)，我们已经看到过 `loadflags` 。在那里我们检查了 `CAN_USE_HEAP` 标记以使用堆。现在我们需要检查 `KEEP_SEGMENTS` 标记。这些标记在 linux 的[引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)文档中有描述：
+在我们清空 `DF` 标志后，下一步就是从内核加载头中的 `loadflags` 字段来检查 `KEEP_SEGMENTS` 标志。你是否还记得在本书的[最初一节](linux-bootstrap-1.md)，我们已经看到过 `loadflags` 。在那里我们检查了 `CAN_USE_HEAP` 标记以使用堆。现在我们需要检查 `KEEP_SEGMENTS` 标记。这些标记在 linux 的[引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)文档中有描述：
 
 ```
 Bit 6 (write): KEEP_SEGMENTS
@@ -169,7 +169,7 @@ Bit 6 (write): KEEP_SEGMENTS
 	movl	%eax, %ss
 ```
 
-记住 `__BOOT_DS` 是 `0x18` （位于[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)中数据段的索引）。如果设置了 `KEEP_SEGMENTS` ，我们就跳转到最近的 `1f` 标签，或者当没有 `1f` 标签，则用 `__BOOT_DS` 更新段寄存器。这非常简单，但是这是一个有趣的操作。如果你已经读了[前一章节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)，你或许还记得我们在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/pmjump.S) 中切换到[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)的时候已经更新了这些段寄存器。那么为什么我们还要去关心这些段寄存器的值呢？答案很简单，Linux 内核也有32位的引导协议，如果一个引导程序之前使用32位协议引导内核，那么在 `startup_32` 之前的代码就会被忽略。在这种情况下 `startup_32` 将会变成引导程序之后的第一个入口点，不保证段寄存器会不会处于未知状态。
+记住 `__BOOT_DS` 是 `0x18` （位于[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)中数据段的索引）。如果设置了 `KEEP_SEGMENTS` ，我们就跳转到最近的 `1f` 标签，或者当没有 `1f` 标签，则用 `__BOOT_DS` 更新段寄存器。这非常简单，但是这是一个有趣的操作。如果你已经读了[前一章节](linux-bootstrap-3.md)，你或许还记得我们在 [arch/x86/boot/pmjump.S](http://lxr.free-electrons.com/source/arch/x86/boot/pmjump.S?v=3.18) 中切换到[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)的时候已经更新了这些段寄存器。那么为什么我们还要去关心这些段寄存器的值呢？答案很简单，Linux 内核也有32位的引导协议，如果一个引导程序之前使用32位协议引导内核，那么在 `startup_32` 之前的代码就会被忽略。在这种情况下 `startup_32` 将会变成引导程序之后的第一个入口点，不保证段寄存器会不会处于未知状态。
 
 在我们检查了 `KEEP_SEGMENTS` 标记并且给段寄存器设置了正确的值之后，下一步就是计算我们代码的加载和编译运行之间的位置偏差了。记住 `setup.ld.S` 包含了以下定义：在 `.head.text` 段的开始 `. = 0` 。这意味着这一段代码被编译成从 `0` 地址运行。我们可以在 `objdump` 工具的输出中看到：
 
@@ -200,7 +200,7 @@ label: pop %reg
 	subl	$1b, %ebp
 ```
 
-回忆前一节， `esi` 寄存器包含了 [boot_params](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/bootparam.h#L113) 结构的地址，这个结构在我们切换到保护模式之前已经被填充了。`bootparams` 这个结构体包含了一个特殊的字段 `scratch` ，其偏移量为 `0x1e4` 。这个 4 字节的区域将会成为 `call` 指令的临时栈。我们把 `scratch` 的地址加 4 存入 `esp` 寄存器。我们之所以在 `BP_scratch` 基础上加 `4` 是因为，如之前所说的，这将成为一个临时的栈，而在 `x86_64` 架构下，栈是自顶向下生长的。所以我们的栈指针就会指向栈顶。接下来我们就可以看到我上面描述的过程。我们跳转到 `1f` 标签并且把该标签的地址放入 `ebp` 寄存器，因为在执行 `call` 指令之后我们把返回地址放到了栈顶。那么，目前我们拥有 `1f` 标签的地址，也能够很容易得到 `startup_32` 的地址。我们只需要把我们从栈里得到的地址减去标签的地址：
+回忆前一节， `esi` 寄存器包含了 [boot_params](http://lxr.free-electrons.com/source/arch/x86/include/uapi/asm/bootparam.h?v=3.18#L113) 结构的地址，这个结构在我们切换到保护模式之前已经被填充了。`bootparams` 这个结构体包含了一个特殊的字段 `scratch` ，其偏移量为 `0x1e4` 。这个 4 字节的区域将会成为 `call` 指令的临时栈。我们把 `scratch` 的地址加 4 存入 `esp` 寄存器。我们之所以在 `BP_scratch` 基础上加 `4` 是因为，如之前所说的，这将成为一个临时的栈，而在 `x86_64` 架构下，栈是自顶向下生长的。所以我们的栈指针就会指向栈顶。接下来我们就可以看到我上面描述的过程。我们跳转到 `1f` 标签并且把该标签的地址放入 `ebp` 寄存器，因为在执行 `call` 指令之后我们把返回地址放到了栈顶。那么，目前我们拥有 `1f` 标签的地址，也能够很容易得到 `startup_32` 的地址。我们只需要把我们从栈里得到的地址减去标签的地址：
 
 ```
 startup_32 (0x0)     +-----------------------+
@@ -272,7 +272,7 @@ ebp            0x100000	0x100000
 	movl	%eax, %esp
 ```
 
- `boots_stack_end` 标签被定义在同一个汇编文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中，位于 [.bss](https://en.wikipedia.org/wiki/.bss) 段：
+ `boots_stack_end` 标签被定义在同一个汇编文件 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 中，位于 [.bss](https://en.wikipedia.org/wiki/.bss) 段：
 
 ```assembly
 	.bss
@@ -294,7 +294,7 @@ boot_stack_end:
 	jnz	no_longmode
 ```
 
-这个函数定义在 [arch/x86/kernel/verify_cpu.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/verify_cpu.S) 中，只是包含了几个对 [cpuid](https://en.wikipedia.org/wiki/CPUID) 指令的调用。该指令用于获取处理器的信息。在我们的情况下，它检查了对 `长模式` 和 `SSE` 的支持，通过 `eax` 寄存器返回0表示成功，1表示失败。
+这个函数定义在 [arch/x86/kernel/verify_cpu.S](http://lxr.free-electrons.com/source/arch/x86/kernel/verify_cpu.S?v=3.18) 中，只是包含了几个对 [cpuid](https://en.wikipedia.org/wiki/CPUID) 指令的调用。该指令用于获取处理器的信息。在我们的情况下，它检查了对 `长模式` 和 `SSE` 的支持，通过 `eax` 寄存器返回0表示成功，1表示失败。
 
 如果 `eax` 的值不是 0 ，我们就跳转到 `no_longmode` 标签，用 `hlt` 指令停止 CPU ，期间不会发生硬件中断：
 
@@ -327,7 +327,7 @@ it has been loaded at and the compile time physical address
 注意：如果 CONFIG_RELOCATABLE=y， 那么 内核将会从其被加载的位置运行，编译时的物理地址 (CONFIG_PHYSICAL_START) 将会被作为最低地址位置的限制。
 ```
 
-简单来说，这意味着相同配置下的 Linux 内核可以从不同地址被启动。这是通过将程序以 [位置无关代码](https://zh.wikipedia.org/wiki/%E5%9C%B0%E5%9D%80%E6%97%A0%E5%85%B3%E4%BB%A3%E7%A0%81) 的形式编译来达到的。如果我们参考 [/arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/Makefile)，我们将会看到解压器的确是用 `-fPIC` 标记编译的：
+简单来说，这意味着相同配置下的 Linux 内核可以从不同地址被启动。这是通过将程序以 [位置无关代码](https://zh.wikipedia.org/wiki/%E5%9C%B0%E5%9D%80%E6%97%A0%E5%85%B3%E4%BB%A3%E7%A0%81) 的形式编译来达到的。如果我们参考 [/arch/x86/boot/compressed/Makefile](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/Makefile?v=3.18)，我们将会看到解压器的确是用 `-fPIC` 标记编译的：
 
 ```Makefile
 KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
@@ -351,7 +351,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 	addl	$z_extract_offset, %ebx
 ```
 
-记住 `ebp` 寄存器的值就是 `startup_32` 标签的物理地址。如果在内核配置中 `CONFIG_RELOCATABLE` 内核配置项开启，我们就把这个地址放到 `ebx` 寄存器中，对齐到 `2M` 的整数倍 ，然后和 `LOAD_PHYSICAL_ADDR` 的值比较。 `LOAD_PHYSICAL_ADDR` 宏定义在头文件 [arch/x86/include/asm/boot.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/boot.h) 中，如下：
+记住 `ebp` 寄存器的值就是 `startup_32` 标签的物理地址。如果在内核配置中 `CONFIG_RELOCATABLE` 内核配置项开启，我们就把这个地址放到 `ebx` 寄存器中，对齐到 `2M` 的整数倍 ，然后和 `LOAD_PHYSICAL_ADDR` 的值比较。 `LOAD_PHYSICAL_ADDR` 宏定义在头文件 [arch/x86/include/asm/boot.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/boot.h?v=3.18) 中，如下：
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -374,7 +374,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 	lgdt	gdt(%ebp)
 ```
 
-在这里我们把 `ebp` 寄存器加上 `gdt` 的偏移存到 `eax` 寄存器。接下来我们把这个地址放到 `ebp` 加上 `gdt+2` 偏移的位置上，并且用 `lgdt` 指令载入 `全局描述符表` 。为了理解这个神奇的 `gdt` 偏移量，我们需要关注 `全局描述符表` 的定义。我们可以在同一个[源文件](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)中找到其定义：
+在这里我们把 `ebp` 寄存器加上 `gdt` 的偏移存到 `eax` 寄存器。接下来我们把这个地址放到 `ebp` 加上 `gdt+2` 偏移的位置上，并且用 `lgdt` 指令载入 `全局描述符表` 。为了理解这个神奇的 `gdt` 偏移量，我们需要关注 `全局描述符表` 的定义。我们可以在同一个[源文件](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18)中找到其定义：
 
 ```assembly
 	.data
@@ -390,7 +390,7 @@ gdt:
 gdt_end:
 ```
 
-我们可以看到其位于 `.data` 段，并且包含了5个描述符： `null` 、内核代码段、内核数据段和其他两个任务描述符。我们已经在[上一章节](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)载入了 `全局描述符表` ，和我们现在做的差不多，但是将描述符改为 `CS.L = 1` `CS.D = 0` 从而在 `64` 位模式下执行。我们可以看到， `gdt` 的定义从两个字节开始： `gdt_end - gdt` ，代表了 `gdt` 表的最后一个字节，或者说表的范围。接下来的4个字节包含了 `gdt` 的基地址。记住 `全局描述符表` 保存在 `48位 GDTR-全局描述符表寄存器` 中，由两个部分组成：
+我们可以看到其位于 `.data` 段，并且包含了5个描述符： `null` 、内核代码段、内核数据段和其他两个任务描述符。我们已经在[上一章节](linux-bootstrap-3.md)载入了 `全局描述符表` ，和我们现在做的差不多，但是将描述符改为 `CS.L = 1` `CS.D = 0` 从而在 `64` 位模式下执行。我们可以看到， `gdt` 的定义从两个字节开始： `gdt_end - gdt` ，代表了 `gdt` 表的最后一个字节，或者说表的范围。接下来的4个字节包含了 `gdt` 的基地址。记住 `全局描述符表` 保存在 `48位 GDTR-全局描述符表寄存器` 中，由两个部分组成：
 
 * 全局描述符表的大小 (16位）
 * 全局描述符表的基址 (32位)
@@ -459,7 +459,7 @@ Linux 内核使用 `4级` 页表，通常我们会建立6个页表：
 
 我们把和 `ebx` 相关的 `pgtable` 的地址放到 `edi` 寄存器中，清空 `eax` 寄存器，并将 `ecx` 赋值为 `6144` 。 `rep stosl` 指令将会把 `eax` 的值写到 `edi` 指向的地址，然后给 `edi` 加 4 ， `ecx` 减 4 ，重复直到 `ecx` 小于等于 0 。所以我们才把 `6144` 赋值给 `ecx` 。
 
- `pgtable` 定义在 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 的最后：
+ `pgtable` 定义在 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 的最后：
 
 ```assembly
 	.section ".pgtable","a",@nobits
@@ -534,7 +534,7 @@ pgtable:
 	wrmsr
 ```
 
-在这里我们把 `MSR_EFER` 标记（在 [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/msr-index.h#L7) 中定义）放到 `ecx` 寄存器中，然后调用 `rdmsr` 指令读取 [MSR](http://en.wikipedia.org/wiki/Model-specific_register) 寄存器。在 `rdmsr` 执行之后，我们将会获得 `edx:eax` 中的结果值，其取决于 `ecx` 的值。我们通过 `btsl` 指令检查 `EFER_LME` 位，并且通过 `wrmsr` 指令将 `eax` 的数据写入 `MSR` 寄存器。
+在这里我们把 `MSR_EFER` 标记（在 [arch/x86/include/uapi/asm/msr-index.h](http://lxr.free-electrons.com/source/arch/x86/include/uapi/asm/msr-index.h?v=3.18#L7) 中定义）放到 `ecx` 寄存器中，然后调用 `rdmsr` 指令读取 [MSR](http://en.wikipedia.org/wiki/Model-specific_register) 寄存器。在 `rdmsr` 执行之后，我们将会获得 `edx:eax` 中的结果值，其取决于 `ecx` 的值。我们通过 `btsl` 指令检查 `EFER_LME` 位，并且通过 `wrmsr` 指令将 `eax` 的数据写入 `MSR` 寄存器。
 
 下一步我们将内核段代码地址入栈（我们在 GDT 中定义了），然后将 `startup_64` 的地址导入 `eax` 。
 
