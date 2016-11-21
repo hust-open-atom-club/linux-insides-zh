@@ -11,4 +11,4 @@
 * [深入外部硬件中断](interrupts-7.md) - 这部分讲述了关于处理外部硬件中断的一些早期初始化代码。
 * [IRQs的非早期初始化](interrupts-8.md) - 这部分讲述了处理外部硬件中断的非早期初始化代码。
 * [Softirq, Tasklets and Workqueues](interrupts-9.md) - 这部分讲述了softirqs、tasklets 和 workqueues 的内容.
-* [](interrupts-10.md) - 这是中断和中断处理的最后一部分，并且我们将会看到一个真实的硬件驱动和中断。
+* [最后一部分](interrupts-10.md) - 这是中断和中断处理的最后一部分，并且我们将会看到一个真实的硬件驱动和中断。
