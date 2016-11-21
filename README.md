@@ -95,7 +95,9 @@ Linux 内核揭密
 |├ [13.2](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linkers.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
 |├ [13.3](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/contribute.md)||未开始|
 |└ [13.4](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/program_startup.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
-
+| 14. [KernelStructures](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures)||正在进行|
+|├ [14.0](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
+|└ [14.1](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/idt.md)||未开始|
 ##翻译认领规则
 
 为了避免多个译者同时翻译相同章节的情况出现，请按照以下规则认领自己要翻译的章节：
