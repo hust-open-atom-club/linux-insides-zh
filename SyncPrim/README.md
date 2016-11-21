@@ -7,3 +7,4 @@
 * [信号量](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-3.html) - this part describes impmentation of `semaphore` synchronization primitive in the Linux kernel. 这个部分描述 Linux 内核中的同步原语 `semaphore` 的实现；
 * [互斥锁](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html) - 这个部分描述 Linux 内核中的 `mutex` ；
 * [读者/写者信号量](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-5.html) - 这个部分描述特殊类型的信号量 - `reader/writer` 信号量；
+* [顺序锁](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-6.html) - 这个部分描述 Linux 内核中的顺序锁.
