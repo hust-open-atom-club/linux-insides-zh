@@ -1,5 +1,5 @@
-Linux Insides
-===============
+Linux 内核揭密
+==============
 
 [![Join the chat at https://gitter.im/MintCN/linux-insides-zh](https://badges.gitter.im/MintCN/linux-insides-zh.svg)](https://gitter.im/MintCN/linux-insides-zh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -14,12 +14,12 @@ Linux Insides
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
 | 1. [Booting](https://github.com/MintCN/linux-insides-zh/tree/master/Booting)||正在进行|
-|├ 1.0|[@xinqiu](https://github.com/xinqiu)|已完成|
-|├ 1.1|[@hailincai](https://github.com/hailincai)|已完成|
-|├ 1.2|[@hailincai](https://github.com/hailincai)|已完成|
-|├ 1.3|[@hailincai](https://github.com/hailincai)|已完成|
-|├ 1.4|[@zmj1316](https://github.com/zmj1316)|已完成|
-|└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
+|├ [1.0](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/README.md)|[@xinqiu](https://github.com/xinqiu)|已完成|
+|├ [1.1](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-1.md)|[@hailincai](https://github.com/hailincai)|已完成|
+|├ [1.2](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md)|[@hailincai](https://github.com/hailincai)|已完成|
+|├ [1.3](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)|[@hailincai](https://github.com/hailincai)|已完成|
+|├ [1.4](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-4.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
+|└ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)|[@chengong](https://github.com/chengong)|正在进行|
 | 2. [Initialization](https://github.com/MintCN/linux-insides-zh/tree/master/Initialization)||正在进行|
 |├ 2.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 2.1|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
