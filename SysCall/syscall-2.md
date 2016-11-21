@@ -114,7 +114,7 @@ asmlinkage const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
 
 之后所有指向“ non-implemented ”系统调用元素的内容为 `sys_ni_syscall` 函数的地址，该函数仅返回 `-ENOSYS` 。 其他元素指向 `sys_syscall_name` 函数。
 
-至此, 完成系统调用表的填充并且 Linux内核了解系统调用处理器的为值。但是 Linux 内核在处理用户空间程序的系统调用时并未立即调用 `sys_syscall_name` 函数。 记住关于中断及中断处理的 [章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)。当 Linux 内核获得处理中断的控制权, 在调用中断处理程序前，必须做一些准备如保存用户空间寄存器，切换至新的堆栈及其他很多工作。系统调用处理也是相同的情形。第一件事是处理系统调用的准备，但是在 Linux 内核开始这些准备之前, 系统调用的入口必须完成初始化，同时只有 Linux 内核知道如何执行这些准备。在下一章节我们将关注 Linux 内核中关于系统调用入口的初始化过程。
+至此, 完成系统调用表的填充并且 Linux内核了解系统调用处理器的为值。但是 Linux 内核在处理用户空间程序的系统调用时并未立即调用 `sys_syscall_name` 函数。 记住关于中断及中断处理的 [章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)。当 Linux 内核获得处理中断的控制权, 在调用中断处理程序前，必须做一些准备如保存用户空间寄存器，切换至新的堆栈及其他很多工作。系统调用处理也是相同的情形。第一件事是处理系统调用的准备，但是在 Linux 内核开始这些准备之前, 系统调用的入口必须完成初始化，同时只有 Linux 内核知道如何执行这些准备。在下一章节我们将关注 Linux 内核中关于系统调用入口的初始化过程。
 
 系统调用入口初始化
 --------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ SYSCALL 引起操作系统系统调用处理器处于特权级0，通过加载IA
 
 ```
 
-这就是说我们需要将系统调用入口放置到 `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register) 。 这一操作在 Linux 内核初始过程时完成。若已阅读关于 Linux 内核中断及中断处理政界的 [第四节](http://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/interrupts-4.html) , Linux 内核调用在初始化过程中调用 `trap_init` 函数。该函数在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码文件中定义，执行 `non-early` 异常处理（如除法错误，[协处理器](https://en.wikipedia.org/wiki/Coprocessor) 错误等 ）的初始化。除了  `non-early` 异常处理的初始化外, 函数调用  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/blob/arch/x86/kernel/cpu/common.c) 中 `cpu_init` 函数，调用相同源码文件中的 `syscall_init` 完成`per-cpu` 状态初始化。
+这就是说我们需要将系统调用入口放置到 `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register) 。 这一操作在 Linux 内核初始过程时完成。若已阅读关于 Linux 内核中断及中断处理政界的 [第四节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-4.html) , Linux 内核调用在初始化过程中调用 `trap_init` 函数。该函数在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码文件中定义，执行 `non-early` 异常处理（如除法错误，[协处理器](https://en.wikipedia.org/wiki/Coprocessor) 错误等 ）的初始化。除了  `non-early` 异常处理的初始化外, 函数调用  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/blob/arch/x86/kernel/cpu/common.c) 中 `cpu_init` 函数，调用相同源码文件中的 `syscall_init` 完成`per-cpu` 状态初始化。
 
 该函数执行系统调用入口的初始化。查看函数的实现，函数没有参数且首先填充两个特殊模块寄存器：
 

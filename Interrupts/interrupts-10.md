@@ -2,7 +2,7 @@
 =====================
 终结篇
 -------------------------
-本文是 Linux 内核[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)的第十节。在[上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/interrupts-9.html)，我们了解了延后中断及其相关概念，如 `softirq`，`tasklet`，`workqueue`。本节我们继续深入这个主题，现在是见识真正的硬件驱动的时候了。
+本文是 Linux 内核[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)的第十节。在[上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html)，我们了解了延后中断及其相关概念，如 `softirq`，`tasklet`，`workqueue`。本节我们继续深入这个主题，现在是见识真正的硬件驱动的时候了。
 
 以 [StringARM** SA-100/21285 评估板](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf)串行驱动为例，我们来观察驱动程序如何请求一个 [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 线，一个中断被触发时会发生什么之类的。驱动程序代码位于 [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/21285.c) 源文件。好啦，源码在手，说走就走！
 
@@ -297,7 +297,7 @@ if (new->thread_fn && !nested) {
 准备处理中断
 ------------------------------
 
-通过上文，我们观察了为给定的中断描述符请求中断号，为给定的中断注册 `irqaction` 结构体的过程。我们已经知道，当一个中断事件发生时，中断控制器向处理器通知该事件，处理器尝试为这个中断找到一个合适的中断门。如果你已阅读本章[第八节](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/interrupts-8.html)，你应该还记得 `native_init_IRQ` 函数。这个函数会初始化本地 [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)。这个函数的如下部分是我们现在最感兴趣的地方：
+通过上文，我们观察了为给定的中断描述符请求中断号，为给定的中断注册 `irqaction` 结构体的过程。我们已经知道，当一个中断事件发生时，中断控制器向处理器通知该事件，处理器尝试为这个中断找到一个合适的中断门。如果你已阅读本章[第八节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-8.html)，你应该还记得 `native_init_IRQ` 函数。这个函数会初始化本地 [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)。这个函数的如下部分是我们现在最感兴趣的地方：
 
 ```C
 for_each_clear_bit_from(i, used_vectors, first_system_vector) {
@@ -444,7 +444,7 @@ native_irq_return_iret:
 总结
 --------------------------
 
-这里是[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html) 章节的第十节的结尾。如你在本节开头读到的那样，这是本章的最后一节。本章开篇阐述了中断理论，我们于是明白了什么是中断，中断的类型，然后也了解了异常以及对这种类型中断的处理，延后中断。最后在本节，我们考察了硬件中断和对这些中断的处理。当然，本节甚至本章都未能覆盖到 Linux 内核中断和中断处理的所有方面。这样并不现实，至少对我而言如此。这是一项浩大工程，不知你作何感想，对我来说，它确实浩大。这个主题远远超出本章讲述的内容，我不确定地球上能否找到一本书可以涵盖这个主题。我们漏掉了关于中断和中断处理的很多内容，但我相信，深入研究中断和中断处理相关的内核源码是个不错的点子。
+这里是[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html) 章节的第十节的结尾。如你在本节开头读到的那样，这是本章的最后一节。本章开篇阐述了中断理论，我们于是明白了什么是中断，中断的类型，然后也了解了异常以及对这种类型中断的处理，延后中断。最后在本节，我们考察了硬件中断和对这些中断的处理。当然，本节甚至本章都未能覆盖到 Linux 内核中断和中断处理的所有方面。这样并不现实，至少对我而言如此。这是一项浩大工程，不知你作何感想，对我来说，它确实浩大。这个主题远远超出本章讲述的内容，我不确定地球上能否找到一本书可以涵盖这个主题。我们漏掉了关于中断和中断处理的很多内容，但我相信，深入研究中断和中断处理相关的内核源码是个不错的点子。
 
 如果有任何疑问或者建议，撰写评论或者在 [twitter](https://twitter.com/0xAX) 上联系我。
 
@@ -469,7 +469,7 @@ native_irq_return_iret:
 * [pid](https://en.wikipedia.org/wiki/Process_identifier)
 * [设备树](https://en.wikipedia.org/wiki/Device_tree)
 * [系统调用](https://en.wikipedia.org/wiki/System_call)
-* [上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/interrupts-9.html)
+* [上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html)
 
 
 

@@ -4,7 +4,7 @@
 延后中断(软中断，Tasklets 和工作队列)介绍
 --------------------------------------------------------------------------------
 
-这是 Linux 内核[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)的第九节，在[上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/interrupts-8.html)我们分析了源文件 [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) 中的 `init_IRQ` 实现。接下来的这一节我们将继续深入学习外部硬件中断的初始化。
+这是 Linux 内核[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)的第九节，在[上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-8.html)我们分析了源文件 [arch/x86/kernel/irqinit.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irqinit.c) 中的 `init_IRQ` 实现。接下来的这一节我们将继续深入学习外部硬件中断的初始化。
 
 中断处理会有一些特点，其中最主要的两个是：
 
@@ -144,7 +144,7 @@ void raise_softirq(unsigned int nr)
 __raise_softirq_irqoff(nr);
 ```
 
-然后，通过 `in_interrupt` 函数获得 `irq_count` 值。我们在这一章的第一[小节](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/interrupts/interrupts-1.html)已经知道它是用来检测一个 cpu 是否处于中断环境。如果我们处于中断上下文中，我们就退出 `raise_softirq_irqoff` 函数，装回 `IF` 标志位并允许当前处理器的中断。如果不在中断上下文中，就会调用 `wakeup_softirqd` 函数：
+然后，通过 `in_interrupt` 函数获得 `irq_count` 值。我们在这一章的第一[小节](https://www.gitbook.com/book/xinqiu/linux-insides-cn/content/Interrupts/interrupts-1.html)已经知道它是用来检测一个 cpu 是否处于中断环境。如果我们处于中断上下文中，我们就退出 `raise_softirq_irqoff` 函数，装回 `IF` 标志位并允许当前处理器的中断。如果不在中断上下文中，就会调用 `wakeup_softirqd` 函数：
 
 ```C
 if (!in_interrupt())
@@ -363,7 +363,7 @@ static void tasklet_action(struct softirq_action *a)
 }
 ```
 
-在 `tasklet_action` 开始时利用 `local_irq_disable` 宏禁用了当前处理器的中断(你可以阅读本书[第二部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/interrupts-2.html)了解更多关于此宏的信息)。接下来获取到当前处理器对应的普通优先级 tasklet 列表并把它设置为 `NULL` ，这是因为所有的 tasklet 都将被执行。然后使能当前处理器的中断，循环遍历 tasklet 列表，每一次遍历都会对当前 tasklet 调用 `tasklet_trylock` 函数来更新它的状态为 `TASKLET_STATE_RUN`：
+在 `tasklet_action` 开始时利用 `local_irq_disable` 宏禁用了当前处理器的中断(你可以阅读本书[第二部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-2.html)了解更多关于此宏的信息)。接下来获取到当前处理器对应的普通优先级 tasklet 列表并把它设置为 `NULL` ，这是因为所有的 tasklet 都将被执行。然后使能当前处理器的中断，循环遍历 tasklet 列表，每一次遍历都会对当前 tasklet 调用 `tasklet_trylock` 函数来更新它的状态为 `TASKLET_STATE_RUN`：
 
 ```C
 static inline int tasklet_trylock(struct tasklet_struct *t)
@@ -505,7 +505,7 @@ insert_work(pwq, work, worklist, work_flags);
 总结
 --------------------------------------------------------------------------------
 
-现在结束了[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)的第九节。这一节中我们继续讨论了外部硬件中断。在之前部分我们看到了 `IRQs` 的初始化和 `irq_desc` 数据结构，在这一节我们看到了用于延后函数的三个概念：`软中断`，`tasklet` 和`工作队列`。
+现在结束了[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)的第九节。这一节中我们继续讨论了外部硬件中断。在之前部分我们看到了 `IRQs` 的初始化和 `irq_desc` 数据结构，在这一节我们看到了用于延后函数的三个概念：`软中断`，`tasklet` 和`工作队列`。
 
 下一节将是 `中断和中断处理` 的最后一节。我们将会了解真正的硬件驱动，并试着学习它是怎样和中断子系统一起工作的。
 
@@ -523,4 +523,4 @@ insert_work(pwq, work, worklist, work_flags);
 * [CPU masks](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
 * [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
 * [Workqueue](https://github.com/torvalds/linux/blob/master/Documentation/workqueue.txt)
-* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/interrupts-8.html)
+* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-8.html)

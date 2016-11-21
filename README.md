@@ -1,5 +1,5 @@
-Linux Insides
-===============
+Linux 内核揭密
+==============
 
 [![Join the chat at https://gitter.im/MintCN/linux-insides-zh](https://badges.gitter.im/MintCN/linux-insides-zh.svg)](https://gitter.im/MintCN/linux-insides-zh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -13,14 +13,14 @@ Linux Insides
 
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
-| 1. Booting||正在进行|
-|├ 1.0|[@xinqiu](https://github.com/xinqiu)|已完成|
-|├ 1.1|[@hailincai](https://github.com/hailincai)|已完成|
-|├ 1.2|[@hailincai](https://github.com/hailincai)|已完成|
-|├ 1.3|[@hailincai](https://github.com/hailincai)|已完成|
-|├ 1.4|[@zmj1316](https://github.com/zmj1316)|已完成|
-|└ 1.5|[@chengong](https://github.com/chengong)|正在进行|
-| 2. Initialization||正在进行|
+| 1. [Booting](https://github.com/MintCN/linux-insides-zh/tree/master/Booting)||正在进行|
+|├ [1.0](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/README.md)|[@xinqiu](https://github.com/xinqiu)|已完成|
+|├ [1.1](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-1.md)|[@hailincai](https://github.com/hailincai)|已完成|
+|├ [1.2](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md)|[@hailincai](https://github.com/hailincai)|已完成|
+|├ [1.3](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)|[@hailincai](https://github.com/hailincai)|已完成|
+|├ [1.4](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-4.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
+|└ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)|[@chengong](https://github.com/chengong)|正在进行|
+| 2. [Initialization](https://github.com/MintCN/linux-insides-zh/tree/master/Initialization)||正在进行|
 |├ 2.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 2.1|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
 |├ 2.2|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
@@ -32,7 +32,7 @@ Linux Insides
 |├ 2.8|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
 |├ 2.9|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
 |└ 2.10|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
-| 3. Interrupts||正在进行|
+| 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/interrupts)||正在进行|
 |├ 3.0|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ 3.1|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ 3.2|[@cloudusers](https://github.com/cloudusers)|正在进行|
@@ -44,13 +44,13 @@ Linux Insides
 |├ 3.8|[@cloudusers](https://github.com/cloudusers)|正在进行|
 |├ 3.9|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
 |└ 3.10|[@worldwar](https://github.com/worldwar)|已完成|
-| 4. System calls||正在进行|
+| 4. [System calls](https://github.com/MintCN/linux-insides-zh/tree/master/SysCall)||正在进行|
 |├ 4.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 4.1|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ 4.2|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ 4.3|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
 |└ 4.4|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-| 5. Timers and time management||正在进行|
+| 5. [Timers and time management](https://github.com/MintCN/linux-insides-zh/tree/master/Timers)||正在进行|
 |├ 5.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 5.1|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
 |├ 5.2|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
@@ -59,7 +59,7 @@ Linux Insides
 |├ 5.5|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
 |├ 5.6|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
 |└ 5.7|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-| 6. Synchronization primitives||正在进行|
+| 6. [Synchronization primitives](https://github.com/MintCN/linux-insides-zh/tree/master/SyncPrim)||正在进行|
 |├ 6.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 6.1|[@keltoy](https://github.com/keltoy)|已完成|
 |├ 6.2|[@keltoy](https://github.com/keltoy)|正在进行|
@@ -67,29 +67,29 @@ Linux Insides
 |├ 6.4|[@huxq](https://github.com/huxq)|正在进行|
 |├ 6.5||未开始|
 |└ 6.6||未开始|
-| 7. Memory management||正在进行|
+| 7. [Memory management](https://github.com/MintCN/linux-insides-zh/tree/master/MM)||正在进行|
 |├ 7.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 7.1|[@choleraehyq](https://github.com/choleraehyq)|已完成|
 |├ 7.2|[@choleraehyq](https://github.com/choleraehyq)|已完成|
 |└ 7.3||未开始|
-| 8. SMP||未开始|
-| 9. Concepts||正在进行|
+| 8. SMP||上游未开始|
+| 9. [Concepts](https://github.com/MintCN/linux-insides-zh/tree/master/Concepts)||正在进行|
 |├ 9.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 9.1|[@up2wing](https://github.com/up2wing)|正在进行|
 |├ 9.2|[@up2wing](https://github.com/up2wing)|正在进行|
 |└ 9.3|[@up2wing](https://github.com/up2wing)|正在进行|
-| 10. DataStructures||正在进行|
+| 10. [DataStructures](https://github.com/MintCN/linux-insides-zh/tree/master/DataStructures)||正在进行|
 |├ 10.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 10.1|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 10.2|[@oska874](https://github.com/oska874)|已完成|
 |└ 10.3|[@cposture](https://github.com/cposture)|已完成|
-| 11. Theory||正在进行|
+| 11. [Theory](https://github.com/MintCN/linux-insides-zh/tree/master/Theory)||正在进行|
 |├ 11.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 11.1|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 11.2|[@mudongliang](https://github.com/mudongliang)|已完成|
 |└ 11.3||未开始|
-| 12. Initial ram disk||未开始|
-| 13. Misc||正在进行|
+| 12. Initial ram disk||上游未开始|
+| 13. [Misc](https://github.com/MintCN/linux-insides-zh/tree/master/Misc)||正在进行|
 |├ 13.0|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ 13.1|[@oska874](https://github.com/oska874)|已完成|
 |├ 13.2|[@zmj1316](https://github.com/zmj1316)|已完成|
