@@ -350,10 +350,9 @@ if (val == _Q_PENDING_VAL) {
 		cpu_relax();
 }
 ```
+这里 `cpu_relax` 只是 [NOP] 指令。综上，我们了解了锁饱含着 - `pending` 位。这个位代表了想要获取锁的线程，但是这个锁已经被其他线程获取了，并且与此同时`队列`为空。在本例中，`pending` 位将被设置并且`队列`不会被创建(touched)。这是优化所完成的，因为不需要考虑在引发缓存无效的自身 `mcs_spinlock` 数组的创建产生的非必需隐患（原文：This is done for optimization, because there are no need in unnecessary latency which will be caused by the cache invalidation in a touching of own `mcs_spinlock` array.）。
 
-where `cpu_relax` is just [NOP](https://en.wikipedia.org/wiki/NOP) instruction. Above, we saw that the lock contains - `pending` bit. This bit represents thread which wanted to acquire lock, but it is already acquired by the other thread and in the same time `queue` is empty. In this case, the `pending` bit will be set and the `queue` will not be touched. This is done for optimization, because there are no need in unnecessary latency which will be caused by the cache invalidation in a touching of own `mcs_spinlock` array.
-
-At the next step we enter into the following loop:
+下一步我们进入下面的循环：
 
 ```C
 for (;;) {
@@ -372,7 +371,7 @@ for (;;) {
 }
 ```
 
-The first `if` clause here checks that state of the lock (`val`) is in locked or pending state. This means that first thread already acquired lock, second thread tried to acquire lock too, but now it is in pending state. In this case we need to start to build queue. We will consider this situation little later. In our case we are first thread holds lock and the second thread tries to do it too. After this check we create new lock in a locked state and compare it with the state of the previous lock. As you remember, the `val` contains state of the `&lock->val` which after the second thread will call the `atomic_cmpxchg_acquire` macro will be equal to `1`. Both `new` and `val` values are equal so we set pending bit in the lock of the second thread. After this we need to check value of the `&lock->val` again, because the first thread may release lock before this moment. If the first thread did not released lock yet, the value of the `old` will be equal to the value of the `val` (because `atomic_cmpxchg_acquire` will return the value from the memory location which is pointed by the `lock->val` and now it is `1`) and we will exit from the loop. As we exited from this loop, we are waiting for the first thread until it will release lock, clear pending bit, acquire lock and return:
+这里第一个 `if` 子句检查锁 (`val`) 的状态是上锁还是待定的(pending)。这意味着第一个线程已经获取了锁，第二个线程也试图获取锁，但现在第二个线程是待定状态。本例中我们需要开始建立队列。我们将稍后考虑这个情况。在我们的例子中，第一个线程持有锁而第二个线程也尝试获取锁。这个检查之后我们在上锁状态并且使用之前锁状态比较后创建新锁。就像你记得的那样，`val` 包含了 `&lock->val` 状态，在第二个线程调用 `atomic_cmpxchg_acquire` 宏后状态将会等于 `1`。由于 `new` 和 `val` 的值相等，所以我们在第二个线程的锁上设置待定位。在此之后，我们需要再次检查 `&lock->val` 的值，因为第一个线程可能在这个时候释放锁。如果第一个线程还又没释放锁，`旧`的值将等于 `val` （因为 `atomic_cmpxchg_acquire` 将会返回存储地址指向 `lock->val` 的值并且当前为 `1`）然后我们将退出循环。因为我们退出了循环，我们会等待第一个线程直到它释放锁，清除待定位，获取锁并且返回：
 
 ```C
 smp_cond_acquire(!(atomic_read(&lock->val) & _Q_LOCKED_MASK));
@@ -380,7 +379,7 @@ clear_pending_set_locked(lock);
 return;
 ```
 
-Notice that we did not touch `queue` yet. We no need in it, because for two threads it just leads to unnecessary latency for memory access. In other case, the first thread may release it lock before this moment. In this case the `lock->val` will contain `_Q_LOCKED_VAL | _Q_PENDING_VAL` and we will start to build `queue`. We start to build `queue` by the getting the local copy of the `mcs_nodes` array of the processor which executes thread:
+注意我们还没创建`队列`。这里我们不需要，因为对于两个线程来说，队列只是导致对内存访问的非必需潜在因素。在其他的例子中，第一个线程可能在这个时候释放其锁。在本例中 `lock->val` 将包含 `_Q_LOCKED_VAL | _Q_PENDING_VAL` 并且我们会开始建立`队列`。通过获得处理器执行线程的本地 `mcs_nodes` 数组的拷贝我们开始建立`队列`：
 
 ```C
 node = this_cpu_ptr(&mcs_nodes[0]);
@@ -388,7 +387,7 @@ idx = node->count++;
 tail = encode_tail(smp_processor_id(), idx);
 ```
 
-Additionally we calculate `tail` which will indicate the tail of the `queue` and `index` which represents an entry of the `mcs_nodes` array. After this we set the `node` to point to the correct of the `mcs_nodes` array, set `locked` to zero because this thread didn't acquire lock yet and `next` to `NULL` because we don't know anything about other `queue` entries:
+除此以外我们计算 表示`队列`尾部和代表 `mcs_nodes` 数组实体的`索引`的`tail` 。在此之后我们设置 `node` 指出 `mcs_nodes` 数组的正确，设置 `locked` 为零应为这个线程还没有获取锁，还有 `next` 为 `NULL` 因为我们不知道任何有关其他`队列`实体的信息：
 
 ```C
 node += idx;
