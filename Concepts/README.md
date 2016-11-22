@@ -5,3 +5,4 @@
 * [每个 CPU 的变量](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)
 * [CPU 掩码](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
 * [initcall 机制](https://0xax.gitbooks.io/linux-insides/content/Concepts/initcall.html)
+* [Linux 内核的通知链](https://0xax.gitbooks.io/linux-insides/content/Concepts/notification_chains.html)
