@@ -78,7 +78,7 @@ Linux 内核揭密
 |├ [9.1](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/per-cpu.md)|[@up2wing](https://github.com/up2wing)|正在进行|
 |├ [9.2](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/cpumask.md)|[@up2wing](https://github.com/up2wing)|正在进行|
 |└ [9.3](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/initcall.md)|[@up2wing](https://github.com/up2wing)|正在进行|
-| 10. [DataStructures](https://github.com/MintCN/linux-insides-zh/tree/master/DataStructures)||正在进行|
+| 10. [DataStructures](https://github.com/MintCN/linux-insides-zh/tree/master/DataStructures)||已完成|
 |├ [10.0](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ [10.1](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md)|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
 |├ [10.2](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/radix-tree.md)|[@oska874](https://github.com/oska874)|已完成|
