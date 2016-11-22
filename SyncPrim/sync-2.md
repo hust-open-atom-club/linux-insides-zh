@@ -395,14 +395,14 @@ node->locked = 0;
 node->next = NULL;
 ```
 
-We already touch `per-cpu` copy of the queue for the processor which executes current thread which wants to acquire lock, this means that owner of the lock may released it before this moment. So we may try to acquire lock again by the call of the `queued_spin_trylock` function.
+我们已经创建了对于执行当前线程想获取锁的处理器的队列的`每个 cpu（per-cpu）` 的拷贝，这意味着锁的拥有者可能在这个时刻释放了锁。因此我们可能通过 `queued_spin_trylock` 函数的调用尝试去再次获取锁。
 
 ```C
 if (queued_spin_trylock(lock))
 		goto release;
 ```
 
-The `queued_spin_trylock` function is defined in the  [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h) header file and just does the same `queued_spin_lock` function that does:
+`queued_spin_trylock` 函数在 [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h) 头文件中被定义而且就像 `queued_spin_lock` 函数一样：
 
 ```C
 static __always_inline int queued_spin_trylock(struct qspinlock *lock)
@@ -413,21 +413,20 @@ static __always_inline int queued_spin_trylock(struct qspinlock *lock)
 	return 0;
 }
 ```
-
-If the lock was successfully acquired we jump to the `release` label to release a node of the `queue`:
+如果锁成功被获取那么我们跳过`释放`标签而释放`队列`中的一个节点：
 
 ```C
 release:
 	this_cpu_dec(mcs_nodes[0].count);
 ```
 
-because we no need in it anymore as lock is acquired. If the `queued_spin_trylock` was unsuccessful, we update tail of the queue:
+因为我们不再需要它了，因为锁已经获得了。如果 `queued_spin_trylock` 不成功，我们更新队列的尾部：
 
 ```C
 old = xchg_tail(lock, tail);
 ```
 
-and retrieve previous tail. The next step is to check that `queue` is not empty. In this case we need to link previous entry with the new:
+然后检索原先的尾部。下一步是检查`队列`是否为空。这个例子中我们需要用新的实体链接之前的实体：
 
 ```C
 if (old & _Q_TAIL_MASK) {
@@ -438,7 +437,7 @@ if (old & _Q_TAIL_MASK) {
 }
 ```
 
-After queue entries linked, we start to wait until reaching the head of queue. As we As we reached this, we need to do a check for new node which might be added during this wait:
+队列实体链接之后，我们开始等待直到队列的头部到来。由于我们等待头部，我们需要对可能在这个等待实践加入的新的节点做一些检查：
 
 ```C
 next = READ_ONCE(node->next);
@@ -446,28 +445,28 @@ if (next)
 	prefetchw(next);
 ```
 
-If the new node was added, we prefetch cache line from memory pointed by the next queue entry with the [PREFETCHW](http://www.felixcloutier.com/x86/PREFETCHW.html) instruction. We preload this pointer now for optimization purpose. We just became a head of queue and this means that there is upcoming `MCS` unlock operation and the next entry will be touched.
+如果新节点被添加，我们从通过使用 [PREFETCHW](http://www.felixcloutier.com/x86/PREFETCHW.html) 指令指出下一个队列实体的内存中预先去除缓存线（cache line）。以优化为目的我们现在预先载入这个指针。我们只是改变了队列的头而这意味着有将要到来的 `MCS` 进行解锁操作并且下一个实体会被创建。
 
-Yes, from this moment we are in the head of the `queue`. But before we are able to acquire a lock, we need to wait at least two events: current owner of a lock will release it and the second thread with `pending` bit will acquire a lock too:
+是的，从这个时刻我们在`队列`的头部。但是在我们有能力获取锁之前，我们需要至少等待两个事件：当前锁的拥有者释放锁和第二个线程处于`待定`位也获取锁：
 
 ```C
 smp_cond_acquire(!((val = atomic_read(&lock->val)) & _Q_LOCKED_PENDING_MASK));
 ```
 
-After both threads will release a lock, the head of the `queue` will hold a lock. In the end we just need to update the tail of the `queue` and remove current head from it.
+两个线程都释放锁后，`队列`的头部会持有锁。最后我们只是需要更新`队列`尾部然后移除从队列中移除头部。
 
-That's all.
+以上。
 
-Conclusion
+总结
 --------------------------------------------------------------------------------
 
-This is the end of the second part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In the previous [part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html) we already met the first synchronization primitive `spinlock` provided by the Linux kernel which is implemented as `ticket spinlock`. In this part we saw another implementation of the `spinlock` mechanism - `queued spinlock`. In the next part we will continue to dive into synchronization primitives in the Linux kernel.
+这是 Linux 内核[同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)章节第二部分的结尾。在上一个[部分](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-1.html)我们已经见到了第一个同步原语`自旋锁`通过 Linux 内核 实现的`排队自旋锁（ticket spinlock）`。在这个部分我们了解了另一个`自旋锁`机制的实现 - `队列自旋锁`。下一个部分我们继续深入 Linux 内核同步原语。
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+如果您有疑问或者建议，请在twitter [0xAX](https://twitter.com/0xAX) 上联系我，通过 [email](anotherworldofworld@gmail.com) 联系我，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**友情提示：英语不是我的母语，对于译文给您带来了的不便我感到非常抱歉。如果您发现任何错误请给我发送PR到 [linux-insides](https://github.com/0xAX/linux-insides)。**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [spinlock](https://en.wikipedia.org/wiki/Spinlock)
