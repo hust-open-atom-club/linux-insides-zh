@@ -60,42 +60,40 @@ pr_info("NR_CPUS:%d nr_cpumask_bits:%d nr_cpu_ids:%d nr_node_ids:%d\n",
         NR_CPUS, nr_cpumask_bits, nr_cpu_ids, nr_node_ids);
 ```
 
- `setup_per_cpu_areas` 以输出CPUs集合的最大个数开始，在内核配置中以 `CONFIG_NR_CPUS` 配置项设置，实际的CPU个数，`nr_cpumask_bits` 对于新的 `cpumask` 操作来说和 `NR_CPUS` 是一样的，最后是 `NUMA` 节点个数。
-The `setup_per_cpu_areas` starts from the output information about the maximum number of CPUs set during kernel configuration with the `CONFIG_NR_CPUS` configuration option, actual number of CPUs, `nr_cpumask_bits` is the same that `NR_CPUS` bit for the new `cpumask` operators and number of `NUMA` nodes.
+ `setup_per_cpu_areas` 开始输出CPUs集合的最大个数（这个在内核配置中以 `CONFIG_NR_CPUS` 配置项设置），实际的CPU个数，`nr_cpumask_bits`（对于新的 `cpumask` 操作来说和 `NR_CPUS` 是一样的），还有 `NUMA` 节点个数。
 
-We can see this output in the dmesg:
+我们可以在dmesg中看到这些输出：
 
 ```
 $ dmesg | grep percpu
 [    0.000000] setup_percpu: NR_CPUS:8 nr_cpumask_bits:8 nr_cpu_ids:8 nr_node_ids:1
 ```
 
-In the next step we check the `percpu` first chunk allocator. All percpu areas are allocated in chunks. The first chunk is used for the static percpu variables. The Linux kernel has `percpu_alloc` command line parameters which provides the type of the first chunk allocator. We can read about it in the kernel documentation:
+然后我们检查 `percpu` 第一个块分配器。所有的每CPU区域都是以块进行分配的。第一个块用于静态每CPU变量。Linux内核提供了决定第一个块分配器类型的命令行：`percpu_alloc` 。我们可以在内核文档中读到它的说明。
 
 ```
-percpu_alloc=	Select which percpu first chunk allocator to use.
-		Currently supported values are "embed" and "page".
-		Archs may support subset or none of the	selections.
-		See comments in mm/percpu.c for details on each
-		allocator.  This parameter is primarily	for debugging
-		and performance comparison.
+percpu_alloc=	选择要使用哪个每CPU第一个块分配器。
+		当前支持的类型是 "embed" 和 "page"。
+        不同架构支持这些类型的子集或不支持。
+        更多分配器的细节参考 mm/percpu.c 中的注释。
+        这个参数主要是为了调试和性能比较的。
 ```
 
-The [mm/percpu.c](https://github.com/torvalds/linux/blob/master/mm/percpu.c) contains the handler of this command line option:
+[mm/percpu.c](https://github.com/torvalds/linux/blob/master/mm/percpu.c) 包含了这个命令行选项的处理函数：
 
 ```C
 early_param("percpu_alloc", percpu_alloc_setup);
 ```
 
-Where the `percpu_alloc_setup` function sets the `pcpu_chosen_fc` variable depends on the `percpu_alloc` parameter value. By default the first chunk allocator is `auto`:
+其中 `percpu_alloc_setup` 函数根据 `percpu_alloc` 参数值设置 `pcpu_chosen_fc` 变量。默认第一个块分配器是 `auto`：
 
 ```C
 enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
 ```
 
-If the `percpu_alloc` parameter is not given to the kernel command line, the `embed` allocator will be used which embeds the first percpu chunk into bootmem with the [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html). The last allocator is the first chunk `page` allocator which maps the first chunk with `PAGE_SIZE` pages.
+如果内核命令行中没有设置 `percpu_alloc` 参数，就会使用 `embed` 分配器，将第一个每CPU块嵌入进带 [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html) 的bootmem。最后一个分配器和第一个块 `page` 分配器一样，只是将第一个块使用 `PAGE_SIZE` 页进行了映射。
 
-As I wrote above, first of all we make a check of the first chunk allocator type in the `setup_per_cpu_areas`. We check that first chunk allocator is not page:
+如我上面所写，首先我们在 `setup_per_cpu_areas` 中对第一个块分配器检查，检查到第一个块分配器不是page分配器：
 
 ```C
 if (pcpu_chosen_fc != PCPU_FC_PAGE) {
@@ -105,7 +103,7 @@ if (pcpu_chosen_fc != PCPU_FC_PAGE) {
 }
 ```
 
-If it is not `PCPU_FC_PAGE`, we will use the `embed` allocator and allocate space for the first chunk with the `pcpu_embed_first_chunk` function:
+如果不是 `PCPU_FC_PAGE`，我们就使用 `embed` 分配器并使用 `pcpu_embed_first_chunk` 函数分配第一块空间。
 
 ```C
 rc = pcpu_embed_first_chunk(PERCPU_FIRST_CHUNK_RESERVE,
@@ -114,16 +112,16 @@ rc = pcpu_embed_first_chunk(PERCPU_FIRST_CHUNK_RESERVE,
 					    pcpu_fc_alloc, pcpu_fc_free);
 ```
 
-As shown above, the `pcpu_embed_first_chunk` function embeds the first percpu chunk into bootmem then we pass a couple of parameters to the `pcup_embed_first_chunk`. They are as follows:
+如前所述，函数 `pcpu_embed_first_chunk` 将第一个percpu块嵌入bootmen，因此我们传递一些参数给 `pcpu_embed_first_chunk`。参数如下：
 
-* `PERCPU_FIRST_CHUNK_RESERVE` - the size of the reserved space for the static `percpu` variables;
-* `dyn_size` - minimum free size for dynamic allocation in bytes;
-* `atom_size` - all allocations are whole multiples of this and aligned to this parameter;
-* `pcpu_cpu_distance` - callback to determine distance between cpus;
-* `pcpu_fc_alloc` - function to allocate `percpu` page;
-* `pcpu_fc_free` - function to release `percpu` page.
+* `PERCPU_FIRST_CHUNK_RESERVE` - 为静态变量 `percpu` 的保留空间大小；
+* `dyn_size` - 动态分配的最少空闲字节；
+* `atom_size` - 所有的分配都是这个的整数倍，并以此对齐；
+* `pcpu_cpu_distance` - 决定cpus距离的回调函数；
+* `pcpu_fc_alloc` - 分配 `percpu` 页的函数；
+* `pcpu_fc_free` - 释放 `percpu` 页的函数。
 
-We calculate all of these parameters before the call of the `pcpu_embed_first_chunk`:
+在调用 `pcpu_embed_first_chunk` 前我们计算好所有的参数：
 
 ```C
 const size_t dyn_size = PERCPU_MODULE_RESERVE + PERCPU_DYNAMIC_RESERVE - PERCPU_FIRST_CHUNK_RESERVE;
