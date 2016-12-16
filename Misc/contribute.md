@@ -5,18 +5,23 @@ Introduction
 --------------------------------------------------------------------------------
 
 As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things. I understood that I can write programs, but didn't actually understand how my program is arranged.
+如你所知，我从去年开始写了一系列的关于 `x86_64` 架构汇编语言程序设计的博文。除了大学期间写过一些 `Hello World` 这样的玩具例程之外，我从来没写过哪怕一行的底层代码。那些例程也是很久以前的事情了，就像我说的，我完全没有写过底层代码。直到不久前，我才开始对这些事情感兴趣。我可以写出程序，但是我却不知道我的程序是怎样被组织运行的。
 
 After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
+在写了一些汇编代码之后，我开始**大致**了解了程序在编译之后会变成什么样子。尽管如此，还是有很多其他的东西我不能够理解。例如：当 `syscall` 指令在我的汇编程序内执行时以及当 `printf` 函数开始工作时究竟发生了什么，还有，我的程序如何通过网络与其他电脑通信。[汇编](https://en.wikipedia.org/wiki/Assembly_language#Assembler)语言并没有为我的问题带来答案，于是我决定做一番深入研究。我开始学习 Linux 内核的源代码，并且尝试着理解那些我感兴趣的东西。Linux 内核源代码也没有解答我**所有的**问题，但是我自身关于 Linux 内核及其外围流程的知识掌握的更好了。
 
 I'm writing this part nine and a half months after I've started to learn from the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
+在我开始学习 Linux 内核的九个半月之后，我写了这部分内容，并且发布了本书的[第一部分](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html)。现在本书包括了四部分，而这并不是终点。我决定写这一系列关于 Linux 内核的文章更多的是为了我自己。正如你所知，Linux 内核的代码量极其巨大，另外还非常容易忘记这一块或那一块内核代码做了什么或者一些东西是怎么实现的。但是，随着 [linux-insides](https://github.com/0xAX/linux-insides) 变得越来越受欢迎，而且在九个月后它积攒了 `9096` 个星星。
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
 It seems that people are interested in the insides of the Linux kernel. Besides this, in all the time that I have been writing `linux-insides`, I have received many questions from different people about how to begin contributing to the Linux kernel. Generally people are interested in contributing to open source projects and the Linux kernel is not an exception:
+看起来人们对 Linux 内核的内在机制非常的感兴趣。除此之外，在我写 `linux-insides` 的这段时间里，我收到了来自不同人的很多问题，这些问题大都是关于如何开始向 Linux 内核贡献代码。通常来说，人们很有兴趣为开源项目做贡献，Linux 内核也不例外。
 
 ![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
 
 So, it seems that people are interested in the Linux kernel development process. I thought it would be strange if a book about the Linux kernel would not contain a part describing how to take a part in the Linux kernel development and that's why I decided to write it. You will not find information about why you should be interested in contributing to the Linux kernel in this part. But if you are interested how to start with Linux kernel development, this part is for you.
+所以，人们看起来对 Linux 内核的开发流程非常感兴趣。我认为如果一本关于 Linux 内核的书不包括一部分来讲讲如何参与 Linux 内核开发的话，这将会变得非常奇怪。这就是我为什么决定写这篇文章。在该部分，你不会找到关于为什么你应该对贡献 Linux 内核感兴趣的信息。但是，如果你对如何参与 Linux 内核开发有兴趣的话，这部分就是为你而作。
 
 Let's start.
 
