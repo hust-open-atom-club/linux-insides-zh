@@ -24,18 +24,25 @@ So, it seems that people are interested in the Linux kernel development process.
 所以，人们看起来对 Linux 内核的开发流程非常感兴趣。我认为如果一本关于 Linux 内核的书不包括一部分来讲讲如何参与 Linux 内核开发的话，这将会变得非常奇怪。这就是我为什么决定写这篇文章。在该部分，你不会找到关于为什么你应该对贡献 Linux 内核感兴趣的信息。但是，如果你对如何参与 Linux 内核开发有兴趣的话，这部分就是为你而作。
 
 Let's start.
+让我们开始吧
 
 How to start with Linux kernel
+如何入门 Linux 内核
 ---------------------------------------------------------------------------------
 
 First of all, let's see how to get, build, and run the Linux kernel. You can run your custom build of the Linux kernel in two ways:
+首先，让我们看看如何获取、构建并运行 Linux 内核。你可以通过两种方式来运行你自己定制的内核。
 
 * Run the Linux kernel on a virtual machine;
 * Run the Linux kernel on real hardware.
+* 在虚拟机里运行 Linux 内核；
+* 在真实的硬件上运行 Linux 内核。
 
 I'll provide descriptions for both methods. Before we start doing anything with the Linux kernel, we need to get it. There are a couple of ways to do this depending on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific to your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
+我会对这两种方式都展开描述。在我们开始对 Linux 内核做些什么之前，我们需要先获取它。有两种方式可以做到这一点，这取决于你的目的。如果你只是想更新一下你电脑上的 Linux 内核版本，那么你可以使用特定于你的 [Linux 发行版](https://en.wikipedia.org/wiki/Linux_distribution)的命令。
 
 In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
+在第一种情况下，你只需要使用 [软件包管理器](https://en.wikipedia.org/wiki/Package_manager) 下载新版本的 Linux 内核。例如，为了将  [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/) 系统的 Linux 内核更新至 `4.1`，你只需要执行以下命令：
 
 ```
 $ sudo add-apt-repository ppa:kernel-ppa/ppa
@@ -43,32 +50,38 @@ $ sudo apt-get update
 ```
 
 After this execute this command:
+在这之后，再执行下面的命令：
 
 ```
 $ apt-cache showpkg linux-headers
 ```
 
 and choose the version of the Linux kernel in which you are interested. In the end execute the next command and replace `${version}` with the version that you chose in the output of the previous command:
+然后选择你感兴趣的 Linux 内核的版本。最后，执行下一条命令并且将 `${version}` 替换为你从上一条命令的输出中选择的版本号。
 
 ```
 $ sudo apt-get install linux-headers-${version} linux-headers-${version}-generic linux-image-${version}-generic --fix-missing
 ```
 
 and reboot your system. After the reboot you will see the new kernel in the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) menu.
+然后重启你的系统。重启完成后，你将在 [grub](https://en.wikipedia.org/wiki/GNU_GRUB) 菜单中看到新的内核。
 
 In the other way if you are interested in the Linux kernel development, you will need to get the source code of the Linux kernel. You can find it on the [kernel.org](https://kernel.org/) website and download an archive with the Linux kernel source code. Actually the Linux kernel development process is fully built around `git` [version control system](https://en.wikipedia.org/wiki/Version_control). So you can get it with `git` from the `kernel.org`:
+另一方面，如果你对 Linux 内核开发感兴趣，那么你就需要获得 Linux 内核的源代码。你可以在 [kernel.org](https://kernel.org/) 网站上找到它并且下载一个包含了 Linux 内核源代码的归档文件。事实上，Linux 内核的开发流程完全建立在 `git` [版本控制系统](https://en.wikipedia.org/wiki/Version_control) 之上，所以你需要通过 `git` 来从 `kernel.org` 上获取内核源代码：
 
 ```
 $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 ```
 
 I don't know how about you, but I prefer `github`. There is a [mirror](https://github.com/torvalds/linux) of the Linux kernel mainline repository, so you can clone it with:
+我不知道你情况如何，但是我非常喜欢 `github`。这儿有一个 Linux 内核主线仓库的 [镜像](https://github.com/torvalds/linux)，所以你可以通过以下命令克隆它：
 
 ```
 $ git clone git@github.com:torvalds/linux.git
 ```
 
 I  use my own [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute the following command:
+我是用我自己的 [fork](https://github.com/0xAX/linux) 仓库来进行开发，等到我想从主线仓库拉取更新的时候，我只需要执行下方的命令：
 
 ```
 $ git checkout master
@@ -76,12 +89,14 @@ $ git pull upstream master
 ```
 
 Note that the remote name of the main repository is `upstream`. To add a new remote with the main Linux repository you can execute:
+注意这个主线仓库的远程主机名叫 `upstream`。为了将主线 Linux 仓库添加为一个新的远程主机，你可以执行：
 
 ```
 git remote add upstream git@github.com:torvalds/linux.git
 ```
 
 After this you will have two remotes:
+在此之后，你将有两个远程主机：
 
 ```
 ~/dev/linux (master) $ git remote -v
@@ -92,14 +107,17 @@ upstream	https://github.com/torvalds/linux.git (push)
 ```
 
 One is of your fork (`origin`) and the second is for the main repository (`upstream`).
+其中一个远程主机是你的 fork 仓库 (`origin`)，另一个是主线仓库 (`upstream`)。
 
 Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way is to just copy the configuration file of the already installed kernel that is located in the `/boot` directory:
+现在，我们已经有了一份 Linux 内核源代码的本地副本，我们需要配置并编译内核。Linux 内核可以通过不同的方式配置。最简单的方式就是直接拷贝已经已安装内核位于 `/boot` 目录下的配置文件。
 
 ```
 $ sudo cp /boot/config-$(uname -r) ~/dev/linux/.config
 ```
 
 If your current Linux kernel was built with the support for access to the `/proc/config.gz` file, you can copy your actual kernel configuration file with this command:
+如果你当前的内核被编译为支持访问 `/proc/config.gz` 文件，你可以使用以下命令复制当前内核的配置文件：
 
 ```
 $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
