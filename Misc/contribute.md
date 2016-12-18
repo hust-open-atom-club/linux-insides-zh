@@ -5,7 +5,7 @@ Introduction
 --------------------------------------------------------------------------------
 
 As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things. I understood that I can write programs, but didn't actually understand how my program is arranged.
-如你所知，我从去年开始写了一系列的关于 `x86_64` 架构汇编语言程序设计的博文。除了大学期间写过一些 `Hello World` 这样的玩具例程之外，我从来没写过哪怕一行的底层代码。那些例程也是很久以前的事情了，就像我说的，我完全没有写过底层代码。直到不久前，我才开始对这些事情感兴趣。我可以写出程序，但是我却不知道我的程序是怎样被组织运行的。
+正如你所知，我从去年开始写了一系列关于 `x86_64` 架构汇编语言程序设计的博文。除了大学期间写过一些 `Hello World` 这样的玩具例程之外，我从来没写过哪怕一行的底层代码。那些例程也是很久以前的事情了，就像我说的，我完全没有写过底层代码。直到不久前，我才开始对这些事情感兴趣。我意识到我虽然可以写出程序，但是我却不知道我的程序是怎样被组织运行的。
 
 After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
 在写了一些汇编代码之后，我开始**大致**了解了程序在编译之后会变成什么样子。尽管如此，还是有很多其他的东西我不能够理解。例如：当 `syscall` 指令在我的汇编程序内执行时以及当 `printf` 函数开始工作时究竟发生了什么，还有，我的程序如何通过网络与其他电脑通信。[汇编](https://en.wikipedia.org/wiki/Assembly_language#Assembler)语言并没有为我的问题带来答案，于是我决定做一番深入研究。我开始学习 Linux 内核的源代码，并且尝试着理解那些我感兴趣的东西。Linux 内核源代码也没有解答我**所有的**问题，但是我自身关于 Linux 内核及其外围流程的知识掌握的更好了。
@@ -124,22 +124,27 @@ $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
 ```
 
 If you are not satisfied with the standard kernel configuration that is provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) provides a set of targets that allows you to configure it. For example `menuconfig` provides a menu-driven interface for the kernel configuration:
+如果你对发行版维护者提供的标准内核配置文件不满意，你可以手动配置 Linux 内核。有两种方式可以做到这一点。Linux 内核的根 [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) 文件提供了一系列允许你配置的目标选项。例如 `menuconfig` 为内核配置提供了一个菜单界面。
 
 ![menuconfig](http://s21.postimg.org/zcz48p7yf/menucnonfig.png)
 
 The `defconfig` argument generates the default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig). You can pass the `ARCH` command line argument to `make` to build `defconfig` for the given architecture:
+ `defconfig` 参数会为当前的架构生成默认的内核配置文件，例如 [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig)。你可以将 `ARCH` 命令行参数传递给 `make`，以此来为给定架构创建 `defconfig` 配置。
 
 ```
 $ make ARCH=arm64 defconfig
 ```
 
 The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to generate a new configuration file where all options will be disabled, enabled, and enabled as modules respectively. The `nconfig` command line arguments that provides `ncurses` based program with menu to configure Linux kernel:
+`allnoconfig`、 `allyesconfig` 以及 `allmodconfig` 参数也允许你生成新的配置文件，其效果分别为尽可能多的选项都关闭、尽可能多的选项都启用或尽可能多的选项都作为模块启用。`nconfig` 命令行参数提供了基于 `ncurses` 的菜单程序来配置 Linux 内核：
 
 ![nconfig](http://s29.postimg.org/hpghikp4n/nconfig.png)
 
 And even `randconfig` to generate random Linux kernel configuration file. I will not write about how to configure the Linux kernel or which options to enable because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
+`randconfig` 参数甚至可以随机地生成 Linux 内核配置。我不会讨论如何去配置 Linux 内核或启用哪个选项，因为没有必要这么做：首先，我不知道你的硬件配置；其次，如果我知道了你的硬件配置，那么剩下的问题就是搞清楚如何使用程序生成内核配置，而这些程序都非常易于使用。
 
 OK, we now have the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is to just execute:
+好了，我们现在有了 Linux 内核的源代码并且完成了配置。下一步就是编译 Linux 内核了。最简单的编译 Linux 内核的方式就是执行：
 
 ```
 $ make
@@ -166,17 +171,20 @@ Kernel: arch/x86/boot/bzImage is ready  (#73)
 ```
 
 To increase the speed of kernel compilation you can pass `-jN` command line argument to `make`, where `N` specifies the number of commands to run simultaneously:
+为了增加内核的编译速度，你可以给 `make` 传递命令行参数 `-jN`，这里的 `N` 指定了并发执行的命令数目：
 
 ```
 $ make -j8
 ```
 
 If you want to build Linux kernel for an architecture that differs from your current, the simplest way to do it pass two arguments:
+如果你想为一个体系结构构建一个与当前内核不同于的内核，那么最简单的方式就是传递两个参数：
 
 * `ARCH` command line argument and the name of the target architecture;
 * `CROSS_COMPILER` command line argument and the cross-compiler tool prefix;
 
 For example if we want to compile the Linux kernel for the [arm64](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features) with default kernel configuration file, we need to execute following command:
+例如，如果我们想使用默认配置文件为 [arm64 架构](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features)编译 Linux 内核，我们需要执行以下命令：
 
 ```
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu- defconfig
@@ -184,8 +192,10 @@ $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu-
 ```
 
 As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now that we have compiled the kernel, we can either install it on our computer or just run it in an emulator.
+编译的结果就是你会看淡压缩后的内核文件 - `arch/x86/boot/bzImage`。既然我们已经编译好了内核，那就可以将它安装到我们的电脑上或者只是将它运行在模拟器内。
 
 Installing Linux kernel
+安装 Linux 内核
 --------------------------------------------------------------------------------
 
 As I already wrote we will consider two ways how to launch new kernel: In the first case we can install and run the new version of the Linux kernel on the real hardware and the second is launch the Linux kernel on a virtual machine. In the previous paragraph we saw how to build the Linux kernel from source code and as a result we have got compressed image:
