@@ -199,6 +199,7 @@ Installing Linux kernel
 --------------------------------------------------------------------------------
 
 As I already wrote we will consider two ways how to launch new kernel: In the first case we can install and run the new version of the Linux kernel on the real hardware and the second is launch the Linux kernel on a virtual machine. In the previous paragraph we saw how to build the Linux kernel from source code and as a result we have got compressed image:
+正如我之前所写的，我们将考察两种用来运行新内核的方法：第一种情况，我们可以在真实的硬件上安装并运行新版本的 Linux 内核，第二种情况就是在虚拟机上运行 Linux 内核。在前面的段落中我们看到了如何从源代码来构建 Linux 内核，由此，我们现在得到了内核的压缩镜像。
 
 ```
 ...
@@ -208,6 +209,7 @@ Kernel: arch/x86/boot/bzImage is ready  (#73)
 ```
 
 After we have got the [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage) we need to install `headers`, `modules` of the new Linux kernel with the:
+在我们获得了 [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage) 之后，我们需要使用以下命令来为新的 Linux 内核安装 `headers` 和 `modules`
 
 ```
 $ sudo make headers_install
@@ -215,12 +217,14 @@ $ sudo make modules_install
 ```
 
 and directly the kernel itself:
+以及内核自身：
 
 ```
 $ sudo make install
 ```
 
 From this moment we have installed new version of the Linux kernel and now we must tell the `bootloader` about it. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two different Linux distros: Fedora and Ubuntu. There are two different ways to update the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
+从这时起，我们已经安装好了新版本的 Linux 内核，现在我们需要通知 `bootloader` 新内核已经安装完成。当然，我们可以手动编辑 `/boot/grub2/grub.cfg` 配置文件并将新内核添加进去，但是我推荐使用脚本来完成这件事。我现在在使用两种不同的 Linux 发行版：Fedora 和 Ubuntu。有两种方式可以更新 [grub](https://en.wikipedia.org/wiki/GNU_GRUB) 配置文件，我目前正在使用下面的脚本来达到这一目的。
 
 ```shell
 #!/bin/bash
@@ -241,8 +245,10 @@ echo "${Green}Done.${Color_Off}"
 ```
 
 This is the last step of the new Linux kernel installation and after this you can reboot your computer and select new version of the kernel during boot.
+这是新 Linux 内核安装过程的最后一步，在这之后你可以重启你的电脑，然后在启动过程中选择新版本的内核。
 
 The second case is to launch new Linux kernel in the virtual machine. I prefer [qemu](https://en.wikipedia.org/wiki/QEMU). First of all we need to build initial ramdisk - [initrd](https://en.wikipedia.org/wiki/Initrd) for this. The `initrd` is a temporary root file system that is used by the Linux kernel during initialization process while other filesystems are not mounted. We can build `initrd` with the following commands:
+第二种情况就是在虚拟机内运行新的 Linux 内核，我更倾向于使用 [qemu](https://en.wikipedia.org/wiki/QEMU)。首先，我们需要为此构建初始的虚拟内存盘 - [initrd](https://en.wikipedia.org/wiki/Initrd)。`initrd` 是一个临时的根文件系统，它在初始化期间被 Linux 内核使用，而那时其他的文件系统尚未被挂载。我们可以使用以下命令构建 `initrd`：
 
 First of all we need to download [busybox](https://en.wikipedia.org/wiki/BusyBox) and run `menuconfig` for its configuration:
 
