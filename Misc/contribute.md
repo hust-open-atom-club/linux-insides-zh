@@ -251,6 +251,7 @@ The second case is to launch new Linux kernel in the virtual machine. I prefer [
 第二种情况就是在虚拟机内运行新的 Linux 内核，我更倾向于使用 [qemu](https://en.wikipedia.org/wiki/QEMU)。首先，我们需要为此构建初始的虚拟内存盘 - [initrd](https://en.wikipedia.org/wiki/Initrd)。`initrd` 是一个临时的根文件系统，它在初始化期间被 Linux 内核使用，而那时其他的文件系统尚未被挂载。我们可以使用以下命令构建 `initrd`：
 
 First of all we need to download [busybox](https://en.wikipedia.org/wiki/BusyBox) and run `menuconfig` for its configuration:
+首先我们需要下载 [busybox](https://en.wikipedia.org/wiki/BusyBox)，然后运行 `menuconfig` 命令配置它：
 
 ```shell
 $ mkdir initrd
@@ -262,10 +263,12 @@ $ make -j4
 ```
 
 `busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities). In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
+`busybox` 是一个可执行文件 - `/bin/busybox`，它包括了一系列类似 [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) 的标准工具。在 `busysbox` 菜单界面上我们需要启用：`Build BusyBox as a static binary (no shared libs)` 选项。
 
 ![busysbox menu](http://s18.postimg.org/sj92uoweh/busybox.png)
 
 We can find this menu in the:
+我们可以遵照下方的路径找到这个菜单项：
 
 ```
 Busybox Settings
@@ -273,6 +276,7 @@ Busybox Settings
 ```
 
 After this we exit from the `busysbox` configuration menu and execute following commands for building and installation of it:
+在此之后，我们从 `busysbox` 的配置菜单退出，然后执行下面的命令来构建并安装它：
 
 ```
 $ make -j4
@@ -280,6 +284,7 @@ $ sudo make install
 ```
 
 Now that `busybox` is installed, we can begin building our `initrd`. To do this, we go to the previous `initrd` directory and:
+既然 `busybox` 已经安装完了，那么我们就可以开始构建 `initrd` 了。为了完成构建过程，我们需要返回到之前的 `initrd` 目录并且运行命令：
 
 ```
 $ cd ..
@@ -290,6 +295,7 @@ $ cp -av ../busybox-1.23.2/_install/* .
 ```
 
 copy `busybox` fields to the `bin`, `sbin` and other directories. Now we need to create executable `init` file that will be executed as a first process in the system. My `init` file just mounts [procfs](https://en.wikipedia.org/wiki/Procfs) and [sysfs](https://en.wikipedia.org/wiki/Sysfs) filesystems and executed shell:
+这会把 `busybox` 复制到 `bin` 目录、`sbin` 目录以及其他相关目录内。现在我们需要创建可执行的 `init` 文件，该文件将会在系统内作为第一个进程执行。我的 `init` 文件仅仅挂载了 [procfs](https://en.wikipedia.org/wiki/Procfs) 和 [sysfs](https://en.wikipedia.org/wiki/Sysfs) 文件系统并且执行了 shell 程序：
 
 ```shell
 #!/bin/sh
@@ -301,12 +307,14 @@ exec /bin/sh
 ```
 
 Now we can create an archive that will be our `initrd`:
+现在，我们可以创建一个归档文件，这就是我们的 `initrd`：
 
 ```
 $ find . -print0 | cpio --null -ov --format=newc | gzip -9 > ~/dev/initrd_x86_64.gz
 ```
 
 We can now run our kernel in the virtual machine. As I already wrote I prefer [qemu](https://en.wikipedia.org/wiki/QEMU) for this. We can run our kernel with the following command:
+我们现在可以在虚拟机里运行我们的内核了。就像我之前写过的，我偏向于用 [qemu](https://en.wikipedia.org/wiki/QEMU) 来完成这些工作。我们可以用下面的命令运行我们的 Linux 内核：
 
 ```
 $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
@@ -315,10 +323,13 @@ $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86
 ![qemu](http://s22.postimg.org/b8ttyigup/qemu.png)
 
 From now we can run the Linux kernel in the virtual machine and this means that we can begin to change and test the kernel.
+从现在起，我们就可以在虚拟机内运行 Linux 内核了，这意味着我们可以开始修改和测试内核了。
 
 Consider using [ivandaviov/minimal](https://github.com/ivandavidov/minimal) to automate the process of generating initrd.
+除了上面的手动过程之外，还可以考虑使用 [ivandaviov/minimal](https://github.com/ivandavidov/minimal) 来自动生成 `initrd`。
 
 Getting started with the Linux Kernel Development
+Linux 内核开发入门
 ---------------------------------------------------------------------------------
 
 The main point of this paragraph is to answer two questions: What to do and what not to do before sending your first patch to the Linux kernel. Please, do not confuse this `to do` with `todo`. I have no answer what you can fix in the Linux kernel. I just want to tell you my workflow during experimenting with the Linux kernel source code.
