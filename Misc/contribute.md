@@ -480,7 +480,7 @@ In the end of this part I want to give you some advice that will describe what t
 * 在你每次改完 Linux 内核源代码之后 - 试着编译它，我指的是任何修改之后，都要不断的编译。没有人喜欢那些连编译都不通过修改。
 
 * The Linux kernel has a coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with it. There is great script which can help to check your changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
-* Linux 内核有
+* Linux 内核有一套代码规范[指南](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle)，你需要遵守它。有一个很棒的脚本可以帮你检查所做的改动。这个脚本就是 - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl)。只需要将被改动的源码文件传递给它即可，然后你就会看到如下输出：
 
 ```
 $ ./scripts/checkpatch.pl -f drivers/staging/dgap/dgap.c
@@ -496,12 +496,14 @@ CHECK: spaces preferred around that '|' (ctx:VxV)
 ```
 
 Also you can see problematic places with the help of the `git diff`:
+在 `git diff` 命令的帮助下，你也会看到一些有问题的地方：
 
 ![git diff](http://oi60.tinypic.com/2u91rgn.jpg)
 
 * [Linus doesn't accept github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 
 * If your change consists from some different and unrelated changes, you need to split the changes via separate commits. The `git format-patch` command will generate patches for each commit and the subject of each patch will contain a `vN` prefix where the `N` is the number of the patch. If you are planning to send a series of patches it will be helpful to pass the `--cover-letter` option to the `git format-patch` command. This will generate an additional file that will contain the cover letter that you can use to describe what your patchset changes. It is also a good idea to use the `--in-reply-to` option in the `git send-email` command. This option allows you to send your patch series in reply to your cover message. The structure of the your patch will look like this for a maintainer:
+* 如果你的修改是由一些不同的且不相关的改动所组成的，你需要通过分离提交来切分修改。`git format-patch` 命令将会为每个提交生成补丁，每个补丁的标题会包含一个 `vN` 前缀，其中 `N` 是补丁的编号。如果你打算发送一系列补丁，也许给 `git format-patch` 命令传递 `--cover-letter` 选项会对此很有帮助。这会生成一个附加文件，该文件包括的附函可以用来描述你补丁集的改动。在 `git send-email` 命令中使用 `--in-reply-to` 选项也是一个好主意，该选项允许你将补丁集作为对附函信息的回复。对于维护者来说，你补丁集的结构看起来如下所示：
 
 ```
 |--> cover letter
