@@ -333,8 +333,10 @@ Linux 内核开发入门
 ---------------------------------------------------------------------------------
 
 The main point of this paragraph is to answer two questions: What to do and what not to do before sending your first patch to the Linux kernel. Please, do not confuse this `to do` with `todo`. I have no answer what you can fix in the Linux kernel. I just want to tell you my workflow during experimenting with the Linux kernel source code.
+这部分的核心内容主要回答了两个问题：在你发送你的第一个 Linux 内核补丁之前你应该做什么 (`to do`) 和不能做什么 (`not to do`)。请千万不要把应该做的事 (`to do`) 和待办事项 (`todo`) 搞混了。我并没有回答你能为 Linux 内核修复什么问题，我只是想告诉你我拿 Linux 内核源代码做实验过程中的工作流程。
 
 First of all I pull the latest updates from Linus's repo with the following commands:
+首先，我需要使用以下命令从 Linus 的仓库中拉取最新的更新：
 
 ```
 $ git checkout master
@@ -342,8 +344,10 @@ $ git pull upstream master
 ```
 
 After this my local repository with the Linux kernel source code is synced with the [mainline](https://github.com/torvalds/linux) repository. Now we can make some changes in the source code. As I already wrote, I have no advice for you where you can start and what `TODO` in the Linux kernel. But the best place for newbies is `staging` tree. In other words the set of drivers from the [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging). The maintainer of the `staging` tree is [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman) and the `staging` tree is that place where your trivial patch can be accepted. Let's look on a simple example that describes how to generate patch, check it and send to the [Linux kernel mail listing](https://lkml.org/).
+在这之后，我的本地 Linux 内核源代码仓库已经和 [主线](https://github.com/torvalds/linux) 仓库同步了。现在我们可以在源代码上做些修改了。就像我之前写的，关于从哪开始或在 Linux 内核中可以做的事，我并不能在这里给你建议。不过，对于新手来说最好的地方就是 `staging` 源码树，也就是 [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging) 上的驱动集合。`staging` 源码树的主要维护者是 [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman)，`staging` 源码树正是你的琐碎补丁可以被接受的地方。让我们看一个简单的例子，它描述了如何生成补丁、检查补丁以及将补丁发送到 [Linux 内核邮件列表](https://lkml.org/)。
 
 If we look in the driver for the [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) based devices, we will see the `dgap_sindex` function on line 295:
+如果我们查看一下为 [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 基本设备所写的驱动程序，在295行我们将会看到 `dgap_sindex` 函数：
 
 ```C
 static char *dgap_sindex(char *string, char *group)
