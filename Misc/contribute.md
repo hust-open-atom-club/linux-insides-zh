@@ -369,14 +369,17 @@ static char *dgap_sindex(char *string, char *group)
 ```
 
 This function looks for a match of any character in the group and returns that position. During research of source code of the Linux kernel, I have noted that the [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains the implementation of the `strpbrk` function that does the same thing as `dgap_sinidex`. It is not a good idea to use a custom implementation of a function that already exists, so we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
+这个函数查找 `group` 和 `string` 共有的字符并返回其位置。在研究 Linux 内核源代码期间，我注意到 [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) 文件实现了一个 `strpbrk` 函数，该函数和 `dgap_sinidex` 函数做了同样的事。使用现存函数的另一种自定义实现并不是一个好主意，我以我们可以从 [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) 源码文件中移除 `dgap_sindex` 函数并使用 `strpbrk` 替换它。
 
 First of all let's create new `git` branch based on the current master that synced with the Linux kernel mainline repo:
+首先，让我们基于当前主分支创建一个新的 `git` 分支，该分支与 Linux 内核主仓库同步。
 
 ```
 $ git checkout -b "dgap-remove-dgap_sindex"
 ```
 
 And now we can replace the `dgap_sindex` with the `strpbrk`. After we did all changes we need to recompile the Linux kernel or just [dgap](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) directory. Do not forget to enable this driver in the kernel configuration. You can find it in the:
+然后，我们可以将 `dgap_sindex` 函数替换为 `strpbrk`。做完这些改动之后，我们需要重新编译 Linux 内核或者只重新编译 [dgap](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 目录。不要忘了在内核配置文件中启用这个驱动。你可以在如下位置找到该驱动：
 
 ```
 Device Drivers
@@ -387,6 +390,7 @@ Device Drivers
 ![dgap menu](http://s4.postimg.org/d3pozpge5/digi.png)
 
 Now is time to make commit. I'm using following combination for this:
+现在是时候提交修改了，我使用下面的命令组合来完成这件事：
 
 ```
 $ git add .
@@ -394,14 +398,17 @@ $ git commit -s -v
 ```
 
 After the last command an editor will be opened that will be chosen from `$GIT_EDITOR` or `$EDITOR` environment variable. The `-s` command line argument will add `Signed-off-by` line by the committer at the end of the commit log message. You can find this line in the end of each commit message, for example - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771). The main point of this line is the tracking of who did a change. The `-v` option show unified diff between the HEAD commit and what would be committed at the bottom of the commit message. It is not necessary, but very useful sometimes. A couple of words about commit message. Actually a commit message consists from two parts:
+最后一条命令运行后将会打开一个编辑器，该编辑器会从 `$GIT_EDITOR` 或 `$EDITOR` 环境变量中选择。 `-s` 命令行参数会在提交信息的末尾按照提交者加上 `Signed-off-by` 这一行。你在每一条提交信息的最后都能看到这一行，例如 - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771)。这一行的主要目的是追踪谁做的修改。`-v` 选项按照合并格式显示 `HEAD` 提交和即将进行的最新提交之间的差异。这样做不是必须的，但是有时候很有用。再来说下提交信息，实际上，一条提交信息由两部分组成：
 
 The first part is on the first line and contains short description of changes. It starts from the `[PATCH]` prefix followed by a subsystem, driver or architecture name and after `:` symbol short description. In our case it will be something like this:
+第一部分放在第一行，它包括了一句对所做修改的简短描述。这一行以 `[PATCH]` 做前缀，后面跟上子系统、驱动或架构的名字，以及在 `:` 之后的简述信息。在我们这个例子中，这一行信息如下所示：
 
 ```
 [PATCH] staging/dgap: Use strpbrk() instead of dgap_sindex()
 ```
 
 After short description usually we have an empty line and full description of the commit. In our case it will be:
+在简述信息之后，我们通常空一行再加上本次提交的详尽描述。在我们的这个例子中，这些信息如下所示：
 
 ```
 The <linux/string.h> provides strpbrk() function that does the same that the
@@ -409,8 +416,10 @@ dgap_sindex(). Let's use already defined function instead of writing custom.
 ```
 
 And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in details. Do not just write a commit message like: `Custom function removed`, you need to describe what you did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
+在提交信息的最后是 `Sign-off-by` 这一行。注意，提交信息的每一行不能超过 `80` 个字符并且提交信息必须详细地描述你所做的修改。千万不要只写一条类似于 `Custom function removed` 这样的提交信息，你需要需要描述你做了什么以及为什么这样做。补丁的审核者必须据此知道他们正在审核什么内容，除此之外，这里的提交信息本身也非常有用。每当你不能理解一些东西的时候，我们都可以使用 [git blame](http://git-scm.com/docs/git-blame) 命令来阅读关于修改的描述。
 
 After we have committed changes time to generate patch. We can do it with the `format-patch` command:
+在我们完成了提交之后，是时候生成补丁文件了。我们可以使用 `format-patch` 命令来完成：
 
 ```
 $ git format-patch master
@@ -418,6 +427,7 @@ $ git format-patch master
 ```
 
 We've passed name of the branch (`master` in this case) to the `format-patch` command that will generate a patch with the last changes that are in the `dgap-remove-dgap_sindex` branch and not are in the `master` branch. As you can note, the `format-patch` command generates file that contains last changes and has name that is based on the commit short description. If you want to generate a patch with the custom name, you can use `--stdout` option:
+我们把分支名字 (这里是`master`) 传递给 `format-patch` 命令，该命令会根据那些在 `dgap-remove-dgap_sindex` 分支但不在  `master` 分支的最新改动来生成补丁。你会发现， `format-patch` 命令生成的文件包含了最新的修改，该文件的名字是基于提交信息的简短描述来生成的。如果你想按照自定义的文件名来生成补丁，你可以使用 `--stdout` 选项：
 
 ```
 $ git format-patch master --stdout > dgap-patch-1.patch
