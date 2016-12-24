@@ -87,7 +87,7 @@ Linux 内核揭密
 |├ [11.0](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[99ad0799](https://github.com/0xAX/linux-insides/commit/99ad07999636b76985218e02e5a52140050cbbde)|
 |├ [11.1](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/Paging.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ [11.2](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/ELF.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
-|└ [11.3](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/asm.md)||未开始|
+|└ [11.3](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/asm.md)|[@mudongliang](https://github.com/mudongliang)|正在进行|
 | 12. Initial ram disk||上游未开始|
 | 13. [Misc](https://github.com/MintCN/linux-insides-zh/tree/master/Misc)||正在进行|
 |├ [13.0](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[ddf0793f](https://github.com/0xAX/linux-insides/commit/ddf0793f6b74b6c541c4979b4deaf093b2b87c9b)|
@@ -106,8 +106,8 @@ Linux 内核揭密
 * 在确认想翻译的章节没有被翻译之后，开一个 issue ，告诉大家你想翻译哪一章节，同时提交申请翻译的 PR ，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“正在进行”；
 * 首先，从上游的[英文库](https://github.com/0xAX/linux-insides)中得到该章节的最新版本，将修改提交到我们的中文库中；
 * 然后翻译你认领的章节；
-* 完成翻译之后，提交翻译内容的 PR ，待 PR 被 merge 之后，关闭 issue ；
-* 最后，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“已完成”，同时不要忘记把自己添加到 [contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md) 中。
+* 完成翻译之后，提交翻译内容的 PR ，待 PR 被 merge 之后，关闭 issue；
+* 最后，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“更新至上游 commit id”，同时不要忘记把自己添加到 [contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md) 中。
 
 翻译前建议看 [TRANSLATION_NOTES.md](https://github.com/MintCN/linux-insides-zh/blob/master/TRANSLATION_NOTES.md) 。关于翻译约定，大家有任何问题或建议也请开 issue 讨论。
 
