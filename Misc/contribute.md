@@ -534,6 +534,7 @@ It's important that your email be in the [plain text](https://en.wikipedia.org/w
 ```
 
 Also it must contain a changelog that describes all changes from previous patch versions. Of course, this is not an exhaustive list of requirements for Linux kernel development, but some of the most important items were addressed.
+同样的，这次的补丁也必须包括更新日志以便描述自上一次的补丁以来所做的修改。当然，本文并不是 Linux 内核开发详尽无遗的指导清单，但是一些最重要的事项已经都被阐明了。
 
 Happy Hacking!
 
