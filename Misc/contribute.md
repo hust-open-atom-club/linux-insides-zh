@@ -539,14 +539,19 @@ Also it must contain a changelog that describes all changes from previous patch 
 Happy Hacking!
 
 Conclusion
+总结
 --------------------------------------------------------------------------------
 
 I hope this will help others join the Linux kernel community!
 If you have any questions or suggestions, write me at [email](kuleshovmail@gmail.com) or ping [me](https://twitter.com/0xAX) on twitter.
+我希望这篇文章能够帮助其他人加入 Linux 内核社区！
+如果你有其他问题或建议，可以给我写[邮件](kuleshovmail@gmail.com)或者在 Twitter 上联系[我](https://twitter.com/0xAX)。
 
 Please note that English is not my first language, and I am really sorry for any inconvenience. If you find any mistakes please let me know via email or send a PR.
+请注意，英语并不是我的母语，对此带来的不便我感到很抱歉。如果你发现了错误，请通过邮件或发 PR 来通知我。
 
 Links
+相关链接
 --------------------------------------------------------------------------------
 
 * [blog posts about assembly programming for x86_64](http://0xax.github.io/categories/assembly/)
