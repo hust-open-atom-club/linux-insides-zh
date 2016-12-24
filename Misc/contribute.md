@@ -434,6 +434,7 @@ $ git format-patch master --stdout > dgap-patch-1.patch
 ```
 
 The last step after we have generated our patch is to send it to the Linux kernel mailing list. Of course, you can use any email client, `git` provides a special command for this: `git send-email`. Before you send your patch, you need to know where to send it. Yes, you can just send it to the Linux kernel mailing list address which is `linux-kernel@vger.kernel.org`, but it is very likely that the patch will be ignored, because of the large flow of messages. The better choice would be to send the patch to the maintainers of the subsystem where you have made changes. To find the names of these maintainers use the `get_maintainer.pl` script. All you need to do is pass the file or directory where you wrote code.
+最后一步就是在我们生成补丁之后将之发送到 Linux 内核邮件列表。当然，你可以使用任意的邮件客户端，`git` 为此提供了一个专门的命令：`git send-email`。在发送补丁之前，你需要知道发到哪里。的确，你可以直接把它发送到 `linux-kernel@vger.kernel.org` 这个 Linux 内核邮件列表，但是这很可能让你的补丁因为巨大的消息流量而被忽略掉。最好的选择是将补丁发送到你的修改所属子系统的维护者那里。可以使用 `get_maintainer.pl` 脚本来找到这些维护者的名字。你所需要做的就是将你的代码所在的文件或目录作为参数传递给脚本。
 
 ```
 $ ./scripts/get_maintainer.pl -f drivers/staging/dgap/dgap.c
@@ -447,6 +448,7 @@ linux-kernel@vger.kernel.org (open list)
 ```
 
 You will see the set of the names and related emails. Now we can send our patch with:
+你将会看到一组姓名和相关的邮件地址。现在你可以通过下面的命令发送补丁：
 
 ```
 $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
@@ -459,19 +461,26 @@ $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
 ```
 
 That's all. The patch is sent and now you only have to wait for feedback from the Linux kernel developers. After you send a patch and a maintainer accepts it, you will find it in the maintainer's repository (for example [patch](https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/commit/?h=staging-testing&id=b9f7f1d0846f15585b8af64435b6b706b25a5c0b) that you saw in this part) and after some time the maintainer will send a pull request to Linus and you will see your patch in the mainline repository.
+这就是全部的过程。补丁被发出去了，现在你所需要做的就是等待 Linux 内核开发者的反馈。在你发送完补丁并且维护者接受它之后，你将在维护者的仓库看到它 (例如前文你看到的[补丁](https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/commit/?h=staging-testing&id=b9f7f1d0846f15585b8af64435b6b706b25a5c0b))。一段时间后，维护者将会向 Linus 发送一个拉取请求，之后你就会在主线仓库里看到你的补丁了。
 
 That's all.
+这就是全部内容。
 
 Some advice
+一些建议
 --------------------------------------------------------------------------------
 
 In the end of this part I want to give you some advice that will describe what to do and what not to do during development of the Linux kernel:
+在该部分的最后，我想建议，这些建议描述了在 Linux 内核的开发过程中需要做什么以及不能做什么。
 
 * Think, Think, Think. And think again before you decide to send a patch.
+* 思考，思考，思考。在你决定发送补丁之前再三考虑。
 
 * Each time when you have changed something in the Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that don't even compile.
+* 在你每次改完 Linux 内核源代码之后 - 试着编译它，我指的是任何修改之后，都要不断的编译。没有人喜欢那些连编译都不通过修改。
 
 * The Linux kernel has a coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with it. There is great script which can help to check your changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
+* Linux 内核有
 
 ```
 $ ./scripts/checkpatch.pl -f drivers/staging/dgap/dgap.c
