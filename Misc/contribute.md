@@ -512,8 +512,10 @@ Also you can see problematic places with the help of the `git diff`:
 ```
 
 You need to pass `message-id` as an argument of the `--in-reply-to` option that you can find in the output of the `git send-email`:
+你可以将 `message-id` 参数传递给 `--in-reply-to` 选项，该选项可以在 `git send-email` 命令的输出中找到。
 
 It's important that your email be in the [plain text](https://en.wikipedia.org/wiki/Plain_text) format. Generally, `send-email` and `format-patch` are very useful during development, so look at the documentation for the commands and you'll find some useful options such as: [git send-email](http://git-scm.com/docs/git-send-email) and [git format-patch](http://git-scm.com/docs/git-format-patch).
+有一件非常重要的事，那就是你的邮件必须是 [纯文本](https://en.wikipedia.org/wiki/Plain_text) 格式。通常来说，`send-email` 和 `format-patch` 这两个命令在内核开发中都是非常有用的，所以请查阅这些命令的的相关文档，你会发现很多有用的选项，例如：[git send-email](http://git-scm.com/docs/git-send-email) 和 [git format-patch](http://git-scm.com/docs/git-format-patch)。
 
 * Do not be surprised if you do not get an immediate answer after you send your patch. Maintainers can be very busy.
 
