@@ -333,7 +333,7 @@ Linux 内核开发入门
 ---------------------------------------------------------------------------------
 
 The main point of this paragraph is to answer two questions: What to do and what not to do before sending your first patch to the Linux kernel. Please, do not confuse this `to do` with `todo`. I have no answer what you can fix in the Linux kernel. I just want to tell you my workflow during experimenting with the Linux kernel source code.
-这部分的核心内容主要回答了两个问题：在你发送你的第一个 Linux 内核补丁之前你应该做什么 (`to do`) 和不能做什么 (`not to do`)。请千万不要把应该做的事 (`to do`) 和待办事项 (`todo`) 搞混了。我并没有回答你能为 Linux 内核修复什么问题，我只是想告诉你我拿 Linux 内核源代码做实验过程中的工作流程。
+这部分的核心内容主要回答了两个问题：在你发送第一个 Linux 内核补丁之前你应该做什么 (`to do`) 和不能做什么 (`not to do`)。请千万不要把应该做的事 (`to do`) 和待办事项 (`todo`) 搞混了。我无法回答你能为 Linux 内核修复什么问题，我只是想告诉你我拿 Linux 内核源代码做实验的流程。
 
 First of all I pull the latest updates from Linus's repo with the following commands:
 首先，我需要使用以下命令从 Linus 的仓库中拉取最新的更新：
@@ -344,10 +344,10 @@ $ git pull upstream master
 ```
 
 After this my local repository with the Linux kernel source code is synced with the [mainline](https://github.com/torvalds/linux) repository. Now we can make some changes in the source code. As I already wrote, I have no advice for you where you can start and what `TODO` in the Linux kernel. But the best place for newbies is `staging` tree. In other words the set of drivers from the [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging). The maintainer of the `staging` tree is [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman) and the `staging` tree is that place where your trivial patch can be accepted. Let's look on a simple example that describes how to generate patch, check it and send to the [Linux kernel mail listing](https://lkml.org/).
-在这之后，我的本地 Linux 内核源代码仓库已经和 [主线](https://github.com/torvalds/linux) 仓库同步了。现在我们可以在源代码上做些修改了。就像我之前写的，关于从哪开始或在 Linux 内核中可以做的事，我并不能在这里给你建议。不过，对于新手来说最好的地方就是 `staging` 源码树，也就是 [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging) 上的驱动集合。`staging` 源码树的主要维护者是 [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman)，`staging` 源码树正是你的琐碎补丁可以被接受的地方。让我们看一个简单的例子，它描述了如何生成补丁、检查补丁以及将补丁发送到 [Linux 内核邮件列表](https://lkml.org/)。
+在这之后，我的本地 Linux 内核源代码仓库已经和 [主线](https://github.com/torvalds/linux) 仓库同步了。现在我们可以在源代码上做些修改了。就像我之前写的，关于从哪开始修改或者可以做些什么，我并不能给你建议。不过，对于新手来说最好的地方就是 `staging` 源码树，也就是 [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging) 上的驱动集合。`staging` 源码树的主要维护者是 [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman)，该源码树正是你的琐碎补丁可以被接受的地方。让我们看一个简单的例子，该例子描述了如何生成补丁、检查补丁以及如何将补丁发送到 [Linux 内核邮件列表](https://lkml.org/)。
 
 If we look in the driver for the [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) based devices, we will see the `dgap_sindex` function on line 295:
-如果我们查看一下为 [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 基本设备所写的驱动程序，在295行我们将会看到 `dgap_sindex` 函数：
+如果我们查看一下为 [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 基础设备所写的驱动程序，在295行我们将会看到 `dgap_sindex` 函数：
 
 ```C
 static char *dgap_sindex(char *string, char *group)
@@ -369,7 +369,7 @@ static char *dgap_sindex(char *string, char *group)
 ```
 
 This function looks for a match of any character in the group and returns that position. During research of source code of the Linux kernel, I have noted that the [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) source code file contains the implementation of the `strpbrk` function that does the same thing as `dgap_sinidex`. It is not a good idea to use a custom implementation of a function that already exists, so we can remove the `dgap_sindex` function from the [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) source code file and use the `strpbrk` instead.
-这个函数查找 `group` 和 `string` 共有的字符并返回其位置。在研究 Linux 内核源代码期间，我注意到 [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) 文件实现了一个 `strpbrk` 函数，该函数和 `dgap_sinidex` 函数做了同样的事。使用现存函数的另一种自定义实现并不是一个好主意，我以我们可以从 [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) 源码文件中移除 `dgap_sindex` 函数并使用 `strpbrk` 替换它。
+这个函数查找 `group` 和 `string` 共有的字符并返回其位置。在研究 Linux 内核源代码期间，我注意到 [lib/string.c](https://github.com/torvalds/linux/blob/master/lib/string.c#L473) 文件里实现了一个 `strpbrk` 函数，该函数和 `dgap_sinidex` 函数做了同样的事。使用现存函数的另一种自定义实现并不是一个好主意，所以我们可以从 [drivers/staging/dgap/dgap.c](https://github.com/torvalds/linux/blob/master/drivers/staging/dgap/dgap.c) 源码文件中移除 `dgap_sindex` 函数并使用 `strpbrk` 替换它。
 
 First of all let's create new `git` branch based on the current master that synced with the Linux kernel mainline repo:
 首先，让我们基于当前主分支创建一个新的 `git` 分支，该分支与 Linux 内核主仓库同步。
@@ -379,7 +379,7 @@ $ git checkout -b "dgap-remove-dgap_sindex"
 ```
 
 And now we can replace the `dgap_sindex` with the `strpbrk`. After we did all changes we need to recompile the Linux kernel or just [dgap](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) directory. Do not forget to enable this driver in the kernel configuration. You can find it in the:
-然后，我们可以将 `dgap_sindex` 函数替换为 `strpbrk`。做完这些改动之后，我们需要重新编译 Linux 内核或者只重新编译 [dgap](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 目录。不要忘了在内核配置文件中启用这个驱动。你可以在如下位置找到该驱动：
+然后，我们可以将 `dgap_sindex` 函数替换为 `strpbrk`。做完这些修改之后，我们需要重新编译 Linux 内核或者只重新编译 [dgap](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 目录。不要忘了在内核配置文件中启用这个驱动，你可以在如下位置找到该驱动：
 
 ```
 Device Drivers
@@ -398,7 +398,7 @@ $ git commit -s -v
 ```
 
 After the last command an editor will be opened that will be chosen from `$GIT_EDITOR` or `$EDITOR` environment variable. The `-s` command line argument will add `Signed-off-by` line by the committer at the end of the commit log message. You can find this line in the end of each commit message, for example - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771). The main point of this line is the tracking of who did a change. The `-v` option show unified diff between the HEAD commit and what would be committed at the bottom of the commit message. It is not necessary, but very useful sometimes. A couple of words about commit message. Actually a commit message consists from two parts:
-最后一条命令运行后将会打开一个编辑器，该编辑器会从 `$GIT_EDITOR` 或 `$EDITOR` 环境变量中选择。 `-s` 命令行参数会在提交信息的末尾按照提交者加上 `Signed-off-by` 这一行。你在每一条提交信息的最后都能看到这一行，例如 - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771)。这一行的主要目的是追踪谁做的修改。`-v` 选项按照合并格式显示 `HEAD` 提交和即将进行的最新提交之间的差异。这样做不是必须的，但是有时候很有用。再来说下提交信息，实际上，一条提交信息由两部分组成：
+最后一条命令运行后将会打开一个编辑器，该编辑器会从 `$GIT_EDITOR` 或 `$EDITOR` 环境变量中进行选择。 `-s` 命令行参数会在提交信息的末尾按照提交者名字加上一行 `Signed-off-by`。你在每一条提交信息的最后都能看到这一行，例如 - [00cc1633](https://github.com/torvalds/linux/commit/00cc1633816de8c95f337608a1ea64e228faf771)。这一行的主要目的是追踪谁做的修改。`-v` 选项按照合并格式显示 `HEAD` 提交和即将进行的最新提交之间的差异。这样做不是并必须的，但有时候却很有用。再来说下提交信息，实际上，一条提交信息由两部分组成：
 
 The first part is on the first line and contains short description of changes. It starts from the `[PATCH]` prefix followed by a subsystem, driver or architecture name and after `:` symbol short description. In our case it will be something like this:
 第一部分放在第一行，它包括了一句对所做修改的简短描述。这一行以 `[PATCH]` 做前缀，后面跟上子系统、驱动或架构的名字，以及在 `:` 之后的简述信息。在我们这个例子中，这一行信息如下所示：
@@ -408,7 +408,7 @@ The first part is on the first line and contains short description of changes. I
 ```
 
 After short description usually we have an empty line and full description of the commit. In our case it will be:
-在简述信息之后，我们通常空一行再加上本次提交的详尽描述。在我们的这个例子中，这些信息如下所示：
+在简述信息之后，我们通常空一行再加上对本次提交的详尽描述。在我们的这个例子中，这些信息如下所示：
 
 ```
 The <linux/string.h> provides strpbrk() function that does the same that the
@@ -416,10 +416,10 @@ dgap_sindex(). Let's use already defined function instead of writing custom.
 ```
 
 And the `Sign-off-by` line in the end of the commit message. Note that each line of a commit message must no be longer than `80` symbols and commit message must describe your changes in details. Do not just write a commit message like: `Custom function removed`, you need to describe what you did and why. The patch reviewers must know what they review. Besides this commit messages in this view are very helpful. Each time when we can't understand something, we can use [git blame](http://git-scm.com/docs/git-blame) to read description of changes.
-在提交信息的最后是 `Sign-off-by` 这一行。注意，提交信息的每一行不能超过 `80` 个字符并且提交信息必须详细地描述你所做的修改。千万不要只写一条类似于 `Custom function removed` 这样的提交信息，你需要需要描述你做了什么以及为什么这样做。补丁的审核者必须据此知道他们正在审核什么内容，除此之外，这里的提交信息本身也非常有用。每当你不能理解一些东西的时候，我们都可以使用 [git blame](http://git-scm.com/docs/git-blame) 命令来阅读关于修改的描述。
+在提交信息的最后是 `Sign-off-by` 这一行。注意，提交信息的每一行不能超过 `80` 个字符并且提交信息必须详细地描述你所做的修改。千万不要只写一条类似于 `Custom function removed` 这样的信息，你需要描述你做了什么以及为什么这样做。补丁的审核者必须据此知道他们正在审核什么内容，除此之外，这里的提交信息本身也非常有用。每当你不能理解一些东西的时候，我们都可以使用 [git blame](http://git-scm.com/docs/git-blame) 命令来阅读关于修改的描述。
 
 After we have committed changes time to generate patch. We can do it with the `format-patch` command:
-在我们完成了提交之后，是时候生成补丁文件了。我们可以使用 `format-patch` 命令来完成：
+提交修改之后，是时候生成补丁文件了。我们可以使用 `format-patch` 命令来完成：
 
 ```
 $ git format-patch master
@@ -427,14 +427,14 @@ $ git format-patch master
 ```
 
 We've passed name of the branch (`master` in this case) to the `format-patch` command that will generate a patch with the last changes that are in the `dgap-remove-dgap_sindex` branch and not are in the `master` branch. As you can note, the `format-patch` command generates file that contains last changes and has name that is based on the commit short description. If you want to generate a patch with the custom name, you can use `--stdout` option:
-我们把分支名字 (这里是`master`) 传递给 `format-patch` 命令，该命令会根据那些在 `dgap-remove-dgap_sindex` 分支但不在  `master` 分支的最新改动来生成补丁。你会发现， `format-patch` 命令生成的文件包含了最新的修改，该文件的名字是基于提交信息的简短描述来生成的。如果你想按照自定义的文件名来生成补丁，你可以使用 `--stdout` 选项：
+我们把分支名字 (这里是`master`) 传递给 `format-patch` 命令，该命令会根据那些包括在 `dgap-remove-dgap_sindex` 分支但不在  `master` 分支的最新改动来生成补丁。你会发现， `format-patch` 命令生成的文件包含了最新所做的修改，该文件的名字是基于提交信息的简短描述来生成的。如果你想按照自定义的文件名来生成补丁，你可以使用 `--stdout` 选项：
 
 ```
 $ git format-patch master --stdout > dgap-patch-1.patch
 ```
 
 The last step after we have generated our patch is to send it to the Linux kernel mailing list. Of course, you can use any email client, `git` provides a special command for this: `git send-email`. Before you send your patch, you need to know where to send it. Yes, you can just send it to the Linux kernel mailing list address which is `linux-kernel@vger.kernel.org`, but it is very likely that the patch will be ignored, because of the large flow of messages. The better choice would be to send the patch to the maintainers of the subsystem where you have made changes. To find the names of these maintainers use the `get_maintainer.pl` script. All you need to do is pass the file or directory where you wrote code.
-最后一步就是在我们生成补丁之后将之发送到 Linux 内核邮件列表。当然，你可以使用任意的邮件客户端，`git` 为此提供了一个专门的命令：`git send-email`。在发送补丁之前，你需要知道发到哪里。的确，你可以直接把它发送到 `linux-kernel@vger.kernel.org` 这个 Linux 内核邮件列表，但是这很可能让你的补丁因为巨大的消息流量而被忽略掉。最好的选择是将补丁发送到你的修改所属子系统的维护者那里。可以使用 `get_maintainer.pl` 脚本来找到这些维护者的名字。你所需要做的就是将你的代码所在的文件或目录作为参数传递给脚本。
+最后一步就是在我们生成补丁之后将之发送到 Linux 内核邮件列表。当然，你可以使用任意的邮件客户端，不过 `git` 为此提供了一个专门的命令：`git send-email`。在发送补丁之前，你需要知道发到哪里。虽然你可以直接把它发送到 `linux-kernel@vger.kernel.org` 这个 Linux 内核邮件列表，但是这很可能让你的补丁因为巨大的消息流而被忽略掉。最好的选择是将补丁发送到你的修改所属子系统的维护者那里。你可以使用 `get_maintainer.pl` 这个脚本来找到这些维护者的名字。你所需要做的就是将你代码所在的文件或目录作为参数传递给脚本。
 
 ```
 $ ./scripts/get_maintainer.pl -f drivers/staging/dgap/dgap.c
@@ -448,7 +448,7 @@ linux-kernel@vger.kernel.org (open list)
 ```
 
 You will see the set of the names and related emails. Now we can send our patch with:
-你将会看到一组姓名和相关的邮件地址。现在你可以通过下面的命令发送补丁：
+你将会看到一组姓名和与之相关的邮件地址。现在你可以通过下面的命令发送补丁了：
 
 ```
 $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
@@ -461,7 +461,7 @@ $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
 ```
 
 That's all. The patch is sent and now you only have to wait for feedback from the Linux kernel developers. After you send a patch and a maintainer accepts it, you will find it in the maintainer's repository (for example [patch](https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/commit/?h=staging-testing&id=b9f7f1d0846f15585b8af64435b6b706b25a5c0b) that you saw in this part) and after some time the maintainer will send a pull request to Linus and you will see your patch in the mainline repository.
-这就是全部的过程。补丁被发出去了，现在你所需要做的就是等待 Linux 内核开发者的反馈。在你发送完补丁并且维护者接受它之后，你将在维护者的仓库看到它 (例如前文你看到的[补丁](https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/commit/?h=staging-testing&id=b9f7f1d0846f15585b8af64435b6b706b25a5c0b))。一段时间后，维护者将会向 Linus 发送一个拉取请求，之后你就会在主线仓库里看到你的补丁了。
+这就是全部的过程。补丁被发出去了，现在你所需要做的就是等待 Linux 内核开发者的反馈。在你发送完补丁并且维护者接受它之后，你将在维护者的仓库中看到它 (例如前文你看到的[补丁](https://git.kernel.org/cgit/linux/kernel/git/gregkh/staging.git/commit/?h=staging-testing&id=b9f7f1d0846f15585b8af64435b6b706b25a5c0b))。一段时间后，维护者将会向 Linus 发送一个拉取请求，之后你就会在主线仓库里看到你的补丁了。
 
 That's all.
 这就是全部内容。
@@ -471,7 +471,7 @@ Some advice
 --------------------------------------------------------------------------------
 
 In the end of this part I want to give you some advice that will describe what to do and what not to do during development of the Linux kernel:
-在该部分的最后，我想建议，这些建议描述了在 Linux 内核的开发过程中需要做什么以及不能做什么。
+在该部分的最后，我想给你一些建议，这些建议大都是关于在 Linux 内核的开发过程中需要做什么以及不能做什么的。
 
 * Think, Think, Think. And think again before you decide to send a patch.
 * 思考，思考，思考。在你决定发送补丁之前再三考虑。
