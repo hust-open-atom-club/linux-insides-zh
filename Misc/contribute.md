@@ -5,23 +5,23 @@ Introduction
 --------------------------------------------------------------------------------
 
 As you already may know, I've started a series of [blog posts](http://0xax.github.io/categories/assembly/) about assembler programming for `x86_64` architecture in the last year. I have never written a line of low-level code before this moment, except for a couple of toy `Hello World` examples in university. It was a long time ago and, as I already said, I didn't write low-level code at all. Some time ago I became interested in such things. I understood that I can write programs, but didn't actually understand how my program is arranged.
-正如你所知，我从去年开始写了一系列关于 `x86_64` 架构汇编语言程序设计的博文。除了大学期间写过一些 `Hello World` 这样的玩具例程之外，我从来没写过哪怕一行的底层代码。那些例程也是很久以前的事情了，就像我说的，我完全没有写过底层代码。直到不久前，我才开始对这些事情感兴趣。我意识到我虽然可以写出程序，但是我却不知道我的程序是怎样被组织运行的。
+正如你所知，我从去年开始写了一系列关于 `x86_64` 架构汇编语言程序设计的博文。除了大学期间写过一些 `Hello World` 这样的玩具例程之外，我从来没写过哪怕一行的底层代码。那些例程也是很久以前的事情了，就像我刚才说的，我几乎完全没有写过底层代码。直到不久前，我才开始对这些事情感兴趣，因为我意识到我虽然可以写出程序，但是我却不知道我的程序是怎样被组织运行的。
 
 After writing some assembler code I began to understand how my program looks after compilation, **approximately**. But anyway, I didn't understand many other things. For example: what occurs when the `syscall` instruction is executed in my assembler, what occurs when the `printf` function starts to work or how can my program talk with other computers via network. [Assembler](https://en.wikipedia.org/wiki/Assembly_language#Assembler) programming language didn't give me answers to my questions and I decided to go deeper in my research. I started to learn from the source code of the Linux kernel and tried to understand the things that I'm interested in. The source code of the Linux kernel didn't give me the answers to **all** of my questions, but now my knowledge about the Linux kernel and the processes around it is much better.
-在写了一些汇编代码之后，我开始**大致**了解了程序在编译之后会变成什么样子。尽管如此，还是有很多其他的东西我不能够理解。例如：当 `syscall` 指令在我的汇编程序内执行时以及当 `printf` 函数开始工作时究竟发生了什么，还有，我的程序如何通过网络与其他电脑通信。[汇编](https://en.wikipedia.org/wiki/Assembly_language#Assembler)语言并没有为我的问题带来答案，于是我决定做一番深入研究。我开始学习 Linux 内核的源代码，并且尝试着理解那些我感兴趣的东西。Linux 内核源代码也没有解答我**所有的**问题，但是我自身关于 Linux 内核及其外围流程的知识掌握的更好了。
+在写了一些汇编代码之后，我开始**大致**了解了程序在编译之后会变成什么样子。尽管如此，还是有很多其他的东西我不能够理解。例如：当 `syscall` 指令在我的汇编程序内执行时以及当 `printf` 函数开始工作时究竟发生了什么，还有，我的程序如何通过网络与其他计算机进行通信。[汇编](https://en.wikipedia.org/wiki/Assembly_language#Assembler)语言并没有为这些问题带来答案，于是我决定做一番深入研究。我开始学习 Linux 内核的源代码，并且尝试着理解那些让我感兴趣的东西。然而 Linux 内核源代码也没有解答我**所有的**问题，不过我自身关于 Linux 内核及其外围流程的知识掌握的更好了。
 
 I'm writing this part nine and a half months after I've started to learn from the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
-在我开始学习 Linux 内核的九个半月之后，我写了这部分内容，并且发布了本书的[第一部分](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html)。现在本书包括了四部分，而这并不是终点。我决定写这一系列关于 Linux 内核的文章更多的是为了我自己。正如你所知，Linux 内核的代码量极其巨大，另外还非常容易忘记这一块或那一块内核代码做了什么或者一些东西是怎么实现的。但是，随着 [linux-insides](https://github.com/0xAX/linux-insides) 变得越来越受欢迎，而且在九个月后它积攒了 `9096` 个星星。
+在我开始学习 Linux 内核的九个半月之后，我写了这部分内容，并且发布了本书的[第一部分](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html)。到现在为止，本书共包括了四个部分，而这并不是终点。我决定写这么一系列关于 Linux 内核的文章其实更多的是为了我自己。你也知道，Linux 内核的代码量极其巨大，另外还非常容易忘记这一块或那一块内核代码做了什么或者一些东西是怎么实现的。但是 [linux-insides](https://github.com/0xAX/linux-insides) 很快就变得越来越火了，并且在九个月后积攒了 `9096` 个星星。
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
 It seems that people are interested in the insides of the Linux kernel. Besides this, in all the time that I have been writing `linux-insides`, I have received many questions from different people about how to begin contributing to the Linux kernel. Generally people are interested in contributing to open source projects and the Linux kernel is not an exception:
-看起来人们对 Linux 内核的内在机制非常的感兴趣。除此之外，在我写 `linux-insides` 的这段时间里，我收到了来自不同人的很多问题，这些问题大都是关于如何开始向 Linux 内核贡献代码。通常来说，人们很有兴趣为开源项目做贡献，Linux 内核也不例外。
+看起来人们对 Linux 内核的内在机制非常的感兴趣。除此之外，在我写 `linux-insides` 的这段时间里，我收到了很多人发来的问题，这些问题大都是关于如何开始向 Linux 内核贡献代码。通常来说，人们很有兴趣为开源项目做贡献，Linux 内核也不例外。
 
 ![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
 
 So, it seems that people are interested in the Linux kernel development process. I thought it would be strange if a book about the Linux kernel would not contain a part describing how to take a part in the Linux kernel development and that's why I decided to write it. You will not find information about why you should be interested in contributing to the Linux kernel in this part. But if you are interested how to start with Linux kernel development, this part is for you.
-所以，人们看起来对 Linux 内核的开发流程非常感兴趣。我认为如果一本关于 Linux 内核的书不包括一部分来讲讲如何参与 Linux 内核开发的话，这将会变得非常奇怪。这就是我为什么决定写这篇文章。在该部分，你不会找到关于为什么你应该对贡献 Linux 内核感兴趣的信息。但是，如果你对如何参与 Linux 内核开发有兴趣的话，这部分就是为你而作。
+这么看来人们看起来对 Linux 内核的开发流程非常感兴趣。我认为如果这么一本关于 Linux 内核的书却不包括一部分来讲讲如何参与 Linux 内核开发的话，这将会变得非常奇怪。这就是我为什么决定写这篇文章。在该部分，你不会看到关于为什么你应该对贡献 Linux 内核感兴趣的信息。但是，如果你对如何参与 Linux 内核开发有兴趣的话，这部分就是为你而作。
 
 Let's start.
 让我们开始吧
@@ -39,10 +39,10 @@ First of all, let's see how to get, build, and run the Linux kernel. You can run
 * 在真实的硬件上运行 Linux 内核。
 
 I'll provide descriptions for both methods. Before we start doing anything with the Linux kernel, we need to get it. There are a couple of ways to do this depending on your purpose. If you just want to update the current version of the Linux kernel on your computer, you can use the instructions specific to your Linux [distro](https://en.wikipedia.org/wiki/Linux_distribution).
-我会对这两种方式都展开描述。在我们开始对 Linux 内核做些什么之前，我们需要先获取它。有两种方式可以做到这一点，这取决于你的目的。如果你只是想更新一下你电脑上的 Linux 内核版本，那么你可以使用特定于你的 [Linux 发行版](https://en.wikipedia.org/wiki/Linux_distribution)的命令。
+我会对这两种方式都展开描述。在我们开始对 Linux 内核做些什么之前，我们首先需要先获取它。根据你目的的不同，有两种方式可以做到这一点。如果你只是想更新一下你电脑上的 Linux 内核版本，那么你可以使用特定于你的 [Linux 发行版](https://en.wikipedia.org/wiki/Linux_distribution) 的命令。
 
 In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
-在第一种情况下，你只需要使用 [软件包管理器](https://en.wikipedia.org/wiki/Package_manager) 下载新版本的 Linux 内核。例如，为了将  [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/) 系统的 Linux 内核更新至 `4.1`，你只需要执行以下命令：
+在这种情况下，你只需要使用 [软件包管理器](https://en.wikipedia.org/wiki/Package_manager) 下载新版本的 Linux 内核。例如，为了将  [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/) 系统的 Linux 内核更新至 `4.1`，你只需要执行以下命令：
 
 ```
 $ sudo add-apt-repository ppa:kernel-ppa/ppa
@@ -57,7 +57,7 @@ $ apt-cache showpkg linux-headers
 ```
 
 and choose the version of the Linux kernel in which you are interested. In the end execute the next command and replace `${version}` with the version that you chose in the output of the previous command:
-然后选择你感兴趣的 Linux 内核的版本。最后，执行下一条命令并且将 `${version}` 替换为你从上一条命令的输出中选择的版本号。
+然后选择你感兴趣的 Linux 内核的版本。最后，执行下面的命令并且将 `${version}` 替换为你从上一条命令的输出中选择的版本号。
 
 ```
 $ sudo apt-get install linux-headers-${version} linux-headers-${version}-generic linux-image-${version}-generic --fix-missing
@@ -67,21 +67,21 @@ and reboot your system. After the reboot you will see the new kernel in the [gru
 然后重启你的系统。重启完成后，你将在 [grub](https://en.wikipedia.org/wiki/GNU_GRUB) 菜单中看到新的内核。
 
 In the other way if you are interested in the Linux kernel development, you will need to get the source code of the Linux kernel. You can find it on the [kernel.org](https://kernel.org/) website and download an archive with the Linux kernel source code. Actually the Linux kernel development process is fully built around `git` [version control system](https://en.wikipedia.org/wiki/Version_control). So you can get it with `git` from the `kernel.org`:
-另一方面，如果你对 Linux 内核开发感兴趣，那么你就需要获得 Linux 内核的源代码。你可以在 [kernel.org](https://kernel.org/) 网站上找到它并且下载一个包含了 Linux 内核源代码的归档文件。事实上，Linux 内核的开发流程完全建立在 `git` [版本控制系统](https://en.wikipedia.org/wiki/Version_control) 之上，所以你需要通过 `git` 来从 `kernel.org` 上获取内核源代码：
+另一方面，如果你对 Linux 内核开发感兴趣，那么你就需要获得 Linux 内核的源代码。你可以在 [kernel.org](https://kernel.org/) 网站上找到它并且下载一个包含了 Linux 内核源代码的归档文件。实际上，Linux 内核的开发流程完全建立在 `git` [版本控制系统](https://en.wikipedia.org/wiki/Version_control) 之上，所以你需要通过 `git` 来从 `kernel.org` 上获取内核源代码：
 
 ```
 $ git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git
 ```
 
 I don't know how about you, but I prefer `github`. There is a [mirror](https://github.com/torvalds/linux) of the Linux kernel mainline repository, so you can clone it with:
-我不知道你情况如何，但是我非常喜欢 `github`。这儿有一个 Linux 内核主线仓库的 [镜像](https://github.com/torvalds/linux)，所以你可以通过以下命令克隆它：
+我不知道你怎么看，但是我本身是非常喜欢 `github` 的。它上面有一个 Linux 内核主线仓库的 [镜像](https://github.com/torvalds/linux)，你可以通过以下命令克隆它：
 
 ```
 $ git clone git@github.com:torvalds/linux.git
 ```
 
 I  use my own [fork](https://github.com/0xAX/linux) for development and when I want to pull updates from the main repository I just execute the following command:
-我是用我自己的 [fork](https://github.com/0xAX/linux) 仓库来进行开发，等到我想从主线仓库拉取更新的时候，我只需要执行下方的命令：
+我是用我自己 [fork](https://github.com/0xAX/linux) 的仓库来进行开发的，等到我想从主线仓库拉取更新的时候，我只需要执行下方的命令即可：
 
 ```
 $ git checkout master
@@ -89,7 +89,7 @@ $ git pull upstream master
 ```
 
 Note that the remote name of the main repository is `upstream`. To add a new remote with the main Linux repository you can execute:
-注意这个主线仓库的远程主机名叫 `upstream`。为了将主线 Linux 仓库添加为一个新的远程主机，你可以执行：
+注意这个主线仓库的远程主机名叫做 `upstream`。为了将主线 Linux 仓库添加为一个新的远程主机，你可以执行：
 
 ```
 git remote add upstream git@github.com:torvalds/linux.git
@@ -110,26 +110,26 @@ One is of your fork (`origin`) and the second is for the main repository (`upstr
 其中一个远程主机是你的 fork 仓库 (`origin`)，另一个是主线仓库 (`upstream`)。
 
 Now that we have a local copy of the Linux kernel source code, we need to configure and build it. The Linux kernel can be configured in different ways. The simplest way is to just copy the configuration file of the already installed kernel that is located in the `/boot` directory:
-现在，我们已经有了一份 Linux 内核源代码的本地副本，我们需要配置并编译内核。Linux 内核可以通过不同的方式配置。最简单的方式就是直接拷贝已经已安装内核位于 `/boot` 目录下的配置文件。
+现在，我们已经有了一份 Linux 内核源代码的本地副本，我们需要配置并编译内核。Linux 内核的配置有很多不同的方式，最简单的方式就是直接拷贝 `/boot` 目录下已安装内核的配置文件。
 
 ```
 $ sudo cp /boot/config-$(uname -r) ~/dev/linux/.config
 ```
 
 If your current Linux kernel was built with the support for access to the `/proc/config.gz` file, you can copy your actual kernel configuration file with this command:
-如果你当前的内核被编译为支持访问 `/proc/config.gz` 文件，你可以使用以下命令复制当前内核的配置文件：
+如果你当前的内核被编译为支持访问 `/proc/config.gz` 文件，你也可以使用以下命令复制当前内核的配置文件：
 
 ```
 $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
 ```
 
 If you are not satisfied with the standard kernel configuration that is provided by the maintainers of your distro, you can configure the Linux kernel manually. There are a couple of ways to do it. The Linux kernel root [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) provides a set of targets that allows you to configure it. For example `menuconfig` provides a menu-driven interface for the kernel configuration:
-如果你对发行版维护者提供的标准内核配置文件不满意，你可以手动配置 Linux 内核。有两种方式可以做到这一点。Linux 内核的根 [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) 文件提供了一系列允许你配置的目标选项。例如 `menuconfig` 为内核配置提供了一个菜单界面。
+如果你对发行版维护者提供的标准内核配置文件并不满意，你也可以手动配置 Linux 内核，有两种方式可以做到这一点。Linux 内核的根 [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) 文件提供了一系列允许你配置的目标选项。例如 `menuconfig` 为内核配置提供了一个菜单界面。
 
 ![menuconfig](http://s21.postimg.org/zcz48p7yf/menucnonfig.png)
 
 The `defconfig` argument generates the default kernel configuration file for the current architecture, for example [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig). You can pass the `ARCH` command line argument to `make` to build `defconfig` for the given architecture:
- `defconfig` 参数会为当前的架构生成默认的内核配置文件，例如 [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig)。你可以将 `ARCH` 命令行参数传递给 `make`，以此来为给定架构创建 `defconfig` 配置。
+ `defconfig` 参数会为当前的架构生成默认的内核配置文件，例如 [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig)。你可以将 `ARCH` 命令行参数传递给 `make`，以此来为给定架构创建 `defconfig` 配置文件。
 
 ```
 $ make ARCH=arm64 defconfig
@@ -141,10 +141,10 @@ The `allnoconfig`, `allyesconfig` and `allmodconfig` arguments allow you to gene
 ![nconfig](http://s29.postimg.org/hpghikp4n/nconfig.png)
 
 And even `randconfig` to generate random Linux kernel configuration file. I will not write about how to configure the Linux kernel or which options to enable because it makes no sense to do so for two reasons: First of all I do not know your hardware and second, if you know your hardware, the only remaining task is to find out how to use programs for kernel configuration, and all of them are pretty simple to use.
-`randconfig` 参数甚至可以随机地生成 Linux 内核配置。我不会讨论如何去配置 Linux 内核或启用哪个选项，因为没有必要这么做：首先，我不知道你的硬件配置；其次，如果我知道了你的硬件配置，那么剩下的问题就是搞清楚如何使用程序生成内核配置，而这些程序都非常易于使用。
+`randconfig` 参数甚至可以随机地生成 Linux 内核配置文件。我不会讨论如何去配置 Linux 内核或启用哪个选项，因为没有必要这么做：首先，我不知道你的硬件配置；其次，如果我知道了你的硬件配置，那么剩下的问题就是搞清楚如何使用程序生成内核配置，而这些程序的使用都是非常容易得。
 
 OK, we now have the source code of the Linux kernel and configured it. The next step is the compilation of the Linux kernel. The simplest way to compile Linux kernel is to just execute:
-好了，我们现在有了 Linux 内核的源代码并且完成了配置。下一步就是编译 Linux 内核了。最简单的编译 Linux 内核的方式就是执行：
+好了，我们现在有了 Linux 内核的源代码并且完成了配置。下一步就是编译 Linux 内核了。最简单的编译 Linux 内核的方式就是执行以下命令：
 
 ```
 $ make
@@ -178,13 +178,13 @@ $ make -j8
 ```
 
 If you want to build Linux kernel for an architecture that differs from your current, the simplest way to do it pass two arguments:
-如果你想为一个体系结构构建一个与当前内核不同于的内核，那么最简单的方式就是传递两个参数：
+如果你想为一个架构构建一个与当前内核不同的内核，那么最简单的方式就是传递下面两个参数：
 
 * `ARCH` command line argument and the name of the target architecture;
 * `CROSS_COMPILER` command line argument and the cross-compiler tool prefix;
 
 For example if we want to compile the Linux kernel for the [arm64](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features) with default kernel configuration file, we need to execute following command:
-例如，如果我们想使用默认配置文件为 [arm64 架构](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features)编译 Linux 内核，我们需要执行以下命令：
+例如，如果我们想使用默认内核配置文件为 [arm64 架构](https://en.wikipedia.org/wiki/ARM_architecture#AArch64_features) 编译 Linux 内核，我们需要执行以下命令：
 
 ```
 $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu- defconfig
@@ -192,14 +192,14 @@ $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu-
 ```
 
 As result of compilation we can see the compressed kernel - `arch/x86/boot/bzImage`. Now that we have compiled the kernel, we can either install it on our computer or just run it in an emulator.
-编译的结果就是你会看淡压缩后的内核文件 - `arch/x86/boot/bzImage`。既然我们已经编译好了内核，那就可以将它安装到我们的电脑上或者只是将它运行在模拟器内。
+编译的结果就是你会看到压缩后的内核文件 - `arch/x86/boot/bzImage`。既然我们已经编译好了内核，那么就可以把它安装到我们的电脑上或者只是将它运行在模拟器里。
 
 Installing Linux kernel
 安装 Linux 内核
 --------------------------------------------------------------------------------
 
 As I already wrote we will consider two ways how to launch new kernel: In the first case we can install and run the new version of the Linux kernel on the real hardware and the second is launch the Linux kernel on a virtual machine. In the previous paragraph we saw how to build the Linux kernel from source code and as a result we have got compressed image:
-正如我之前所写的，我们将考察两种用来运行新内核的方法：第一种情况，我们可以在真实的硬件上安装并运行新版本的 Linux 内核，第二种情况就是在虚拟机上运行 Linux 内核。在前面的段落中我们看到了如何从源代码来构建 Linux 内核，由此，我们现在得到了内核的压缩镜像。
+就像我之前写的，我们将考察两种用来运行新内核的方法：第一种情况，我们可以在真实的硬件上安装并运行新版本的 Linux 内核，第二种情况就是在虚拟机上运行 Linux 内核。在前面的段落中我们看到了如何从源代码来构建 Linux 内核，并且我们现在已经得到了内核的压缩镜像。
 
 ```
 ...
@@ -224,7 +224,7 @@ $ sudo make install
 ```
 
 From this moment we have installed new version of the Linux kernel and now we must tell the `bootloader` about it. Of course we can add it manually by the editing of the `/boot/grub2/grub.cfg` configuration file, but I prefer to use a script for this purpose. I'm using two different Linux distros: Fedora and Ubuntu. There are two different ways to update the [grub](https://en.wikipedia.org/wiki/GNU_GRUB) configuration file. I'm using following script for this purpose:
-从这时起，我们已经安装好了新版本的 Linux 内核，现在我们需要通知 `bootloader` 新内核已经安装完成。当然，我们可以手动编辑 `/boot/grub2/grub.cfg` 配置文件并将新内核添加进去，但是我推荐使用脚本来完成这件事。我现在在使用两种不同的 Linux 发行版：Fedora 和 Ubuntu。有两种方式可以更新 [grub](https://en.wikipedia.org/wiki/GNU_GRUB) 配置文件，我目前正在使用下面的脚本来达到这一目的。
+从这时起，我们已经安装好了新版本的 Linux 内核，现在我们需要通知 `bootloader` 新内核已经安装完成。我们当然可以手动编辑 `/boot/grub2/grub.cfg` 配置文件并将新内核添加进去，但是我更推荐使用脚本来完成这件事。我现在在使用两种不同的 Linux 发行版：Fedora 和 Ubuntu，有两种方式可以用来更新 [grub](https://en.wikipedia.org/wiki/GNU_GRUB) 配置文件，我目前正在使用下面的脚本来达到这一目的：
 
 ```shell
 #!/bin/bash
@@ -245,10 +245,10 @@ echo "${Green}Done.${Color_Off}"
 ```
 
 This is the last step of the new Linux kernel installation and after this you can reboot your computer and select new version of the kernel during boot.
-这是新 Linux 内核安装过程的最后一步，在这之后你可以重启你的电脑，然后在启动过程中选择新版本的内核。
+这是新 Linux 内核安装过程中的最后一步，在这之后你可以重启你的电脑，然后在启动过程中选择新版本的内核。
 
 The second case is to launch new Linux kernel in the virtual machine. I prefer [qemu](https://en.wikipedia.org/wiki/QEMU). First of all we need to build initial ramdisk - [initrd](https://en.wikipedia.org/wiki/Initrd) for this. The `initrd` is a temporary root file system that is used by the Linux kernel during initialization process while other filesystems are not mounted. We can build `initrd` with the following commands:
-第二种情况就是在虚拟机内运行新的 Linux 内核，我更倾向于使用 [qemu](https://en.wikipedia.org/wiki/QEMU)。首先，我们需要为此构建初始的虚拟内存盘 - [initrd](https://en.wikipedia.org/wiki/Initrd)。`initrd` 是一个临时的根文件系统，它在初始化期间被 Linux 内核使用，而那时其他的文件系统尚未被挂载。我们可以使用以下命令构建 `initrd`：
+第二种情况就是在虚拟机内运行新的 Linux 内核，我更倾向于使用 [qemu](https://en.wikipedia.org/wiki/QEMU)。首先我们需要为此构建初始的虚拟内存盘 - [initrd](https://en.wikipedia.org/wiki/Initrd)。`initrd` 是一个临时的根文件系统，它在初始化期间被 Linux 内核使用，而那时其他的文件系统尚未被挂载。我们可以使用以下命令构建 `initrd`：
 
 First of all we need to download [busybox](https://en.wikipedia.org/wiki/BusyBox) and run `menuconfig` for its configuration:
 首先我们需要下载 [busybox](https://en.wikipedia.org/wiki/BusyBox)，然后运行 `menuconfig` 命令配置它：
@@ -263,12 +263,12 @@ $ make -j4
 ```
 
 `busybox` is an executable file - `/bin/busybox` that contains a set of standard tools like [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities). In the `busysbox` menu we need to enable: `Build BusyBox as a static binary (no shared libs)` option:
-`busybox` 是一个可执行文件 - `/bin/busybox`，它包括了一系列类似 [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) 的标准工具。在 `busysbox` 菜单界面上我们需要启用：`Build BusyBox as a static binary (no shared libs)` 选项。
+`busybox` 是一个可执行文件 - `/bin/busybox`，它包括了一系列类似于 [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) 的标准工具。在 `busysbox` 菜单界面上我们需要启用：`Build BusyBox as a static binary (no shared libs)` 选项：
 
 ![busysbox menu](http://s18.postimg.org/sj92uoweh/busybox.png)
 
 We can find this menu in the:
-我们可以遵照下方的路径找到这个菜单项：
+我们可以按照下方的路径找到这个菜单项：
 
 ```
 Busybox Settings
@@ -276,7 +276,7 @@ Busybox Settings
 ```
 
 After this we exit from the `busysbox` configuration menu and execute following commands for building and installation of it:
-在此之后，我们从 `busysbox` 的配置菜单退出，然后执行下面的命令来构建并安装它：
+在此之后，我们从 `busysbox` 的配置菜单退出去，然后执行下面的命令来构建并安装它：
 
 ```
 $ make -j4
@@ -314,7 +314,7 @@ $ find . -print0 | cpio --null -ov --format=newc | gzip -9 > ~/dev/initrd_x86_64
 ```
 
 We can now run our kernel in the virtual machine. As I already wrote I prefer [qemu](https://en.wikipedia.org/wiki/QEMU) for this. We can run our kernel with the following command:
-我们现在可以在虚拟机里运行我们的内核了。就像我之前写过的，我偏向于用 [qemu](https://en.wikipedia.org/wiki/QEMU) 来完成这些工作。我们可以用下面的命令运行我们的 Linux 内核：
+我们现在可以在虚拟机里运行我们的内核了。就像我之前写过的，我偏向于使用 [qemu](https://en.wikipedia.org/wiki/QEMU) 来完成这些工作，可以用下面的命令运行我们的 Linux 内核：
 
 ```
 $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
