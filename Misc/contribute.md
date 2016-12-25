@@ -474,13 +474,13 @@ In the end of this part I want to give you some advice that will describe what t
 在该部分的最后，我想给你一些建议，这些建议大都是关于在 Linux 内核的开发过程中需要做什么以及不能做什么的。
 
 * Think, Think, Think. And think again before you decide to send a patch.
-* 思考，思考，思考。在你决定发送补丁之前再三考虑。
+* 考虑，考虑，再考虑。在你决定发送补丁之前再三考虑。
 
 * Each time when you have changed something in the Linux kernel source code - compile it. After any changes. Again and again. Nobody likes changes that don't even compile.
 * 在你每次改完 Linux 内核源代码之后 - 试着编译它，我指的是任何修改之后，都要不断的编译。没有人喜欢那些连编译都不通过修改。
 
 * The Linux kernel has a coding style [guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle) and you need to comply with it. There is great script which can help to check your changes. This script is - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl). Just pass source code file with changes to it and you will see:
-* Linux 内核有一套代码规范[指南](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle)，你需要遵守它。有一个很棒的脚本可以帮你检查所做的改动。这个脚本就是 - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl)。只需要将被改动的源码文件传递给它即可，然后你就会看到如下输出：
+* Linux 内核有一套代码规范[指南](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle)，你需要遵守它。有一个很棒的脚本可以帮你检查所做的修改。这个脚本就是 - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl)。只需要将被改动的源码文件传递给它即可，然后你就会看到如下输出：
 
 ```
 $ ./scripts/checkpatch.pl -f drivers/staging/dgap/dgap.c
@@ -503,7 +503,7 @@ Also you can see problematic places with the help of the `git diff`:
 * [Linus doesn't accept github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 
 * If your change consists from some different and unrelated changes, you need to split the changes via separate commits. The `git format-patch` command will generate patches for each commit and the subject of each patch will contain a `vN` prefix where the `N` is the number of the patch. If you are planning to send a series of patches it will be helpful to pass the `--cover-letter` option to the `git format-patch` command. This will generate an additional file that will contain the cover letter that you can use to describe what your patchset changes. It is also a good idea to use the `--in-reply-to` option in the `git send-email` command. This option allows you to send your patch series in reply to your cover message. The structure of the your patch will look like this for a maintainer:
-* 如果你的修改是由一些不同的且不相关的改动所组成的，你需要通过分离提交来切分修改。`git format-patch` 命令将会为每个提交生成补丁，每个补丁的标题会包含一个 `vN` 前缀，其中 `N` 是补丁的编号。如果你打算发送一系列补丁，也许给 `git format-patch` 命令传递 `--cover-letter` 选项会对此很有帮助。这会生成一个附加文件，该文件包括的附函可以用来描述你补丁集的改动。在 `git send-email` 命令中使用 `--in-reply-to` 选项也是一个好主意，该选项允许你将补丁集作为对附函信息的回复。对于维护者来说，你补丁集的结构看起来如下所示：
+* 如果你的修改是由一些不同的且不相关的改动所组成的，你需要通过分离提交来切分修改。`git format-patch` 命令将会为每个提交生成补丁，每个补丁的标题会包含一个 `vN` 前缀，其中 `N` 是补丁的编号。如果你打算发送一系列补丁，也许给 `git format-patch` 命令传递 `--cover-letter` 选项会对此很有帮助。这会生成一个附加文件，该文件包括的附函可以用来描述你的补丁集所做的改动。在 `git send-email` 命令中使用 `--in-reply-to` 选项也是一个好主意，该选项允许你将补丁集作为对附函的回复发送出去。对于维护者来说，你补丁集的结构看起来就像下面这样：
 
 ```
 |--> cover letter
@@ -518,23 +518,23 @@ It's important that your email be in the [plain text](https://en.wikipedia.org/w
 有一件非常重要的事，那就是你的邮件必须是 [纯文本](https://en.wikipedia.org/wiki/Plain_text) 格式。通常来说，`send-email` 和 `format-patch` 这两个命令在内核开发中都是非常有用的，所以请查阅这些命令的的相关文档，你会发现很多有用的选项，例如：[git send-email](http://git-scm.com/docs/git-send-email) 和 [git format-patch](http://git-scm.com/docs/git-format-patch)。
 
 * Do not be surprised if you do not get an immediate answer after you send your patch. Maintainers can be very busy.
-* 如果你发完补丁之后没有得到立即答复，请不要惊讶，因为维护者们是很忙的。
+* 如果你发完补丁之后没有得到立即答复，请不要惊讶，因为维护者们都是很忙的。
 
 * The [scripts](https://github.com/torvalds/linux/tree/master/scripts) directory contains many different useful scripts that are related to Linux kernel development. We already saw two scripts from this directory: the `checkpatch.pl` and the `get_maintainer.pl` scripts. Outside of those scripts, you can find the [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) script that will print usage of the stack, [extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) for extracting an uncompressed kernel image, and many others. Outside of the `scripts` directory you can find some very useful [scripts](https://github.com/lorenzo-stoakes/kernel-scripts) by [Lorenzo Stoakes](https://twitter.com/ljsloz) for kernel development.
-* [scripts](https://github.com/torvalds/linux/tree/master/scripts) 目录包含了很多对 Linux 内核开发有用的脚本。我们已经看过此目录中的两个脚本了：`checkpatch.pl` 和 `get_maintainer.pl`。除此之外，你还可以找到 [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) 脚本，它可以打印栈的使用情况，[extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) 脚本可以提取出未经压缩的内镜镜像，还有很多其他的脚本。在 `scripts` 目录之外，你也会发现很多有用的 [脚本](https://github.com/lorenzo-stoakes/kernel-scripts)，这些脚本是 [Lorenzo Stoakes](https://twitter.com/ljsloz) 为内核开发所写的。
+* [scripts](https://github.com/torvalds/linux/tree/master/scripts) 目录包含了很多对 Linux 内核开发有用的脚本。我们已经看过此目录中的两个脚本了：`checkpatch.pl` 和 `get_maintainer.pl`。除此之外，你还可以找到 [stackusage](https://github.com/torvalds/linux/blob/master/scripts/stackusage) 脚本，它可以打印栈的使用情况，[extract-vmlinux](https://github.com/torvalds/linux/blob/master/scripts/extract-vmlinux) 脚本可以提取出未经压缩的内镜镜像，还有很多其他的脚本。在 `scripts` 目录之外，你也会发现很多有用的 [脚本](https://github.com/lorenzo-stoakes/kernel-scripts)，这些脚本是 [Lorenzo Stoakes](https://twitter.com/ljsloz) 为内核开发而编写的。
 
 * Subscribe to the Linux kernel mailing list. There are a large number of letters every day on `lkml`, but it is very useful to read them and understand things such as the current state of the Linux kernel. Other than `lkml` there are [set](http://vger.kernel.org/vger-lists.html) mailing listings which are related to the different Linux kernel subsystems.
-* 订阅 Linux 内核邮件列表。`lkml` 列表中每天都会有大量的信件，但是阅读它们并了解一些类似于 Linux 内核目前开发状态的内容是很有帮助的。除了 `lkml` 之外，还有 [一组](http://vger.kernel.org/vger-lists.html) 邮件列表，它们对应于不同的 Linux 内核子系统。
+* 订阅 Linux 内核邮件列表。`lkml` 列表中每天都会有大量的信件，但是阅读它们并了解一些类似于 Linux 内核目前开发状态的内容是很有帮助的。除了 `lkml` 之外，还有 [一些](http://vger.kernel.org/vger-lists.html) 其他的邮件列表，它们分别对应于不同的 Linux 内核子系统。
 
 * If your patch is not accepted the first time and you receive feedback from Linux kernel developers, make your changes and resend the patch with the `[PATCH vN]` prefix (where `N` is the number of patch version). For example:
-* 如果你发的补丁第一次没有被接受，你就会收到 Linux 内核开发者的反馈。做一些修改然后以 `[PATCH vN]`(`N` 是补丁版本号) 为前缀重新发送补丁，例如：
+* 如果你发的补丁第一次没有被接受，你就会收到 Linux 内核开发者的反馈。请做一些修改然后以 `[PATCH vN]`(`N` 是补丁版本号) 为前缀重新发送补丁，例如：
 
 ```
 [PATCH v2] staging/dgap: Use strpbrk() instead of dgap_sindex()
 ```
 
 Also it must contain a changelog that describes all changes from previous patch versions. Of course, this is not an exhaustive list of requirements for Linux kernel development, but some of the most important items were addressed.
-同样的，这次的补丁也必须包括更新日志以便描述自上一次的补丁以来所做的修改。当然，本文并不是 Linux 内核开发详尽无遗的指导清单，但是一些最重要的事项已经都被阐明了。
+同样的，这次的补丁也必须包括更新日志以便描述自上一次的补丁以来所做的修改。当然，本文并不是对 Linux 内核开发详尽无遗的指导清单，但是一些最重要的事项已经都被阐明了。
 
 Happy Hacking!
 
