@@ -405,7 +405,7 @@ $ git send-email --to "Lidza Louina <lidza.louina@gmail.com>" \
 
 * 考虑，考虑，再考虑。在你决定发送补丁之前再三考虑。
 
-* 在你每次改完 Linux 内核源代码之后 - 试着编译它，我指的是任何修改之后，都要不断的编译。没有人喜欢那些连编译都不通过修改。
+* 在你每次改完 Linux 内核源代码之后 - 试着编译它。我指的是任何修改之后，都要不断的编译。没有人喜欢那些连编译都不通过修改。
 
 * Linux 内核有一套代码规范[指南](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle)，你需要遵守它。有一个很棒的脚本可以帮你检查所做的修改。这个脚本就是 - [scripts/checkpatch.pl](https://github.com/torvalds/linux/blob/master/scripts/checkpatch.pl)。只需要将被改动的源码文件传递给它即可，然后你就会看到如下输出：
 
@@ -426,7 +426,6 @@ CHECK: spaces preferred around that '|' (ctx:VxV)
 
 ![git diff](http://oi60.tinypic.com/2u91rgn.jpg)
 
-* [Linus doesn't accept github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 * [Linus 不接受 github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 
 * 如果你的修改是由一些不同的且不相关的改动所组成的，你需要通过分离提交来切分修改。`git format-patch` 命令将会为每个提交生成一个补丁，每个补丁的标题会包含一个 `vN` 前缀，其中 `N` 是补丁的编号。如果你打算发送一系列补丁，也许给 `git format-patch` 命令传递 `--cover-letter` 选项会对此很有帮助。这会生成一个附加文件，该文件包括的附函可以用来描述你的补丁集所做的改动。在 `git send-email` 命令中使用 `--in-reply-to` 选项也是一个好主意，该选项允许你将补丁集作为对附函的回复发送出去。对于维护者来说，你补丁集的结构看起来就像下面这样：
