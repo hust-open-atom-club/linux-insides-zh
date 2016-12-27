@@ -4,7 +4,7 @@ Linux 内核开发
 简介
 --------------------------------------------------------------------------------
 
-如你所知，我从去年开始写了一系列关于 `x86_64` 架构汇编语言程序设计的[博文](http://xinqiu.gitbooks.io/categories/assembly/)。除了大学期间写过一些 `Hello World` 这样的玩具例程之外，我从来没写过哪怕一行的底层代码。那些例程也是很久以前的事情了，就像我刚才说的，我几乎完全没有写过底层代码。直到不久前，我才开始对这些事情感兴趣，因为我意识到我虽然可以写出程序，但是我却不知道我的程序是怎样被组织运行的。
+如你所知，我从去年开始写了一系列关于 `x86_64` 架构汇编语言程序设计的[博文](http://xinqiu.gitbooks.io/categories/assembly/)。除了大学期间写过一些 `Hello World` 这样无实用价值的程序之外，我从来没写过哪怕一行的底层代码。那些程序也是很久以前的事情了，就像我刚才说的，我几乎完全没有写过底层代码。直到不久前，我才开始对这些事情感兴趣，因为我意识到我虽然可以写出程序，但是我却不知道我的程序是怎样被组织运行的。
 
 在写了一些汇编代码之后，我开始**大致**了解了程序在编译之后会变成什么样子。尽管如此，还是有很多其他的东西我不能够理解。例如：当 `syscall` 指令在我的汇编程序内执行时究竟发生了什么，当 `printf` 函数开始工作时又发生了什么，还有，我的程序是如何通过网络与其他计算机进行通信的。[汇编](https://en.wikipedia.org/wiki/Assembly_language#Assembler)语言并没有为这些问题带来答案，于是我决定做一番深入研究。我开始学习 Linux 内核的源代码，并且尝试着理解那些让我感兴趣的东西。然而 Linux 内核源代码也没有解答我**所有的**问题，不过我自身关于 Linux 内核及其外围流程的知识确实掌握的更好了。
 
@@ -165,7 +165,7 @@ $ make -j4 ARCH=arm64 CROSS_COMPILER=aarch64-linux-gnu-
 安装 Linux 内核
 --------------------------------------------------------------------------------
 
-就像我之前写的，我们将考察两种用来运行新内核的方法：第一种情况，我们可以在真实的硬件上安装并运行新版本的 Linux 内核，第二种情况就是在虚拟机上运行 Linux 内核。在前面的段落中我们看到了如何从源代码来构建 Linux 内核，并且我们现在已经得到了内核的压缩镜像：
+就像我之前写的，我们将考察两种运行新内核的方法：第一种情况，我们可以在真实的硬件上安装并运行新版本的 Linux 内核，第二种情况就是在虚拟机上运行 Linux 内核。在前面的段落中我们看到了如何从源代码来构建 Linux 内核，并且我们现在已经得到了内核的压缩镜像：
 
 ```
 ...
@@ -222,7 +222,7 @@ $ make menuconfig
 $ make -j4
 ```
 
-`busybox` 是一个可执行文件 - `/bin/busybox`，它包括了一系列类似于 [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) 的标准工具。在 `busysbox` 菜单界面上我们需要启用：`Build BusyBox as a static binary (no shared libs)` 选项：
+`busybox` 是一个可执行文件 - `/bin/busybox`，它包括了一系列类似于 [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) 的标准工具。在 `busysbox` 菜单界面上我们需要启用 `Build BusyBox as a static binary (no shared libs)` 选项：
 
 ![busysbox menu](http://s18.postimg.org/sj92uoweh/busybox.png)
 
@@ -293,7 +293,7 @@ $ git pull upstream master
 
 在这之后，我的本地 Linux 内核源代码仓库已经和[主线](https://github.com/torvalds/linux)仓库同步了。现在我们可以在源代码上做些修改了。就像我之前写的，关于从哪开始修改或者可以做些什么，我并不能给你太多建议。不过，对于新手来说最好的地方就是 `staging` 源码树，也就是 [drivers/staging](https://github.com/torvalds/linux/tree/master/drivers/staging) 上的驱动集合。`staging` 源码树的主要维护者是 [Greg Kroah-Hartman](https://en.wikipedia.org/wiki/Greg_Kroah-Hartman)，该源码树正是你的琐碎补丁可以被接受的地方。让我们看一个简单的例子，该例子描述了如何生成补丁、检查补丁以及如何将补丁发送到 [Linux 内核邮件列表](https://lkml.org/)。
 
-如果我们查看一下为 [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 基础设备所写的驱动程序，在295行我们将会看到 `dgap_sindex` 函数：
+如果我们查看一下为 [Digi International EPCA PCI](https://github.com/torvalds/linux/tree/master/drivers/staging/dgap) 基础设备所写的驱动程序，在 295 行我们将会看到 `dgap_sindex` 函数：
 
 ```C
 static char *dgap_sindex(char *string, char *group)
