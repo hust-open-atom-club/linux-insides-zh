@@ -13,7 +13,7 @@ After writing some assembler code I began to understand how my program looks aft
 在写了一些汇编代码之后，我开始**大致**了解了程序在编译之后会变成什么样子。尽管如此，还是有很多其他的东西我不能够理解。例如：当 `syscall` 指令在我的汇编程序内执行时究竟发生了什么，当 `printf` 函数开始工作时又发生了什么，还有，我的程序是如何通过网络与其他计算机进行通信的。[汇编](https://en.wikipedia.org/wiki/Assembly_language#Assembler)语言并没有为这些问题带来答案，于是我决定做一番深入研究。我开始学习 Linux 内核的源代码，并且尝试着理解那些让我感兴趣的东西。然而 Linux 内核源代码也没有解答我**所有的**问题，不过我自身关于 Linux 内核及其外围流程的知识确实掌握的更好了。
 
 I'm writing this part nine and a half months after I've started to learn from the source code of the Linux kernel and published the first [part](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html) of this book. Now it contains forty parts and it is not the end. I decided to write this series about the Linux kernel mostly for myself. As you know the Linux kernel is very huge piece of code and it is easy to forget what does this or that part of the Linux kernel mean and how does it implement something. But soon the [linux-insides](https://github.com/0xAX/linux-insides) repo became popular and after nine months it has `9096` stars:
-在我开始学习 Linux 内核的九个半月之后，我写了这部分内容，并且发布了本书的[第一部分](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html)。到现在为止，本书共包括了四个部分，而这并不是终点。我之所以写这一系列关于 Linux 内核的文章其实更多的是为了我自己。你也知道，Linux 内核的代码量极其巨大，另外还非常容易忘记这一块或那一块内核代码做了什么，或者忘记某些东西是怎么实现的。出乎意料的是 [linux-insides](https://github.com/0xAX/linux-insides) 很快就变得越来越火，并且在九个月后积攒了 `9096` 个星星。
+在我开始学习 Linux 内核的九个半月之后，我写了这部分内容，并且发布了本书的[第一部分](https://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-1.html)。到现在为止，本书共包括了四个部分，而这并不是终点。我之所以写这一系列关于 Linux 内核的文章其实更多的是为了我自己。你也知道，Linux 内核的代码量极其巨大，另外还非常容易忘记这一块或那一块内核代码做了什么，或者忘记某些东西是怎么实现的。出乎意料的是 [linux-insides](https://github.com/0xAX/linux-insides) 很快就火了，并且在九个月后积攒了 `9096` 个星星。
 
 ![github](http://s2.postimg.org/jjb3s4frt/stars.png)
 
@@ -23,10 +23,10 @@ It seems that people are interested in the insides of the Linux kernel. Besides 
 ![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
 
 So, it seems that people are interested in the Linux kernel development process. I thought it would be strange if a book about the Linux kernel would not contain a part describing how to take a part in the Linux kernel development and that's why I decided to write it. You will not find information about why you should be interested in contributing to the Linux kernel in this part. But if you are interested how to start with Linux kernel development, this part is for you.
-这么看起来大家对 Linux 内核的开发流程非常感兴趣。我认为如果这么一本关于 Linux 内核的书却不包括一部分来讲讲如何参与 Linux 内核开发的话，这将会变得非常奇怪。这就是我为什么决定写这篇文章。在该部分，你不会看到为什么你应该对贡献 Linux 内核感兴趣，但是，如果你对参与 Linux 内核开发有兴趣的话，那这部分就是为你而作。
+这么看起来大家对 Linux 内核的开发流程非常感兴趣。我认为如果这么一本关于 Linux 内核的书却不包括一部分来讲讲如何参与 Linux 内核开发的话，那就非常奇怪了。这就是我决定写这篇文章的原因。在本文中，你不会看到为什么你应该对贡献 Linux 内核感兴趣，但是如果你想参与 Linux 内核开发的话，那这部分就是为你而作。
 
 Let's start.
-让我们开始吧
+让我们开始吧。
 
 How to start with Linux kernel
 如何入门 Linux 内核
@@ -44,7 +44,7 @@ I'll provide descriptions for both methods. Before we start doing anything with 
 我会对这两种方式都展开描述。在我们开始对 Linux 内核做些什么之前，我们首先需要先获取它。根据你目的的不同，有两种方式可以做到这一点。如果你只是想更新一下你电脑上的 Linux 内核版本，那么你可以使用特定于你 [Linux 发行版](https://en.wikipedia.org/wiki/Linux_distribution)的命令。
 
 In the first case you just need to download new version of the Linux kernel with the [package manager](https://en.wikipedia.org/wiki/Package_manager). For example, to upgrade the version of the Linux kernel to `4.1` for [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/), you will just need to execute the following commands:
-在这种情况下，你只需要使用[软件包管理器](https://en.wikipedia.org/wiki/Package_manager)下载新版本的 Linux 内核。例如，为了将 [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/) 系统的 Linux 内核更新至 `4.1`，你只需要执行以下命令：
+在这种情况下，你只需要使用[软件包管理器](https://en.wikipedia.org/wiki/Package_manager)下载新版本的 Linux 内核。例如，为了将 [Ubuntu (Vivid Vervet)](http://releases.ubuntu.com/15.04/) 系统的 Linux 内核更新至 `4.1` 版本，你只需要执行以下命令：
 
 ```
 $ sudo add-apt-repository ppa:kernel-ppa/ppa
