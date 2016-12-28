@@ -7,3 +7,4 @@ Linux内核对很多数据结构提供不同的实现方法，比如，双向链
 
   * [双向链表](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)
   * [基数树](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/radix-tree.html)
+  * [位数组](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/bitmap.html)
