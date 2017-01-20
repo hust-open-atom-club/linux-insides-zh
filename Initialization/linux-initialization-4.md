@@ -4,7 +4,7 @@
 Kernel entry point
 ================================================================================
 
-还记得上一章的内容吗 - [跳转到内核入口之前的最后准备](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)？你应该还记得我们已经完成一系列初始化操作停在了`start_kernel`函数位于`init/main.c`.`start_kernel`函数是于体系架构无关的通用处理入口函数，尽管我们在此初始化过程中要无数次的返回arch/ 文件夹。如果你仔细看看`start_kernel`函数的内容，你将发现此函数涉及内容非常广泛。在此过程中约包含了86个调用函数，是的，你发现它真的是非常庞大但是此部分并不是全部的初始化过程，在当前阶段我们只看这些就可以了。此章节以及后续所有的内容章节[内核初始化过程](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md)我们都将涉及并详述。
+还记得上一章的内容吗 - [跳转到内核入口之前的最后准备](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)？你应该还记得我们已经完成一系列初始化操作，并停在了调用位于`init/main.c`中的`start_kernel`函数之前.`start_kernel`函数是与体系架构无关的通用处理入口函数，尽管我们在此初始化过程中要无数次的返回arch/ 文件夹。如果你仔细看看`start_kernel`函数的内容，你将发现此函数涉及内容非常广泛。在此过程中约包含了86个调用函数，是的，你发现它真的是非常庞大但是此部分并不是全部的初始化过程，在当前阶段我们只看这些就可以了。此章节以及后续所有在[内核初始化过程](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md)章节的内容将涉及并详述它。
 
 `start_kernel`函数的主要目的是完成内核初始化并启动祖先进程(1号进程)。在祖先进程启动之前`start_kernel`函数做了很多事情，如[锁验证器](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt),根据处理器标识ID初始化处理器，开启cgroups子系统，设置每CPU区域环境，初始化[VFS](http://en.wikipedia.org/wiki/Virtual_file_system) Cache机制，初始化内存管理，rcu,vmalloc,scheduler(调度器),IRQs(中断向量表),ACPI(中断可编程控制器)以及其它很多子系统。只有经过这些步骤我们才看到本章最后一部分祖先进程启动的过程；同志们，如此复杂的内核子系统，有没有勾起你的学习欲望，有这么多的内核代码等着我们去征服，让我们开始吧。
 
