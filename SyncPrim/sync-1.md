@@ -20,7 +20,7 @@ clocksource_select();
 ...
 mutex_unlock(&clocksource_mutex);
 ```
-出自 [kernel/time/clocksource.c](https://github.com/torvalds/linux/master/kernel/time/clocksource.c) 源文件。这段代码来自于 `__clocksource_register_scale` 函数，此函数添加给定的 [clocksource](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html) 到时钟源列表中。这个函数在注册时钟源列表中生成两个不同的操作。例如 `clocksource_enqueue` 函数就是添加给定时钟源到注册时钟源列表——`clocksource_list` 中。注意这几行代码闭两个函数所包围：`mutex_lock` 和 `mutex_unlock`，这两个函数都带有一个参数——在本例中为 `clocksource_mutex`。
+出自 [kernel/time/clocksource.c](https://github.com/torvalds/linux/master/kernel/time/clocksource.c) 源文件。这段代码来自于 `__clocksource_register_scale` 函数，此函数添加给定的 [clocksource](https://0xax.gitbooks.io/linux-insides/content/Timers/timers-2.html) 到时钟源列表中。这个函数在注册时钟源列表中生成两个不同的操作。例如 `clocksource_enqueue` 函数就是添加给定时钟源到注册时钟源列表——`clocksource_list` 中。注意这几行代码被两个函数所包围：`mutex_lock` 和 `mutex_unlock`，这两个函数都带有一个参数——在本例中为 `clocksource_mutex`。
 
 这些函数展示了基于[互斥锁 (mutex)](https://en.wikipedia.org/wiki/Mutual_exclusion) 同步原语的加锁和解锁。当 `mutex_lock` 被执行，允许我们阻止两个或两个以上线程执行这段代码，而 `mute_unlock` 还没有被互斥锁的处理拥有者锁执行。换句话说，就是阻止在 `clocksource_list`上的并行操作。为什么在这里需要使用`互斥锁`？ 如果两个并行处理尝试去注册一个时钟源会怎样。正如我们已经知道的那样，其中具有最大的等级（其具有最高的频率在系统中注册的时钟源）的列表中选择一个时钟源后，`clocksource_enqueue` 函数立即将一个给定的时钟源到 `clocksource_list` 列表：
 
@@ -57,7 +57,7 @@ Linux 内核中的自旋锁。
 * `acquired`;
 * `released`.
 
-每一个想要获取`自旋锁`的处理，必须为这个变量写入一个表示`自旋锁获取 (spinlock acquire)`状态的值，并且为这个变量写入`所释放 (spinlock released)`状态。如果一个处理程序尝试执行受`自旋锁`保护的代码，那么代码将会被锁住，直到占有锁的处理程序释放掉。在本例中，所有相关的操作必须是
+每一个想要获取`自旋锁`的处理，必须为这个变量写入一个表示`自旋锁获取 (spinlock acquire)`状态的值，并且为这个变量写入`锁释放 (spinlock released)`状态。如果一个处理程序尝试执行受`自旋锁`保护的代码，那么代码将会被锁住，直到占有锁的处理程序释放掉。在本例中，所有相关的操作必须是
 [原子的 (atomic)](https://en.wikipedia.org/wiki/Linearizability)，来阻止[竞态条件](https://en.wikipedia.org/wiki/Race_condition)状态。`自旋锁`在 Linux 内核中使用 `spinlock_t` 类型来表示。如果我们查看 Linux 内核代码，我们会看到，这个类型被[广泛地 (widely)](http://lxr.free-electrons.com/ident?i=spinlock_t) 使用。`spinlock_t` 的定义如下：
 
 ```C
@@ -320,7 +320,7 @@ typedef struct arch_spinlock {
         };
 } arch_spinlock_t;
 ```
-这个`自旋锁`的变体被称为——`标签自旋锁 (ticket spinlock)`。 就像我们锁了解的，标签自旋锁包括两个部分。当锁被获取， 它就每次处理想获取`自旋锁`时增加一个`尾部(tail)`。如果`尾部`不等于`头部`， 那么程序就会被锁住，直到这些变量的值不再相等。来看看`arch_spin_lock`函数上的实现：
+这个`自旋锁`的变体被称为——`标签自旋锁 (ticket spinlock)`。 就像我们锁了解的，标签自旋锁包括两个部分。当锁被获取，如果有程序想要获取`自旋锁`它就会将`尾部(tail)`值加1。如果`尾部`不等于`头部`， 那么程序就会被锁住，直到这些变量的值不再相等。来看看`arch_spin_lock`函数上的实现：
 
 ```C
 static __always_inline void arch_spin_lock(arch_spinlock_t *lock)
