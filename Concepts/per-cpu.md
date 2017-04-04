@@ -133,15 +133,14 @@ size_t atom_size;
 #endif
 ```
 
-If the first chunk allocator is `PCPU_FC_PAGE`, we will use the `pcpu_page_first_chunk` instead of the `pcpu_embed_first_chunk`. After that `percpu` areas up, we setup `percpu` offset and its segment for every CPU with the `setup_percpu_segment` function (only for `x86` systems) and move some early data from the arrays to the `percpu` variables (`x86_cpu_to_apicid`, `irq_stack_ptr` and etc...). After the kernel finishes the initialization process, we will have loaded N `.data..percpu` sections, where N is the number of CPUs, and the section used by the bootstrap processor will contain an uninitialized variable created with the `DEFINE_PER_CPU` macro.
+如果第一个块分配器是 `PCPU_FC_PAGE`，我们用 `pcpu_page_first_chunk` 来代替 `pcpu_embed_first_chunk`。 `percpu` 区域准备好以后，我们用 `setup_percpu_segment` 函数设置 `percpu` 的偏移和段（只针对 `x86` 系统），并将前面的数据从数组移到 `percpu` 变量（`x86_cpu_to_apicid`, `irq_stack_ptr` 等等）。当内核完成初始化进程后，我们就有了N个 `.data..percpu` 段，其中 N 是 CPU 个数，bootstrap 进程使用的段将会包含用 `DEFINE_PER_CPU` 宏创建的未初始化的变量。
 
-The kernel provides an API for per-cpu variables manipulating:
+内核提供了操作每 CPU 变量的API：
 
 * get_cpu_var(var)
 * put_cpu_var(var)
 
-
-Let's look at the `get_cpu_var` implementation:
+让我们来看看 `get_cpu_var` 的实现：
 
 ```C
 #define get_cpu_var(var)     \
@@ -151,29 +150,29 @@ Let's look at the `get_cpu_var` implementation:
 }))
 ```
 
-The Linux kernel is preemptible and accessing a per-cpu variable requires us to know which processor the kernel is running on. So, current code must not be preempted and moved to the another CPU while accessing a per-cpu variable. That's why, first of all we can see a call of the `preempt_disable` function then a call of the `this_cpu_ptr` macro, which looks like:
+Linux 内核是抢占式的，获取每 CPU 变量需要我们知道内核运行在哪个处理器上。因此访问每 CPU 变量时，当前代码不能被抢占，不能移到其它的 CPU。如我们所见，这就是为什么首先调用 `preempt_disable` 函数然后调用 `this_cpu_ptr` 宏，像这样：
 
 ```C
 #define this_cpu_ptr(ptr) raw_cpu_ptr(ptr)
 ```
 
-and
+以及
 
 ```C
 #define raw_cpu_ptr(ptr)        per_cpu_ptr(ptr, 0)
 ```
 
-where `per_cpu_ptr` returns a pointer to the per-cpu variable for the given cpu (second parameter). After we've created a per-cpu variable and made modifications to it, we must call the `put_cpu_var` macro which enables preemption with a call of `preempt_enable` function. So the typical usage of a per-cpu variable is as follows:
+`per_cpu_ptr` 返回一个指向给定CPU（第2个参数）每CPU变量的指针。当我们创建了一个每CPU变量并对其进行了修改时，我们必须调用 `put_cpu_var` 宏通过函数 `preempt_enable` 使能抢占。因此典型的每CPU变量的使用如下：
 
 ```C
 get_cpu_var(var);
 ...
-//Do something with the 'var'
+//用这个 'var' 做些啥
 ...
 put_cpu_var(var);
 ```
 
-Let's look at the `per_cpu_ptr` macro:
+让我们来看下这个 `per_cpu_ptr` 宏：
 
 ```C
 #define per_cpu_ptr(ptr, cpu)                             \
@@ -183,7 +182,7 @@ Let's look at the `per_cpu_ptr` macro:
 })
 ```
 
-As I wrote above, this macro returns a per-cpu variable for the given cpu. First of all it calls `__verify_pcpu_ptr`:
+就像我们上面写的，这个宏返回了一个给定cpu的每CPU变量。首先它调用了 `__verify_pcpu_ptr`：
 
 ```C
 #define __verify_pcpu_ptr(ptr)
@@ -193,37 +192,36 @@ do {
 } while (0)
 ```
 
-which makes the given `ptr` type of `const void __percpu *`,
+声明了 `ptr` 类型的 `const void __percpu *`。
 
-After this we can see the call of the `SHIFT_PERCPU_PTR` macro with two parameters. As first parameter we pass our ptr and for second parameter we pass the cpu number to the `per_cpu_offset` macro:
+然后我们看到调用了 `SHIFT_PERCPU_PTR` 宏，带了两个参数。第一个参数是我们的指针，第二个参数是传给 `per_cpu_offset` 宏的CPU数：
 
 ```C
 #define per_cpu_offset(x) (__per_cpu_offset[x])
 ```
 
-which expands to getting the `x` element from the `__per_cpu_offset` array:
-
+该宏将 `x` 扩展为 `__per_cpu_offset` 数组：
 
 ```C
 extern unsigned long __per_cpu_offset[NR_CPUS];
 ```
 
-where `NR_CPUS` is the number of CPUs. The `__per_cpu_offset` array is filled with the distances between cpu-variable copies. For example all per-cpu data is `X` bytes in size, so if we access `__per_cpu_offset[Y]`, `X*Y` will be accessed. Let's look at the `SHIFT_PERCPU_PTR` implementation:
+其中 `NR_CPUS` 是CPU的数目。`__per_cpu_offset` 数组以CPU变量拷贝之间的距离填充。例如，所有每CPU变量是 `X` 字节大小，所以我们通过 `__per_cpu_offset[Y]` 就可以访问 `X*Y`。让我们来看下 `SHIFT_PERCPU_PTR` 的实现：
 
 ```C
 #define SHIFT_PERCPU_PTR(__p, __offset)                                 \
          RELOC_HIDE((typeof(*(__p)) __kernel __force *)(__p), (__offset))
 ```
 
-`RELOC_HIDE` just returns offset `(typeof(ptr)) (__ptr + (off))` and it will return a pointer to the variable.
+`RELOC_HIDE` 仅是取 `(typeof(ptr)) (__ptr + (off))` 的偏移量，并返回该变量的指针。
 
-That's all! Of course it is not the full API, but a general overview. It can be hard to start with, but to understand per-cpu variables you mainly need to understand the  [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) magic.
+就这些了！当然这不是全部的API，只是一个大概。开头是比较艰难，但是理解per-cpu变量你只需理解 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 的奥秘。
 
-Let's again look at the algorithm of getting a pointer to a per-cpu variable:
+让我们再看下获得 per-cpu 变量指针的算法：
 
-* The kernel creates multiple `.data..percpu` sections (one per-cpu) during initialization process;
-* All variables created with the `DEFINE_PER_CPU` macro will be relocated to the first section or for CPU0;
-* `__per_cpu_offset` array filled with the distance (`BOOT_PERCPU_OFFSET`) between `.data..percpu` sections;
-* When the `per_cpu_ptr` is called, for example for getting a pointer on a certain per-cpu variable for the third CPU, the `__per_cpu_offset` array will be accessed, where every index points to the required CPU.
+* 内核在初始化流程中创建多个 `.data..percpu` 区域（每 per-cpu 变量）；
+* 所有 `DEFINE_PER_CPU` 宏创建的变量都将重分配到首个扇区或者 CPU0；
+* `__per_cpu_offset` 数组以 (`BOOT_PERCPU_OFFSET`) 和 `.data..percpu` 扇区之间的距离填充；
+* 当调用 `per_cpu_ptr` 时，例如取一个 per-cpu 变量的第三个 CPU 的指针，将访问 `__per_cpu_offset` 数组，该数组的索引指向了所需 CPU。
 
-That's all.
+就这么多了。
