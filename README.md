@@ -1,5 +1,4 @@
-Linux 内核揭密
-==============
+# Linux 内核揭密
 
 [![Join the chat at https://gitter.im/MintCN/linux-insides-zh](https://badges.gitter.im/MintCN/linux-insides-zh.svg)](https://gitter.im/MintCN/linux-insides-zh?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -9,7 +8,7 @@ Linux 内核揭密
 
 **问题/建议**: 通过在 twitter 上 [@0xAX](https://twitter.com/0xAX) ，直接添加 [issue](https://github.com/0xAX/linux-insides/issues/new) 或者直接给我发[邮件](mailto:anotherworldofworld@gmail.com),请自由地向我提出任何问题或者建议。
 
-##翻译进度
+## 翻译进度
 
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
@@ -98,7 +97,8 @@ Linux 内核揭密
 | 14. [KernelStructures](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures)||正在进行|
 |├ [14.0](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[3cb550c0](https://github.com/0xAX/linux-insides/commit/3cb550c089c8fc609f667290434e9e98e93fa279)|
 |└ [14.1](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/idt.md)||未开始|
-##翻译认领规则
+
+## 翻译认领规则
 
 为了避免多个译者同时翻译相同章节的情况出现，请按照以下规则认领自己要翻译的章节：
 
@@ -111,21 +111,21 @@ Linux 内核揭密
 
 翻译前建议看 [TRANSLATION_NOTES.md](https://github.com/MintCN/linux-insides-zh/blob/master/TRANSLATION_NOTES.md) 。关于翻译约定，大家有任何问题或建议也请开 issue 讨论。
 
-##作者
+## 作者
 
 [@0xAX](https://twitter.com/0xAX)
 
-##中文维护者
+## 中文维护者
 
 [@xinqiu](https://github.com/xinqiu)
 
 [@mudongliang](https://github.com/mudongliang)
 
-##中文贡献者
+## 中文贡献者
 
 详见 [contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md)
 
-##LICENSE
+## LICENSE
 
 Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
 
