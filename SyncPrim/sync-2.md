@@ -126,7 +126,7 @@ int unlock(lock)
 +---------+     +----------------------------+
 ```
 
-第二个队列尝试获取锁
+第二个队列尝试获取锁:
 
 ```
 +---------+     +----------------------------------------+     +-------------------------+
@@ -136,7 +136,7 @@ int unlock(lock)
 +---------+     +----------------------------------------+     +-------------------------+
 ```
 
-为代码描述为：
+或者伪代码描述为：
 
 ```C
 void lock(...)
@@ -179,15 +179,14 @@ void unlock(...)
 }
 ```
 
-想法很简单，但是`队列自旋锁`的实现一定是比为代码复杂。就如同我上面写到的，`队列自旋锁`机制计划在 Linux 内核中成为`排队自旋锁`的替代品。但你们可能还记得，常用`自旋锁`适用于`32位(32-bit)`的 [字(word)](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29)。而基于`MCS`的锁不能使用这个大小，你们卡能知道 `spinlock_t` 类型在 Linux 内核中的使用是[宽字符(widely)](http://lxr.free-electrons.com/ident?i=spinlock_t)的。这种情况下可能不得不重写 Linux 内核中重要的组成部分，但这是不可接受的。除了这一点，一些包含自旋锁用于保护的内核结构不能适配(can't grow)。但无论怎样，基于这一概念的 Linux 内核中的`队列自旋锁`实现有一些修改，可以适应`32`位的字。
+想法很简单，但是`队列自旋锁`的实现一定是比伪代码复杂。就如同我上面写到的，`队列自旋锁`机制计划在 Linux 内核中成为`排队自旋锁`的替代品。但你们可能还记得，常用`自旋锁`适用于`32位(32-bit)`的 [字(word)](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29)。而基于`MCS`的锁不能使用这个大小，你们可能知道 `spinlock_t` 类型在 Linux 内核中的使用是[宽字符(widely)](http://lxr.free-electrons.com/ident?i=spinlock_t)的。这种情况下可能不得不重写 Linux 内核中重要的组成部分，但这是不可接受的。除了这一点，一些包含自旋锁用于保护的内核结构不能增长大小。但无论怎样，基于这一概念的 Linux 内核中的`队列自旋锁`实现有一些修改，可以适应`32`位的字。
 
-这就是所有有关`队列自旋锁`的理论，现在让我们考虑以下在 Linux 内核中这个机制是如何实现的。`队列自旋锁`的实现看起来比`排队自旋锁`的实现更加复杂和混乱，但是关注研究它将会有收获
-(原句：but the study with attention will lead to success.)。
+这就是所有有关`队列自旋锁`的理论，现在让我们考虑以下在 Linux 内核中这个机制是如何实现的。`队列自旋锁`的实现看起来比`排队自旋锁`的实现更加复杂和混乱，但是细致的研究会引导成功。
 
 队列自旋锁的API
 -------------------------------------------------------------------------------
 
-现在我们从原理角度了解了一些`队列自旋锁`，是时候了解 Linux 内核中这一机制的实现了。就想我们之前了解的那样 [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h#L126) 头文件提供一套宏，代表API中的自旋锁的获取、释放等等。
+现在我们从原理角度了解了一些`队列自旋锁`，是时候了解 Linux 内核中这一机制的实现了。就像我们之前了解的那样 [include/asm-generic/qspinlock.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock.h#L126) 头文件提供一套宏，代表 API 中的自旋锁的获取、释放等等。
 
 ```C
 #define arch_spin_is_locked(l)          queued_spin_is_locked(l)
@@ -200,7 +199,7 @@ void unlock(...)
 #define arch_spin_unlock_wait(l)        queued_spin_unlock_wait(l)
 ```
 
-这些所有的宏扩展了同一头文件下的函数的调用。此外，我们发现 [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) 头文件的 `qspinlock` 结构代表了 Linux 内核队列自旋锁。
+所有这些宏扩展了同一头文件下的函数的调用。此外，我们发现 [include/asm-generic/qspinlock_types.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/qspinlock_types.h) 头文件的 `qspinlock` 结构代表了 Linux 内核队列自旋锁。
 
 ```C
 typedef struct qspinlock {
@@ -269,7 +268,7 @@ static __always_inline void queued_spin_lock(struct qspinlock *lock)
 }
 ```
 
-看起来很简单，除了 `queued_spin_lock_slowpath` 函数。 我们可能发现它只有一个参数。在我们的例子中这个参数代表 `队列自旋锁` 被上锁。让我们考虑`队列`锁为空，现在第一个线程想要获取锁的情况。正如我们可能了解的 `queued_spin_lock` 函数从调用 `atomic_cmpxchg_acquire` 宏开始。就像你们可能从宏的名字猜到的那样，它执行原子的 [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 指令，使用第一个参数（当前给定自旋锁的状态）比较第二个参数（在我们的例子为零）的值，如果他们相等，那么第二个参数在存储位置保存 `_Q_LOCKED_VAL` 的值，该存储位置通过 `&lock->val` 指向并且返回这个存储位置的初始值。
+看起来很简单，除了 `queued_spin_lock_slowpath` 函数，我们可能发现它只有一个参数。在我们的例子中这个参数代表 `队列自旋锁` 被上锁。让我们考虑`队列`锁为空，现在第一个线程想要获取锁的情况。正如我们可能了解的 `queued_spin_lock` 函数从调用 `atomic_cmpxchg_acquire` 宏开始。就像你们可能从宏的名字猜到的那样，它执行原子的 [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 指令，使用第一个参数（当前给定自旋锁的状态）比较第二个参数（在我们的例子为零）的值，如果他们相等，那么第二个参数在存储位置保存 `_Q_LOCKED_VAL` 的值，该存储位置通过 `&lock->val` 指向并且返回这个存储位置的初始值。
 
 `atomic_cmpxchg_acquire` 宏定义在 [include/linux/atomic.h](https://github.com/torvalds/linux/blob/master/include/linux/atomic.h) 头文件中并且扩展了 `atomic_cmpxchg` 函数的调用：
 
@@ -324,8 +323,7 @@ if (likely(val == 0))
 
 此时此刻，我们的第一个线程持有锁。注意这个行为与在 `MCS` 算法的描述有所区别。线程获取锁，但是我们不添加此线程入`队列`。就像我之前已经写到的，`队列自旋锁` 概念的实现在 Linux 内核中基于 `MCS` 算法，但是于此同时它对优化目的有一些差异。
 
-所以第一个线程已经获取了锁然后现在让我们考虑第二个线程尝试获取相同的锁的情况。第二个线程将从同样的 `queued_spin_lock` 函数开始，但是 `lock->val` 会包含
-`1` 或者 `_Q_LOCKED_VAL`，因为第一个线程已经持有了锁。因此，在本例中 `queued_spin_lock_slowpath` 函数将会被调用。`queued_spin_lock_slowpath`函数定义在 [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/master/kernel/locking/qspinlock.c) 源码文件中并且从以下的检查开始：
+所以第一个线程已经获取了锁然后现在让我们考虑第二个线程尝试获取相同的锁的情况。第二个线程将从同样的 `queued_spin_lock` 函数开始，但是 `lock->val` 会包含 `1` 或者 `_Q_LOCKED_VAL`，因为第一个线程已经持有了锁。因此，在本例中 `queued_spin_lock_slowpath` 函数将会被调用。`queued_spin_lock_slowpath`函数定义在 [kernel/locking/qspinlock.c](https://github.com/torvalds/linux/blob/master/kernel/locking/qspinlock.c) 源码文件中并且从以下的检查开始：
 
 ```C
 void queued_spin_lock_slowpath(struct qspinlock *lock, u32 val)
@@ -350,7 +348,7 @@ if (val == _Q_PENDING_VAL) {
 		cpu_relax();
 }
 ```
-这里 `cpu_relax` 只是 [NOP] 指令。综上，我们了解了锁饱含着 - `pending` 位。这个位代表了想要获取锁的线程，但是这个锁已经被其他线程获取了，并且与此同时`队列`为空。在本例中，`pending` 位将被设置并且`队列`不会被创建(touched)。这是优化所完成的，因为不需要考虑在引发缓存无效的自身 `mcs_spinlock` 数组的创建产生的非必需隐患（原文：This is done for optimization, because there are no need in unnecessary latency which will be caused by the cache invalidation in a touching of own `mcs_spinlock` array.）。
+这里 `cpu_relax` 只是 [NOP](https://en.wikipedia.org/wiki/NOP) 指令。综上，我们了解了锁饱含着 - `pending` 位。这个位代表了想要获取锁的线程，但是这个锁已经被其他线程获取了，并且与此同时`队列`为空。在本例中，`pending` 位将被设置并且`队列`不会被创建(touched)。这是优化所完成的，因为不需要考虑在引发缓存无效的自身 `mcs_spinlock` 数组的创建产生的非必需隐患（原文：This is done for optimization, because there are no need in unnecessary latency which will be caused by the cache invalidation in a touching of own `mcs_spinlock` array.）。
 
 下一步我们进入下面的循环：
 
@@ -387,7 +385,7 @@ idx = node->count++;
 tail = encode_tail(smp_processor_id(), idx);
 ```
 
-除此以外我们计算 表示`队列`尾部和代表 `mcs_nodes` 数组实体的`索引`的`tail` 。在此之后我们设置 `node` 指出 `mcs_nodes` 数组的正确，设置 `locked` 为零应为这个线程还没有获取锁，还有 `next` 为 `NULL` 因为我们不知道任何有关其他`队列`实体的信息：
+除此之外我们计算 表示`队列`尾部和代表 `mcs_nodes` 数组实体的`索引`的`tail` 。在此之后我们设置 `node` 指向正确的 `mcs_nodes` 数组，设置 `locked` 为零应为这个线程还没有获取锁，还有 `next` 为 `NULL` 因为我们不知道任何有关其他`队列`实体的信息：
 
 ```C
 node += idx;
@@ -420,7 +418,7 @@ release:
 	this_cpu_dec(mcs_nodes[0].count);
 ```
 
-因为我们不再需要它了，因为锁已经获得了。如果 `queued_spin_trylock` 不成功，我们更新队列的尾部：
+现在我们不再需要它了，因为锁已经获得了。如果 `queued_spin_trylock` 不成功，我们更新队列的尾部：
 
 ```C
 old = xchg_tail(lock, tail);
