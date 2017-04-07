@@ -71,7 +71,7 @@ Linux 内核揭密
 |├ [7.0](https://github.com/MintCN/linux-insides-zh/blob/master/MM/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[f83c8ee2](https://github.com/0xAX/linux-insides/commit/f83c8ee29e2051a8f4c08d6a0fa8247d934e14d9)|
 |├ [7.1](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-1.md)|[@choleraehyq](https://github.com/choleraehyq)|已完成|
 |├ [7.2](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-2.md)|[@choleraehyq](https://github.com/choleraehyq)|已完成|
-|└ [7.3](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-3.md)||未开始|
+|└ [7.3](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-3.md)|[@lifangwang](https://github.com/lifangwang)|正在进行|
 | 8. SMP||上游未开始|
 | 9. [Concepts](https://github.com/MintCN/linux-insides-zh/tree/master/Concepts)||正在进行|
 |├ [9.0](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
