@@ -1,16 +1,20 @@
 The initcall mechanism
+initcall 机制
 ================================================================================
 
 Introduction
+介绍
 --------------------------------------------------------------------------------
 
 As you may understand from the title, this part will cover an interesting and important concept in the Linux kernel which is called - `initcall`. We already saw definitions like these:
+就像你从标题所理解的，这部分将涉及Linux内核中有趣且重要的概念，称之为 `initcall`。我们可以看到类似这样的定义：
 
 ```C
 early_param("debug", debug_kernel);
 ```
 
 or
+或者
 
 ```C
 arch_initcall(init_pit_clocksource);
