@@ -1,61 +1,61 @@
-interrupt-descriptor table (IDT)
+ 中断描述符 （IDT）
 ================================================================================
 
-Three general interrupt & exceptions sources:
+三个常见的中断和异常来源：
 
-* Exceptions - sync;
-* Software interrupts - sync;
-* External interrupts - async.
+* 异常 - sync；
+* 软中断 - sync；
+* 外部中断 - async。
 
-Types of Exceptions:
+异常的类型：
 
-* Faults - are precise exceptions reported on the boundary `before` the instruction causing the exception. The saved `%rip` points to the faulting instruction;
-* Traps - are precise exceptions reported on the boundary `following` the instruction causing the exception. The same with `%rip`;
-* Aborts - are imprecise exceptions. Because they are imprecise, aborts typically do not allow reliable program restart.
+* 故障 - 在指令导致异常`之前`会被准确地报告。`%rip`保存的指针指向故障的指令；
+* 陷阱 - 在指令导致异常`之后`会被准确地报告。`%rip`保存的指针同样指向故障的指令；
+* 终止 - 是不明确的异常。 因为它们不能被明确，中止通常不允许程序可靠地再次启动。
 
-`Maskable` interrupts trigger the interrupt-handling mechanism only when RFLAGS.IF=1. Otherwise they are held pending for as long as the RFLAGS.IF bit is cleared to 0.
+只有当RFLAGS.IF = 1时，`可屏蔽`中断触发才中断处理程序。 除非RFLAGS.IF位清零，否则它们将持续处于等待处理状态。
 
-`Nonmaskable` interrupts (NMI) are unaffected by the value of the rFLAGS.IF bit. However, the occurrence of an NMI masks further NMIs until an IRET instruction is executed.
+`不可屏蔽`中断（NMI）不受rFLAGS.IF位的影响。 无论怎样一个NMI的发生都会进一步屏蔽之后的其他NMI，直到执行IRET（中断返回）指令。
 
-Specific exception and interrupt sources are assigned a fixed vector-identification number (also called an “interrupt vector” or simply “vector”). The interrupt vector is used by the interrupt-handling mechanism to locate the system-software service routine assigned to the exception or interrupt. Up to
-256 unique interrupt vectors are available. The first 32 vectors are reserved for predefined exception and interrupt conditions. They are defined in the [arch/x86/include/asm/traps.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/traps.h#L121) header file:
+具体的异常和中断来源被分配了固定的向量标识号（也称“中断向量”或简称“向量”）。中断处理程序使用中断向量来定位异常或中断，从而分配相应的系统软件服务处理程序。有至多256个特殊的中断向量可用。前32个是保留的，用于预定义的异常和中断条件。请参考[arch / x86 / include / asm / traps.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/traps.h#L121)头文件中对他们的定义：
+
 
 ```
-/* Interrupts/Exceptions */
+/* 中断/异常 */
 enum {
-	X86_TRAP_DE = 0,	/*  0, Divide-by-zero */
-	X86_TRAP_DB,		/*  1, Debug */
-	X86_TRAP_NMI,		/*  2, Non-maskable Interrupt */
-	X86_TRAP_BP,		/*  3, Breakpoint */
-	X86_TRAP_OF,		/*  4, Overflow */
-	X86_TRAP_BR,		/*  5, Bound Range Exceeded */
-	X86_TRAP_UD,		/*  6, Invalid Opcode */
-	X86_TRAP_NM,		/*  7, Device Not Available */
-	X86_TRAP_DF,		/*  8, Double Fault */
-	X86_TRAP_OLD_MF,	/*  9, Coprocessor Segment Overrun */
-	X86_TRAP_TS,		/* 10, Invalid TSS */
-	X86_TRAP_NP,		/* 11, Segment Not Present */
-	X86_TRAP_SS,		/* 12, Stack Segment Fault */
-	X86_TRAP_GP,		/* 13, General Protection Fault */
-	X86_TRAP_PF,		/* 14, Page Fault */
-	X86_TRAP_SPURIOUS,	/* 15, Spurious Interrupt */
-	X86_TRAP_MF,		/* 16, x87 Floating-Point Exception */
-	X86_TRAP_AC,		/* 17, Alignment Check */
-	X86_TRAP_MC,		/* 18, Machine Check */
-	X86_TRAP_XF,		/* 19, SIMD Floating-Point Exception */
-	X86_TRAP_IRET = 32,	/* 32, IRET Exception */
+	X86_TRAP_DE = 0,	/*  0, 除零错误 */
+	X86_TRAP_DB,		/*  1, 调试 */
+	X86_TRAP_NMI,		/*  2, 不可屏蔽中断 */
+	X86_TRAP_BP,		/*  3, 断点 */
+	X86_TRAP_OF,		/*  4, 溢出 */
+	X86_TRAP_BR,		/*  5, 超出范围 */
+	X86_TRAP_UD,		/*  6, 操作码无效 */
+	X86_TRAP_NM,		/*  7, 设备不可用 */
+	X86_TRAP_DF,		/*  8, 双精度浮点错误 */
+	X86_TRAP_OLD_MF,	/*  9, 协处理器段溢出 */
+	X86_TRAP_TS,		/* 10, 无效的 TSS */
+	X86_TRAP_NP,		/* 11, 段不存在 */
+	X86_TRAP_SS,		/* 12, 堆栈段故障 */
+	X86_TRAP_GP,		/* 13, 一般保护故障 */
+	X86_TRAP_PF,		/* 14, 页错误 */
+	X86_TRAP_SPURIOUS,	/* 15, 伪中断 */
+	X86_TRAP_MF,		/* 16, x87 浮点异常 */
+	X86_TRAP_AC,		/* 17, 对齐检查 */
+	X86_TRAP_MC,		/* 18, 机器检测 */
+	X86_TRAP_XF,		/* 19, SIMD （单指令多数据结构浮点）异常 */
+	X86_TRAP_IRET = 32,	/* 32, IRET （中断返回）异常 */
 };
 ```
 
-Error Codes
+错误代码（Error code）
 --------------------------------------------------------------------------------
 
-The processor exception-handling mechanism reports error and status information for some exceptions using an error code. The error code is pushed onto the stack by the exception-mechanism during the control transfer into the exception handler. The error code has two formats:
+处理器异常处理程序使用错误代码报告某些异常的错误和状态信息。在控制权交给异常处理程序期间，异常处理装置将错误代码推送到堆栈中。错误代码有两种格式：
 
-* most error-reporting exceptions format;
-* page fault format.
+* 多数异常错误报告格式；
+* 页错误格式。
 
-Here is format of selector error code:
+选择器错误代码的格式如下：
 
 ```
 31                           16 15                                  3   2   1   0
@@ -66,14 +66,14 @@ Here is format of selector error code:
 +-------------------------------------------------------------------------------+
 ```
 
-Where:
+说明如下:
 
-* `EXT` - If this bit is set to 1, the exception source is external to the processor. If cleared to 0, the exception source is internal to the processor;
-* `IDT` - If this bit is set to 1, the error-code selector-index field references a gate descriptor located in the `interrupt-descriptor table`. If cleared to 0, the selector-index field references a descriptor in either the `global-descriptor table` or local-descriptor table `LDT`, as indicated by the `TI` bit;
-* `TI` - If this bit is set to 1, the error-code selector-index field references a descriptor in the `LDT`. If cleared to 0, the selector-index field references a descriptor in the `GDT`.
-* `Selector Index` - The selector-index field specifies the index into either the `GDT`, `LDT`, or `IDT`, as specified by the `IDT` and `TI` bits.
+* `EXT` - 如果该位设置为1，则异常源在处理器外部。 如果设置为0，则异常源位于处理器的内部；
+* `IDT` - 如果该位设置为1，则错误代码选择器索引字段引用位于“中断描述符表”中的门描述符。 如果设置为0，则选择器索引字段引用“全局描述符表”或本地描述符表“LDT”中的描述符，由“TI”位所指示；
+* `TI` - 如果该位设置为1，则错误代码选择器索引字段引用“LDT”中的描述符。 如果清除为0，则选择器索引字段引用“GDT”中的描述符；
+* `Selector Index` - 选择器索引字段指定索引为“GDT‘，“LDT”或“IDT”，它是由“IDT”和“TI”位指定的。
 
-Page-Fault Error Code format is:
+页错误代码格式如下：
 
 ```
 31                                                              4   3   2   1   0
@@ -84,24 +84,24 @@ Page-Fault Error Code format is:
 +-------------------------------------------------------------------------------+
 ```
 
-Where:
+说明如下:
 
-* `I/D` - If this bit is set to 1, it indicates that the access that caused the page fault was an instruction fetch;
-* `RSV` - If this bit is set to 1, the page fault is a result of the processor reading a 1 from a reserved field within a page-translation-table entry;
-* `U/S` - If this bit is cleared to 0, an access in supervisor mode (`CPL=0, 1, or 2`) caused the page fault. If this bit is set to 1, an access in user mode (CPL=3) caused the page fault;
-* `R/W` - If this bit is cleared to 0, the access that caused the page fault is a memory read. If this bit is set to 1, the memory access that caused the page fault was a write;
-* `P` - If this bit is cleared to 0, the page fault was caused by a not-present page. If this bit is set to 1, the page fault was caused by a page-protection violation.
+* `I/D` - 如果该位设置为1，表示造成页错误的访问是取指；
+* `RSV` - 如果该位设置为1，则页错误是处理器从保留给分页表的区域中读取1的结果;
+* `U/S` - 如果该位被设置为0，则是管理员模式（`CPL = 0,1或2`）进行访问导致了页错误。 如果该位设置为1，则是用户模式（CPL = 3）进行访问导致了页错误；
+* `R/W` - 如果该位被设置为0，导致页错误的是内存读取。 如果该位设置为1，则导致页错误的是内存写入；
+* `P` - 如果该位被设置为0，则页错误是由不存在的页面引起的。 如果该位设置为1，页错误是由于违反页保护引起的。
 
-Interrupt Control Transfers
+中断控制传输（Interrupt Control Transfers）
 --------------------------------------------------------------------------------
 
-The IDT may contain any of three kinds of gate descriptors:
+IDT可以包含三种门描述符中的任何一种：
 
-* `Task Gate` - contains the segment selector for a TSS for an exception and/or interrupt handler task;
-* `Interrupt Gate` - contains segment selector and offset that the processor uses to transfer program execution to a handler procedure in an interrupt handler code segment;
-* `Trap Gate` - contains segment selector and offset that the processor uses to transfer program execution to a handler procedure in an exception handler code segment.
+* `Task Gate（任务门）` - 包含用于异常与或中断处理程序任务的TSS的段选择器；
+* `Interrupt Gate（中断门）` - 包含处理器用于将程序从执行转移到中断处理程序的段选择器和偏移量；
+* `Trap Gate（陷阱门）` - 包含处理器用于将程序从执行转移到异常处理程序的段选择器和偏移量。
 
-General format of gates is:
+门的一般格式是：
 
 ```
 127                                                                             96
@@ -130,16 +130,16 @@ General format of gates is:
 +-------------------------------------------------------------------------------+
 ```
 
-Where
+说明如下：
 
-* `Selector` - Segment Selector for destination code segment;
-* `Offset` - Offset to handler procedure entry point;
-* `DPL` - Descriptor Privilege Level;
-* `P` - Segment Present flag;
-* `IST` - Interrupt Stack Table;
-* `TYPE` - one of: Local descriptor-table (LDT) segment descriptor, Task-state segment (TSS) descriptor, Call-gate descriptor, Interrupt-gate descriptor, Trap-gate descriptor or Task-gate descriptor.
+* `Selector` - 目标代码段的段选择器；
+* `Offset` - 处理程序入口点的偏移量；
+* `DPL` - 描述符权限级别；
+* `P` - 当前段标志；
+* `IST` - 中断堆栈表；
+* `TYPE` - 本地描述符表（LDT）段描述符，任务状态段（TSS）描述符，调用门描述符，中断门描述符，陷阱门描述符或任务门描述符之一。
 
-An `IDT` descriptor is represented by the following structure in the Linux kernel (only for `x86_64`):
+`IDT` 描述符在Linux内核中由以下结构表示（仅适用于`x86_64`）：
 
 ```C
 struct gate_struct64 {
@@ -152,9 +152,9 @@ struct gate_struct64 {
 } __attribute__((packed));
 ```
 
-which is defined in the [arch/x86/include/asm/desc_defs.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/desc_defs.h#L51) header file.
+它定义在 [arch/x86/include/asm/desc_defs.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/desc_defs.h#L51) 头文件中。
 
-A task gate descriptor does not contain `IST` field and its format differs from interrupt/trap gates:
+任务门描述符不包含`IST`字段，并且其格式与中断/陷阱门不同：
 
 ```C
 struct ldttss_desc64 {
@@ -167,24 +167,24 @@ struct ldttss_desc64 {
 } __attribute__((packed));
 ```
 
-Exceptions During a Task Switch
+任务切换期间的异常（Exceptions During a Task Switch）
 --------------------------------------------------------------------------------
 
-An exception can occur during a task switch while loading a segment selector. Page faults can also occur when accessing a TSS. In these cases, the hardware task-switch mechanism completes loading the new task state from the TSS, and then triggers the appropriate exception mechanism.
+任务切换在加载段选择器期间可能会发生异常。页错误也可能会在访问TSS时出现。在这些情况下，由硬件任务切换机构完成从TSS加载新的任务状态，然后触发适当的异常处理。
 
-**In long mode, an exception cannot occur during a task switch, because the hardware task-switch mechanism is disabled.**
+**在长模式下，由于硬件任务切换机构被禁用，因而在任务切换期间不会发生异常。**
 
-Nonmaskable interrupt
+不可屏蔽中断（Nonmaskable interrupt）
 --------------------------------------------------------------------------------
 
-**TODO**
+**未完待续**
 
 API
 --------------------------------------------------------------------------------
 
-**TODO**
+**未完待续**
 
-Interrupt Stack Table
+中断堆栈表（Interrupt Stack Table）
 --------------------------------------------------------------------------------
 
-**TODO**
+**未完待续**
