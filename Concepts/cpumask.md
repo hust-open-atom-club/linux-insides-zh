@@ -1,16 +1,16 @@
 CPU masks
 ================================================================================
 
-Introduction
+介绍
 --------------------------------------------------------------------------------
 
-`Cpumasks` is a special way provided by the Linux kernel to store information about CPUs in the system. The relevant source code and header files which contains API for `Cpumasks` manipulation:
+`Cpumasks` 是Linux内核提供的保存系统CPU信息的特殊方法。包含 `Cpumasks` 操作 API 相关的源码和头文件：
 
 * [include/linux/cpumask.h](https://github.com/torvalds/linux/blob/master/include/linux/cpumask.h)
 * [lib/cpumask.c](https://github.com/torvalds/linux/blob/master/lib/cpumask.c)
 * [kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c)
 
-As comment says from the [include/linux/cpumask.h](https://github.com/torvalds/linux/blob/master/include/linux/cpumask.h): Cpumasks provide a bitmap suitable for representing the set of CPU's in a system, one bit position per CPU number. We already saw a bit about cpumask in the `boot_cpu_init` function from the [Kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) part. This function makes first boot cpu online, active and etc...:
+正如 [include/linux/cpumask.h](https://github.com/torvalds/linux/blob/master/include/linux/cpumask.h) 注释：Cpumasks 提供了代表系统中 CPU 集合的位图，一位放置一个 CPU 序号。我们已经在 [Kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) 部分，函数 `boot_cpu_init` 中看到了一点cpumask。这个函数将第一个启动的 cpu 上线、激活等等……
 
 ```C
 set_cpu_online(cpu, true);
@@ -19,40 +19,40 @@ set_cpu_present(cpu, true);
 set_cpu_possible(cpu, true);
 ```
 
-`set_cpu_possible` is a set of cpu ID's which can be plugged in anytime during the life of that system boot. `cpu_present` represents which CPUs are currently plugged in. `cpu_online` represents a subset of the `cpu_present` and indicates CPUs which are available for scheduling. These masks depend on the `CONFIG_HOTPLUG_CPU` configuration option and if this option is disabled `possible == present` and `active == online`. The implementations of all of these functions are very similar. Every function checks the second parameter. If it is `true`, it calls `cpumask_set_cpu` otherwise it calls `cpumask_clear_cpu` .
+`set_cpu_possible` 是一个在系统启动时任意时刻都可插入的 cpu ID 集合。`cpu_present` 代表了当前插入的 CPUs。`cpu_online` 是 `cpu_present` 的子集，表示可调度的 CPUs。这些掩码依赖于 `CONFIG_HOTPLUG_CPU` 配置选项，以及 `possible == present` 和 `active == online`选项是否被禁用。这些函数的实现很相似，检测第二个参数，如果为 `true`，就调用 `cpumask_set_cpu` ，否则调用 `cpumask_clear_cpu`。
 
-There are two ways for a `cpumask` creation. First is to use `cpumask_t`. It is defined as:
+有两种方法创建 `cpumask`。第一种是用 `cpumask_t`。定义如下：
 
 ```C
 typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 ```
 
-It wraps the `cpumask` structure which contains one bitmask `bits` field. The `DECLARE_BITMAP` macro gets two parameters:
+它封装了 `cpumask` 结构，其包含了一个位掩码 `bits` 字段。`DECLARE_BITMAP` 宏有两个参数：
 
 * bitmap name;
 * number of bits.
 
-and creates an array of `unsigned long` with the given name. Its implementation is pretty easy:
+并以给定名称创建了一个 `unsigned long` 数组。它的实现非常简单：
 
 ```C
 #define DECLARE_BITMAP(name,bits) \
         unsigned long name[BITS_TO_LONGS(bits)]
 ```
 
-where `BITS_TO_LONGS`:
+其中 `BITS_TO_LONGS`：
 
 ```C
 #define BITS_TO_LONGS(nr)       DIV_ROUND_UP(nr, BITS_PER_BYTE * sizeof(long))
 #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
 ```
 
-As we are focusing on the `x86_64` architecture, `unsigned long` is 8-bytes size and our array will contain only one element:
+因为我们专注于 `x86_64` 架构，`unsigned long` 是8字节大小，因此我们的数组仅包含一个元素：
 
 ```
 (((8) + (8) - 1) / (8)) = 1
 ```
 
-`NR_CPUS` macro represents the number of CPUs in the system and depends on the `CONFIG_NR_CPUS` macro which is defined in [include/linux/threads.h](https://github.com/torvalds/linux/blob/master/include/linux/threads.h) and looks like this:
+`NR_CPUS` 宏表示系统中的 CPU，依赖于在 [include/linux/threads.h](https://github.com/torvalds/linux/blob/master/include/linux/threads.h) 中定义的 `CONFIG_NR_CPUS` 宏，看起来像这样：
 
 ```C
 #ifndef CONFIG_NR_CPUS
@@ -62,7 +62,7 @@ As we are focusing on the `x86_64` architecture, `unsigned long` is 8-bytes size
 #define NR_CPUS         CONFIG_NR_CPUS
 ```
 
-The second way to define cpumask is to use the `DECLARE_BITMAP` macro directly and the `to_cpumask` macro which converts the given bitmap to `struct cpumask *`:
+第二种定义 cpumask 的方法是直接使用宏 `DECLARE_BITMAP` 和 `to_cpumask` 宏，后者将给定的位图转化为 `struct cpumask *`：
 
 ```C
 #define to_cpumask(bitmap)                                              \
@@ -70,7 +70,7 @@ The second way to define cpumask is to use the `DECLARE_BITMAP` macro directly a
                             : (void *)sizeof(__check_is_bitmap(bitmap))))
 ```
 
-We can see the ternary operator operator here which is `true` every time. `__check_is_bitmap` inline function is defined as:
+可以看到这里的三目运算符每次总是 `true`。`__check_is_bitmap` 内联函数定义为：
 
 ```C
 static inline int __check_is_bitmap(const unsigned long *bitmap)
@@ -79,17 +79,17 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 }
 ```
 
-And returns `1` every time. We need it here for only one purpose: at compile time it checks that a given `bitmap` is a bitmap, or in other words it checks that a given `bitmap` has type - `unsigned long *`. So we just pass `cpu_possible_bits` to the `to_cpumask` macro for converting an array of `unsigned long` to the `struct cpumask *`.
+每次都是返回 `1`。我们需要它仅一个目的：编译时检测一个给定的 `bitmap` 是一个位图，换句话说，它检测一个 `bitmap` 有 `unsigned long *` 类型。因此我们传递 `cpu_possible_bits` 给宏 `to_cpumask` ，将 `unsigned long` 数组转换为 `struct cpumask *`。
 
 cpumask API
 --------------------------------------------------------------------------------
 
-As we can define cpumask with one of the method, Linux kernel provides API for manipulating a cpumask. Let's consider one of the function which presented above. For example `set_cpu_online`. This function takes two parameters:
+因为我们可以用上述方法之一来定义 cpumask，Linux 内核提供了 API 来操作 cpumask。我们看下上述函数之一，例如 `set_cpu_online`，这个函数有两个参数：
 
-* Number of CPU;
-* CPU status;
+* CPU 数目;
+* CPU 状态;
 
-Implementation of this function looks as:
+这个函数的实现是这样：
 
 ```C
 void set_cpu_online(unsigned int cpu, bool online)
@@ -103,13 +103,13 @@ void set_cpu_online(unsigned int cpu, bool online)
 }
 ```
 
-First of all it checks the second `state` parameter and calls `cpumask_set_cpu` or `cpumask_clear_cpu` depends on it. Here we can see casting to the `struct cpumask *` of the second parameter in the `cpumask_set_cpu`. In our case it is `cpu_online_bits` which is a bitmap and defined as:
+首先检测第二个 `state` 参数并调用依赖它的 `cpumask_set_cpu` 或 `cpumask_clear_cpu`。这里我们可以看到在中 `cpumask_set_cpu` 的第二个参数转换为 `struct cpumask *`。在我们的例子中是位图 `cpu_online_bits`，定义如下：
 
 ```C
 static DECLARE_BITMAP(cpu_online_bits, CONFIG_NR_CPUS) __read_mostly;
 ```
 
-The `cpumask_set_cpu` function makes only one call to the `set_bit` function:
+函数 `cpumask_set_cpu` 调用了一次 `set_bit` 函数：
 
 ```C
 static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
