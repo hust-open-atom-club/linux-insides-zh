@@ -118,18 +118,18 @@ static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
 }
 ```
 
-The `set_bit` function takes two parameters too, and sets a given bit (first parameter) in the memory (second parameter or `cpu_online_bits` bitmap). We can see here that before `set_bit` will be called, its two parameters will be passed to the
+`set_bit` 函数也有两个参数，设置了一个给定位（第一个参数）的内存（第二个参数或 `cpu_online_bits` 位图）。这儿我们可以看到在调用 `set_bit` 之前，它的两个参数会传递给
 
 * cpumask_check;
 * cpumask_bits.
 
-Let's consider these two macros. First if `cpumask_check` does nothing in our case and just returns given parameter. The second `cpumask_bits` just returns the `bits` field from the given `struct cpumask *` structure:
+让我们细看下这两个宏。第一个 `cpumask_check` 在我们的例子里没做任何事，只是返回了给的参数。第二个 `cpumask_bits` 只是返回了传入 `struct cpumask *` 结构的 `bits` 域。
 
 ```C
 #define cpumask_bits(maskp) ((maskp)->bits)
 ```
 
-Now let's look on the `set_bit` implementation:
+现在让我们看下 `set_bit` 的实现：
 
 ```C
  static __always_inline void
@@ -147,50 +147,49 @@ Now let's look on the `set_bit` implementation:
  }
 ```
 
-This function looks scary, but it is not so hard as it seems. First of all it passes `nr` or number of the bit to the `IS_IMMEDIATE` macro which just calls the GCC internal `__builtin_constant_p` function:
+这个函数看着吓人，但它没有看起来那么难。首先传参 `nr` 或者说位数给 `IS_IMMEDIATE` 宏，该宏调用了 GCC 内联函数 `__builtin_constant_p`：
 
 ```C
 #define IS_IMMEDIATE(nr)    (__builtin_constant_p(nr))
 ```
 
-`__builtin_constant_p` checks that given parameter is known constant at compile-time. As our `cpu` is not compile-time constant, the `else` clause will be executed:
+`__builtin_constant_p` 检查给定参数是否编译时恒定变量。因为我们的 `cpu` 不是编译时恒定变量，将会执行 `else` 分支：
 
 ```C
 asm volatile(LOCK_PREFIX "bts %1,%0" : BITOP_ADDR(addr) : "Ir" (nr) : "memory");
 ```
 
-Let's try to understand how it works step by step:
+让我们试着一步一步来理解它如何工作的：
 
-`LOCK_PREFIX` is a x86 `lock` instruction. This instruction tells the cpu to occupy the system bus while the instruction(s) will be executed. This allows the CPU to synchronize memory access, preventing simultaneous access of multiple processors (or devices - the DMA controller for example) to one memory cell.
+`LOCK_PREFIX` 是个 x86 `lock` 指令。这个指令告诉 cpu 当指令执行时占据系统总线。这允许 CPU 同步内存访问，防止多核（或多设备 - 比如 DMA 控制器）并发访问同一个内存cell。
 
-`BITOP_ADDR` casts the given parameter to the `(*(volatile long *)` and adds `+m` constraints. `+` means that this operand is both read and written by the instruction. `m` shows that this is a memory operand. `BITOP_ADDR` is defined as:
+`BITOP_ADDR` 转换给定参数至 `(*(volatile long *)` 并且加了 `+m` 约束。`+` 意味着这个操作数对于指令是可读写的。`m` 显示这是一个内存操作数。`BITOP_ADDR` 定义如下：
 
 ```C
 #define BITOP_ADDR(x) "+m" (*(volatile long *) (x))
 ```
 
-Next is the `memory` clobber. It tells the compiler that the assembly code performs memory reads or writes to items other than those listed in the input and output operands (for example, accessing the memory pointed to by one of the input parameters).
+接下来是 `memory`。它告诉编译器汇编代码执行内存读或写到某些项，而不是那些输入或输出操作数（例如，访问指向输出参数的内存）。
 
-`Ir` - immediate register operand.
+`Ir` - 立即操作数。
 
+`bts` 指令设置一个位字符串的给定位，存储给定位的值到 `CF` 标志位。所以我们传递 cpu 号，我们的例子中为0，给 `set_bit` 并且执行后，其设置了在 `cpu_online_bits` cpumask 中的 0 位。这意味着第一个 cpu 此时上线了。
 
-The `bts` instruction sets a given bit in a bit string and stores the value of a given bit in the `CF` flag. So we passed the cpu number which is zero in our case and after `set_bit` is executed, it sets the zero bit in the `cpu_online_bits` cpumask. It means that the first cpu is online at this moment.
+当然，除了 `set_cpu_*` API 外，cpumask 提供了其它 cpumasks 操作的 API。让我们简短看下。
 
-Besides the `set_cpu_*` API, cpumask of course provides another API for cpumasks manipulation. Let's consider it in short.
-
-Additional cpumask API
+附加的 cpumask API
 --------------------------------------------------------------------------------
 
-cpumask provides a set of macros for getting the numbers of CPUs in various states. For example:
+cpumaks 提供了一系列宏来得到不同状态 CPUs 序号。例如：
 
 ```C
 #define num_online_cpus()	cpumask_weight(cpu_online_mask)
 ```
 
-This macro returns the amount of `online` CPUs. It calls the `cpumask_weight` function with the `cpu_online_mask` bitmap (read about it). The`cpumask_weight` function makes one call of the `bitmap_weight` function with two parameters:
+这个宏返回了 `online` CPUs 数量。它读取 `cpu_online_mask` 位图并调用了 `cpumask_weight` 函数。`cpumask_weight` 函数使用两个参数调用了一次 `bitmap_weight` 函数：
 
 * cpumask bitmap;
-* `nr_cpumask_bits` - which is `NR_CPUS` in our case.
+* `nr_cpumask_bits` - 在我们的例子中就是 `NR_CPUS`。
 
 ```C
 static inline unsigned int cpumask_weight(const struct cpumask *srcp)
@@ -199,27 +198,27 @@ static inline unsigned int cpumask_weight(const struct cpumask *srcp)
 }
 ```
 
-and calculates the number of bits in the given bitmap. Besides the `num_online_cpus`, cpumask provides macros for the all CPU states:
+并计算给定位图的位数。除了 `num_online_cpus`，cpumask还提供了所有 CPU 状态的宏：
 
 * num_possible_cpus;
 * num_active_cpus;
 * cpu_online;
 * cpu_possible.
 
-and many more.
+等等。
 
-Besides that the Linux kernel provides the following API for the manipulation of `cpumask`:
+除了 Linux 内核提供的下述操作 `cpumask` 的 API：
 
-* `for_each_cpu` - iterates over every cpu in a mask;
-* `for_each_cpu_not` - iterates over every cpu in a complemented mask;
-* `cpumask_clear_cpu` - clears a cpu in a cpumask;
-* `cpumask_test_cpu` - tests a cpu in a mask;
-* `cpumask_setall` - set all cpus in a mask;
-* `cpumask_size` - returns size to allocate for a 'struct cpumask' in bytes;
+* `for_each_cpu` - 遍历一个mask的所有 cpu;
+* `for_each_cpu_not` - 遍历所有补集的 cpu;
+* `cpumask_clear_cpu` - 清除一个 cpumask 的 cpu;
+* `cpumask_test_cpu` - 测试一个 mask 中的 cpu;
+* `cpumask_setall` - 设置 mask 的所有 cpu;
+* `cpumask_size` - 返回分配 'struct cpumask' 字节数大小;
 
-and many many more...
+还有很多。
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [cpumask documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
