@@ -83,7 +83,7 @@ lgdt gdt
   
   * 如果G = 0, 那么内存段的长度是按照1 byte进行增长的 ( Limit每增加1，段长度增加1 byte )，最大的内存段长度将是1M bytes；
   * 如果G = 1, 那么内存段的长度是按照4K bytes进行增长的 ( Limit每增加1，段长度增加4K bytes )，最大的内存段长度将是4G bytes;
-  * 段长度的计算公司是 base_seg_length * ( LIMIT + 1)。
+  * 段长度的计算公式是 base_seg_length * ( LIMIT + 1)。
    
 2. Base[32-bits] 被保存在上述地址结构的0-15， 32-39以及56-63位。Base定义了段基址。
 
