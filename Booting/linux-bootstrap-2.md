@@ -83,12 +83,12 @@ lgdt gdt
   
   * 如果G = 0, 那么内存段的长度是按照1 byte进行增长的 ( Limit每增加1，段长度增加1 byte )，最大的内存段长度将是1M bytes；
   * 如果G = 1, 那么内存段的长度是按照4K bytes进行增长的 ( Limit每增加1，段长度增加4K bytes )，最大的内存段长度将是4G bytes;
-  * 段长度的计算公司是 base_seg_length * ( LIMIT + 1)。
+  * 段长度的计算公式是 base_seg_length * ( LIMIT + 1)。
    
 2. Base[32-bits] 被保存在上述地址结构的0-15， 32-39以及56-63位。Base定义了段基址。
 
 3. Type/Attribute (40-47 bits) 定义了内存段的类型以及支持的操作。
-  * `S` 标记（ 第44位 ）定义了段的类型，`S` = 0说明这个内存段是一个系统段；`S` = 1说明这个内存段是一个代码段或者是数据段（ 堆栈段是一种特使类型的数据段，堆栈段必须是可以进行读写的段 ）。
+  * `S` 标记（ 第44位 ）定义了段的类型，`S` = 0说明这个内存段是一个系统段；`S` = 1说明这个内存段是一个代码段或者是数据段（ 堆栈段是一种特殊类型的数据段，堆栈段必须是可以进行读写的段 ）。
    
 在`S` = 1的情况下，上述内存结构的第43位决定了内存段是数据段还是代码段。如果43位 = 0，说明是一个数据段，否则就是一个代码段。
 
@@ -169,12 +169,12 @@ lgdt gdt
 
 * 禁止中断发生
 * 使用命令 `lgdt` 将GDT表装入 `GDTR` 寄存器
-* 设置CR0寄存器的PE位为1，是CPU进入保护模式
+* 设置CR0寄存器的PE位为1，使CPU进入保护模式
 * 跳转开始执行保护模式代码
 
 在后面的章节中，我们将看到Linux 内核中完整的转换代码。不过在系统进入保护模式之前，内核有很多的准备工作需要进行。
 
-让我们代开C文件 [arch/x86/boot/main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18)。这个文件包含了很多的函数，这些函数分别会执行键盘初始化，内存堆初始化等等操作...，下面让我们来具体看一些重要的函数。
+让我们打开C文件 [arch/x86/boot/main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18)。这个文件包含了很多的函数，这些函数分别会执行键盘初始化，内存堆初始化等等操作...，下面让我们来具体看一些重要的函数。
 
 将启动参数拷贝到"zeropage"
 --------------------------------------------------------------------------------
@@ -182,6 +182,8 @@ lgdt gdt
 让我们从`main`函数开始看起，这个函数中，首先调用了[`copy_boot_params(void)`](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L30)。 
 
 这个函数将内核设置信息拷贝到`boot_params`结构的相应字段。大家可以在[arch/x86/include/uapi/asm/bootparam.h](http://lxr.free-electrons.com/source/arch/x86/include/uapi/asm/bootparam.h?v=3.18#L113)找到`boot_params`结构的定义。
+
+`boot_params`结构中包含`struct setup_header hdr`字段。这个结构包含了[linux boot protocol](https://www.kernel.org/doc/Documentation/x86/boot.txt)中定义的相同字段，并且由boot loader填写。在内核编译的时候`copy_boot_params`完成两个工作：
 
 1. 将[header.S](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18#L281)中定义的 `hdr` 结构中的内容拷贝到 `boot_params` 结构的字段 `struct setup_header hdr` 中。
 
