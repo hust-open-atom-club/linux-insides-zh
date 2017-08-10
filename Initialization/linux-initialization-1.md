@@ -504,7 +504,7 @@ per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `pe
 	movl %eax,%gs
 ```
 
-在所有这些步骤都结束后，我们需要设置一下 `gs` 寄存器，令它指向一个特殊的栈 `irqstack`，用于处理[中断]https://en.wikipedia.org/wiki/Interrupt)：
+在所有这些步骤都结束后，我们需要设置一下 `gs` 寄存器，令它指向一个特殊的栈 `irqstack`，用于处理[中断](https://en.wikipedia.org/wiki/Interrupt)：
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -521,9 +521,7 @@ per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `pe
 
 我们需要把 `MSR_GS_BASE` 放入 `ecx` 寄存器，同时利用 `wrmsr` 指令向 `eax` 和 `edx` 处的地址加载数据（即指向 `initial_gs`）。`cs`, `fs`, `ds` 和 `ss` 段寄存器在64位模式下不用来寻址，但 `fs` 和 `gs` 可以使用。 `fs` 和 `gs` 有一个隐含的部分（与实模式下的 `cs` 段寄存器类似），这个隐含部分存储了一个描述符，其指向 [Model Specific Registers](https://en.wikipedia.org/wiki/Model-specific_register)。因此上面的 `0xc0000101` 是一个 `gs.base` MSR 地址。当发生[系统调用](https://en.wikipedia.org/wiki/System_call) 或者 [中断](https://en.wikipedia.org/wiki/Interrupt)时，入口点处并没有内核栈，因此 `MSR_GS_BASE` 将会用来存放中断栈。
 
-接下来我们把实模式中的 bootparam 结构的地址放入 `rdi` （），然后跳转到C语言代码：
-
-In the next step we put the address of the real mode bootparam structure to the `rdi` (remember `rsi` holds pointer to this structure from the start) and jump to the C code with:
+接下来我们把实模式中的 bootparam 结构的地址放入 `rdi`(要记得`rsi`从一开始就保存了这个结构体的指针)，然后跳转到C语言代码：
 
 ```assembly
 	movq	initial_code(%rip),%rax
@@ -554,16 +552,16 @@ asmlinkage __visible void __init x86_64_start_kernel(char * real_mode_data) {
 }
 ```
 
-这个函数接受一个参数 `real_mode_data`（刚才我们传入了一个实模式下的数据的地址）。
+这个函数接受一个参数 `real_mode_data`（刚才我们把实模式下数据的地址保存到了`rdi`寄存器中）。
 
 这个函数是内核中第一个执行的C语言代码！
 
 走进 start_kernel
 --------------------------------------------------------------------------------
 
-在我们真正到达“内核入口点”之前，还需要一些最后的准备工作：[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489)中的start_kernel函数。
+在我们真正到达“内核入口点”-[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489)中的start_kernel函数之前，我们还需要最后的准备工作：
 
-首先在 `x86_64_start_kernel` 函数中可以看到一些检查：
+首先在 `x86_64_start_kernel` 函数中可以看到一些检查工作：
 
 ```C
 BUILD_BUG_ON(MODULES_VADDR < __START_KERNEL_map);
@@ -576,24 +574,20 @@ BUILD_BUG_ON(!(((MODULES_END - 1) & PGDIR_MASK) == (__START_KERNEL & PGDIR_MASK)
 BUILD_BUG_ON(__fix_to_virt(__end_of_fixed_addresses) <= MODULES_END);
 ```
 
-这些检查包括：模块的虚拟地址不能低于内核text段基地址 `__START_KERNEL_map`，
-
-`BUILD_BUG_ON` 宏定义如下：
-
-There are checks for different things like virtual addresses of modules space is not fewer than base address of the kernel text - `__STAT_KERNEL_map`, that kernel text with modules is not less than image of the kernel and etc... `BUILD_BUG_ON` is a macro which looks as:
+这些检查包括：模块的虚拟地址不能低于内核text段基地址`__START_KERNEL_map`，包含模块的内核text段的空间大小不能小于内核镜像大小等等。`BUILD_BUG_ON` 宏定义如下：
 
 ```C
 #define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
 ```
 
-我们来考虑一下这个trick是怎么工作的。首先以第一个条件 `MODULES_VADDR < __START_KERNEL_map` 为例：`!!conditions` 等价于 `condition != 0`，这代表如果 `MODULES_VADDR < __START_KERNEL_map` 为真，则 `!!(condition)` 为1，否则为0。随后 `2*!!(condition)` 将为 `2` 或 `0`。因此，这个宏将可能产生两种不同的行为：
+我们来理解一下这些巧妙的设计是怎么工作的。首先以第一个条件 `MODULES_VADDR < __START_KERNEL_map` 为例：`!!conditions` 等价于 `condition != 0`，这代表如果 `MODULES_VADDR < __START_KERNEL_map` 为真，则 `!!(condition)` 为1，否则为0。执行`2*!!(condition)`之后数值变为 `2` 或 `0`。因此，这个宏执行完后可能产生两种不同的行为：
 
-* 编译错误。因为我们尝试取获取一个字符数组负索引处变量的大小。
+* 编译错误。因为我们尝试取获取一个字符数组索引为负数的变量的大小。
 * 没有编译错误。
 
-这种C语言的trick利用常量达到了编译错误的目的。
+就是这么简单，通过C语言中某些常量导致编译错误的技巧实现了这一设计。
 
-接下来 start_kernel 调用了 `cr4_init_shadow` 函数，其中存储了每个CPU中 `cr4` 的Shadow Copy。上下文切换可能会修改 `cr4` 中的位，因此需要位每个CPU保存一份 `cr4` 的内容。在这之后将会调用 `reset_early_page_tables` 函数，它充值了所有的全局页目录项，同时向 `cr3` 中重新写入了的全局页目录表的地址：
+接下来 start_kernel 调用了 `cr4_init_shadow` 函数，其中存储了每个CPU中 `cr4` 的Shadow Copy。上下文切换可能会修改 `cr4` 中的位，因此需要保存每个CPU中`cr4` 的内容。在这之后将会调用 `reset_early_page_tables` 函数，它重置了所有的全局页目录项，同时向 `cr3` 中重新写入了的全局页目录表的地址：
 
 ```C
 for (i = 0; i < PTRS_PER_PGD-1; i++)
