@@ -18,59 +18,59 @@
 |├ [1.2](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.3](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.4](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-4.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
-|└ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)|[@chengong](https://github.com/chengong)|正在进行|
+|└ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)||未开始|
 | 2. [Initialization](https://github.com/MintCN/linux-insides-zh/tree/master/Initialization)||正在进行|
 |├ [2.0](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
-|├ [2.1](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-1.md)|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
-|├ [2.2](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md)|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
-|├ [2.3](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)|[@dontpanic92](https://github.com/dontpanic92)|正在进行|
-|├ [2.4](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-4.md)|[@bjwrkj](https://github.com/bjwrkj)|已完成|
-|├ [2.5](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-5.md)|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
-|├ [2.6](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-6.md)|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
-|├ [2.7](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md)|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
-|├ [2.8](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-8.md)|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
-|├ [2.9](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-9.md)|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
-|└ [2.10](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-10.md)|[@bjwrkj](https://github.com/bjwrkj)|正在进行|
+|├ [2.1](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-1.md)||未开始|
+|├ [2.2](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md)||未开始|
+|├ [2.3](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)||未开始|
+|├ [2.4](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-4.md)||已完成|
+|├ [2.5](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-5.md)||未开始|
+|├ [2.6](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-6.md)||未开始|
+|├ [2.7](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md)||未开始|
+|├ [2.8](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-8.md)||未开始|
+|├ [2.9](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-9.md)||未开始|
+|└ [2.10](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-10.md)||未开始|
 | 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/Interrupts)||正在进行|
 |├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|正在进行|
-|├ [3.1](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-1.md)|[@littleneko](https://github.com/littleneko)|正在进行|
-|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-2.md)|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-3.md)|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-4.md)|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-5.md)|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-6.md)|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-7.md)|[@cloudusers](https://github.com/cloudusers)|正在进行|
-|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-8.md)|[@cloudusers](https://github.com/cloudusers)|正在进行|
+|├ [3.1](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-1.md)||未开始|
+|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-2.md)||未开始|
+|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-3.md)||未开始|
+|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-4.md)||未开始|
+|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-5.md)||未开始|
+|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-6.md)||未开始|
+|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-7.md)||未开始|
+|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-8.md)||未开始|
 |├ [3.9](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-9.md)|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
 |└ [3.10](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-10.md)|[@worldwar](https://github.com/worldwar)|已完成|
 | 4. [System calls](https://github.com/MintCN/linux-insides-zh/tree/master/SysCall)||正在进行|
 |├ [4.0](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[194d0c83](https://github.com/0xAX/linux-insides/commit/194d0c83e3273c6167830c29d9ba13ec57bfbcb6)|
 |├ [4.1](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-1.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.2](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-2.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
-|├ [4.3](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-3.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-|└ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-4.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
+|├ [4.3](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-3.md)||未开始|
+|└ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-4.md)||未开始|
 | 5. [Timers and time management](https://github.com/MintCN/linux-insides-zh/tree/master/Timers)||正在进行|
 |├ [5.0](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[2a742fd4](https://github.com/0xAX/linux-insides/commit/2a742fd485df0260efce2078e7162c0de668e98b)|
-|├ [5.1](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-1.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-|├ [5.2](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-2.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-|├ [5.3](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-3.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-|├ [5.4](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-4.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-|├ [5.5](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-5.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-|├ [5.6](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-6.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
-|└ [5.7](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-7.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
+|├ [5.1](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-1.md)||未开始|
+|├ [5.2](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-2.md)||未开始|
+|├ [5.3](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-3.md)||未开始|
+|├ [5.4](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-4.md)||未开始|
+|├ [5.5](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-5.md)||未开始|
+|├ [5.6](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-6.md)||未开始|
+|└ [5.7](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-7.md)||未开始|
 | 6. [Synchronization primitives](https://github.com/MintCN/linux-insides-zh/tree/master/SyncPrim)||正在进行|
 |├ [6.0](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[6f85b63e](https://github.com/0xAX/linux-insides/commit/6f85b63e347b636e08e965e9dc22c177e972afe2)|
 |├ [6.1](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-1.md)|[@keltoy](https://github.com/keltoy)|已完成|
 |├ [6.2](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-2.md)|[@keltoy](https://github.com/keltoy)|已完成|
 |├ [6.3](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-3.md)|[@huxq](https://github.com/huxq)|已完成|
-|├ [6.4](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-4.md)|[@huxq](https://github.com/huxq)|正在进行|
-|├ [6.5](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-5.md)|[@hdl](https://github.com/hdl)|正在进行|
-|└ [6.6](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-6.md)|[@e1001925](https://github.com/e1001925)|正在进行|
-| 7. [Memory management](https://github.com/MintCN/linux-insides-zh/tree/master/MM)||正在进行|
+|├ [6.4](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-4.md)||未开始|
+|├ [6.5](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-5.md)||未开始|
+|└ [6.6](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-6.md)||未开始|
+| 7. [Memory management](https://github.com/MintCN/linux-insides-zh/tree/master/MM)||未开始|
 |├ [7.0](https://github.com/MintCN/linux-insides-zh/blob/master/MM/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[f83c8ee2](https://github.com/0xAX/linux-insides/commit/f83c8ee29e2051a8f4c08d6a0fa8247d934e14d9)|
 |├ [7.1](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-1.md)|[@choleraehyq](https://github.com/choleraehyq)|已完成|
 |├ [7.2](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-2.md)|[@choleraehyq](https://github.com/choleraehyq)|已完成|
-|└ [7.3](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-3.md)|[@lifangwang](https://github.com/lifangwang)|正在进行|
+|└ [7.3](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-3.md)||未开始|
 | 8. SMP||上游未开始|
 | 9. [Concepts](https://github.com/MintCN/linux-insides-zh/tree/master/Concepts)||正在进行|
 |├ [9.0](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
@@ -86,15 +86,15 @@
 |├ [11.0](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[99ad0799](https://github.com/0xAX/linux-insides/commit/99ad07999636b76985218e02e5a52140050cbbde)|
 |├ [11.1](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/Paging.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
 |├ [11.2](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/ELF.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
-|└ [11.3](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/asm.md)|[@mudongliang](https://github.com/mudongliang)|正在进行|
+|└ [11.3](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/asm.md)||未开始|
 | 12. Initial ram disk||上游未开始|
-| 13. [Misc](https://github.com/MintCN/linux-insides-zh/tree/master/Misc)||正在进行|
+| 13. [Misc](https://github.com/MintCN/linux-insides-zh/tree/master/Misc)||已完成|
 |├ [13.0](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[ddf0793f](https://github.com/0xAX/linux-insides/commit/ddf0793f6b74b6c541c4979b4deaf093b2b87c9b)|
 |├ [13.1](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/how_linux_compile.md)|[@oska874](https://github.com/oska874)|已完成|
 |├ [13.2](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linkers.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
 |├ [13.3](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/contribute.md)|[@hao-lee](https://github.com/hao-lee)|更新至[3ed5214](https://github.com/0xAX/linux-insides/commit/3ed521464e99a8ff2f8d438592a605a716a268e2)|
 |└ [13.4](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/program_startup.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
-| 14. [KernelStructures](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures)||正在进行|
+| 14. [KernelStructures](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures)||已完成|
 |├ [14.0](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[3cb550c0](https://github.com/0xAX/linux-insides/commit/3cb550c089c8fc609f667290434e9e98e93fa279)|
 |└ [14.1](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/idt.md)|[@woodpenker](https://github.com/woodpenker)|更新至[4521637d](https://github.com/0xAX/linux-insides/commit/4521637d9cb76e5d4e4dc951758b264a68504927)|
 
@@ -128,5 +128,3 @@
 ## LICENSE
 
 Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
-
-
