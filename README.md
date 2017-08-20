@@ -111,6 +111,10 @@
 
 翻译前建议看 [TRANSLATION_NOTES.md](https://github.com/MintCN/linux-insides-zh/blob/master/TRANSLATION_NOTES.md) 。关于翻译约定，大家有任何问题或建议也请开 issue 讨论。
 
+## 翻译申请回收原则
+
+为了避免翻译申请过长时间没有任何更新，所以暂设置时间为三个月，如果三个月之内，issue 并没有任何更新，翻译申请就会被回收。
+
 ## 作者
 
 [@0xAX](https://twitter.com/0xAX)
