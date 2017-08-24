@@ -8,7 +8,7 @@ Introduction
 
 As you may understand from the title, this part will cover an interesting and important concept in the Linux kernel which is called - `initcall`. We already saw definitions like these:
 
-就像你从标题所理解的，这部分将涉及Linux内核中有趣且重要的概念，称之为 `initcall`。我们可以看到类似这样的定义：
+就像你从标题所理解的，这部分将涉及Linux内核中有趣且重要的概念，称之为 `initcall`。在Linux内核中，我们可以看到类似这样的定义：
 
 ```C
 early_param("debug", debug_kernel);
@@ -22,7 +22,7 @@ or
 arch_initcall(init_pit_clocksource);
 ```
 
-in some parts of the Linux kernel. Before we see how this mechanism is implemented in the Linux kernel, we must know actually what is it and how the Linux kernel uses it. Definitions like these represent a [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) function which will be called either during initialization of the Linux kernel or right after it. Actually the main point of the `initcall` mechanism is to determine correct order of the built-in modules and subsystems initialization. For example let's look at the following function:
+在我们分析这个机制在内核中是如何实现的之前，我们必须了解这个机制是什么，在Linux内核中是如何使用它的。像这样的定义表示一个 [回调函数](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) ，它们会在Linux内核启动中或启动后调用。实际上 `initcall` 机制的要点是确定内置模块和子系统初始化的正确顺序。举个例子，我们来看看下面的函数： Actually the main point of the `initcall` mechanism is to determine correct order of the built-in modules and subsystems initialization. For example let's look at the following function:
 
 ```C
 static int __init nmi_warning_debugfs(void)
