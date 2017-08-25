@@ -39,7 +39,7 @@ static int __init nmi_warning_debugfs(void)
 arch_initcall(arch_kdebugfs_init);
 ```
 
-The Linux kernel calls all architecture-specific `initcalls` before the `fs` related `initcalls`. So, our `nmi_longest_ns` file will be created only after the `arch_kdebugfs_dir` directory will be created. Actually, the Linux kernel provides eight levels of main `initcalls`:
+Linux内核在调用 `fs` 相关的 `initcalls` 之前调用所有特定架构的 `initcalls`。因此，只有在 `arch_kdebugfs_dir` 目录创建以后才会创建我们的 `nmi_longest_ns`。实际上，Linux内核提供了八个级别的主 `initcalls`：The Linux kernel calls all architecture-specific `initcalls` before the `fs` related `initcalls`. So, our `nmi_longest_ns` file will be created only after the `arch_kdebugfs_dir` directory will be created. Actually, the Linux kernel provides eight levels of main `initcalls`:
 
 * `early`;
 * `core`;
@@ -50,7 +50,7 @@ The Linux kernel calls all architecture-specific `initcalls` before the `fs` rel
 * `device`;
 * `late`.
 
-All of their names are represented by the `initcall_level_names` array which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+它们的所有的命名是由定义在源码文件 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中的数组 `initcall_level_names` 来描述的：All of their names are represented by the `initcall_level_names` array which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
 
 ```C
 static char *initcall_level_names[] __initdata = {
