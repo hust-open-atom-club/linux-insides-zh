@@ -50,7 +50,7 @@ Linux内核在调用 `fs` 相关的 `initcalls` 之前调用所有特定架构�
 * `device`;
 * `late`.
 
-它们的所有的命名是由定义在源码文件 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中的数组 `initcall_level_names` 来描述的：All of their names are represented by the `initcall_level_names` array which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+它们的所有名称是由数组 `initcall_level_names` 来描述的，该数组定义在源码文件 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中：All of their names are represented by the `initcall_level_names` array which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
 
 ```C
 static char *initcall_level_names[] __initdata = {
@@ -65,12 +65,12 @@ static char *initcall_level_names[] __initdata = {
 };
 ```
 
-All functions which are marked as `initcall` by these identifiers, will be called in the same order or at first `early initcalls` will be called, at second `core initcalls` and etc. From this moment we know a little about `initcall` mechanism, so we can start to dive into the source code of the Linux kernel to see how this mechanism is implemented.
+所有用这些（相同的）标识符标记为 `initcall` 的函数将会以相同的顺序被调用， `early initcalls` 会首先被调用，其次是 `core initcalls`，以此类推。现在，我们对 `initcall` 机制了解点了，所以我们可以开始潜入Linux内核源码，来看看这个机制是如何实现的。All functions which are marked as `initcall` by these identifiers, will be called in the same order or at first `early initcalls` will be called, at second `core initcalls` and etc. From this moment we know a little about `initcall` mechanism, so we can start to dive into the source code of the Linux kernel to see how this mechanism is implemented.
 
-Implementation initcall mechanism in the Linux kernel
+initcall机制在Linux内核中的实现Implementation initcall mechanism in the Linux kernel
 --------------------------------------------------------------------------------
 
-The Linux kernel provides a set of macros from the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file to mark a given function as `initcall`. All of these macros are pretty simple:
+Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 的宏，来标记给定的函数为 `initcall`。所有这些宏都相当简单：The Linux kernel provides a set of macros from the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file to mark a given function as `initcall`. All of these macros are pretty simple:
 
 ```C
 #define early_initcall(fn)		__define_initcall(fn, early)
@@ -83,7 +83,7 @@ The Linux kernel provides a set of macros from the [include/linux/init.h](https:
 #define late_initcall(fn)		__define_initcall(fn, 7)
 ```
 
-and as we may see these macros just expand to the call of the `__define_initcall` macro from the same header file. Moreover, the `__define_initcall` macro takes two arguments:
+我们可以看到这些宏只是从相同的头文件扩展为 `__define_initcall` 宏的调用。此外，`__define_initcall` 宏有两个参数：and as we may see these macros just expand to the call of the `__define_initcall` macro from the same header file. Moreover, the `__define_initcall` macro takes two arguments:
 
 * `fn` - callback function which will be called during call of `initcalls` of the certain level;
 * `id` - identifier to identify `initcall` to prevent error when two the same `initcalls` point to the same handler.
