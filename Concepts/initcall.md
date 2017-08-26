@@ -184,7 +184,7 @@ static void __init do_initcalls(void)
 }
 ```
 
-The `initcall_levels` array is defined in the same source code [file](https://github.com/torvalds/linux/blob/master/init/main.c) and contains pointers to the sections which were defined in the `__define_initcall` macro:
+`initcall_levels` 数组在同一个源码[文件](https://github.com/torvalds/linux/blob/master/init/main.c)中定义，包含了定义在 `__define_initcall` 宏中的那些段的指针：The `initcall_levels` array is defined in the same source code [file](https://github.com/torvalds/linux/blob/master/init/main.c) and contains pointers to the sections which were defined in the `__define_initcall` macro:
 
 ```C
 static initcall_t *initcall_levels[] __initdata = {
@@ -200,7 +200,7 @@ static initcall_t *initcall_levels[] __initdata = {
 };
 ```
 
-If you are interested, you can find these sections in the `arch/x86/kernel/vmlinux.lds` linker script which is generated after the Linux kernel compilation:
+如果你有兴趣，你可以在Linux内核编译后生成的链接器脚本 `arch/x86/kernel/vmlinux.lds` 中找到这些段：If you are interested, you can find these sections in the `arch/x86/kernel/vmlinux.lds` linker script which is generated after the Linux kernel compilation:
 
 ```
 .init.data : AT(ADDR(.init.data) - 0xffffffff80000000) {
@@ -219,9 +219,9 @@ If you are interested, you can find these sections in the `arch/x86/kernel/vmlin
 }
 ```
 
-If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html) of this book.
+如果你对这些不熟，可以在本书的某些[部分](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)了解更多关于[链接器](https://en.wikipedia.org/wiki/Linker_%28computing%29)的信息。If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html) of this book.
 
-As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does following two things: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
+正如我们刚看到的，`do_initcall_level` 函数有一个参数 - `initcall` 的级别，做了以下两件事：首先这个函数拷贝了 `initcall_command_line`，这是通常内核包含了各个模块参数的[命令行](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)的副本，并用 [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c)源码文件的 `parse_args` 函数解析它，然后调用各个级别的 `do_on_initcall` 函数：As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does following two things: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
 
 ```C
 for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
