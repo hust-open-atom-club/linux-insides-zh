@@ -8,6 +8,15 @@
 
 **问题/建议**: 通过在 twitter 上 [@0xAX](https://twitter.com/0xAX) ，直接添加 [issue](https://github.com/0xAX/linux-insides/issues/new) 或者直接给我发[邮件](mailto:anotherworldofworld@gmail.com),请自由地向我提出任何问题或者建议。
 
+## 贡献条目
+
+对于 linux-insides-zh 项目，您可以通过以下方法贡献自己的力量：
+
+- 英文翻译，目前只提供简体中文的译文；
+- 更新未被翻译的英文原本，其实就是将上游英文的更新纳入到当前项目中；
+- 更新已经翻译的中文译文，其实就是查看上游英文的更新，检查是否需要对中文译文进行更新；
+- 校对当前已经翻译过的中文疑问，包括修改 typo，润色等工作；
+
 ## 翻译进度
 
 | 章节|译者|翻译进度|
