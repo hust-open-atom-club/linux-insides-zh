@@ -228,7 +228,7 @@ for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
 		do_one_initcall(*fn);
 ```
 
-The `do_on_initcall` does  main job for us. As we may see, this function takes one parameter which represent `initcall` callback function and does the call of the given callback:
+`do_on_initcall` 为我们做了主要的工作。我们可以看到，这个函数有一个入参表示 `initcall` 回调函数，并调用给定的回调：The `do_on_initcall` does  main job for us. As we may see, this function takes one parameter which represent `initcall` callback function and does the call of the given callback:
 
 ```C
 int __init_or_module do_one_initcall(initcall_t fn)
@@ -261,7 +261,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 }
 ```
 
-Let's try to understand what does the `do_on_initcall` function does. First of all we increase [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) counter so that we can check it later to be sure that it is not imbalanced. After this step we can see the call of the `initcall_backlist` function which
+让我们来试着理解 `do_on_initcall` 函数做了什么。首先我们增加 [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 计数，以便我们稍后做下检查，以确保它不是不平衡的。这步以后，我们可以看到 `initcall_backlist` 函数的调用，这个函数遍历包含了 `initcalls` 黑名单的 `blacklisted_initcalls` 链表，如果 `initcall` 在黑名单里就释放它：Let's try to understand what does the `do_on_initcall` function does. First of all we increase [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) counter so that we can check it later to be sure that it is not imbalanced. After this step we can see the call of the `initcall_backlist` function which
 goes over the `blacklisted_initcalls` list which stores blacklisted `initcalls` and releases the given `initcall` if it is located in this list:
 
 ```C
@@ -274,9 +274,9 @@ list_for_each_entry(entry, &blacklisted_initcalls, next) {
 }
 ```
 
-The blacklisted `initcalls` stored in the `blacklisted_initcalls` list and this list is filled during early Linux kernel initialization from the Linux kernel command line.
+黑名单的 `initcalls` 保存在 `blacklisted_initcalls` 链表中，这个链表是在早期Linux内核初始化时由Linux内核命令行来填充的。The blacklisted `initcalls` stored in the `blacklisted_initcalls` list and this list is filled during early Linux kernel initialization from the Linux kernel command line.
 
-After the blacklisted `initcalls` will be handled, the next part of code does directly the call of the `initcall`:
+处理完黑名单 `initcalls`，接下来的代码直接调用 `initcall`：After the blacklisted `initcalls` will be handled, the next part of code does directly the call of the `initcall`:
 
 ```C
 if (initcall_debug)
@@ -285,13 +285,13 @@ else
 	ret = fn();
 ```
 
-Depends on the value of the `initcall_debug` variable, the `do_one_initcall_debug` function will call `initcall` or this function will do it directly via `fn()`. The `initcall_debug` variable is defined in the [same](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+取决于 `initcall_debug` 变量的值，`do_one_initcall_debug` 函数将调用 `initcall`，或直接调用`fn()`。`initcall_debug` 变量定义在[同一个源码文件](https://github.com/torvalds/linux/blob/master/init/main.c)：Depends on the value of the `initcall_debug` variable, the `do_one_initcall_debug` function will call `initcall` or this function will do it directly via `fn()`. The `initcall_debug` variable is defined in the [same](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
 
 ```C
 bool initcall_debug;
 ```
 
-and provides ability to print some information to the kernel [log buffer](https://en.wikipedia.org/wiki/Dmesg). The value of the variable can be set from the kernel commands via the `initcall_debug` parameter. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) of the Linux kernel command line:
+该变量提供了向内核[日志缓冲区](https://en.wikipedia.org/wiki/Dmesg)打印一些信息的能力。可以通过 `initcall_debug` 参数从内核命令行中设置这个变量的值。从Linux内核命令行[文档](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)可以看到：and provides ability to print some information to the kernel [log buffer](https://en.wikipedia.org/wiki/Dmesg). The value of the variable can be set from the kernel commands via the `initcall_debug` parameter. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) of the Linux kernel command line:
 
 ```
 initcall_debug	[KNL] Trace initcalls as they are executed.  Useful
