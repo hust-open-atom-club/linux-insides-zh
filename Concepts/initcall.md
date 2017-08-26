@@ -155,9 +155,9 @@ LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 #endif
 ```
 
-In order to prevent any problem when there is no reference to a variable in a module, it will be moved to the end of the program. That's all about the `__define_initcall` macro. So, all of the `*_initcall` macros will be expanded during compilation of the Linux kernel, and all `initcalls` will be placed in their sections and all of them will be available from the `.data` section and the Linux kernel will know where to find a certain `initcall` to call it during initialization process.
+为了防止没有引用模块中变量时出现问题，它被移到了程序末尾。这就是关于 `__define_initcall` 宏的全部了。所以，所有的 `*_initcall` 宏将会在Linux内核编译时扩展，所有的 `initcalls` 会放置在它们的段内，并可以通过 `.data` 段来获取，Linux内核在初始化过程中就知道在哪儿去找到 `initcall` 并调用它。In order to prevent any problem when there is no reference to a variable in a module, it will be moved to the end of the program. That's all about the `__define_initcall` macro. So, all of the `*_initcall` macros will be expanded during compilation of the Linux kernel, and all `initcalls` will be placed in their sections and all of them will be available from the `.data` section and the Linux kernel will know where to find a certain `initcall` to call it during initialization process.
 
-As `initcalls` can be called by the Linux kernel, let's look how the Linux kernel does this. This process starts in the `do_basic_setup` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+既然Linux内核可以调用 `initcalls`，我们就来看下Linux内核是如何做的。这个过程从[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 头文件的 `do_basic_setup` 函数开始：As `initcalls` can be called by the Linux kernel, let's look how the Linux kernel does this. This process starts in the `do_basic_setup` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
 
 ```C
 static void __init do_basic_setup(void)
@@ -172,7 +172,7 @@ static void __init do_basic_setup(void)
 }
 ```
 
-which is called during the initialization of the Linux kernel, right after main steps of initialization like memory manager related initialization, `CPU` subsystem and other already finished. The `do_initcalls` function just goes through the array of `initcall` levels and call the `do_initcall_level` function for each level:
+该函数在Linux内核初始化过程中调用，调用时机是主要步骤之后，比如内存管理器相关的初始化、`CPU` 子系统等都完成了。`do_initcalls` 函数只是遍历 `initcall` 级别数组，并调用每个级别的 `do_initcall_level` 函数：which is called during the initialization of the Linux kernel, right after main steps of initialization like memory manager related initialization, `CPU` subsystem and other already finished. The `do_initcalls` function just goes through the array of `initcall` levels and call the `do_initcall_level` function for each level:
 
 ```C
 static void __init do_initcalls(void)
