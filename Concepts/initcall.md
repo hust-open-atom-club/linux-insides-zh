@@ -85,10 +85,10 @@ Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.
 
 我们可以看到这些宏只是从相同的头文件扩展为 `__define_initcall` 宏的调用。此外，`__define_initcall` 宏有两个参数：and as we may see these macros just expand to the call of the `__define_initcall` macro from the same header file. Moreover, the `__define_initcall` macro takes two arguments:
 
-* `fn` - callback function which will be called during call of `initcalls` of the certain level;
-* `id` - identifier to identify `initcall` to prevent error when two the same `initcalls` point to the same handler.
+* `fn` - 在调用某个级别 `initcalls` 时调用的回调函数；callback function which will be called during call of `initcalls` of the certain level;
+* `id` - 识别 `initcall` 的标识符，用来防止两个相同的 `initcalls` 指向同一个处理函数时出现错误。identifier to identify `initcall` to prevent error when two the same `initcalls` point to the same handler.
 
-The implementation of the `__define_initcall` macro looks like:
+`__define_initcall` 宏的实现如下所示：The implementation of the `__define_initcall` macro looks like:
 
 ```C
 #define __define_initcall(fn, id) \
@@ -97,13 +97,13 @@ The implementation of the `__define_initcall` macro looks like:
 	LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 ```
 
-To understand the `__define_initcall` macro, first of all let's look at the `initcall_t` type. This type is defined in the same [header]() file and it represents pointer to a function which returns pointer to [integer](https://en.wikipedia.org/wiki/Integer) which will be result of the `initcall`:
+要了解 `__define_initcall` 宏，首先让我们来看下 `initcall_t` 类型。这个类型定义在同一个 [头文件]() 中，它表示一个返回 [整形](https://en.wikipedia.org/wiki/Integer)指针的函数指针，这将是 `initcall` 的结果。To understand the `__define_initcall` macro, first of all let's look at the `initcall_t` type. This type is defined in the same [header]() file and it represents pointer to a function which returns pointer to [integer](https://en.wikipedia.org/wiki/Integer) which will be result of the `initcall`:
 
 ```C
 typedef int (*initcall_t)(void);
 ```
 
-Now let's return to the `_-define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces definition of the given function which is located in the `.initcall id .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the following [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attributes: `__initcall_function_name_id` and `__used`. If we will look in the [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) header file which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
+现在让我们回到 `_-define_initcall` 宏。[##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 提供了连接两个符号的能力。在我们的例子中，`__define_initcall` 宏的第一行产生了 `.initcall id .init` [ELF部分](http://www.skyfree.org/linux/references/ELF_Format.pdf) 给定函数的定义，并标记以下[gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) 属性： `__initcall_function_name_id` and `__used`。如果我们查看表示内核链接脚本数据的 [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) 头文件，我们会看到所有的 `initcalls` 部分都将放在 `.data` 段。Now let's return to the `_-define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces definition of the given function which is located in the `.initcall id .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the following [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attributes: `__initcall_function_name_id` and `__used`. If we will look in the [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) header file which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
 
 ```C
 #define INIT_CALLS					\
@@ -129,19 +129,19 @@ Now let's return to the `_-define_initcall` macro. The [##](https://gcc.gnu.org/
 
 ```
 
-The second attribute - `__used` is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) header file and it expands to the definition of the following `gcc` attribute:
+第二个属性 - `__used`，定义在 [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) 头文件中，它扩展了以下 `gcc` 定义：The second attribute - `__used` is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) header file and it expands to the definition of the following `gcc` attribute:
 
 ```C
 #define __used   __attribute__((__used__))
 ```
 
-which prevents `variable defined but not used` warning. The last line of the `__define_initcall` macro is:
+它防止 `定义了变量但未使用` 的告警。宏 `__define_initcall` 最后一行是：which prevents `variable defined but not used` warning. The last line of the `__define_initcall` macro is:
 
 ```C
 LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 ```
 
-depends on the `CONFIG_LTO` kernel configuration option and just provides stub for the compiler [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization):
+这取决于 `CONFIG_LTO` 内核配置选项，只为编译器提供[链接时间优化](https://gcc.gnu.org/wiki/LinkTimeOptimization)存根：depends on the `CONFIG_LTO` kernel configuration option and just provides stub for the compiler [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization):
 
 ```
 #ifdef CONFIG_LTO
