@@ -43,13 +43,13 @@
 | 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/Interrupts)||正在进行|
 |├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ [3.1](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-1.md)||未开始|
-|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-2.md)||未开始|
-|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-3.md)||未开始|
-|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-4.md)||未开始|
-|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-5.md)||未开始|
-|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-6.md)||未开始|
-|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-7.md)||未开始|
-|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-8.md)||未开始|
+|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-2.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-3.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-4.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-5.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-6.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-7.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-8.md)|[@up2wing](https://github.com/up2wing)|正在进行|
 |├ [3.9](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-9.md)|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
 |└ [3.10](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-10.md)|[@worldwar](https://github.com/worldwar)|已完成|
 | 4. [System calls](https://github.com/MintCN/linux-insides-zh/tree/master/SysCall)||正在进行|
