@@ -353,13 +353,13 @@ if (irqs_disabled()) {
 rootfs_initcall(populate_rootfs);
 ```
 
-From this place, we may see familiar output:
+在这里，我们可以看到熟悉的输出：From this place, we may see familiar output:
 
 ```
 [    0.199960] Unpacking initramfs...
 ```
 
-Besides the `rootfs_initcall` level, there are additional `console_initcall`, `security_initcall` and other secondary `initcall` levels. The last thing that we have missed is the set of the `*_initcall_sync` levels. Almost each `*_initcall` macro that we have seen in this part, has macro companion with the `_sync` prefix:
+除了 `rootfs_initcall` 级别，还有其它的`console_initcall`、 `security_initcall` 和其他辅助的  `initcall` 级别。我们遗漏的最后一件事，是 `*_initcall_sync` 级别的集合。在这部分我们看到的几乎每个 `*_initcall` 宏，都有 `_sync` 前缀的宏伴随：Besides the `rootfs_initcall` level, there are additional `console_initcall`, `security_initcall` and other secondary `initcall` levels. The last thing that we have missed is the set of the `*_initcall_sync` levels. Almost each `*_initcall` macro that we have seen in this part, has macro companion with the `_sync` prefix:
 
 ```C
 #define core_initcall_sync(fn)		__define_initcall(fn, 1s)
@@ -371,20 +371,20 @@ Besides the `rootfs_initcall` level, there are additional `console_initcall`, `s
 #define late_initcall_sync(fn)		__define_initcall(fn, 7s)
 ```
 
-The main goal of these additional levels is to wait for completion of all a module related initialization routines for a certain level.
+这些附加级别的主要目的是，等待所有某个级别的与模块相关的初始化例程完成。The main goal of these additional levels is to wait for completion of all a module related initialization routines for a certain level.
 
-That's all.
+这就是全部了。That's all.
 
-Conclusion
+结论Conclusion
 --------------------------------------------------------------------------------
 
-In this part we saw the important mechanism of the Linux kernel which allows to call a function which depends on the current state of the Linux kernel during its initialization.
+在这部分中，我们看到了Linux内核的一项重要机制，即在初始化期间允许调用依赖于Linux内核当前状态的函数。In this part we saw the important mechanism of the Linux kernel which allows to call a function which depends on the current state of the Linux kernel during its initialization.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+如果你有问题或建议，可随时在twitter [0xAX](https://twitter.com/0xAX) 上联系我，给我发 [email](anotherworldofworld@gmail.com)，或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new)。If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**.
+**请注意英语不是我的母语，对此带来的不便，我很抱歉。如果你发现了任何错误，都可以给我发 PR 到[linux-insides](https://github.com/0xAX/linux-insides)。Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**.
 
-Links
+链接Links
 --------------------------------------------------------------------------------
 
 * [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29)
