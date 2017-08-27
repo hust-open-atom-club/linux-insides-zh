@@ -299,7 +299,7 @@ initcall_debug	[KNL] Trace initcalls as they are executed.  Useful
                       startup.
 ```
 
-And that's true. If we will look at the implementation of the `do_one_initcall_debug` function, we will see that it does the same as the `do_one_initcall` function or i.e. the `do_one_initcall_debug` function calls the given `initcall` and prints some information (like the [pid](https://en.wikipedia.org/wiki/Process_identifier) of the currently running task, duration of execution of the `initcall` and etc.) related to the execution of the given `initcall`:
+确实如此。如果我们看下 `do_one_initcall_debug` 函数的实现，我们会看到它与 `do_one_initcall` 函数做了一样的事，也就是说，`do_one_initcall_debug` 函数调用了给定的 `initcall`，并打印了一些和 `initcall` 相关的信息（比如当前任务的 [pid](https://en.wikipedia.org/wiki/Process_identifier)、`initcall` 的持续时间等）：And that's true. If we will look at the implementation of the `do_one_initcall_debug` function, we will see that it does the same as the `do_one_initcall` function or i.e. the `do_one_initcall_debug` function calls the given `initcall` and prints some information (like the [pid](https://en.wikipedia.org/wiki/Process_identifier) of the currently running task, duration of execution of the `initcall` and etc.) related to the execution of the given `initcall`:
 
 ```C
 static int __init_or_module do_one_initcall_debug(initcall_t fn)
@@ -321,7 +321,7 @@ static int __init_or_module do_one_initcall_debug(initcall_t fn)
 }
 ```
 
-As an `initcall` was called by the one of the ` do_one_initcall` or `do_one_initcall_debug` functions, we may see two checks in the end of the `do_one_initcall` function. The first one checks the amount of possible `__preempt_count_add` and `__preempt_count_sub` calls inside of the executed initcall, and if this value is not equal to the previous value of the preemptible counter, we add the `preemption imbalance` string to the message buffer and set correct value of the preemptible counter:
+由于 `initcall` 被 `do_one_initcall` 或 `do_one_initcall_debug` 调用，我们可以看到在 `do_one_initcall` 函数末尾做了两次检查。第一个检查在initcall执行内部 `__preempt_count_add` 和 `__preempt_count_sub` 可能的执行次数，如果这个值和之前的可抢占计数不相等，我们就把 `preemption imbalance` 字符串添加到消息缓冲区，并设置正确的可抢占计数：As an `initcall` was called by the one of the ` do_one_initcall` or `do_one_initcall_debug` functions, we may see two checks in the end of the `do_one_initcall` function. The first one checks the amount of possible `__preempt_count_add` and `__preempt_count_sub` calls inside of the executed initcall, and if this value is not equal to the previous value of the preemptible counter, we add the `preemption imbalance` string to the message buffer and set correct value of the preemptible counter:
 
 ```C
 if (preempt_count() != count) {
@@ -330,7 +330,7 @@ if (preempt_count() != count) {
 }
 ```
 
-Later this error string will be printed. The last check the state of local [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) and if they are disabled, we add the `disabled interrupts` strings to the our message buffer and enable `IRQs` for the current processor to prevent the state when `IRQs` were disabled by an `initcall` and didn't enable again:
+稍后这个错误字符串就会打印出来。最后检查本地 [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 的状态，如果它们被禁用了，我们就添加 `disabled interrupts` 字符串到我们的消息缓冲区，并为当前处理器使能 `IRQs`，以防出现 `IRQs` 被 `initcall` 禁用了但不再使能的情况出现：Later this error string will be printed. The last check the state of local [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) and if they are disabled, we add the `disabled interrupts` strings to the our message buffer and enable `IRQs` for the current processor to prevent the state when `IRQs` were disabled by an `initcall` and didn't enable again:
 
 ```C
 if (irqs_disabled()) {
@@ -339,7 +339,7 @@ if (irqs_disabled()) {
 }
 ```
 
-That's all. In this way the Linux kernel does initialization of many subsystems in a correct order. From now on, we know what is the `initcall` mechanism in the Linux kernel. In this part, we covered main general portion of the `initcall` mechanism but we left some important concepts. Let's make a short look at these concepts.
+这就是全部了。通过这种方式，Linux内核以正确的顺序完成了很多子系统的初始化。现在我们知道Linux内核的 `initcall` 机制是怎么回事了。在这部分中，我们介绍了 `initcall` 机制的主要部分，但遗留了一些重要的概念。让我们来简单看下这些概念。That's all. In this way the Linux kernel does initialization of many subsystems in a correct order. From now on, we know what is the `initcall` mechanism in the Linux kernel. In this part, we covered main general portion of the `initcall` mechanism but we left some important concepts. Let's make a short look at these concepts.
 
 First of all, we have missed one level of `initcalls`, this is `rootfs initcalls`. You can find definition of the `rootfs_initcall` in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file along with all similar macros which we saw in this part:
 
