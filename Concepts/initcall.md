@@ -341,13 +341,13 @@ if (irqs_disabled()) {
 
 这就是全部了。通过这种方式，Linux内核以正确的顺序完成了很多子系统的初始化。现在我们知道Linux内核的 `initcall` 机制是怎么回事了。在这部分中，我们介绍了 `initcall` 机制的主要部分，但遗留了一些重要的概念。让我们来简单看下这些概念。That's all. In this way the Linux kernel does initialization of many subsystems in a correct order. From now on, we know what is the `initcall` mechanism in the Linux kernel. In this part, we covered main general portion of the `initcall` mechanism but we left some important concepts. Let's make a short look at these concepts.
 
-First of all, we have missed one level of `initcalls`, this is `rootfs initcalls`. You can find definition of the `rootfs_initcall` in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file along with all similar macros which we saw in this part:
+首先，我们错过了一个级别的 `initcalls`，就是 `rootfs initcalls`。和我们在本部分看到的很多宏类似，你可以在 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 头文件中找到 `rootfs_initcall` 的定义：First of all, we have missed one level of `initcalls`, this is `rootfs initcalls`. You can find definition of the `rootfs_initcall` in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file along with all similar macros which we saw in this part:
 
 ```C
 #define rootfs_initcall(fn)		__define_initcall(fn, rootfs)
 ```
 
-As we may understand from the macro's name, its main purpose is to store callbacks which are related to the [rootfs](https://en.wikipedia.org/wiki/Initramfs). Besides this goal, it may be useful to initialize other stuffs after initialization related to filesystems level only if devices related stuff are not initialized. For example, the decompression of the [initramfs](https://en.wikipedia.org/wiki/Initramfs) which occurred in the `populate_rootfs` function from the [init/initramfs.c](https://github.com/torvalds/linux/blob/master/init/initramfs.c) source code file:
+从这个宏的名字我们可以理解到，它的主要目的是保存和 [rootfs](https://en.wikipedia.org/wiki/Initramfs) 相关的回调。除此之外，只有在与设备相关的东西没被初始化时，在文件系统级别初始化以后再初始化一些其它东西时才有用。例如，发生在源码文件 [init/initramfs.c](https://github.com/torvalds/linux/blob/master/init/initramfs.c) 中 `populate_rootfs` 函数里的解压  [initramfs](https://en.wikipedia.org/wiki/Initramfs)：As we may understand from the macro's name, its main purpose is to store callbacks which are related to the [rootfs](https://en.wikipedia.org/wiki/Initramfs). Besides this goal, it may be useful to initialize other stuffs after initialization related to filesystems level only if devices related stuff are not initialized. For example, the decompression of the [initramfs](https://en.wikipedia.org/wiki/Initramfs) which occurred in the `populate_rootfs` function from the [init/initramfs.c](https://github.com/torvalds/linux/blob/master/init/initramfs.c) source code file:
 
 ```C
 rootfs_initcall(populate_rootfs);
