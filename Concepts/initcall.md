@@ -5,7 +5,7 @@ initcall 机制
 --------------------------------------------------------------------------------
 
 
-就像你从标题所理解的，这部分将涉及Linux内核中有趣且重要的概念，称之为 `initcall`。在Linux内核中，我们可以看到类似这样的定义：
+就像你从标题所理解的，这部分将涉及 Linux 内核中有趣且重要的概念，称之为 `initcall`。在 Linux 内核中，我们可以看到类似这样的定义：
 
 ```C
 early_param("debug", debug_kernel);
@@ -17,7 +17,7 @@ early_param("debug", debug_kernel);
 arch_initcall(init_pit_clocksource);
 ```
 
-在我们分析这个机制在内核中是如何实现的之前，我们必须了解这个机制是什么，在Linux内核中是如何使用它的。像这样的定义表示一个 [回调函数](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) ，它们会在Linux内核启动中或启动后调用。实际上 `initcall` 机制的要点是确定内置模块和子系统初始化的正确顺序。举个例子，我们来看看下面的函数：
+在我们分析这个机制在内核中是如何实现的之前，我们必须了解这个机制是什么，在 Linux 内核中是如何使用它的。像这样的定义表示一个 [回调函数](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) ，它们会在 Linux 内核启动中或启动后调用。实际上 `initcall` 机制的要点是确定内置模块和子系统初始化的正确顺序。举个例子，我们来看看下面的函数：
 
 ```C
 static int __init nmi_warning_debugfs(void)
@@ -28,13 +28,13 @@ static int __init nmi_warning_debugfs(void)
 }
 ```
 
-这个函数出自源码文件 [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c)。我们可以看到，这个函数只是在 `arch_debugfs_dir` 目录中创建 `nmi_longest_ns` [debugfs](https://en.wikipedia.org/wiki/Debugfs) 文件。实际上，只有在 `arch_debugfs_dir` 创建后，才会创建这个 `debugfs` 文件。这个目录是在Linux内核特定架构的初始化期间创建的。实际上，该目录将在源码文件 [arch/x86/kernel/kdebugfs.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/kdebugfs.c) 的 `arch_kdebugfs_init` 函数中创建。注意 `arch_kdebugfs_init` 函数也被标记为 `initcall`。
+这个函数出自源码文件 [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c)。我们可以看到，这个函数只是在 `arch_debugfs_dir` 目录中创建 `nmi_longest_ns` [debugfs](https://en.wikipedia.org/wiki/Debugfs) 文件。实际上，只有在 `arch_debugfs_dir` 创建后，才会创建这个 `debugfs` 文件。这个目录是在 Linux 内核特定架构的初始化期间创建的。实际上，该目录将在源码文件 [arch/x86/kernel/kdebugfs.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/kdebugfs.c) 的 `arch_kdebugfs_init` 函数中创建。注意 `arch_kdebugfs_init` 函数也被标记为 `initcall`。
 
 ```C
 arch_initcall(arch_kdebugfs_init);
 ```
 
-Linux内核在调用 `fs` 相关的 `initcalls` 之前调用所有特定架构的 `initcalls`。因此，只有在 `arch_kdebugfs_dir` 目录创建以后才会创建我们的 `nmi_longest_ns`。实际上，Linux内核提供了八个级别的主 `initcalls`：
+Linux 内核在调用 `fs` 相关的 `initcalls` 之前调用所有特定架构的 `initcalls`。因此，只有在 `arch_kdebugfs_dir` 目录创建以后才会创建我们的 `nmi_longest_ns`。实际上，Linux 内核提供了八个级别的主 `initcalls`：
 
 * `early`;
 * `core`;
@@ -60,12 +60,12 @@ static char *initcall_level_names[] __initdata = {
 };
 ```
 
-所有用这些（相同的）标识符标记为 `initcall` 的函数将会以相同的顺序被调用， `early initcalls` 会首先被调用，其次是 `core initcalls`，以此类推。现在，我们对 `initcall` 机制了解点了，所以我们可以开始潜入Linux内核源码，来看看这个机制是如何实现的。
+所有用这些（相同的）标识符标记为 `initcall` 的函数将会以相同的顺序被调用， `early initcalls` 会首先被调用，其次是 `core initcalls`，以此类推。现在，我们对 `initcall` 机制了解点了，所以我们可以开始潜入 Linux 内核源码，来看看这个机制是如何实现的。
 
-initcall机制在Linux内核中的实现
+initcall 机制在 Linux 内核中的实现
 --------------------------------------------------------------------------------
 
-Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 的宏，来标记给定的函数为 `initcall`。所有这些宏都相当简单：
+Linux 内核提供了一组来自头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 的宏，来标记给定的函数为 `initcall`。所有这些宏都相当简单：
 
 ```C
 #define early_initcall(fn)		__define_initcall(fn, early)
@@ -98,7 +98,7 @@ Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.
 typedef int (*initcall_t)(void);
 ```
 
-现在让我们回到 `_-define_initcall` 宏。[##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 提供了连接两个符号的能力。在我们的例子中，`__define_initcall` 宏的第一行产生了 `.initcall id .init` [ELF部分](http://www.skyfree.org/linux/references/ELF_Format.pdf) 给定函数的定义，并标记以下[gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) 属性： `__initcall_function_name_id` and `__used`。如果我们查看表示内核链接脚本数据的 [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) 头文件，我们会看到所有的 `initcalls` 部分都将放在 `.data` 段：
+现在让我们回到 `_-define_initcall` 宏。[##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 提供了连接两个符号的能力。在我们的例子中，`__define_initcall` 宏的第一行产生了 `.initcall id .init` [ELF 部分](http://www.skyfree.org/linux/references/ELF_Format.pdf) 给定函数的定义，并标记以下 [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) 属性： `__initcall_function_name_id` 和 `__used`。如果我们查看表示内核链接脚本数据的 [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) 头文件，我们会看到所有的 `initcalls` 部分都将放在 `.data` 段：
 
 ```C
 #define INIT_CALLS					\
@@ -150,9 +150,9 @@ LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 #endif
 ```
 
-为了防止没有引用模块中变量时出现问题，它被移到了程序末尾。这就是关于 `__define_initcall` 宏的全部了。所以，所有的 `*_initcall` 宏将会在Linux内核编译时扩展，所有的 `initcalls` 会放置在它们的段内，并可以通过 `.data` 段来获取，Linux内核在初始化过程中就知道在哪儿去找到 `initcall` 并调用它。
+为了防止没有引用模块中变量时出现问题，它被移到了程序末尾。这就是关于 `__define_initcall` 宏的全部了。所以，所有的 `*_initcall` 宏将会在Linux内核编译时扩展，所有的 `initcalls` 会放置在它们的段内，并可以通过 `.data` 段来获取，Linux 内核在初始化过程中就知道在哪儿去找到 `initcall` 并调用它。
 
-既然Linux内核可以调用 `initcalls`，我们就来看下Linux内核是如何做的。这个过程从[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 头文件的 `do_basic_setup` 函数开始：
+既然 Linux 内核可以调用 `initcalls`，我们就来看下 Linux 内核是如何做的。这个过程从 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 头文件的 `do_basic_setup` 函数开始：
 
 ```C
 static void __init do_basic_setup(void)
@@ -167,7 +167,7 @@ static void __init do_basic_setup(void)
 }
 ```
 
-该函数在Linux内核初始化过程中调用，调用时机是主要步骤之后，比如内存管理器相关的初始化、`CPU` 子系统等都完成了。`do_initcalls` 函数只是遍历 `initcall` 级别数组，并调用每个级别的 `do_initcall_level` 函数：
+该函数在 Linux 内核初始化过程中调用，调用时机是主要步骤之后，比如内存管理器相关的初始化、`CPU` 子系统等都完成了。`do_initcalls` 函数只是遍历 `initcall` 级别数组，并调用每个级别的 `do_initcall_level` 函数：
 
 ```C
 static void __init do_initcalls(void)
@@ -195,7 +195,7 @@ static initcall_t *initcall_levels[] __initdata = {
 };
 ```
 
-如果你有兴趣，你可以在Linux内核编译后生成的链接器脚本 `arch/x86/kernel/vmlinux.lds` 中找到这些段：
+如果你有兴趣，你可以在 Linux 内核编译后生成的链接器脚本 `arch/x86/kernel/vmlinux.lds` 中找到这些段：
 
 ```
 .init.data : AT(ADDR(.init.data) - 0xffffffff80000000) {
@@ -268,7 +268,7 @@ list_for_each_entry(entry, &blacklisted_initcalls, next) {
 }
 ```
 
-黑名单的 `initcalls` 保存在 `blacklisted_initcalls` 链表中，这个链表是在早期Linux内核初始化时由Linux内核命令行来填充的。
+黑名单的 `initcalls` 保存在 `blacklisted_initcalls` 链表中，这个链表是在早期 Linux 内核初始化时由 Linux 内核命令行来填充的。
 
 处理完黑名单 `initcalls`，接下来的代码直接调用 `initcall`：
 
@@ -279,7 +279,7 @@ else
 	ret = fn();
 ```
 
-取决于 `initcall_debug` 变量的值，`do_one_initcall_debug` 函数将调用 `initcall`，或直接调用`fn()`。`initcall_debug` 变量定义在[同一个源码文件](https://github.com/torvalds/linux/blob/master/init/main.c)：
+取决于 `initcall_debug` 变量的值，`do_one_initcall_debug` 函数将调用 `initcall`，或直接调用 `fn()`。`initcall_debug` 变量定义在[同一个源码文件](https://github.com/torvalds/linux/blob/master/init/main.c)：
 
 ```C
 bool initcall_debug;
@@ -333,7 +333,7 @@ if (irqs_disabled()) {
 }
 ```
 
-这就是全部了。通过这种方式，Linux内核以正确的顺序完成了很多子系统的初始化。现在我们知道Linux内核的 `initcall` 机制是怎么回事了。在这部分中，我们介绍了 `initcall` 机制的主要部分，但遗留了一些重要的概念。让我们来简单看下这些概念。
+这就是全部了。通过这种方式，Linux 内核以正确的顺序完成了很多子系统的初始化。现在我们知道 Linux 内核的 `initcall` 机制是怎么回事了。在这部分中，我们介绍了 `initcall` 机制的主要部分，但遗留了一些重要的概念。让我们来简单看下这些概念。
 
 首先，我们错过了一个级别的 `initcalls`，就是 `rootfs initcalls`。和我们在本部分看到的很多宏类似，你可以在 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 头文件中找到 `rootfs_initcall` 的定义：
 
@@ -353,7 +353,7 @@ rootfs_initcall(populate_rootfs);
 [    0.199960] Unpacking initramfs...
 ```
 
-除了 `rootfs_initcall` 级别，还有其它的`console_initcall`、 `security_initcall` 和其他辅助的  `initcall` 级别。我们遗漏的最后一件事，是 `*_initcall_sync` 级别的集合。在这部分我们看到的几乎每个 `*_initcall` 宏，都有 `_sync` 前缀的宏伴随：
+除了 `rootfs_initcall` 级别，还有其它的 `console_initcall`、 `security_initcall` 和其他辅助的  `initcall` 级别。我们遗漏的最后一件事，是 `*_initcall_sync` 级别的集合。在这部分我们看到的几乎每个 `*_initcall` 宏，都有 `_sync` 前缀的宏伴随：
 
 ```C
 #define core_initcall_sync(fn)		__define_initcall(fn, 1s)
@@ -372,9 +372,9 @@ rootfs_initcall(populate_rootfs);
 结论
 --------------------------------------------------------------------------------
 
-在这部分中，我们看到了Linux内核的一项重要机制，即在初始化期间允许调用依赖于Linux内核当前状态的函数。
+在这部分中，我们看到了 Linux 内核的一项重要机制，即在初始化期间允许调用依赖于 Linux 内核当前状态的函数。
 
-如果你有问题或建议，可随时在twitter [0xAX](https://twitter.com/0xAX) 上联系我，给我发 [email](anotherworldofworld@gmail.com)，或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new)。
+如果你有问题或建议，可随时在 twitter [0xAX](https://twitter.com/0xAX) 上联系我，给我发 [email](anotherworldofworld@gmail.com)，或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new)。
 
 **请注意英语不是我的母语，对此带来的不便，我很抱歉。如果你发现了任何错误，都可以给我发 PR 到[linux-insides](https://github.com/0xAX/linux-insides)。**.
 
