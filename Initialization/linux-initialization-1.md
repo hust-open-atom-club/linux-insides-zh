@@ -1,23 +1,26 @@
-Kernel initialization. Part 1.
+内核初始化 第一部分
 ================================================================================
 
-First steps in the kernel code
+踏入内核代码的第一步（TODO: Need proofreading）
 --------------------------------------------------------------------------------
 
-The previous [post](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html) was a last part of the Linux kernel [booting process](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html) chapter and now we are starting to dive into initialization process of the Linux kernel. After the image of the Linux kernel is decompressed and placed in a correct place in memory, it starts to work. All previous parts describe the work of the Linux kernel setup code which does preparation before the first bytes of the Linux kernel code will be executed. From now we are in the kernel and all parts of this chapter will be devoted to the initialization process of the kernel before it will launch process with [pid](https://en.wikipedia.org/wiki/Process_identifier) `1`. There are many things to do before the kernel will start first `init` process. Hope we will see all of the preparations before kernel will start in this big chapter. We will start from the kernel entry point, which is located in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) and and will move further and further. We will see first preparations like early page tables initialization, switch to a new descriptor in kernel space and many many more, before we will see the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489) will be called.
+[上一章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)是[引导过程](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)的最后一部分。从现在开始，我们将深入探究 Linux 内核的初始化过程。在解压缩完 Linux 内核镜像、并把它妥善地放入内存后，内核就开始工作了。我们在第一章中介绍了 Linux 内核引导程序，它的任务就是为执行内核代码做准备。而在本章中，我们将探究内核代码，看一看内核的初始化过程——即在启动 [PID](https://en.wikipedia.org/wiki/Process_identifier) 为 `1` 的 `init` 进程前，内核所做的大量工作。
 
-In the last [part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html) of the previous [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html) we stopped at the [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) instruction from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) assembly source code file:
+本章的内容很多，介绍了在内核启动前的所有准备工作。[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) 文件中定义了内核入口点，我们会从这里开始，逐步地深入下去。在 `start_kernel` 函数（定义在 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489)） 执行之前，我们会看到很多的初期的初始化过程，例如初期页表初始化、切换到一个新的内核空间描述符等等。
+
+在[上一章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)的[最后一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)中，我们跟踪到了 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 文件中的 [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 指令：
 
 ```assembly
 jmp	*%rax
 ```
 
-At this moment the `rax` register contains address of the Linux kernel entry point which that was obtained as a result of the call of the `decompress_kernel` function from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file. So, our last instruction in the kernel setup code is a jump on the kernel entry point. We already know where is defined the entry point of the linux kernel, so we are able to start to learn what does the Linux kernel does after the start.
+此时 `rax` 寄存器中保存的就是 Linux 内核入口点，通过调用 `decompress_kernel` （[arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c)） 函数后获得。由此可见，内核引导程序的最后一行代码是一句指向内核入口点的跳转指令。既然已经知道了内核入口点定义在哪，我们就可以继续探究 Linux 内核在引导结束后做了些什么。
 
-First steps in the kernel
+
+内核执行的第一步
 --------------------------------------------------------------------------------
 
-Okay, we got the address of the decompressed kernel image from the `decompress_kernel` function into `rax` register and just jumped there. As we already know the entry point of the decompressed kernel image starts in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) assembly source code file and at the beginning of it, we can see following definitions:
+OK，在调用了 `decompress_kernel` 函数后，`rax` 寄存器中保存了解压缩后的内核镜像的地址，并且跳转了过去。解压缩后的内核镜像的入口点定义在 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S)，这个文件的开头几行如下：
 
 ```assembly
 	__HEAD
@@ -29,13 +32,13 @@ startup_64:
 	...
 ```
 
-We can see definition of the `startup_64` routine that is defined in the `__HEAD` section, which is just a macro which expands to the definition of executable `.head.text` section:
+我们可以看到 `startup_64` 过程定义在了 `__HEAD` 区段下。 `__HEAD` 只是一个宏，它将展开为可执行的 `.head.text` 区段：
 
 ```C
 #define __HEAD		.section	".head.text","ax"
 ```
 
-We can see definition of this section in the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S#L93) linker script:
+我们可以在 [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S#L93) 链接器脚本文件中看到这个区段的定义：
 
 ```
 .text : AT(ADDR(.text) - LOAD_OFFSET) {
@@ -46,48 +49,48 @@ We can see definition of this section in the [arch/x86/kernel/vmlinux.lds.S](htt
 } :text = 0x9090
 ```
 
-Besides the definition of the `.text` section, we can understand default virtual and physical addresses from the linker script. Note that address of the `_text` is location counter which is defined as:
+除了对 `.text` 区段的定义，我们还能从这个脚本文件中得知内核的默认物理地址与虚拟地址。`_text` 是一个地址计数器，对于 [x86_64](https://en.wikipedia.org/wiki/X86-64) 来说，它定义为：
 
 ```
 . = __START_KERNEL;
 ```
 
-for the [x86_64](https://en.wikipedia.org/wiki/X86-64). The definition of the `__START_KERNEL` macro is located in the [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_types.h) header file and represented by the sum of the base virtual address of the kernel mapping and physical start:
+`__START_KERNEL` 宏的定义在 [arch/x86/include/asm/page_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_types.h) 头文件中，它由内核映射的虚拟基址与基物理起始点相加得到：
 
 ```C
-#define __START_KERNEL	(__START_KERNEL_map + __PHYSICAL_START)
+#define _START_KERNEL	(__START_KERNEL_map + __PHYSICAL_START)
 
 #define __PHYSICAL_START  ALIGN(CONFIG_PHYSICAL_START, CONFIG_PHYSICAL_ALIGN)
 ```
 
-Or in other words:
+换句话说：
 
-* Base physical address of the Linux kernel - `0x1000000`;
-* Base virtual address of the Linux kernel - `0xffffffff81000000`.
+* Linux 内核的物理基址 - `0x1000000`;
+* Linux 内核的虚拟基址 - `0xffffffff81000000`.
 
-Now we know default physical and virtual addresses of the `startup_64` routine, but to know actual addresses we must to calculate it with the following code:
+现在我们知道了 `startup_64` 过程的默认物理地址与虚拟地址，但是真正的地址必须要通过下面的代码计算得到：
 
 ```assembly
 	leaq	_text(%rip), %rbp
 	subq	$_text - __START_KERNEL_map, %rbp
 ```
 
-Yes, it defined as `0x1000000`, but it may be different, for example if [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) is enabled. So our current goal is to calculate delta between `0x1000000` and where we actually loaded. Here we just put the `rip-relative` address to the `rbp` register and then subtract `$_text - __START_KERNEL_map` from it. We know that compiled virtual address of the `_text` is `0xffffffff81000000` and the physical address of it is `0x1000000`. The `__START_KERNEL_map` macro expands to the `0xffffffff80000000` address, so at the second line of the assembly code, we will get following expression:
+没错，虽然定义为 `0x1000000`，但是仍然有可能变化，例如启用 [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) 的时候。所以我们当前的目标是计算 `0x1000000` 与实际加载地址的差。这里我们首先将RIP相对地址（`rip-relative`）放入 `rbp` 寄存器，并且从中减去 `$_text - __START_KERNEL_map` 。我们已经知道， `_text` 在编译后的默认虚拟地址为 `0xffffffff81000000`， 物理地址为 `0x1000000`。`__START_KERNEL_map` 宏将展开为 `0xffffffff80000000`，因此对于对于第二行汇编代码，我们将得到如下的表达式：
 
 ```
 rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 ```
 
-So, after the calculation,  the `rbp` will contain `0` which represents difference between addresses where we actually loaded and where the code was compiled. In our case `zero` means that the Linux kernel was loaded by default address and the [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) was disabled.
+在计算过后，`rbp` 的值将为 `0`，代表了实际加载地址与编译后的默认地址之间的差值。在我们这个例子中，`0` 代表了 Linux 内核被加载到了默认地址，并且没有启用 [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization#Linux) 。
 
-After we got the address of the `startup_64`, we need to do a check that this address is correctly aligned. We will do it with the following code:
+在得到了 `startup_64` 的地址后，我们需要检查这个地址是否已经正确对齐。下面的代码将进行这项工作：
 
 ```assembly
 	testl	$~PMD_PAGE_MASK, %ebp
 	jnz	bad_address
 ```
 
-Here we just compare low part of the `rbp` register with the complemented value of the `PMD_PAGE_MASK`. The `PMD_PAGE_MASK` indicates the mask for `Page middle directory` (read [paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html) about it) and defined as:
+在这里我们将 `rbp` 寄存器的低32位与 `PMD_PAGE_MASK` 进行比较。`PMD_PAGE_MASK` 代表中层页目录（`Page middle directory`）屏蔽位（相关信息请阅读 [paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html) 一节），它的定义如下：
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
@@ -96,9 +99,9 @@ Here we just compare low part of the `rbp` register with the complemented value 
 #define PMD_SHIFT       21
 ```
 
-As we can easily calculate, `PMD_PAGE_SIZE` is `2` megabytes. Here we use standard formula for checking alignment and if `text` address is not aligned for `2` megabytes, we jump to `bad_address` label.
+可以很容易得出 `PMD_PAGE_SIZE` 为 `2MB` 。在这里我们使用标准公式来检查对齐问题，如果 `text` 的地址没有对齐到 `2MB`，则跳转到 `bad_address`。
 
-After this we check address that it is not too large by the checking of highest `18` bits:
+在此之后，我们通过检查高 `18` 位来防止这个地址过大：
 
 ```assembly
 	leaq	_text(%rip), %rax
@@ -106,18 +109,19 @@ After this we check address that it is not too large by the checking of highest 
 	jnz	bad_address
 ```
 
-The address must not be greater than `46`-bits:
+这个地址必须不超过 `46` 个比特，即小于2的46次方：
 
 ```C
 #define MAX_PHYSMEM_BITS       46
 ```
 
-Okay, we did some early checks and now we can move on.
+OK，至此我们完成了一些初步的检查，可以继续进行后续的工作了。
 
-Fix base addresses of page tables
+
+修正页表基地址
 --------------------------------------------------------------------------------
 
-The first step before we start to setup identity paging is to fixup following addresses:
+在开始设置 Identity 分页之前，我们需要首先修正下面的地址：
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -126,7 +130,7 @@ The first step before we start to setup identity paging is to fixup following ad
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-All of `early_level4_pgt`, `level3_kernel_pgt` and other address may be wrong if the `startup_64` is not equal to default `0x1000000` address. The `rbp` register contains the delta address so we add to the certain entries of the `early_level4_pgt`, the `level3_kernel_pgt` and the `level2_fixmap_pgt`. Let's try to understand what these labels mean. First of all let's look at their definition:
+如果 `startup_64` 的值不为默认的 `0x1000000` 的话， 则包括 `early_level4_pgt`、`level3_kernel_pgt` 在内的很多地址都会不正确。`rbp`寄存器中包含的是相对地址，因此我们把它与 `early_level4_pgt`、`level3_kernel_pgt` 以及  `level2_fixmap_pgt` 中特定的项相加。首先我们来看一下它们的定义：
 
 ```assembly
 NEXT_PAGE(early_level4_pgt)
@@ -151,25 +155,25 @@ NEXT_PAGE(level1_fixmap_pgt)
 	.fill	512,8,0
 ```
 
-Looks hard, but it isn't. First of all let's look at the `early_level4_pgt`. It starts with the (4096 - 8) bytes of zeros, it means that we don't use the first `511` entries. And after this we can see one `level3_kernel_pgt` entry. Note that we subtract `__START_KERNEL_map + _PAGE_TABLE` from it. As we know `__START_KERNEL_map` is a base virtual address of the kernel text, so if we subtract `__START_KERNEL_map`, we will get physical address of the `level3_kernel_pgt`. Now let's look at `_PAGE_TABLE`, it is just page entry access rights:
+看起来很难理解，实则不然。首先我们来看一下 `early_level4_pgt`。它的前 (4096 - 8) 个字节全为 `0`，即它的前 `511` 个项均不使用，之后的一项是 `level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE`。我们知道 `__START_KERNEL_map` 是内核的虚拟基地址，因此减去 `__START_KERNEL_map` 后就得到了 `level3_kernel_pgt` 的物理地址。现在我们来看一下 `_PAGE_TABLE`，它是页表项的访问权限：
 
 ```C
 #define _PAGE_TABLE     (_PAGE_PRESENT | _PAGE_RW | _PAGE_USER | \
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-You can read more about it in the [paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html) part.
+更多信息请阅读 [分页](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html) 部分.
 
-The `level3_kernel_pgt` - stores two entries which map kernel space. At the start of it's definition, we can see that it is filled with zeros `L3_START_KERNEL` or `510` times. Here the `L3_START_KERNEL` is the index in the page upper directory which contains `__START_KERNEL_map` address and it equals `510`. After this, we can see the definition of the two `level3_kernel_pgt` entries: `level2_kernel_pgt` and `level2_fixmap_pgt`. First is simple, it is page table entry which contains pointer to the page middle directory which maps kernel space and it has:
+`level3_kernel_pgt` 中保存的两项用来映射内核空间，在它的前 `510`（即 `L3_START_KERNEL`）项均为 `0`。这里的 `L3_START_KERNEL` 保存的是在上层页目录（Page Upper Directory）中包含`__START_KERNEL_map` 地址的那一条索引，它等于 `510`。后面一项 `level2_kernel_pgt - __START_KERNEL_map + _KERNPG_TABLE` 中的 `level2_kernel_pgt` 比较容易理解，它是一条页表项，包含了指向中层页目录的指针，它用来映射内核空间，并且具有如下的访问权限：
 
 ```C
 #define _KERNPG_TABLE   (_PAGE_PRESENT | _PAGE_RW | _PAGE_ACCESSED | \
                          _PAGE_DIRTY)
 ```
 
-access rights. The second - `level2_fixmap_pgt` is a virtual addresses which can refer to any physical addresses even under kernel space. They represented by the one `level2_fixmap_pgt` entry and `10` megabytes hole for the [vsyscalls](https://lwn.net/Articles/446528/) mapping. The next `level2_kernel_pgt` calls the `PDMS` macro which creates `512` megabytes from the `__START_KERNEL_map` for kernel `.text` (after these `512` megabytes will be modules memory space).
+`level2_fixmap_pgt` 是一系列虚拟地址，它们可以在内核空间中指向任意的物理地址。它们由`level2_fixmap_pgt`作为入口点、`10`MB 大小的空间用来为 [vsyscalls](https://lwn.net/Articles/446528/) 做映射。`level2_kernel_pgt` 则调用了`PDMS` 宏，在 `__START_KERNEL_map` 地址处为内核的 `.text` 创建了 `512`MB 大小的空间（这 `512` MB空间的后面是模块内存空间）。
 
-Now, after we saw definitions of these symbols, let's get back to the code which is described at the beginning of the section. Remember that the `rbp` register contains delta between the address of the `startup_64` symbol which was got during kernel [linking](https://en.wikipedia.org/wiki/Linker_%28computing%29) and the actual address. So, for this moment, we just need to add add this delta to the base address of some page table entries, that they'll have correct addresses. In our case these entries are:
+现在，在看过了这些符号的定义之后，让我们回到本节开始时介绍的那几行代码。`rbp` 寄存器包含了实际地址与 `startup_64` 地址之差，其中 `startup_64` 的地址是在内核[链接](https://en.wikipedia.org/wiki/Linker_%28computing%29)时获得的。因此我们只需要把它与各个页表项的基地址相加，就能够得到正确的地址了。在这里这些操作如下：
 
 ```assembly
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
@@ -178,9 +182,9 @@ Now, after we saw definitions of these symbols, let's get back to the code which
 	addq	%rbp, level2_fixmap_pgt + (506*8)(%rip)
 ```
 
-or the last entry of the `early_level4_pgt` which is the `level3_kernel_pgt`, last two entries of the `level3_kernel_pgt` which are the `level2_kernel_pgt` and the `level2_fixmap_pgt` and five hundreds seventh entry of the `level2_fixmap_pgt` which is `level1_fixmap_pgt` page directory.
+换句话说，`early_level4_pgt` 的最后一项就是 `level3_kernel_pgt`，`level3_kernel_pgt` 的最后两项分别是 `level2_kernel_pgt` 和 `level2_fixmap_pgt`， `level2_fixmap_pgt` 的第507项就是 `level1_fixmap_pgt` 页目录。
 
-After all of this we will have:
+在这之后我们就得到了：
 
 ```
 early_level4_pgt[511] -> level3_kernel_pgt[0]
@@ -190,19 +194,19 @@ level2_kernel_pgt[0]   -> 512 MB kernel mapping
 level2_fixmap_pgt[507] -> level1_fixmap_pgt
 ```
 
-Note that we didn't fixup base address of the `early_level4_pgt` and some of other page table directories, because we will see this during of building/filling of structures for these page tables. As we corrected base addresses of the page tables, we can start to build it.
+需要注意的是，我们并不修正 `early_level4_pgt` 以及其他页目录的基地址，我们会在构造、填充这些页目录结构的时候修正。我们修正了页表基地址后，就可以开始构造这些页目录了。
 
-Identity mapping setup
+Identity Map Paging
 --------------------------------------------------------------------------------
 
-Now we can see the set up of identity mapping of early page tables. In Identity Mapped Paging, virtual addresses are mapped to physical addresses that have the same value, `1 : 1`. Let's look at it in detail. First of all we get the `rip-relative` address of the `_text` and `_early_level4_pgt` and put they into `rdi` and `rbx` registers:
+现在我们可以进入到对初期页表进行 Identity 映射的初始化过程了。在 Identity 映射分页中，虚拟地址会被映射到地址相同的物理地址上，即 `1 : 1`。下面我们来看一下细节。首先我们找到 `_text` 与 `_early_level4_pgt` 的 RIP 相对地址，并把他们放入 `rdi` 与 `rbx` 寄存器中。
 
 ```assembly
 	leaq	_text(%rip), %rdi
 	leaq	early_level4_pgt(%rip), %rbx
 ```
 
-After this we store address of the `_text` in the `rax` and get the index of the page global directory entry which stores `_text` address, by shifting `_text` address on the `PGDIR_SHIFT`:
+在此之后我们使用 `rax` 保存 `_text` 的地址。同时，在全局页目录表中有一条记录中存放的是 `_text` 的地址。为了得到这条索引，我们把 `_text` 的地址右移 `PGDIR_SHIFT` 位。
 
 ```assembly
 	movq	%rdi, %rax
@@ -213,7 +217,8 @@ After this we store address of the `_text` in the `rax` and get the index of the
 	movq	%rdx, 8(%rbx,%rax,8)
 ```
 
-where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global directory bits in a virtual address. There are macro for all types of page directories:
+其中 `PGDIR_SHIFT` 为 `39`。`PGDIR_SHIFT`表示的是在虚拟地址下的全局页目录位的屏蔽值（mask）。下面的宏定义了所有类型的页目录的屏蔽值：
+
 
 ```C
 #define PGDIR_SHIFT     39
@@ -221,9 +226,9 @@ where `PGDIR_SHIFT` is `39`. `PGDIR_SHFT` indicates the mask for page global dir
 #define PMD_SHIFT       21
 ```
 
-After this we put the address of the first `level3_kernel_pgt` in the `rdx` with the `_KERNPG_TABLE` access rights (see above) and fill the `early_level4_pgt` with the 2 `level3_kernel_pgt` entries.
+此后我们就将 `level3_kernel_pgt` 的地址放进 `rdx` 中，并将它的访问权限设置为 `_KERNPG_TABLE`（见上），然后将 `level3_kernel_pgt` 填入 `early_level4_pgt` 的两项中。
 
-After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now contains the address of the first entry of the `level3_kernel_pgt`) and put `rdi` (it now contains physical address of the `_text`)  to the `rax`. And after this we write addresses of the two page upper directory entries to the `level3_kernel_pgt`:
+然后我们给 `rdx` 寄存器加上 `4096`（即 `early_level4_pgt` 的大小），并把 `rdi` 寄存器的值（即 `_text` 的物理地址）赋值给 `rax` 寄存器。之后我们把上层页目录中的两个项写入 `level3_kernel_pgt`：
 
 ```assembly
 	addq	$4096, %rdx
@@ -236,7 +241,7 @@ After this we add `4096` (size of the `early_level4_pgt`) to the `rdx` (it now c
 	movq	%rdx, 4096(%rbx,%rax,8)
 ```
 
-In the next step we write addresses of the page middle directory entries to the `level2_kernel_pgt` and the last step is correcting of the kernel text+data virtual addresses:
+下一步我们把中层页目录表项的地址写入 `level2_kernel_pgt`，然后修正内核的 text 和 data 的虚拟地址：
 
 ```assembly
 	leaq	level2_kernel_pgt(%rip), %rdi
@@ -249,9 +254,9 @@ In the next step we write addresses of the page middle directory entries to the 
 	jne	1b
 ```
 
-Here we put the address of the `level2_kernel_pgt` to the `rdi` and address of the page table entry to the `r8` register. Next we check the present bit in the `level2_kernel_pgt` and if it is zero we're moving to the next page by adding 8 bytes to `rdi` which contains address of the `level2_kernel_pgt`. After this we compare it with `r8` (contains address of the page table entry) and go back to label `1` or move forward.
+这里首先把 `level2_kernel_pgt` 的地址赋值给 `rdi`，并把页表项的地址赋值给 `r8` 寄存器。下一步我们来检查 `level2_kernel_pgt` 中的存在位，如果其为0，就把 `rdi` 加上8以便指向下一个页。然后我们将其与 `r8`（即页表项的地址）作比较，不相等的话就跳转回前面的标签 `1` ，反之则继续运行。
 
-In the next step we correct `phys_base` physical address with `rbp` (contains physical address of the `_text`), put physical address of the `early_level4_pgt` and jump to label `1`:
+接下来我们使用 `rbp` （即 `_text` 的物理地址）来修正 `phys_base` 物理地址。将 `early_level4_pgt` 的物理地址与 `rbp` 相加，然后跳转至标签 `1`：
 
 ```assembly
 	addq	%rbp, phys_base(%rip)
@@ -259,12 +264,12 @@ In the next step we correct `phys_base` physical address with `rbp` (contains ph
 	jmp 1f
 ```
 
-where `phys_base` matches the first entry of the `level2_kernel_pgt` which is `512` MB kernel mapping.
+其中 `phys_base` 与 `level2_kernel_pgt` 第一项相同，为 `512` MB的内核映射。
 
-Last preparation before jump at the kernel entry point
+跳转至内核入口点之前的最后准备
 --------------------------------------------------------------------------------
 
-After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extension) and put the physical address of the `phys_base` (see above) to the `rax` register and fill `cr3` register with it:
+此后我们就跳转至标签`1`来开启 `PAE` 和 `PGE` （Paging Global Extension），并且将`phys_base`的物理地址（见上）放入 `rax` 就寄存器，同时将其放入 `cr3` 寄存器：
 
 ```assembly
 1:
@@ -275,7 +280,8 @@ After that we jump to the label `1` we enable `PAE`, `PGE` (Paging Global Extens
 	movq	%rax, %cr3
 ```
 
-In the next step we check that CPU supports [NX](http://en.wikipedia.org/wiki/NX_bit) bit with:
+接下来我们检查CPU是否支持 [NX](http://en.wikipedia.org/wiki/NX_bit) 位：
+
 
 ```assembly
 	movl	$0x80000001, %eax
@@ -283,16 +289,18 @@ In the next step we check that CPU supports [NX](http://en.wikipedia.org/wiki/NX
 	movl	%edx,%edi
 ```
 
-We put `0x80000001` value to the `eax` and execute `cpuid` instruction for getting the extended processor info and feature bits. The result will be in the `edx` register which we put to the `edi`.
+首先将 `0x80000001` 放入 `eax` 中，然后执行 `cpuid` 指令来得到处理器信息。这条指令的结果会存放在 `edx` 中，我们把他再放到 `edi` 里。
 
-Now we put `0xc0000080` or `MSR_EFER` to the `ecx` and call `rdmsr` instruction for the reading model specific register.
+现在我们把 `MSR_EFER` （即 `0xc0000080`）放入 `ecx`，然后执行 `rdmsr` 指令来读取CPU中的Model Specific Register (MSR)。
+
 
 ```assembly
 	movl	$MSR_EFER, %ecx
 	rdmsr
 ```
 
-The result will be in the `edx:eax`. General view of the `EFER` is following:
+返回结果将存放于 `edx:eax` 。下面展示了 `EFER` 各个位的含义：
+
 
 ```
 63                                                                              32
@@ -309,7 +317,7 @@ The result will be in the `edx:eax`. General view of the `EFER` is following:
  --------------------------------------------------------------------------------
 ```
 
-We will not see all fields in details here, but we will learn about this and other `MSRs` in a special part about it. As we read `EFER` to the `edx:eax`, we check `_EFER_SCE` or zero bit which is `System Call Extensions` with `btsl` instruction and set it to one. By the setting `SCE` bit we enable `SYSCALL` and `SYSRET` instructions. In the next step we check 20th bit in the `edi`, remember that this register stores result of the `cpuid` (see above). If `20` bit is set (`NX` bit) we just write `EFER_SCE` to the model specific register.
+在这里我们不会介绍每一个位的含义，没有涉及到的位和其他的 MSR 将会在专门的部分介绍。在我们将 `EFER` 读入 `edx:eax` 之后，通过 `btsl` 来将 `_EFER_SCE` （即第0位）置1，设置 `SCE` 位将会启用 `SYSCALL` 以及 `SYSRET` 指令。下一步我们检查 `edi`（即 `cpuid` 的结果（见上）） 中的第20位。如果第 `20` 位（即 `NX` 位）置位，我们就只把 `EFER_SCE`写入MSR。
 
 ```assembly
 	btsl	$_EFER_SCE, %eax
@@ -320,17 +328,16 @@ We will not see all fields in details here, but we will learn about this and oth
 1:	wrmsr
 ```
 
-If the [NX](https://en.wikipedia.org/wiki/NX_bit) bit is supported we enable `_EFER_NX`  and write it too, with the `wrmsr` instruction. After the [NX](https://en.wikipedia.org/wiki/NX_bit) bit is set, we set some bits in the `cr0` [control register](https://en.wikipedia.org/wiki/Control_register), namely:
+如果支持 [NX](https://en.wikipedia.org/wiki/NX_bit) 那么我们就把 `_EFER_NX` 也写入MSR。在设置了 [NX](https://en.wikipedia.org/wiki/NX_bit) 后，还要对 `cr0` （[control register](https://en.wikipedia.org/wiki/Control_register)） 中的一些位进行设置：
 
-* `X86_CR0_PE` - system is in protected mode;
-* `X86_CR0_MP` - controls interaction of WAIT/FWAIT instructions with TS flag in CR0;
-* `X86_CR0_ET` - on the 386, it allowed to specify whether the external math coprocessor was an 80287 or 80387;
-* `X86_CR0_NE` - enable internal x87 floating point error reporting when set, else enables PC style x87 error detection;
-* `X86_CR0_WP` - when set, the CPU can't write to read-only pages when privilege level is 0;
-* `X86_CR0_AM` - alignment check enabled if AM set, AC flag (in EFLAGS register) set, and privilege level is 3;
-* `X86_CR0_PG` - enable paging.
 
-by the execution following assembly code:
+* `X86_CR0_PE` - 系统处于保护模式;
+* `X86_CR0_MP` - 与CR0的TS标志位一同控制 WAIT/FWAIT 指令的功能；
+* `X86_CR0_ET` - 386允许指定外部数学协处理器为80287或80387;
+* `X86_CR0_NE` - 如果置位，则启用内置的x87浮点错误报告，否则启用PC风格的x87错误检测；
+* `X86_CR0_WP` - 如果置位，则CPU在特权等级为0时无法写入只读内存页;
+* `X86_CR0_AM` - 当AM位置位、EFLGS中的AC位置位、特权等级为3时，进行对齐检查;
+* `X86_CR0_PG` - 启用分页.
 
 ```assembly
 #define CR0_STATE	(X86_CR0_PE | X86_CR0_MP | X86_CR0_ET | \
@@ -340,7 +347,7 @@ movl	$CR0_STATE, %eax
 movq	%rax, %cr0
 ```
 
-We already know that to run any code, and even more [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code from assembly, we need to setup a stack. As always, we are doing it by the setting of [stack pointer](https://en.wikipedia.org/wiki/Stack_register) to a correct place in memory and resetting [flags](https://en.wikipedia.org/wiki/FLAGS_register) register after this:
+为了从汇编执行[C语言](https://en.wikipedia.org/wiki/C_%28programming_language%29)代码，我们需要建立一个栈。首先将[栈指针](https://en.wikipedia.org/wiki/Stack_register) 指向一个内存中合适的区域，然后重置[FLAGS寄存器](https://en.wikipedia.org/wiki/FLAGS_register)
 
 ```assembly
 movq stack_start(%rip), %rsp
@@ -348,14 +355,14 @@ pushq $0
 popfq
 ```
 
-The most interesting thing here is the `stack_start`. It defined in the same [source](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) code file and looks like:
+在这里最有意思的地方在于 `stack_start`。它也定义在[当前的源文件](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S)中：
 
 ```assembly
 GLOBAL(stack_start)
 .quad  init_thread_union+THREAD_SIZE-8
 ```
 
-The `GLOBAL` is already familiar to us from. It defined in the [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) header file expands to the `global` symbol definition:
+对于 `GLOABL` 我们应该很熟悉了。它在 [arch/x86/include/asm/linkage.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/linkage.h) 头文件中定义如下：
 
 ```C
 #define GLOBAL(name)    \
@@ -363,16 +370,15 @@ The `GLOBAL` is already familiar to us from. It defined in the [arch/x86/include
          name:
 ```
 
-The `THREAD_SIZE` macro is defined in the [arch/x86/include/asm/page_64_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_64_types.h) header file and depends on value of the `KASAN_STACK_ORDER` macro:
+`THREAD_SIZE` 定义在 [arch/x86/include/asm/page_64_types.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/page_64_types.h)，它依赖于 `KASAN_STACK_ORDER` 的值:
 
 ```C
 #define THREAD_SIZE_ORDER       (2 + KASAN_STACK_ORDER)
 #define THREAD_SIZE  (PAGE_SIZE << THREAD_SIZE_ORDER)
 ```
 
-We consider when the [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) is disabled and the `PAGE_SIZE` is `4096` bytes. So the `THREAD_SIZE` will expands to `16` kilobytes and represents size of the stack of a thread. Why is `thread`? You may already know that each [process](https://en.wikipedia.org/wiki/Process_%28computing%29) may have parent [processes](https://en.wikipedia.org/wiki/Parent_process) and [child](https://en.wikipedia.org/wiki/Child_process) processes. Actually, a parent process and child process differ in stack. A new kernel stack is allocated for a new process. In the Linux kernel this stack is represented by the [union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B) with the `thread_info` structure.
+首先来考虑当禁用了 [kasan](http://lxr.free-electrons.com/source/Documentation/kasan.txt) 并且 `PAGE_SIZE` 大小为4096时的情况。此时 `THREAD_SIZE` 将为 `16` KB，代表了一个线程的栈的大小。为什么是`线程`？我们知道每一个[进程](https://en.wikipedia.org/wiki/Process_%28computing%29)可能会有[父进程](https://en.wikipedia.org/wiki/Parent_process)和[子进程](https://en.wikipedia.org/wiki/Child_process)。事实上，父进程和子进程使用不同的栈空间，每一个新进程都会拥有一个新的内核栈。在Linux内核中，这个栈由 `thread_info` 结构中的一个[union](https://en.wikipedia.org/wiki/Union_type#C.2FC.2B.2B)表示：
 
-And as we can see the `init_thread_union` is represented by the `thread_union`, which defined as:
 
 ```C
 union thread_union {
@@ -381,14 +387,14 @@ union thread_union {
 };
 ```
 
-and `init_thread_union` looks like:
+例如，`init_thread_union`定义如下：
 
 ```C
 union thread_union init_thread_union __init_task_data =
 	{ INIT_THREAD_INFO(init_task) };
 ```
 
-Where the `INIT_THREAD_INFO` macro takes `task_struct` structure which represents process descriptor in the Linux kernel and does some basic initialization of the given `task_struct` structure:
+其中 `INIT_THREAD_INFO` 接受 `task_struct` 结构类型的参数，并进行一些初始化操作：
 
 ```C
 #define INIT_THREAD_INFO(tsk)		\
@@ -400,7 +406,7 @@ Where the `INIT_THREAD_INFO` macro takes `task_struct` structure which represent
 }
 ```
 
-So, the `thread_union` contains low-level information about a process and process's stack and placed in the bottom of stack:
+`task_struct` 结构在内核中代表了对进程的描述。因此，`thread_union` 包含了关于一个进程的低级信息，并且其位于进程栈底：
 
 ```
 +-----------------------+
@@ -418,15 +424,15 @@ So, the `thread_union` contains low-level information about a process and proces
 +-----------------------+
 ```
 
-Note that we reserve `8` bytes at the to of stack. This is necessary to guarantee illegal access of the next page memory.
+需要注意的是我们在栈顶保留了 `8` 个字节的空间，用来保护对下一个内存页的非法访问。
 
-After the early boot stack is set, to update the [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table) with `lgdt` instruction:
+在初期启动栈设置好之后，使用 `lgdt` 指令来更新[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)：
 
 ```assembly
 lgdt	early_gdt_descr(%rip)
 ```
 
-where the `early_gdt_descr` is defined as:
+其中 `early_gdt_descr` 定义如下：
 
 ```assembly
 early_gdt_descr:
@@ -435,13 +441,13 @@ early_gdt_descr_base:
 	.quad	INIT_PER_CPU_VAR(gdt_page)
 ```
 
-We need to reload `Global Descriptor Table` because now kernel works in the low userspace addresses, but soon kernel will work in it's own space. Now let's look at the definition of `early_gdt_descr`. Global Descriptor Table contains `32` entries:
+需要重新加载 `全局描述附表` 的原因是，虽然目前内核工作在用户空间的低地址中，但很快内核将会在它自己的内存地址空间中运行。下面让我们来看一下 `early_gdt_descr` 的定义。全局描述符表包含了32项，用于内核代码、数据、线程局部存储段等：
 
 ```C
 #define GDT_ENTRIES 32
 ```
 
-for kernel code, data, thread local storage segments and etc... it's simple. Now let's look at the `early_gdt_descr_base`. First of `gdt_page` defined as:
+现在来看一下 `early_gdt_descr_base`. 首先，`gdt_page` 的定义在[arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)中:
 
 ```C
 struct gdt_page {
@@ -449,7 +455,7 @@ struct gdt_page {
 } __attribute__((aligned(PAGE_SIZE)));
 ```
 
-in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h). It contains one field `gdt` which is array of the `desc_struct` structure which is defined as:
+它只包含了一项 `desc_struct` 的数组`gdt`。`desc_struct`定义如下:
 
 ```C
 struct desc_struct {
@@ -468,24 +474,26 @@ struct desc_struct {
  } __attribute__((packed));
 ```
 
-and presents familiar to us `GDT` descriptor. Also we can note that `gdt_page` structure aligned to `PAGE_SIZE` which is `4096` bytes. It means that `gdt` will occupy one page. Now let's try to understand what is `INIT_PER_CPU_VAR`. `INIT_PER_CPU_VAR` is a macro which defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h) and just concats `init_per_cpu__` with the given parameter:
+它跟 `GDT` 描述符的定义很像。同时需要注意的是，`gdt_page`结构是 `PAGE_SIZE`(` 4096`) 对齐的，即 `gdt` 将会占用一页内存。
+
+下面我们来看一下 `INIT_PER_CPU_VAR`，它定义在 [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/percpu.h)，只是将给定的参数与 `init_per_cpu__`连接起来：
 
 ```C
 #define INIT_PER_CPU_VAR(var) init_per_cpu__##var
 ```
 
-After the `INIT_PER_CPU_VAR` macro will be expanded, we will have `init_per_cpu__gdt_page`. We can see in the [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S):
+所以在宏展开之后，我们会得到 `init_per_cpu__gdt_page`。而在 [linker script](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/vmlinux.lds.S) 中可以发现:
 
 ```
 #define INIT_PER_CPU(x) init_per_cpu__##x = x + __per_cpu_load
 INIT_PER_CPU(gdt_page);
 ```
 
-As we got `init_per_cpu__gdt_page` in `INIT_PER_CPU_VAR` and `INIT_PER_CPU` macro from linker script will be expanded we will get offset from the `__per_cpu_load`. After this calculations, we will have correct base address of the new GDT.
+`INIT_PER_CPU` 扩展后也将得到 `init_per_cpu__gdt_page` 并将它的值设置为相对于 `__per_cpu_load` 的偏移量。这样，我们就得到了新GDT的正确的基地址。
 
-Generally per-CPU variables is a 2.6 kernel feature. You can understand what it is from its name. When we create `per-CPU` variable, each CPU will have will have its own copy of this variable. Here we creating `gdt_page` per-CPU variable. There are many advantages for variables of this type, like there are no locks, because each CPU works with its own copy of variable and etc... So every core on multiprocessor will have its own `GDT` table and every entry in the table will represent a memory segment which can be accessed from the thread which ran on the core. You can read in details about `per-CPU` variables in the [Theory/per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) post.
+per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `per-CPU` 变量时，每个CPU都会拥有一份它自己的拷贝，在这里我们创建的是 `gdt_page` per-CPU变量。这种类型的变量有很多有点，比如由于每个CPU都只访问自己的变量而不需要锁等。因此在多处理器的情况下，每一个处理器核心都将拥有一份自己的 `GDT` 表，其中的每一项都代表了一块内存，这块内存可以由在这个核心上运行的线程访问。这里 [Theory/per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 有关于 `per-CPU` 变量的更详细的介绍。
 
-As we loaded new Global Descriptor Table, we reload segments as we did it every time:
+在加载好了新的全局描述附表之后，跟之前一样我们重新加载一下各个段：
 
 ```assembly
 	xorl %eax,%eax
@@ -496,7 +504,7 @@ As we loaded new Global Descriptor Table, we reload segments as we did it every 
 	movl %eax,%gs
 ```
 
-After all of these steps we set up `gs` register that it post to the `irqstack` which represents special stack where [interrupts](https://en.wikipedia.org/wiki/Interrupt) will be handled on:
+在所有这些步骤都结束后，我们需要设置一下 `gs` 寄存器，令它指向一个特殊的栈 `irqstack`，用于处理[中断](https://en.wikipedia.org/wiki/Interrupt)：
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -505,15 +513,15 @@ After all of these steps we set up `gs` register that it post to the `irqstack` 
 	wrmsr
 ```
 
-where `MSR_GS_BASE` is:
+其中， `MSR_GS_BASE` 为：
 
 ```C
 #define MSR_GS_BASE             0xc0000101
 ```
 
-We need to put `MSR_GS_BASE` to the `ecx` register and load data from the `eax` and `edx` (which are point to the `initial_gs`) with `wrmsr` instruction. We don't use `cs`, `fs`, `ds` and `ss` segment registers for addressing in the 64-bit mode, but `fs` and `gs` registers can be used. `fs` and `gs` have a hidden part (as we saw it in the real mode for `cs`) and this part contains descriptor which mapped to [Model Specific Registers](https://en.wikipedia.org/wiki/Model-specific_register). So we can see above `0xc0000101` is a `gs.base` MSR address. When a [system call](https://en.wikipedia.org/wiki/System_call) or [interrupt](https://en.wikipedia.org/wiki/Interrupt) occurred, there is no kernel stack at the entry point, so the value of the `MSR_GS_BASE` will store address of the interrupt stack.
+我们需要把 `MSR_GS_BASE` 放入 `ecx` 寄存器，同时利用 `wrmsr` 指令向 `eax` 和 `edx` 处的地址加载数据（即指向 `initial_gs`）。`cs`, `fs`, `ds` 和 `ss` 段寄存器在64位模式下不用来寻址，但 `fs` 和 `gs` 可以使用。 `fs` 和 `gs` 有一个隐含的部分（与实模式下的 `cs` 段寄存器类似），这个隐含部分存储了一个描述符，其指向 [Model Specific Registers](https://en.wikipedia.org/wiki/Model-specific_register)。因此上面的 `0xc0000101` 是一个 `gs.base` MSR 地址。当发生[系统调用](https://en.wikipedia.org/wiki/System_call) 或者 [中断](https://en.wikipedia.org/wiki/Interrupt)时，入口点处并没有内核栈，因此 `MSR_GS_BASE` 将会用来存放中断栈。
 
-In the next step we put the address of the real mode bootparam structure to the `rdi` (remember `rsi` holds pointer to this structure from the start) and jump to the C code with:
+接下来我们把实模式中的 bootparam 结构的地址放入 `rdi` (要记得 `rsi` 从一开始就保存了这个结构体的指针)，然后跳转到C语言代码：
 
 ```assembly
 	movq	initial_code(%rip),%rax
@@ -523,7 +531,7 @@ In the next step we put the address of the real mode bootparam structure to the 
 	lretq
 ```
 
-Here we put the address of the `initial_code` to the `rax` and push fake address, `__KERNEL_CS` and the address of the `initial_code` to the stack. After this we can see `lretq` instruction which means that after it return address will be extracted from stack (now there is address of the `initial_code`) and jump there. `initial_code` is defined in the same source code file and looks:
+这里我们把 `initial_code` 放入 `rax` 中，并且向栈里分别压入一个无用的地址、`__KERNEL_CS` 和 `initial_code` 的地址。随后的 `lreq` 指令表示从栈上弹出返回地址并跳转。`initial_code` 同样定义在这个文件里：
 
 ```assembly
 	.balign	8
@@ -534,7 +542,7 @@ Here we put the address of the `initial_code` to the `rax` and push fake address
 	...
 ```
 
-As we can see `initial_code` contains address of the `x86_64_start_kernel`, which is defined in the [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c) and looks like this:
+可以看到 `initial_code` 包含了 `x86_64_start_kernel` 的地址，其定义在 [arch/x86/kerne/head64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head64.c)：
 
 ```C
 asmlinkage __visible void __init x86_64_start_kernel(char * real_mode_data) {
@@ -544,16 +552,16 @@ asmlinkage __visible void __init x86_64_start_kernel(char * real_mode_data) {
 }
 ```
 
-It has one argument is a `real_mode_data` (remember that we passed address of the real mode data to the `rdi` register previously).
+这个函数接受一个参数 `real_mode_data`（刚才我们把实模式下数据的地址保存到了 `rdi` 寄存器中）。
 
-This is first C code in the kernel!
+这个函数是内核中第一个执行的C语言代码！
 
-Next to start_kernel
+走进 start_kernel
 --------------------------------------------------------------------------------
 
-We need to see last preparations before we can see "kernel entry point" - start_kernel function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489).
+在我们真正到达“内核入口点”-[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489)中的start_kernel函数之前，我们还需要最后的准备工作：
 
-First of all we can see some checks in the `x86_64_start_kernel` function:
+首先在 `x86_64_start_kernel` 函数中可以看到一些检查工作：
 
 ```C
 BUILD_BUG_ON(MODULES_VADDR < __START_KERNEL_map);
@@ -566,20 +574,20 @@ BUILD_BUG_ON(!(((MODULES_END - 1) & PGDIR_MASK) == (__START_KERNEL & PGDIR_MASK)
 BUILD_BUG_ON(__fix_to_virt(__end_of_fixed_addresses) <= MODULES_END);
 ```
 
-There are checks for different things like virtual addresses of modules space is not fewer than base address of the kernel text - `__STAT_KERNEL_map`, that kernel text with modules is not less than image of the kernel and etc... `BUILD_BUG_ON` is a macro which looks as:
+这些检查包括：模块的虚拟地址不能低于内核 text 段基地址 `__START_KERNEL_map` ，包含模块的内核 text 段的空间大小不能小于内核镜像大小等等。`BUILD_BUG_ON` 宏定义如下：
 
 ```C
 #define BUILD_BUG_ON(condition) ((void)sizeof(char[1 - 2*!!(condition)]))
 ```
 
-Let's try to understand how this trick works. Let's take for example first condition: `MODULES_VADDR < __START_KERNEL_map`. `!!conditions` is the same that `condition != 0`. So it means if `MODULES_VADDR < __START_KERNEL_map` is true, we will get `1` in the `!!(condition)` or zero if not. After `2*!!(condition)` we will get or `2` or `0`. In the end of calculations we can get two different behaviors:
+我们来理解一下这些巧妙的设计是怎么工作的。首先以第一个条件 `MODULES_VADDR < __START_KERNEL_map` 为例：`!!conditions` 等价于 `condition != 0`，这代表如果 `MODULES_VADDR < __START_KERNEL_map` 为真，则 `!!(condition)` 为1，否则为0。执行`2*!!(condition)`之后数值变为 `2` 或 `0`。因此，这个宏执行完后可能产生两种不同的行为：
 
-* We will have compilation error, because try to get size of the char array with negative index (as can be in our case, because `MODULES_VADDR` can't be less than `__START_KERNEL_map` will be in our case);
-* No compilation errors.
+* 编译错误。因为我们尝试取获取一个字符数组索引为负数的变量的大小。
+* 没有编译错误。
 
-That's all. So interesting C trick for getting compile error which depends on some constants.
+就是这么简单，通过C语言中某些常量导致编译错误的技巧实现了这一设计。
 
-In the next step we can see call of the `cr4_init_shadow` function which stores shadow copy of the `cr4` per cpu. Context switches can change bits in the `cr4` so we need to store `cr4` for each CPU. And after this we can see call of the `reset_early_page_tables` function where we resets all page global directory entries and write new pointer to the PGT in `cr3`:
+接下来 start_kernel 调用了 `cr4_init_shadow` 函数，其中存储了每个CPU中 `cr4` 的Shadow Copy。上下文切换可能会修改 `cr4` 中的位，因此需要保存每个CPU中 `cr4` 的内容。在这之后将会调用 `reset_early_page_tables` 函数，它重置了所有的全局页目录项，同时向 `cr3` 中重新写入了的全局页目录表的地址：
 
 ```C
 for (i = 0; i < PTRS_PER_PGD-1; i++)
@@ -590,26 +598,25 @@ next_early_pgt = 0;
 write_cr3(__pa_nodebug(early_level4_pgt));
 ```
 
-Soon we will build new page tables. Here we can see that we go through all Page Global Directory Entries (`PTRS_PER_PGD` is `512`) in the loop and make it zero. After this we set `next_early_pgt` to zero (we will see details about it in the next post) and write physical address of the `early_level4_pgt` to the `cr3`. `__pa_nodebug` is a macro which will be expanded to:
+很快我们就会设置新的页表。在这里我们遍历了所有的全局页目录项（其中 `PTRS_PER_PGD` 为 `512`），将其设置为0。之后将 `next_early_pgt` 设置为0（会在下一篇文章中介绍细节），同时把 `early_level4_pgt` 的物理地址写入 `cr3`。`__pa_nodebug` 是一个宏，将被扩展为：
 
 ```C
 ((unsigned long)(x) - __START_KERNEL_map + phys_base)
 ```
 
-After this we clear `_bss` from the `__bss_stop` to `__bss_start` and the next step will be setup of the early `IDT` handlers, but it's big concept so we will see it in the next part.
+此后我们清空了从 `__bss_stop` 到 `__bss_start` 的 `_bss` 段，下一步将是建立初期 `IDT（中断描述符表）` 的处理代码，内容很多，我们将会留到下一个部分再来探究。
 
-Conclusion
+总结
 --------------------------------------------------------------------------------
 
-This is the end of the first part about linux kernel initialization.
+第一部分关于Linux内核的初始化过程到这里就结束了。
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
+如果你有任何问题或建议，请在twitter上联系我 [0xAX](https://twitter.com/0xAX)，或者通过[邮件](anotherworldofworld@gmail.com)与我沟通，还可以新开[issue](https://github.com/MintCN/linux-insides-zh/issues/new)。
 
-In the next part we will see initialization of the early interruption handlers, kernel space memory mapping and a lot more.
+下一部分我们会看到初期中断处理程序的初始化过程、内核空间的内存映射等。
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
-Links
+相关链接
 --------------------------------------------------------------------------------
 
 * [Model Specific Register](http://en.wikipedia.org/wiki/Model-specific_register)

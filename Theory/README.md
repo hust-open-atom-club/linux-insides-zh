@@ -4,3 +4,4 @@
 
 * [分页](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
 * [Elf64 格式](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/ELF.html)
+* [內联汇编](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/asm.html)

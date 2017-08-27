@@ -4,7 +4,7 @@ Linux 内核系统调用 第一节
 简介
 --------------------------------------------------------------------------------
 
-这次提交为 [linux-insides](http://xinqiu.gitbooks.io/linux-insides-cn/content/) 添加一个新的章节，从标题就可以知道, 这一章节将介绍Linux 内核中 [System Call](https://en.wikipedia.org/wiki/System_call) 的概念。章节内容的选择并非偶然。在前一[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)我们了解了中断及中断处理。系统调用的概念与中断非常相似，这是因为软件中断是执行系统调用最常见的方式。我们将讨论系统调用概念的各个方面。例如，用户空间发起系统调用的细节，内核中一组系统调用处理器的执行过程, [VDSO](https://en.wikipedia.org/wiki/VDSO) 和 [vsyscall](https://lwn.net/Articles/446528/) 概念以及其他信息。
+这次提交为 [linux-insides](http://xinqiu.gitbooks.io/linux-insides-cn/content/) 添加一个新的章节，从标题就可以知道, 这一章节将介绍Linux 内核中 [System Call](https://en.wikipedia.org/wiki/System_call) 的概念。章节内容的选择并非偶然。在前一[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)我们了解了中断及中断处理。系统调用的概念与中断非常相似，这是因为软件中断是执行系统调用最常见的方式。我们将讨论系统调用概念的各个方面。例如，用户空间发起系统调用的细节，内核中一组系统调用处理器的执行过程, [VDSO](https://en.wikipedia.org/wiki/VDSO) 和 [vsyscall](https://lwn.net/Articles/446528/) 概念以及其他信息。
 
 在了解 Linux 内核系统调用执行过程之前，了解一些系统调用的原理是有帮助的。我们从下面的段落开始。
 
@@ -77,7 +77,7 @@ SYSCALL 将 IA32_STAR MSR 的 47：32 位加载至 CS 和 SS 段选择器。
 wrmsrl(MSR_LSTAR, entry_SYSCALL_64);
 ```
 
-因此，`syscall` 指令唤醒一个系统调用对应的处理程序。但是如何确定调用哪个处理器？事实上这些信息从通用目的[寄存器](https://en.wikipedia.org/wiki/Processor_register)的到。正如系统调用[表](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)中描述，每个系统调用对应特定的编号。上面的示例中, 第一个系统调用是 - `write` 将数据写入指定文件。在系统调用表中查找 write 系统调用.[write](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L10) 系统调用的编号为 - `1`。在示例中通过`rax`寄存器传递该编号，接下来的几个通用目的寄存器: `%rdi`, `%rsi` 和 `%rdx` 保存 `write` 系统调用的参数。 在示例中为[文件描述符](https://en.wikipedia.org/wiki/File_descriptor) (`1` 是[stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29)), 第二个参数字符串指针, 第三个为数据的大小。是的，你听到的没错，系统调用的参数。正如上文, 系统调用仅仅是内核空间的 `C` 函数。示例中第一个系统调用为 write ，在 [fs/read_write.c] (https://github.com/torvalds/linux/blob/master/fs/read_write.c) 源文件中定义如下:
+因此，`syscall` 指令唤醒一个系统调用对应的处理程序。但是如何确定调用哪个处理程序？事实上这些信息从通用目的[寄存器](https://en.wikipedia.org/wiki/Processor_register)得到。正如系统调用[表](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)中描述，每个系统调用对应特定的编号。上面的示例中, 第一个系统调用是 - `write` 将数据写入指定文件。在系统调用表中查找 write 系统调用.[write](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl#L10) 系统调用的编号为 - `1`。在示例中通过`rax`寄存器传递该编号，接下来的几个通用目的寄存器: `%rdi`, `%rsi` 和 `%rdx` 保存 `write` 系统调用的参数。 在示例中为[文件描述符](https://en.wikipedia.org/wiki/File_descriptor) (`1` 是[stdout](https://en.wikipedia.org/wiki/Standard_streams#Standard_output_.28stdout.29)), 第二个参数字符串指针, 第三个为数据的大小。是的，你听到的没错，系统调用的参数。正如上文, 系统调用仅仅是内核空间的 `C` 函数。示例中第一个系统调用为 write ，在 [fs/read_write.c] (https://github.com/torvalds/linux/blob/master/fs/read_write.c) 源文件中定义如下:
 
 ```C
 SYSCALL_DEFINE3(write, unsigned int, fd, const char __user *, buf,
@@ -403,4 +403,4 @@ fdput_pos(f);
 * [Virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system)
 * [systemd](https://en.wikipedia.org/wiki/Systemd)
 * [epoll](https://en.wikipedia.org/wiki/Epoll)
-* [Previous chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/interrupts/index.html)
+* [Previous chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)
