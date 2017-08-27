@@ -1,12 +1,9 @@
-The initcall mechanism
 initcall 机制
 ================================================================================
 
-Introduction
 介绍
 --------------------------------------------------------------------------------
 
-As you may understand from the title, this part will cover an interesting and important concept in the Linux kernel which is called - `initcall`. We already saw definitions like these:
 
 就像你从标题所理解的，这部分将涉及Linux内核中有趣且重要的概念，称之为 `initcall`。在Linux内核中，我们可以看到类似这样的定义：
 
@@ -14,15 +11,13 @@ As you may understand from the title, this part will cover an interesting and im
 early_param("debug", debug_kernel);
 ```
 
-or
-
 或者
 
 ```C
 arch_initcall(init_pit_clocksource);
 ```
 
-在我们分析这个机制在内核中是如何实现的之前，我们必须了解这个机制是什么，在Linux内核中是如何使用它的。像这样的定义表示一个 [回调函数](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) ，它们会在Linux内核启动中或启动后调用。实际上 `initcall` 机制的要点是确定内置模块和子系统初始化的正确顺序。举个例子，我们来看看下面的函数： Actually the main point of the `initcall` mechanism is to determine correct order of the built-in modules and subsystems initialization. For example let's look at the following function:
+在我们分析这个机制在内核中是如何实现的之前，我们必须了解这个机制是什么，在Linux内核中是如何使用它的。像这样的定义表示一个 [回调函数](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) ，它们会在Linux内核启动中或启动后调用。实际上 `initcall` 机制的要点是确定内置模块和子系统初始化的正确顺序。举个例子，我们来看看下面的函数：
 
 ```C
 static int __init nmi_warning_debugfs(void)
@@ -33,13 +28,13 @@ static int __init nmi_warning_debugfs(void)
 }
 ```
 
-这个函数出自源码文件 [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c)。我们可以看到，这个函数只是在 `arch_debugfs_dir` 目录中创建 `nmi_longest_ns` [debugfs](https://en.wikipedia.org/wiki/Debugfs) 文件。实际上，只有在 `arch_debugfs_dir` 创建后，才会创建这个 `debugfs` 文件。这个目录是在Linux内核特定架构的初始化期间创建的。实际上，该目录将在源码文件 [arch/x86/kernel/kdebugfs.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/kdebugfs.c) 的 `arch_kdebugfs_init` 函数中创建。注意 `arch_kdebugfs_init` 函数也被标记为 `initcall`。from the [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c) source code file. As we may see it just creates the `nmi_longest_ns` [debugfs](https://en.wikipedia.org/wiki/Debugfs) file in the `arch_debugfs_dir` directory. Actually, this `debugfs` file may be created only after the `arch_debugfs_dir` will be created. Creation of this directory occurs during the architecture-specific initialization of the Linux kernel. Actually this directory will be created in the `arch_kdebugfs_init` function from the [arch/x86/kernel/kdebugfs.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/kdebugfs.c) source code file. Note that the `arch_kdebugfs_init` function is marked as `initcall` too:
+这个函数出自源码文件 [arch/x86/kernel/nmi.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/nmi.c)。我们可以看到，这个函数只是在 `arch_debugfs_dir` 目录中创建 `nmi_longest_ns` [debugfs](https://en.wikipedia.org/wiki/Debugfs) 文件。实际上，只有在 `arch_debugfs_dir` 创建后，才会创建这个 `debugfs` 文件。这个目录是在Linux内核特定架构的初始化期间创建的。实际上，该目录将在源码文件 [arch/x86/kernel/kdebugfs.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/kdebugfs.c) 的 `arch_kdebugfs_init` 函数中创建。注意 `arch_kdebugfs_init` 函数也被标记为 `initcall`。
 
 ```C
 arch_initcall(arch_kdebugfs_init);
 ```
 
-Linux内核在调用 `fs` 相关的 `initcalls` 之前调用所有特定架构的 `initcalls`。因此，只有在 `arch_kdebugfs_dir` 目录创建以后才会创建我们的 `nmi_longest_ns`。实际上，Linux内核提供了八个级别的主 `initcalls`：The Linux kernel calls all architecture-specific `initcalls` before the `fs` related `initcalls`. So, our `nmi_longest_ns` file will be created only after the `arch_kdebugfs_dir` directory will be created. Actually, the Linux kernel provides eight levels of main `initcalls`:
+Linux内核在调用 `fs` 相关的 `initcalls` 之前调用所有特定架构的 `initcalls`。因此，只有在 `arch_kdebugfs_dir` 目录创建以后才会创建我们的 `nmi_longest_ns`。实际上，Linux内核提供了八个级别的主 `initcalls`：
 
 * `early`;
 * `core`;
@@ -50,7 +45,7 @@ Linux内核在调用 `fs` 相关的 `initcalls` 之前调用所有特定架构�
 * `device`;
 * `late`.
 
-它们的所有名称是由数组 `initcall_level_names` 来描述的，该数组定义在源码文件 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中：All of their names are represented by the `initcall_level_names` array which is defined in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+它们的所有名称是由数组 `initcall_level_names` 来描述的，该数组定义在源码文件 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中：
 
 ```C
 static char *initcall_level_names[] __initdata = {
@@ -65,12 +60,12 @@ static char *initcall_level_names[] __initdata = {
 };
 ```
 
-所有用这些（相同的）标识符标记为 `initcall` 的函数将会以相同的顺序被调用， `early initcalls` 会首先被调用，其次是 `core initcalls`，以此类推。现在，我们对 `initcall` 机制了解点了，所以我们可以开始潜入Linux内核源码，来看看这个机制是如何实现的。All functions which are marked as `initcall` by these identifiers, will be called in the same order or at first `early initcalls` will be called, at second `core initcalls` and etc. From this moment we know a little about `initcall` mechanism, so we can start to dive into the source code of the Linux kernel to see how this mechanism is implemented.
+所有用这些（相同的）标识符标记为 `initcall` 的函数将会以相同的顺序被调用， `early initcalls` 会首先被调用，其次是 `core initcalls`，以此类推。现在，我们对 `initcall` 机制了解点了，所以我们可以开始潜入Linux内核源码，来看看这个机制是如何实现的。
 
-initcall机制在Linux内核中的实现Implementation initcall mechanism in the Linux kernel
+initcall机制在Linux内核中的实现
 --------------------------------------------------------------------------------
 
-Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 的宏，来标记给定的函数为 `initcall`。所有这些宏都相当简单：The Linux kernel provides a set of macros from the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file to mark a given function as `initcall`. All of these macros are pretty simple:
+Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 的宏，来标记给定的函数为 `initcall`。所有这些宏都相当简单：
 
 ```C
 #define early_initcall(fn)		__define_initcall(fn, early)
@@ -83,12 +78,12 @@ Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.
 #define late_initcall(fn)		__define_initcall(fn, 7)
 ```
 
-我们可以看到这些宏只是从相同的头文件扩展为 `__define_initcall` 宏的调用。此外，`__define_initcall` 宏有两个参数：and as we may see these macros just expand to the call of the `__define_initcall` macro from the same header file. Moreover, the `__define_initcall` macro takes two arguments:
+我们可以看到这些宏只是从相同的头文件扩展为 `__define_initcall` 宏的调用。此外，`__define_initcall` 宏有两个参数：
 
-* `fn` - 在调用某个级别 `initcalls` 时调用的回调函数；callback function which will be called during call of `initcalls` of the certain level;
-* `id` - 识别 `initcall` 的标识符，用来防止两个相同的 `initcalls` 指向同一个处理函数时出现错误。identifier to identify `initcall` to prevent error when two the same `initcalls` point to the same handler.
+* `fn` - 在调用某个级别 `initcalls` 时调用的回调函数；
+* `id` - 识别 `initcall` 的标识符，用来防止两个相同的 `initcalls` 指向同一个处理函数时出现错误。
 
-`__define_initcall` 宏的实现如下所示：The implementation of the `__define_initcall` macro looks like:
+`__define_initcall` 宏的实现如下所示：
 
 ```C
 #define __define_initcall(fn, id) \
@@ -97,13 +92,13 @@ Linux内核提供了一组来自头文件 [include/linux/init.h](https://github.
 	LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 ```
 
-要了解 `__define_initcall` 宏，首先让我们来看下 `initcall_t` 类型。这个类型定义在同一个 [头文件]() 中，它表示一个返回 [整形](https://en.wikipedia.org/wiki/Integer)指针的函数指针，这将是 `initcall` 的结果。To understand the `__define_initcall` macro, first of all let's look at the `initcall_t` type. This type is defined in the same [header]() file and it represents pointer to a function which returns pointer to [integer](https://en.wikipedia.org/wiki/Integer) which will be result of the `initcall`:
+要了解 `__define_initcall` 宏，首先让我们来看下 `initcall_t` 类型。这个类型定义在同一个 [头文件]() 中，它表示一个返回 [整形](https://en.wikipedia.org/wiki/Integer)指针的函数指针，这将是 `initcall` 的结果：
 
 ```C
 typedef int (*initcall_t)(void);
 ```
 
-现在让我们回到 `_-define_initcall` 宏。[##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 提供了连接两个符号的能力。在我们的例子中，`__define_initcall` 宏的第一行产生了 `.initcall id .init` [ELF部分](http://www.skyfree.org/linux/references/ELF_Format.pdf) 给定函数的定义，并标记以下[gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) 属性： `__initcall_function_name_id` and `__used`。如果我们查看表示内核链接脚本数据的 [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) 头文件，我们会看到所有的 `initcalls` 部分都将放在 `.data` 段。Now let's return to the `_-define_initcall` macro. The [##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) provides ability to concatenate two symbols. In our case, the first line of the `__define_initcall` macro produces definition of the given function which is located in the `.initcall id .init` [ELF section](http://www.skyfree.org/linux/references/ELF_Format.pdf) and marked with the following [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) attributes: `__initcall_function_name_id` and `__used`. If we will look in the [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) header file which represents data for the kernel [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29) script, we will see that all of `initcalls` sections will be placed in the `.data` section:
+现在让我们回到 `_-define_initcall` 宏。[##](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html) 提供了连接两个符号的能力。在我们的例子中，`__define_initcall` 宏的第一行产生了 `.initcall id .init` [ELF部分](http://www.skyfree.org/linux/references/ELF_Format.pdf) 给定函数的定义，并标记以下[gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection) 属性： `__initcall_function_name_id` and `__used`。如果我们查看表示内核链接脚本数据的 [include/asm-generic/vmlinux.lds.h](https://github.com/torvalds/linux/blob/master/include/asm-generic/vmlinux.lds.h) 头文件，我们会看到所有的 `initcalls` 部分都将放在 `.data` 段：
 
 ```C
 #define INIT_CALLS					\
@@ -129,19 +124,19 @@ typedef int (*initcall_t)(void);
 
 ```
 
-第二个属性 - `__used`，定义在 [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) 头文件中，它扩展了以下 `gcc` 定义：The second attribute - `__used` is defined in the [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) header file and it expands to the definition of the following `gcc` attribute:
+第二个属性 - `__used`，定义在 [include/linux/compiler-gcc.h](https://github.com/torvalds/linux/blob/master/include/linux/compiler-gcc.h) 头文件中，它扩展了以下 `gcc` 定义：
 
 ```C
 #define __used   __attribute__((__used__))
 ```
 
-它防止 `定义了变量但未使用` 的告警。宏 `__define_initcall` 最后一行是：which prevents `variable defined but not used` warning. The last line of the `__define_initcall` macro is:
+它防止 `定义了变量但未使用` 的告警。宏 `__define_initcall` 最后一行是：
 
 ```C
 LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 ```
 
-这取决于 `CONFIG_LTO` 内核配置选项，只为编译器提供[链接时间优化](https://gcc.gnu.org/wiki/LinkTimeOptimization)存根：depends on the `CONFIG_LTO` kernel configuration option and just provides stub for the compiler [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization):
+这取决于 `CONFIG_LTO` 内核配置选项，只为编译器提供[链接时间优化](https://gcc.gnu.org/wiki/LinkTimeOptimization)存根：
 
 ```
 #ifdef CONFIG_LTO
@@ -155,9 +150,9 @@ LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 #endif
 ```
 
-为了防止没有引用模块中变量时出现问题，它被移到了程序末尾。这就是关于 `__define_initcall` 宏的全部了。所以，所有的 `*_initcall` 宏将会在Linux内核编译时扩展，所有的 `initcalls` 会放置在它们的段内，并可以通过 `.data` 段来获取，Linux内核在初始化过程中就知道在哪儿去找到 `initcall` 并调用它。In order to prevent any problem when there is no reference to a variable in a module, it will be moved to the end of the program. That's all about the `__define_initcall` macro. So, all of the `*_initcall` macros will be expanded during compilation of the Linux kernel, and all `initcalls` will be placed in their sections and all of them will be available from the `.data` section and the Linux kernel will know where to find a certain `initcall` to call it during initialization process.
+为了防止没有引用模块中变量时出现问题，它被移到了程序末尾。这就是关于 `__define_initcall` 宏的全部了。所以，所有的 `*_initcall` 宏将会在Linux内核编译时扩展，所有的 `initcalls` 会放置在它们的段内，并可以通过 `.data` 段来获取，Linux内核在初始化过程中就知道在哪儿去找到 `initcall` 并调用它。
 
-既然Linux内核可以调用 `initcalls`，我们就来看下Linux内核是如何做的。这个过程从[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 头文件的 `do_basic_setup` 函数开始：As `initcalls` can be called by the Linux kernel, let's look how the Linux kernel does this. This process starts in the `do_basic_setup` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+既然Linux内核可以调用 `initcalls`，我们就来看下Linux内核是如何做的。这个过程从[init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 头文件的 `do_basic_setup` 函数开始：
 
 ```C
 static void __init do_basic_setup(void)
@@ -172,7 +167,7 @@ static void __init do_basic_setup(void)
 }
 ```
 
-该函数在Linux内核初始化过程中调用，调用时机是主要步骤之后，比如内存管理器相关的初始化、`CPU` 子系统等都完成了。`do_initcalls` 函数只是遍历 `initcall` 级别数组，并调用每个级别的 `do_initcall_level` 函数：which is called during the initialization of the Linux kernel, right after main steps of initialization like memory manager related initialization, `CPU` subsystem and other already finished. The `do_initcalls` function just goes through the array of `initcall` levels and call the `do_initcall_level` function for each level:
+该函数在Linux内核初始化过程中调用，调用时机是主要步骤之后，比如内存管理器相关的初始化、`CPU` 子系统等都完成了。`do_initcalls` 函数只是遍历 `initcall` 级别数组，并调用每个级别的 `do_initcall_level` 函数：
 
 ```C
 static void __init do_initcalls(void)
@@ -184,7 +179,7 @@ static void __init do_initcalls(void)
 }
 ```
 
-`initcall_levels` 数组在同一个源码[文件](https://github.com/torvalds/linux/blob/master/init/main.c)中定义，包含了定义在 `__define_initcall` 宏中的那些段的指针：The `initcall_levels` array is defined in the same source code [file](https://github.com/torvalds/linux/blob/master/init/main.c) and contains pointers to the sections which were defined in the `__define_initcall` macro:
+`initcall_levels` 数组在同一个源码[文件](https://github.com/torvalds/linux/blob/master/init/main.c)中定义，包含了定义在 `__define_initcall` 宏中的那些段的指针：
 
 ```C
 static initcall_t *initcall_levels[] __initdata = {
@@ -200,7 +195,7 @@ static initcall_t *initcall_levels[] __initdata = {
 };
 ```
 
-如果你有兴趣，你可以在Linux内核编译后生成的链接器脚本 `arch/x86/kernel/vmlinux.lds` 中找到这些段：If you are interested, you can find these sections in the `arch/x86/kernel/vmlinux.lds` linker script which is generated after the Linux kernel compilation:
+如果你有兴趣，你可以在Linux内核编译后生成的链接器脚本 `arch/x86/kernel/vmlinux.lds` 中找到这些段：
 
 ```
 .init.data : AT(ADDR(.init.data) - 0xffffffff80000000) {
@@ -219,16 +214,16 @@ static initcall_t *initcall_levels[] __initdata = {
 }
 ```
 
-如果你对这些不熟，可以在本书的某些[部分](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)了解更多关于[链接器](https://en.wikipedia.org/wiki/Linker_%28computing%29)的信息。If you are not familiar with this then you can know more about [linkers](https://en.wikipedia.org/wiki/Linker_%28computing%29) in the special [part](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html) of this book.
+如果你对这些不熟，可以在本书的某些[部分](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)了解更多关于[链接器](https://en.wikipedia.org/wiki/Linker_%28computing%29)的信息。
 
-正如我们刚看到的，`do_initcall_level` 函数有一个参数 - `initcall` 的级别，做了以下两件事：首先这个函数拷贝了 `initcall_command_line`，这是通常内核包含了各个模块参数的[命令行](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)的副本，并用 [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c)源码文件的 `parse_args` 函数解析它，然后调用各个级别的 `do_on_initcall` 函数：As we just saw, the `do_initcall_level` function takes one parameter - level of `initcall` and does following two things: First of all this function parses the `initcall_command_line` which is copy of usual kernel [command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) which may contain parameters for modules with the `parse_args` function from the [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c) source code file and call the `do_on_initcall` function for each level:
+正如我们刚看到的，`do_initcall_level` 函数有一个参数 - `initcall` 的级别，做了以下两件事：首先这个函数拷贝了 `initcall_command_line`，这是通常内核包含了各个模块参数的[命令行](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)的副本，并用 [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c)源码文件的 `parse_args` 函数解析它，然后调用各个级别的 `do_on_initcall` 函数：
 
 ```C
 for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
 		do_one_initcall(*fn);
 ```
 
-`do_on_initcall` 为我们做了主要的工作。我们可以看到，这个函数有一个入参表示 `initcall` 回调函数，并调用给定的回调：The `do_on_initcall` does  main job for us. As we may see, this function takes one parameter which represent `initcall` callback function and does the call of the given callback:
+`do_on_initcall` 为我们做了主要的工作。我们可以看到，这个函数有一个入参表示 `initcall` 回调函数，并调用给定的回调：
 
 ```C
 int __init_or_module do_one_initcall(initcall_t fn)
@@ -261,8 +256,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 }
 ```
 
-让我们来试着理解 `do_on_initcall` 函数做了什么。首先我们增加 [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 计数，以便我们稍后做下检查，以确保它不是不平衡的。这步以后，我们可以看到 `initcall_backlist` 函数的调用，这个函数遍历包含了 `initcalls` 黑名单的 `blacklisted_initcalls` 链表，如果 `initcall` 在黑名单里就释放它：Let's try to understand what does the `do_on_initcall` function does. First of all we increase [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) counter so that we can check it later to be sure that it is not imbalanced. After this step we can see the call of the `initcall_backlist` function which
-goes over the `blacklisted_initcalls` list which stores blacklisted `initcalls` and releases the given `initcall` if it is located in this list:
+让我们来试着理解 `do_on_initcall` 函数做了什么。首先我们增加 [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 计数，以便我们稍后做下检查，以确保它不是不平衡的。这步以后，我们可以看到 `initcall_backlist` 函数的调用，这个函数遍历包含了 `initcalls` 黑名单的 `blacklisted_initcalls` 链表，如果 `initcall` 在黑名单里就释放它：
 
 ```C
 list_for_each_entry(entry, &blacklisted_initcalls, next) {
@@ -274,9 +268,9 @@ list_for_each_entry(entry, &blacklisted_initcalls, next) {
 }
 ```
 
-黑名单的 `initcalls` 保存在 `blacklisted_initcalls` 链表中，这个链表是在早期Linux内核初始化时由Linux内核命令行来填充的。The blacklisted `initcalls` stored in the `blacklisted_initcalls` list and this list is filled during early Linux kernel initialization from the Linux kernel command line.
+黑名单的 `initcalls` 保存在 `blacklisted_initcalls` 链表中，这个链表是在早期Linux内核初始化时由Linux内核命令行来填充的。
 
-处理完黑名单 `initcalls`，接下来的代码直接调用 `initcall`：After the blacklisted `initcalls` will be handled, the next part of code does directly the call of the `initcall`:
+处理完黑名单 `initcalls`，接下来的代码直接调用 `initcall`：
 
 ```C
 if (initcall_debug)
@@ -285,13 +279,13 @@ else
 	ret = fn();
 ```
 
-取决于 `initcall_debug` 变量的值，`do_one_initcall_debug` 函数将调用 `initcall`，或直接调用`fn()`。`initcall_debug` 变量定义在[同一个源码文件](https://github.com/torvalds/linux/blob/master/init/main.c)：Depends on the value of the `initcall_debug` variable, the `do_one_initcall_debug` function will call `initcall` or this function will do it directly via `fn()`. The `initcall_debug` variable is defined in the [same](https://github.com/torvalds/linux/blob/master/init/main.c) source code file:
+取决于 `initcall_debug` 变量的值，`do_one_initcall_debug` 函数将调用 `initcall`，或直接调用`fn()`。`initcall_debug` 变量定义在[同一个源码文件](https://github.com/torvalds/linux/blob/master/init/main.c)：
 
 ```C
 bool initcall_debug;
 ```
 
-该变量提供了向内核[日志缓冲区](https://en.wikipedia.org/wiki/Dmesg)打印一些信息的能力。可以通过 `initcall_debug` 参数从内核命令行中设置这个变量的值。从Linux内核命令行[文档](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)可以看到：and provides ability to print some information to the kernel [log buffer](https://en.wikipedia.org/wiki/Dmesg). The value of the variable can be set from the kernel commands via the `initcall_debug` parameter. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/kernel-parameters.txt) of the Linux kernel command line:
+该变量提供了向内核[日志缓冲区](https://en.wikipedia.org/wiki/Dmesg)打印一些信息的能力。可以通过 `initcall_debug` 参数从内核命令行中设置这个变量的值。从Linux内核命令行[文档](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)可以看到：
 
 ```
 initcall_debug	[KNL] Trace initcalls as they are executed.  Useful
@@ -299,7 +293,7 @@ initcall_debug	[KNL] Trace initcalls as they are executed.  Useful
                       startup.
 ```
 
-确实如此。如果我们看下 `do_one_initcall_debug` 函数的实现，我们会看到它与 `do_one_initcall` 函数做了一样的事，也就是说，`do_one_initcall_debug` 函数调用了给定的 `initcall`，并打印了一些和 `initcall` 相关的信息（比如当前任务的 [pid](https://en.wikipedia.org/wiki/Process_identifier)、`initcall` 的持续时间等）：And that's true. If we will look at the implementation of the `do_one_initcall_debug` function, we will see that it does the same as the `do_one_initcall` function or i.e. the `do_one_initcall_debug` function calls the given `initcall` and prints some information (like the [pid](https://en.wikipedia.org/wiki/Process_identifier) of the currently running task, duration of execution of the `initcall` and etc.) related to the execution of the given `initcall`:
+确实如此。如果我们看下 `do_one_initcall_debug` 函数的实现，我们会看到它与 `do_one_initcall` 函数做了一样的事，也就是说，`do_one_initcall_debug` 函数调用了给定的 `initcall`，并打印了一些和 `initcall` 相关的信息（比如当前任务的 [pid](https://en.wikipedia.org/wiki/Process_identifier)、`initcall` 的持续时间等）：
 
 ```C
 static int __init_or_module do_one_initcall_debug(initcall_t fn)
@@ -321,7 +315,7 @@ static int __init_or_module do_one_initcall_debug(initcall_t fn)
 }
 ```
 
-由于 `initcall` 被 `do_one_initcall` 或 `do_one_initcall_debug` 调用，我们可以看到在 `do_one_initcall` 函数末尾做了两次检查。第一个检查在initcall执行内部 `__preempt_count_add` 和 `__preempt_count_sub` 可能的执行次数，如果这个值和之前的可抢占计数不相等，我们就把 `preemption imbalance` 字符串添加到消息缓冲区，并设置正确的可抢占计数：As an `initcall` was called by the one of the ` do_one_initcall` or `do_one_initcall_debug` functions, we may see two checks in the end of the `do_one_initcall` function. The first one checks the amount of possible `__preempt_count_add` and `__preempt_count_sub` calls inside of the executed initcall, and if this value is not equal to the previous value of the preemptible counter, we add the `preemption imbalance` string to the message buffer and set correct value of the preemptible counter:
+由于 `initcall` 被 `do_one_initcall` 或 `do_one_initcall_debug` 调用，我们可以看到在 `do_one_initcall` 函数末尾做了两次检查。第一个检查在initcall执行内部 `__preempt_count_add` 和 `__preempt_count_sub` 可能的执行次数，如果这个值和之前的可抢占计数不相等，我们就把 `preemption imbalance` 字符串添加到消息缓冲区，并设置正确的可抢占计数：
 
 ```C
 if (preempt_count() != count) {
@@ -330,7 +324,7 @@ if (preempt_count() != count) {
 }
 ```
 
-稍后这个错误字符串就会打印出来。最后检查本地 [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 的状态，如果它们被禁用了，我们就添加 `disabled interrupts` 字符串到我们的消息缓冲区，并为当前处理器使能 `IRQs`，以防出现 `IRQs` 被 `initcall` 禁用了但不再使能的情况出现：Later this error string will be printed. The last check the state of local [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) and if they are disabled, we add the `disabled interrupts` strings to the our message buffer and enable `IRQs` for the current processor to prevent the state when `IRQs` were disabled by an `initcall` and didn't enable again:
+稍后这个错误字符串就会打印出来。最后检查本地 [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 的状态，如果它们被禁用了，我们就添加 `disabled interrupts` 字符串到我们的消息缓冲区，并为当前处理器使能 `IRQs`，以防出现 `IRQs` 被 `initcall` 禁用了但不再使能的情况出现：
 
 ```C
 if (irqs_disabled()) {
@@ -339,27 +333,27 @@ if (irqs_disabled()) {
 }
 ```
 
-这就是全部了。通过这种方式，Linux内核以正确的顺序完成了很多子系统的初始化。现在我们知道Linux内核的 `initcall` 机制是怎么回事了。在这部分中，我们介绍了 `initcall` 机制的主要部分，但遗留了一些重要的概念。让我们来简单看下这些概念。That's all. In this way the Linux kernel does initialization of many subsystems in a correct order. From now on, we know what is the `initcall` mechanism in the Linux kernel. In this part, we covered main general portion of the `initcall` mechanism but we left some important concepts. Let's make a short look at these concepts.
+这就是全部了。通过这种方式，Linux内核以正确的顺序完成了很多子系统的初始化。现在我们知道Linux内核的 `initcall` 机制是怎么回事了。在这部分中，我们介绍了 `initcall` 机制的主要部分，但遗留了一些重要的概念。让我们来简单看下这些概念。
 
-首先，我们错过了一个级别的 `initcalls`，就是 `rootfs initcalls`。和我们在本部分看到的很多宏类似，你可以在 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 头文件中找到 `rootfs_initcall` 的定义：First of all, we have missed one level of `initcalls`, this is `rootfs initcalls`. You can find definition of the `rootfs_initcall` in the [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) header file along with all similar macros which we saw in this part:
+首先，我们错过了一个级别的 `initcalls`，就是 `rootfs initcalls`。和我们在本部分看到的很多宏类似，你可以在 [include/linux/init.h](https://github.com/torvalds/linux/blob/master/include/linux/init.h) 头文件中找到 `rootfs_initcall` 的定义：
 
 ```C
 #define rootfs_initcall(fn)		__define_initcall(fn, rootfs)
 ```
 
-从这个宏的名字我们可以理解到，它的主要目的是保存和 [rootfs](https://en.wikipedia.org/wiki/Initramfs) 相关的回调。除此之外，只有在与设备相关的东西没被初始化时，在文件系统级别初始化以后再初始化一些其它东西时才有用。例如，发生在源码文件 [init/initramfs.c](https://github.com/torvalds/linux/blob/master/init/initramfs.c) 中 `populate_rootfs` 函数里的解压  [initramfs](https://en.wikipedia.org/wiki/Initramfs)：As we may understand from the macro's name, its main purpose is to store callbacks which are related to the [rootfs](https://en.wikipedia.org/wiki/Initramfs). Besides this goal, it may be useful to initialize other stuffs after initialization related to filesystems level only if devices related stuff are not initialized. For example, the decompression of the [initramfs](https://en.wikipedia.org/wiki/Initramfs) which occurred in the `populate_rootfs` function from the [init/initramfs.c](https://github.com/torvalds/linux/blob/master/init/initramfs.c) source code file:
+从这个宏的名字我们可以理解到，它的主要目的是保存和 [rootfs](https://en.wikipedia.org/wiki/Initramfs) 相关的回调。除此之外，只有在与设备相关的东西没被初始化时，在文件系统级别初始化以后再初始化一些其它东西时才有用。例如，发生在源码文件 [init/initramfs.c](https://github.com/torvalds/linux/blob/master/init/initramfs.c) 中 `populate_rootfs` 函数里的解压  [initramfs](https://en.wikipedia.org/wiki/Initramfs)：
 
 ```C
 rootfs_initcall(populate_rootfs);
 ```
 
-在这里，我们可以看到熟悉的输出：From this place, we may see familiar output:
+在这里，我们可以看到熟悉的输出：
 
 ```
 [    0.199960] Unpacking initramfs...
 ```
 
-除了 `rootfs_initcall` 级别，还有其它的`console_initcall`、 `security_initcall` 和其他辅助的  `initcall` 级别。我们遗漏的最后一件事，是 `*_initcall_sync` 级别的集合。在这部分我们看到的几乎每个 `*_initcall` 宏，都有 `_sync` 前缀的宏伴随：Besides the `rootfs_initcall` level, there are additional `console_initcall`, `security_initcall` and other secondary `initcall` levels. The last thing that we have missed is the set of the `*_initcall_sync` levels. Almost each `*_initcall` macro that we have seen in this part, has macro companion with the `_sync` prefix:
+除了 `rootfs_initcall` 级别，还有其它的`console_initcall`、 `security_initcall` 和其他辅助的  `initcall` 级别。我们遗漏的最后一件事，是 `*_initcall_sync` 级别的集合。在这部分我们看到的几乎每个 `*_initcall` 宏，都有 `_sync` 前缀的宏伴随：
 
 ```C
 #define core_initcall_sync(fn)		__define_initcall(fn, 1s)
@@ -371,20 +365,20 @@ rootfs_initcall(populate_rootfs);
 #define late_initcall_sync(fn)		__define_initcall(fn, 7s)
 ```
 
-这些附加级别的主要目的是，等待所有某个级别的与模块相关的初始化例程完成。The main goal of these additional levels is to wait for completion of all a module related initialization routines for a certain level.
+这些附加级别的主要目的是，等待所有某个级别的与模块相关的初始化例程完成。
 
-这就是全部了。That's all.
+这就是全部了。
 
-结论Conclusion
+结论
 --------------------------------------------------------------------------------
 
-在这部分中，我们看到了Linux内核的一项重要机制，即在初始化期间允许调用依赖于Linux内核当前状态的函数。In this part we saw the important mechanism of the Linux kernel which allows to call a function which depends on the current state of the Linux kernel during its initialization.
+在这部分中，我们看到了Linux内核的一项重要机制，即在初始化期间允许调用依赖于Linux内核当前状态的函数。
 
-如果你有问题或建议，可随时在twitter [0xAX](https://twitter.com/0xAX) 上联系我，给我发 [email](anotherworldofworld@gmail.com)，或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new)。If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+如果你有问题或建议，可随时在twitter [0xAX](https://twitter.com/0xAX) 上联系我，给我发 [email](anotherworldofworld@gmail.com)，或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new)。
 
-**请注意英语不是我的母语，对此带来的不便，我很抱歉。如果你发现了任何错误，都可以给我发 PR 到[linux-insides](https://github.com/0xAX/linux-insides)。Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**.
+**请注意英语不是我的母语，对此带来的不便，我很抱歉。如果你发现了任何错误，都可以给我发 PR 到[linux-insides](https://github.com/0xAX/linux-insides)。**.
 
-链接Links
+链接
 --------------------------------------------------------------------------------
 
 * [callback](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29)
