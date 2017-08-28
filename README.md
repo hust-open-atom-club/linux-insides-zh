@@ -8,6 +8,15 @@
 
 **问题/建议**: 通过在 twitter 上 [@0xAX](https://twitter.com/0xAX) ，直接添加 [issue](https://github.com/0xAX/linux-insides/issues/new) 或者直接给我发[邮件](mailto:anotherworldofworld@gmail.com),请自由地向我提出任何问题或者建议。
 
+## 贡献条目
+
+对于 linux-insides-zh 项目，您可以通过以下方法贡献自己的力量：
+
+- 英文翻译，目前只提供简体中文的译文；
+- 更新未被翻译的英文原本，其实就是将上游英文的更新纳入到当前项目中；
+- 更新已经翻译的中文译文，其实就是查看上游英文的更新，检查是否需要对中文译文进行更新；
+- 校对当前已经翻译过的中文疑问，包括修改 typo，润色等工作；
+
 ## 翻译进度
 
 | 章节|译者|翻译进度|
@@ -34,13 +43,13 @@
 | 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/Interrupts)||正在进行|
 |├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|正在进行|
 |├ [3.1](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-1.md)||未开始|
-|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-2.md)||未开始|
-|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-3.md)||未开始|
-|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-4.md)||未开始|
-|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-5.md)||未开始|
-|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-6.md)||未开始|
-|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-7.md)||未开始|
-|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-8.md)||未开始|
+|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-2.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-3.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-4.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-5.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-6.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-7.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-8.md)|[@up2wing](https://github.com/up2wing)|正在进行|
 |├ [3.9](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-9.md)|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
 |└ [3.10](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/interrupts-10.md)|[@worldwar](https://github.com/worldwar)|已完成|
 | 4. [System calls](https://github.com/MintCN/linux-insides-zh/tree/master/SysCall)||正在进行|
@@ -97,6 +106,9 @@
 | 14. [KernelStructures](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures)||已完成|
 |├ [14.0](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[3cb550c0](https://github.com/0xAX/linux-insides/commit/3cb550c089c8fc609f667290434e9e98e93fa279)|
 |└ [14.1](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/idt.md)|[@woodpenker](https://github.com/woodpenker)|更新至[4521637d](https://github.com/0xAX/linux-insides/commit/4521637d9cb76e5d4e4dc951758b264a68504927)|
+| 15. [Cgroups](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups)||正在进行|
+|├ [15.0](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[e811ca4f](https://github.com/0xAX/linux-insides/commit/90f50c2ac5a197da044e5091c631dd43e811ca4f)|
+|└ [15.1](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/cgroups1.md)|[@tjm-1990](https://github.com/tjm-1990)|正在进行|
 
 ## 翻译认领规则
 
