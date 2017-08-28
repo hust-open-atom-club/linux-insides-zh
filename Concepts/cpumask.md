@@ -52,7 +52,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 (((8) + (8) - 1) / (8)) = 1
 ```
 
-`NR_CPUS` 宏表示系统中的 CPU，依赖于在 [include/linux/threads.h](https://github.com/torvalds/linux/blob/master/include/linux/threads.h) 中定义的 `CONFIG_NR_CPUS` 宏，看起来像这样：
+`NR_CPUS` 宏表示系统中的 CPU，且依赖于在 [include/linux/threads.h](https://github.com/torvalds/linux/blob/master/include/linux/threads.h) 中定义的 `CONFIG_NR_CPUS` 宏，看起来像这样：
 
 ```C
 #ifndef CONFIG_NR_CPUS
@@ -79,17 +79,17 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 }
 ```
 
-每次都是返回 `1`。我们需要它仅一个目的：编译时检测一个给定的 `bitmap` 是一个位图，换句话说，它检测一个 `bitmap` 有 `unsigned long *` 类型。因此我们传递 `cpu_possible_bits` 给宏 `to_cpumask` ，将 `unsigned long` 数组转换为 `struct cpumask *`。
+每次都是返回 `1`。我们需要它只是因为：编译时检测一个给定的 `bitmap` 是一个位图，换句话说，它检测一个 `bitmap` 是否有 `unsigned long *` 类型。因此我们传递 `cpu_possible_bits` 给宏 `to_cpumask` ，将 `unsigned long` 数组转换为 `struct cpumask *`。
 
 cpumask API
 --------------------------------------------------------------------------------
 
-因为我们可以用上述方法之一来定义 cpumask，Linux 内核提供了 API 来操作 cpumask。我们看下上述函数之一，例如 `set_cpu_online`，这个函数有两个参数：
+因为我们可以用其中一个方法来定义 cpumask，Linux 内核提供了 API 来处理 cpumask。我们来研究下其中一个函数，例如 `set_cpu_online`，这个函数有两个参数：
 
 * CPU 数目;
 * CPU 状态;
 
-这个函数的实现是这样：
+这个函数的实现如下所示：
 
 ```C
 void set_cpu_online(unsigned int cpu, bool online)
@@ -103,13 +103,13 @@ void set_cpu_online(unsigned int cpu, bool online)
 }
 ```
 
-首先检测第二个 `state` 参数并调用依赖它的 `cpumask_set_cpu` 或 `cpumask_clear_cpu`。这里我们可以看到在中 `cpumask_set_cpu` 的第二个参数转换为 `struct cpumask *`。在我们的例子中是位图 `cpu_online_bits`，定义如下：
+该函数首先检测第二个 `state` 参数并调用依赖它的 `cpumask_set_cpu` 或 `cpumask_clear_cpu`。这里我们可以看到在中 `cpumask_set_cpu` 的第二个参数转换为 `struct cpumask *`。在我们的例子中是位图 `cpu_online_bits`，定义如下：
 
 ```C
 static DECLARE_BITMAP(cpu_online_bits, CONFIG_NR_CPUS) __read_mostly;
 ```
 
-函数 `cpumask_set_cpu` 调用了一次 `set_bit` 函数：
+函数 `cpumask_set_cpu` 仅调用了一次 `set_bit` 函数：
 
 ```C
 static inline void cpumask_set_cpu(unsigned int cpu, struct cpumask *dstp)
@@ -171,7 +171,7 @@ asm volatile(LOCK_PREFIX "bts %1,%0" : BITOP_ADDR(addr) : "Ir" (nr) : "memory");
 
 接下来是 `memory`。它告诉编译器汇编代码执行内存读或写到某些项，而不是那些输入或输出操作数（例如，访问指向输出参数的内存）。
 
-`Ir` - 立即操作数。
+`Ir` - 寄存器操作数。
 
 `bts` 指令设置一个位字符串的给定位，存储给定位的值到 `CF` 标志位。所以我们传递 cpu 号，我们的例子中为 0，给 `set_bit` 并且执行后，其设置了在 `cpu_online_bits` cpumask 中的 0 位。这意味着第一个 cpu 此时上线了。
 
