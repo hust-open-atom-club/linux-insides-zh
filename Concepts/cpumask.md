@@ -52,7 +52,7 @@ typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
 (((8) + (8) - 1) / (8)) = 1
 ```
 
-`NR_CPUS` 宏表示系统中的 CPU，且依赖于在 [include/linux/threads.h](https://github.com/torvalds/linux/blob/master/include/linux/threads.h) 中定义的 `CONFIG_NR_CPUS` 宏，看起来像这样：
+`NR_CPUS` 宏表示的是系统中 CPU 的数目，且依赖于在 [include/linux/threads.h](https://github.com/torvalds/linux/blob/master/include/linux/threads.h) 中定义的 `CONFIG_NR_CPUS` 宏，看起来像这样：
 
 ```C
 #ifndef CONFIG_NR_CPUS
