@@ -30,9 +30,9 @@
 |└ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)||未开始|
 | 2. [Initialization](https://github.com/MintCN/linux-insides-zh/tree/master/Initialization)||正在进行|
 |├ [2.0](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
-|├ [2.1](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-1.md)||未开始|
-|├ [2.2](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md)||未开始|
-|├ [2.3](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)||未开始|
+|├ [2.1](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-1.md)|[@dontpanic92](https://github.com/dontpanic92)|已完成|
+|├ [2.2](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md)|[@dontpanic92](https://github.com/dontpanic92)|已完成|
+|├ [2.3](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)|[@dontpanic92](https://github.com/dontpanic92)|已完成|
 |├ [2.4](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-4.md)||已完成|
 |├ [2.5](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-5.md)||未开始|
 |├ [2.6](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-6.md)||未开始|
