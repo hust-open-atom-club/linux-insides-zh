@@ -155,7 +155,7 @@ print line
 ...
 ```
 
-没变化。再把这个进程的 pid 加到我们控制组的 `devices/tasks` 文件：
+没有任何效果。再把这个进程的 pid 加到我们控制组的 `devices/tasks` 文件：
 
 ```
 # echo $(pidof -x cgroup_test_script.sh) > /sys/fs/cgroup/devices/cgroup_test_group/tasks
