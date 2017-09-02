@@ -4,30 +4,30 @@
 简介
 --------------------------------------------------------------------------------
 
-这是 [linux 内核揭密](http://0xax.gitbooks.io/linux-insides/content/) 的新一章的第一部分。你可以根据这部分的标题猜测 - 这一部分将涉及 Linux 内核中的 [控制组](https://en.wikipedia.org/wiki/Cgroups) 或 `cgroups` 机制。
+这是 [linux 内核揭密](http://0xax.gitbooks.io/linux-insides/content/) 的新一章的第一部分。你可以根据这部分的标题猜测 - 这一部分将涉及 Linux 内核中的 [`cgroup`](https://en.wikipedia.org/wiki/Cgroups) 或 `cgroups` 机制。
 
-`Cgroups` 是由 Linux 内核提供的一种机制，它允许我们分配诸如处理器时间、每组进程的数量、每个控制组的内存大小，或者针对一个或一组进程的上述资源的组合。`Cgroups` 是按照层级结构组织的，这种机制类似于通常的进程，他们也是层级结构，并且子 `cgroups` 会继承其上级的一些属性。但实际上他们还是有区别的。`cgroups` 和进程之间的主要区别在于，多个不同层级的控制组可以同时存在，而进程树则是单一的。同时存在的多个不同层级的控制组并不是任意的，因为每个控制组层级都要附加到一组控制组"子系统"中。
+`Cgroups` 是由 Linux 内核提供的一种机制，它允许我们分配诸如处理器时间、每组进程的数量、每个 `cgroup` 的内存大小，或者针对一个或一组进程的上述资源的组合。`Cgroups` 是按照层级结构组织的，这种机制类似于通常的进程，他们也是层级结构，并且子 `cgroups` 会继承其上级的一些属性。但实际上他们还是有区别的。`cgroups` 和进程之间的主要区别在于，多个不同层级的 `cgroup` 可以同时存在，而进程树则是单一的。同时存在的多个不同层级的 `cgroup` 并不是任意的，因为每个 `cgroup` 层级都要附加到一组 `cgroup` "子系统"中。
 
-每个“控制组子系统”代表一种资源，如针对某个“控制组”的处理器时间或者 [pid](https://en.wikipedia.org/wiki/Process_identifier)  的数量，也叫进程数。Linux 内核提供对以下 12 种“控制组子系统”的支持：
+每个 `cgroup` 子系统代表一种资源，如针对某个 `cgroup` 的处理器时间或者 [pid](https://en.wikipedia.org/wiki/Process_identifier)  的数量，也叫进程数。Linux 内核提供对以下 12 种 `cgroup` 子系统的支持：
 
-* `cpuset` - 为“控制组”内的任务分配独立的处理器和内存节点；
-* `cpu` - 使用调度程序对“控制组”内的任务提供 CPU 资源的访问；
-* `cpuacct` - 生成“控制组”中所有任务的处理器使用情况报告；
+* `cpuset` - 为 `cgroup` 内的任务分配独立的处理器和内存节点；
+* `cpu` - 使用调度程序对 `cgroup` 内的任务提供 CPU 资源的访问；
+* `cpuacct` - 生成 `cgroup` 中所有任务的处理器使用情况报告；
 * `io` - 限制对[块设备](https://en.wikipedia.org/wiki/Device_file)的读写操作;
-* `memory` - 限制“控制组”中的一组任务的内存使用;
-* `devices` - 限制“控制组”中的一组任务访问设备；
-* `freezer` - 允许“控制组”中的一组任务挂起/恢复；
-* `net_cls` - 允许对“控制组”中的任务产生的网络数据包进行标记；
-* `net_prio` - 针对“控制组”中的每个网络接口提供一种动态修改网络流量优先级的方法；
-* `perf_event` - 支持访问“控制组”中的[性能事件](https://en.wikipedia.org/wiki/Perf_(Linux));
-* `hugetlb` - 为“控制组”开启对[大页内存](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt)的支持;
-* `pid` - 限制“控制组”中的进程数量。
+* `memory` - 限制 `cgroup` 中的一组任务的内存使用;
+* `devices` - 限制 `cgroup` 中的一组任务访问设备；
+* `freezer` - 允许 `cgroup` 中的一组任务挂起/恢复；
+* `net_cls` - 允许对 `cgroup` 中的任务产生的网络数据包进行标记；
+* `net_prio` - 针对 `cgroup` 中的每个网络接口提供一种动态修改网络流量优先级的方法；
+* `perf_event` - 支持访问 `cgroup` 中的[性能事件](https://en.wikipedia.org/wiki/Perf_(Linux));
+* `hugetlb` - 为 `cgroup` 开启对[大页内存](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt)的支持;
+* `pid` - 限制 `cgroup` 中的进程数量。
 
-每个“控制组子系统”是否被支持均与相关配置选项有关。例如，`cpuset` 子系统应该通过 `CONFIG_CPUSETS` 内核配置选项启用，`io` 子系统通过 `CONFIG_BLK_CGROUP` 内核配置选项等。所有这些内核配置选项都可以在 `General setup → Control Group support` 菜单里找到：
+每个 `cgroup` 子系统是否被支持均与相关配置选项有关。例如，`cpuset` 子系统应该通过 `CONFIG_CPUSETS` 内核配置选项启用，`io` 子系统通过 `CONFIG_BLK_CGROUP` 内核配置选项等。所有这些内核配置选项都可以在 `General setup → Control Group support` 菜单里找到：
 
 ![menuconfig](http://oi66.tinypic.com/2rc2a9e.jpg)
 
-你可以通过 [proc](https://en.wikipedia.org/wiki/Procfs) 虚拟文件系统在计算机上查看已经启用的控制组：
+你可以通过 [proc](https://en.wikipedia.org/wiki/Procfs) 虚拟文件系统在计算机上查看已经启用的 `cgroup`：
 
 ```
 $ cat /proc/cgroups 
@@ -68,7 +68,7 @@ dr-xr-xr-x 5 root root  0 Dec  2 22:37 pids
 dr-xr-xr-x 5 root root  0 Dec  2 22:37 systemd
 ```
 
-正如你所猜测的那样，“控制组”机制不只是针对 Linux 内核的需求而创建的，更多的是用户空间层面的需求。要使用“控制组”，需要先创建它。我们可以通过两种方式来创建。
+正如你所猜测的那样，`cgroup` 机制不只是针对 Linux 内核的需求而创建的，更多的是用户空间层面的需求。要使用 `cgroup` ，需要先创建它。我们可以通过两种方式来创建。
 
 第一种方法是在 `/sys/fs/cgroup` 目录下的任意子系统中创建子目录，并将任务的 pid 添加到 `tasks` 文件中，这个文件在我们创建子目录后会自动创建。
 
@@ -131,7 +131,7 @@ total 0
 -rw-r--r-- 1 root root 0 Dec  3 22:55 tasks
 ```
 
-现在我们重点关注 `tasks` 和 `devices.deny` 这两个文件。第一个文件 `tasks` 包含的是要附加到 `cgroup_test_group` 控制组的 pid，第二个文件 `devices.deny` 包含的是拒绝访问的设备列表。新创建的控制组默认对设备没有任何访问限制。为了禁止访问某个设备(在我们的示例中是 `/dev/tty`)，我们应该向 `devices.deny` 写入下面这行：
+现在我们重点关注 `tasks` 和 `devices.deny` 这两个文件。第一个文件 `tasks` 包含的是要附加到 `cgroup_test_group` `cgroup` 的 pid，第二个文件 `devices.deny` 包含的是拒绝访问的设备列表。新创建的 `cgroup` 默认对设备没有任何访问限制。为了禁止访问某个设备(在我们的示例中是 `/dev/tty`)，我们应该向 `devices.deny` 写入下面这行：
 
 ```
 # echo "c 5:0 w" > devices.deny
@@ -155,7 +155,7 @@ print line
 ...
 ```
 
-没有任何效果。再把这个进程的 pid 加到我们控制组的 `devices/tasks` 文件：
+没有任何效果。再把这个进程的 pid 加到我们 `cgroup` 的 `devices/tasks` 文件：
 
 ```
 # echo $(pidof -x cgroup_test_script.sh) > /sys/fs/cgroup/devices/cgroup_test_group/tasks
@@ -211,13 +211,13 @@ Control group /:
 │   └─6404 /bin/bash
 ```
 
-现在我们了解了一些关于“控制组”的机制，如何手动使用它，以及这个机制的用途。是时候深入 Linux 内核源码来了解这个机制的实现了。
+现在我们了解了一些关于 `cgroup` 的机制，如何手动使用它，以及这个机制的用途。是时候深入 Linux 内核源码来了解这个机制的实现了。
 
-控制组的早期初始化
+ `cgroup` 的早期初始化
 --------------------------------------------------------------------------------
 
-现在，在我们刚刚看到关于 Linux 内核的“控制组”机制的一些理论之后，我们可以开始深入到 Linux 的内核源码，以便更深入的了解这种机制。
-与往常一样，我们将从“控制组”的初始化开始。在 Linux 内核中，`cgroups` 的初始化分为两个部分:早期和晚期。在这部分我们只考虑“早期”的部分，“晚期”的部分会在下一部分考虑。
+现在，在我们刚刚看到关于 Linux 内核的 `cgroup` 机制的一些理论之后，我们可以开始深入到 Linux 的内核源码，以便更深入的了解这种机制。
+与往常一样，我们将从 `cgroup` 的初始化开始。在 Linux 内核中，`cgroups` 的初始化分为两个部分:早期和晚期。在这部分我们只考虑“早期”的部分，“晚期”的部分会在下一部分考虑。
 
 `Cgroups` 的早期初始化是在 Linux 内核的早期初始化期间从 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中调用：
 
@@ -424,7 +424,7 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
 结束语
 --------------------------------------------------------------------------------
 
-这是第一部分的结尾，它描述了 Linux 内核中“控制组”机制的引入，我们讨论了与“控制组”机制相关的一些理论和初始化步骤，在接下来的部分中，我们将继续深入讨论“控制组”更实用的方面。
+这是第一部分的结尾，它描述了 Linux 内核中 `cgroup` 机制的引入，我们讨论了与 `cgroup` 机制相关的一些理论和初始化步骤，在接下来的部分中，我们将继续深入讨论 `cgroup` 更实用的方面。
 
 如果你有任何问题或建议，可以写评论给我，也可以在 [twitter](https://twitter.com/0xAX) 上联系我。
 
