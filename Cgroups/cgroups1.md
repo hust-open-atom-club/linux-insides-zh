@@ -4,7 +4,7 @@
 简介
 --------------------------------------------------------------------------------
 
-这是 [linux 内核揭密](http://0xax.gitbooks.io/linux-insides/content/) 的新一章的第一部分。你可以根据这部分的标题猜测 - 这一部分将涉及 Linux 内核中的 [`cgroup`](https://en.wikipedia.org/wiki/Cgroups) 或 `cgroups` 机制。
+这是 [linux 内核揭密](http://0xax.gitbooks.io/linux-insides/content/) 的新一章的第一部分。你可以根据这部分的标题猜测 - 这一部分将涉及 Linux 内核中的 [`控制组`](https://en.wikipedia.org/wiki/Cgroups) 或 `cgroups` 机制。
 
 `Cgroups` 是由 Linux 内核提供的一种机制，它允许我们分配诸如处理器时间、每组进程的数量、每个 `cgroup` 的内存大小，或者针对一个或一组进程的上述资源的组合。`Cgroups` 是按照层级结构组织的，这种机制类似于通常的进程，他们也是层级结构，并且子 `cgroups` 会继承其上级的一些属性。但实际上他们还是有区别的。`cgroups` 和进程之间的主要区别在于，多个不同层级的 `cgroup` 可以同时存在，而进程树则是单一的。同时存在的多个不同层级的 `cgroup` 并不是任意的，因为每个 `cgroup` 层级都要附加到一组 `cgroup` "子系统"中。
 
@@ -217,7 +217,7 @@ Control group /:
 --------------------------------------------------------------------------------
 
 现在，在我们刚刚看到关于 Linux 内核的 `cgroup` 机制的一些理论之后，我们可以开始深入到 Linux 的内核源码，以便更深入的了解这种机制。
-与往常一样，我们将从 `cgroup` 的初始化开始。在 Linux 内核中，`cgroups` 的初始化分为两个部分:早期和晚期。在这部分我们只考虑“早期”的部分，“晚期”的部分会在下一部分考虑。
+与往常一样，我们将从 `cgroup` 的初始化开始。在 Linux 内核中，`cgroups` 的初始化分为两个部分：早期和晚期。在这部分我们只考虑“早期”的部分，“晚期”的部分会在下一部分考虑。
 
 `Cgroups` 的早期初始化是在 Linux 内核的早期初始化期间从 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中调用：
 
