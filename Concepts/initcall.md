@@ -17,7 +17,7 @@ early_param("debug", debug_kernel);
 arch_initcall(init_pit_clocksource);
 ```
 
-在我们分析这个机制在内核中是如何实现的之前，我们必须了解这个机制是什么，在 Linux 内核中是如何使用它的。像这样的定义表示一个 [回调函数](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) ，它们会在 Linux 内核启动中或启动后调用。实际上 `initcall` 机制的要点是确定内置模块和子系统初始化的正确顺序。举个例子，我们来看看下面的函数：
+在我们分析这个机制在内核中是如何实现的之前，我们必须了解这个机制是什么，以及在 Linux 内核中是如何使用它的。像这样的定义表示一个 [回调函数](https://en.wikipedia.org/wiki/Callback_%28computer_programming%29) ，它们会在 Linux 内核启动中或启动后调用。实际上 `initcall` 机制的要点是确定内置模块和子系统初始化的正确顺序。举个例子，我们来看看下面的函数：
 
 ```C
 static int __init nmi_warning_debugfs(void)
@@ -60,7 +60,7 @@ static char *initcall_level_names[] __initdata = {
 };
 ```
 
-所有用这些（相同的）标识符标记为 `initcall` 的函数将会以相同的顺序被调用， `early initcalls` 会首先被调用，其次是 `core initcalls`，以此类推。现在，我们对 `initcall` 机制了解点了，所以我们可以开始潜入 Linux 内核源码，来看看这个机制是如何实现的。
+所有用这些标识符标记为 `initcall` 的函数将会以相同的顺序被调用，或者说，`early initcalls` 会首先被调用，其次是 `core initcalls`，以此类推。现在，我们对 `initcall` 机制了解点了，所以我们可以开始潜入 Linux 内核源码，来看看这个机制是如何实现的。
 
 initcall 机制在 Linux 内核中的实现
 --------------------------------------------------------------------------------
@@ -78,7 +78,7 @@ Linux 内核提供了一组来自头文件 [include/linux/init.h](https://github
 #define late_initcall(fn)		__define_initcall(fn, 7)
 ```
 
-我们可以看到这些宏只是从相同的头文件扩展为 `__define_initcall` 宏的调用。此外，`__define_initcall` 宏有两个参数：
+我们可以看到，这些宏只是从同一个头文件的 `__define_initcall` 宏的调用扩展而来。此外，`__define_initcall` 宏有两个参数：
 
 * `fn` - 在调用某个级别 `initcalls` 时调用的回调函数；
 * `id` - 识别 `initcall` 的标识符，用来防止两个相同的 `initcalls` 指向同一个处理函数时出现错误。
@@ -150,7 +150,7 @@ LTO_REFERENCE_INITCALL(__initcall_##fn##id)
 #endif
 ```
 
-为了防止没有引用模块中变量时出现问题，它被移到了程序末尾。这就是关于 `__define_initcall` 宏的全部了。所以，所有的 `*_initcall` 宏将会在Linux内核编译时扩展，所有的 `initcalls` 会放置在它们的段内，并可以通过 `.data` 段来获取，Linux 内核在初始化过程中就知道在哪儿去找到 `initcall` 并调用它。
+为了防止当模块中的变量没有引用时而产生的任何问题，它被移到了程序末尾。这就是关于 `__define_initcall` 宏的全部了。所以，所有的 `*_initcall` 宏将会在Linux内核编译时扩展，所有的 `initcalls` 会放置在它们的段内，并可以通过 `.data` 段来获取，Linux 内核在初始化过程中就知道在哪儿去找到 `initcall` 并调用它。
 
 既然 Linux 内核可以调用 `initcalls`，我们就来看下 Linux 内核是如何做的。这个过程从 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 头文件的 `do_basic_setup` 函数开始：
 
@@ -167,7 +167,7 @@ static void __init do_basic_setup(void)
 }
 ```
 
-该函数在 Linux 内核初始化过程中调用，调用时机是主要步骤之后，比如内存管理器相关的初始化、`CPU` 子系统等都完成了。`do_initcalls` 函数只是遍历 `initcall` 级别数组，并调用每个级别的 `do_initcall_level` 函数：
+该函数在 Linux 内核初始化过程中调用，调用时机是主要的初始化步骤，比如内存管理器相关的初始化、`CPU` 子系统等完成之后。`do_initcalls` 函数只是遍历 `initcall` 级别数组，并调用每个级别的 `do_initcall_level` 函数：
 
 ```C
 static void __init do_initcalls(void)
@@ -223,7 +223,7 @@ for (fn = initcall_levels[level]; fn < initcall_levels[level+1]; fn++)
 		do_one_initcall(*fn);
 ```
 
-`do_on_initcall` 为我们做了主要的工作。我们可以看到，这个函数有一个入参表示 `initcall` 回调函数，并调用给定的回调：
+`do_on_initcall` 为我们做了主要的工作。我们可以看到，这个函数有一个参数表示 `initcall` 回调函数，并调用给定的回调函数：
 
 ```C
 int __init_or_module do_one_initcall(initcall_t fn)
@@ -256,7 +256,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 }
 ```
 
-让我们来试着理解 `do_on_initcall` 函数做了什么。首先我们增加 [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 计数，以便我们稍后做下检查，以确保它不是不平衡的。这步以后，我们可以看到 `initcall_backlist` 函数的调用，这个函数遍历包含了 `initcalls` 黑名单的 `blacklisted_initcalls` 链表，如果 `initcall` 在黑名单里就释放它：
+让我们来试着理解 `do_on_initcall` 函数做了什么。首先我们增加 [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 计数，以便我们稍后进行检查，以确保它不是不平衡的。这步以后，我们可以看到 `initcall_backlist` 函数的调用，这个函数遍历包含了 `initcalls` 黑名单的 `blacklisted_initcalls` 链表，如果 `initcall` 在黑名单里就释放它：
 
 ```C
 list_for_each_entry(entry, &blacklisted_initcalls, next) {
@@ -270,7 +270,7 @@ list_for_each_entry(entry, &blacklisted_initcalls, next) {
 
 黑名单的 `initcalls` 保存在 `blacklisted_initcalls` 链表中，这个链表是在早期 Linux 内核初始化时由 Linux 内核命令行来填充的。
 
-处理完黑名单 `initcalls`，接下来的代码直接调用 `initcall`：
+处理完进入黑名单的 `initcalls`，接下来的代码直接调用 `initcall`：
 
 ```C
 if (initcall_debug)
@@ -324,7 +324,7 @@ if (preempt_count() != count) {
 }
 ```
 
-稍后这个错误字符串就会打印出来。最后检查本地 [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 的状态，如果它们被禁用了，我们就添加 `disabled interrupts` 字符串到我们的消息缓冲区，并为当前处理器使能 `IRQs`，以防出现 `IRQs` 被 `initcall` 禁用了但不再使能的情况出现：
+稍后这个错误字符串就会被打印出来。最后检查本地 [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 的状态，如果它们被禁用了，我们就将 `disabled interrupts` 字符串添加到我们的消息缓冲区，并为当前处理器使能 `IRQs`，以防出现 `IRQs` 被 `initcall` 禁用了但不再使能的情况出现：
 
 ```C
 if (irqs_disabled()) {
