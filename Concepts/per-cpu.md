@@ -1,4 +1,4 @@
-每CPU变量
+每 CPU 变量
 ================================================================================
 
 每 CPU 变量是一项内核特性。从它的名字你就可以理解这项特性的意义了。我们可以创建一个变量，然后每个 CPU 上都会有一个此变量的拷贝。本节我们来看下这个特性，并试着去理解它是如何实现以及工作的。
@@ -10,7 +10,7 @@
         DEFINE_PER_CPU_SECTION(type, name, "")
 ```
 
-像其它许多每 CPU 变量一样，这个宏定义在 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 中。现在我们来看下这个特性是如何实现的。
+正如其它许多处理每 CPU 变量的宏一样，这个宏定义在 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 中。现在我们来看下这个特性是如何实现的。
 
 看下 `DECLARE_PER_CPU` 的定义，可以看到它使用了 2 个参数：`type` 和 `name`，因此我们可以这样创建每 CPU 变量：
 
