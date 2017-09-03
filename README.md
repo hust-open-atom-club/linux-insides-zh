@@ -118,7 +118,7 @@
 * 在确认想翻译的章节没有被翻译之后，开一个 issue ，告诉大家你想翻译哪一章节，同时提交申请翻译的 PR ，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“正在进行”；
 * 首先，从上游的[英文库](https://github.com/0xAX/linux-insides)中得到该章节的最新版本，将修改提交到我们的中文库中；
 * 然后翻译你认领的章节；
-* 完成翻译之后，提交翻译内容的 PR ，待 PR 被 merge 之后，关闭 issue；
+* 完成翻译之后，提交翻译内容的 PR (**注：大家最好以一个文件为基本单位来提交翻译 PR，方便我们进行 review，否则可能会因为 comments 导致展示 PR 的网页变得过于冗长，不方便 review 修改的内容**)。待 PR 被合并之后，请关闭 issue；
 * 最后，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“更新至上游 commit id”，同时不要忘记把自己添加到 [contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md) 中。
 
 翻译前建议看 [TRANSLATION_NOTES.md](https://github.com/MintCN/linux-insides-zh/blob/master/TRANSLATION_NOTES.md) 。关于翻译约定，大家有任何问题或建议也请开 issue 讨论。
