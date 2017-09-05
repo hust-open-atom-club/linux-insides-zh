@@ -135,7 +135,7 @@ size_t atom_size;
 
 如果第一个块分配器是 `PCPU_FC_PAGE`，我们用 `pcpu_page_first_chunk` 而不是 `pcpu_embed_first_chunk`。 `per-cpu` 区域准备好以后，我们用 `setup_percpu_segment` 函数设置 `per-cpu` 的偏移和段（只针对 `x86` 系统），并将前面的数据从数组移到 `per-cpu` 变量（`x86_cpu_to_apicid`, `irq_stack_ptr` 等等）。当内核完成初始化进程后，我们就有了N个 `.data..percpu` 段，其中 N 是 CPU 个数，bootstrap 进程使用的段将会包含用 `DEFINE_PER_CPU` 宏创建的未初始化的变量。
 
-内核提供了操作每 CPU 变量的API：
+内核提供了操作 per-cpu 变量的API：
 
 * get_cpu_var(var)
 * put_cpu_var(var)
@@ -206,7 +206,7 @@ do {
 extern unsigned long __per_cpu_offset[NR_CPUS];
 ```
 
-其中 `NR_CPUS` 是 CPU 的数目。`__per_cpu_offset` 数组以 CPU 变量拷贝之间的距离填充。例如，所有每 CPU 变量是 `X` 字节大小，所以我们通过 `__per_cpu_offset[Y]` 就可以访问 `X*Y`。让我们来看下 `SHIFT_PERCPU_PTR` 的实现：
+其中 `NR_CPUS` 是 CPU 的数目。`__per_cpu_offset` 数组以 CPU 变量拷贝之间的距离填充。例如，所有 per-cpu 变量是 `X` 字节大小，所以我们通过 `__per_cpu_offset[Y]` 就可以访问 `X*Y`。让我们来看下 `SHIFT_PERCPU_PTR` 的实现：
 
 ```C
 #define SHIFT_PERCPU_PTR(__p, __offset)                                 \
