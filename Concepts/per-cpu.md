@@ -1,18 +1,18 @@
-每 CPU 变量
+Per-cpu 变量
 ================================================================================
 
-每 CPU 变量是一项内核特性。从它的名字你就可以理解这项特性的意义了。我们可以创建一个变量，然后每个 CPU 上都会有一个此变量的拷贝。本节我们来看下这个特性，并试着去理解它是如何实现以及工作的。
+Per-cpu 变量是一项内核特性。从它的名字你就可以理解这项特性的意义了。我们可以创建一个变量，然后每个 CPU 上都会有一个此变量的拷贝。本节我们来看下这个特性，并试着去理解它是如何实现以及工作的。
 
-内核提供了一个创建每 CPU 变量的 API - `DEFINE_PER_CPU` 宏：
+内核提供了一个创建 per-cpu 变量的 API - `DEFINE_PER_CPU` 宏：
 
 ```C
 #define DEFINE_PER_CPU(type, name) \
         DEFINE_PER_CPU_SECTION(type, name, "")
 ```
 
-正如其它许多处理每 CPU 变量的宏一样，这个宏定义在 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 中。现在我们来看下这个特性是如何实现的。
+正如其它许多处理 per-cpu 变量的宏一样，这个宏定义在 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 中。现在我们来看下这个特性是如何实现的。
 
-看下 `DECLARE_PER_CPU` 的定义，可以看到它使用了 2 个参数：`type` 和 `name`，因此我们可以这样创建每 CPU 变量：
+看下 `DECLARE_PER_CPU` 的定义，可以看到它使用了 2 个参数：`type` 和 `name`，因此我们可以这样创建 per-cpu 变量：
 
 ```C
 DEFINE_PER_CPU(int, per_cpu_n)
@@ -38,7 +38,7 @@ DEFINE_PER_CPU(int, per_cpu_n)
 #define PER_CPU_BASE_SECTION ".data..percpu"
 ```
 
-当所有的宏展开之后，我们得到一个全局的每 CPU 变量：
+当所有的宏展开之后，我们得到一个全局的 per-cpu 变量：
 
 ```C
 __attribute__((section(".data..percpu"))) int per_cpu_n
@@ -51,9 +51,9 @@ __attribute__((section(".data..percpu"))) int per_cpu_n
               CONTENTS, ALLOC, LOAD, DATA
 ```
 
-好，现在我们知道了，当我们使用 `DEFINE_PER_CPU` 宏时，一个在 `.data..percpu` 段中的每 CPU 变量就被创建了。内核初始化时，调用 `setup_per_cpu_areas` 函数多次加载 `.data..percpu` 段，每个 CPU 一次。
+好，现在我们知道了，当我们使用 `DEFINE_PER_CPU` 宏时，一个在 `.data..percpu` 段中的 per-cpu 变量就被创建了。内核初始化时，调用 `setup_per_cpu_areas` 函数多次加载 `.data..percpu` 段，每个 CPU 一次。
 
-让我们来看下每 CPU 区域初始化流程。它从 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中调用 `setup_per_cpu_areas` 函数开始，这个函数定义在 [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c) 中。
+让我们来看下 per-cpu 区域初始化流程。它从 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中调用 `setup_per_cpu_areas` 函数开始，这个函数定义在 [arch/x86/kernel/setup_percpu.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup_percpu.c) 中。
 
 ```C
 pr_info("NR_CPUS:%d nr_cpumask_bits:%d nr_cpu_ids:%d nr_node_ids:%d\n",
@@ -69,10 +69,10 @@ $ dmesg | grep percpu
 [    0.000000] setup_percpu: NR_CPUS:8 nr_cpumask_bits:8 nr_cpu_ids:8 nr_node_ids:1
 ```
 
-然后我们检查 `percpu` 第一个块分配器。所有的每 CPU 区域都是以块进行分配的。第一个块用于静态每 CPU 变量。Linux 内核提供了决定第一个块分配器类型的命令行：`percpu_alloc` 。我们可以在内核文档中读到它的说明。
+然后我们检查 `per-cpu` 第一个块分配器。所有的 per-cpu 区域都是以块进行分配的。第一个块用于静态 per-cpu 变量。Linux 内核提供了决定第一个块分配器类型的命令行：`percpu_alloc` 。我们可以在内核文档中读到它的说明。
 
 ```
-percpu_alloc=	选择要使用哪个每CPU第一个块分配器。
+percpu_alloc=	选择要使用哪个 per-cpu 第一个块分配器。
 		当前支持的类型是 "embed" 和 "page"。
         不同架构支持这些类型的子集或不支持。
         更多分配器的细节参考 mm/percpu.c 中的注释。
@@ -91,7 +91,7 @@ early_param("percpu_alloc", percpu_alloc_setup);
 enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
 ```
 
-如果内核命令行中没有设置 `percpu_alloc` 参数，就会使用 `embed` 分配器，将第一个每 CPU 块嵌入进带 [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html) 的 bootmem。最后一个分配器和第一个块 `page` 分配器一样，只是将第一个块使用 `PAGE_SIZE` 页进行了映射。
+如果内核命令行中没有设置 `percpu_alloc` 参数，就会使用 `embed` 分配器，将第一个 per-cpu 块嵌入进带 [memblock](http://0xax.gitbooks.io/linux-insides/content/mm/linux-mm-1.html) 的 bootmem。最后一个分配器和第一个块 `page` 分配器一样，只是将第一个块使用 `PAGE_SIZE` 页进行了映射。
 
 如我上面所写，首先我们在 `setup_per_cpu_areas` 中对第一个块分配器检查，检查到第一个块分配器不是 page 分配器：
 
@@ -112,9 +112,9 @@ rc = pcpu_embed_first_chunk(PERCPU_FIRST_CHUNK_RESERVE,
 					    pcpu_fc_alloc, pcpu_fc_free);
 ```
 
-如前所述，函数 `pcpu_embed_first_chunk` 将第一个 percpu 块嵌入 bootmen，因此我们传递一些参数给 `pcpu_embed_first_chunk`。参数如下：
+如前所述，函数 `pcpu_embed_first_chunk` 将第一个 per-cpu 块嵌入 bootmen，因此我们传递一些参数给 `pcpu_embed_first_chunk`。参数如下：
 
-* `PERCPU_FIRST_CHUNK_RESERVE` - 为静态变量 `percpu` 保留空间的大小；
+* `PERCPU_FIRST_CHUNK_RESERVE` - 为静态变量 `per-cpu` 保留空间的大小；
 * `dyn_size` - 动态分配的最少空闲字节；
 * `atom_size` - 所有的分配都是这个的整数倍，并以此对齐；
 * `pcpu_cpu_distance` - 决定 cpus 距离的回调函数；
@@ -133,7 +133,7 @@ size_t atom_size;
 #endif
 ```
 
-如果第一个块分配器是 `PCPU_FC_PAGE`，我们用 `pcpu_page_first_chunk` 而不是 `pcpu_embed_first_chunk`。 `percpu` 区域准备好以后，我们用 `setup_percpu_segment` 函数设置 `percpu` 的偏移和段（只针对 `x86` 系统），并将前面的数据从数组移到 `percpu` 变量（`x86_cpu_to_apicid`, `irq_stack_ptr` 等等）。当内核完成初始化进程后，我们就有了N个 `.data..percpu` 段，其中 N 是 CPU 个数，bootstrap 进程使用的段将会包含用 `DEFINE_PER_CPU` 宏创建的未初始化的变量。
+如果第一个块分配器是 `PCPU_FC_PAGE`，我们用 `pcpu_page_first_chunk` 而不是 `pcpu_embed_first_chunk`。 `per-cpu` 区域准备好以后，我们用 `setup_percpu_segment` 函数设置 `per-cpu` 的偏移和段（只针对 `x86` 系统），并将前面的数据从数组移到 `per-cpu` 变量（`x86_cpu_to_apicid`, `irq_stack_ptr` 等等）。当内核完成初始化进程后，我们就有了N个 `.data..percpu` 段，其中 N 是 CPU 个数，bootstrap 进程使用的段将会包含用 `DEFINE_PER_CPU` 宏创建的未初始化的变量。
 
 内核提供了操作每 CPU 变量的API：
 
@@ -150,7 +150,7 @@ size_t atom_size;
 }))
 ```
 
-Linux 内核是抢占式的，获取每 CPU 变量需要我们知道内核运行在哪个处理器上。因此访问每 CPU 变量时，当前代码不能被抢占，不能移到其它的 CPU。如我们所见，这就是为什么首先调用 `preempt_disable` 函数然后调用 `this_cpu_ptr` 宏，像这样：
+Linux 内核是抢占式的，获取 per-cpu 变量需要我们知道内核运行在哪个处理器上。因此访问 per-cpu 变量时，当前代码不能被抢占，不能移到其它的 CPU。如我们所见，这就是为什么首先调用 `preempt_disable` 函数然后调用 `this_cpu_ptr` 宏，像这样：
 
 ```C
 #define this_cpu_ptr(ptr) raw_cpu_ptr(ptr)
@@ -162,7 +162,7 @@ Linux 内核是抢占式的，获取每 CPU 变量需要我们知道内核运行
 #define raw_cpu_ptr(ptr)        per_cpu_ptr(ptr, 0)
 ```
 
-`per_cpu_ptr` 返回一个指向给定 CPU（第 2 个参数）每 CPU 变量的指针。当我们创建了一个每 CPU 变量并对其进行了修改时，我们必须调用 `put_cpu_var` 宏通过函数 `preempt_enable` 使能抢占。因此典型的每 CPU 变量的使用如下：
+`per_cpu_ptr` 返回一个指向给定 CPU（第 2 个参数） per-cpu 变量的指针。当我们创建了一个 per-cpu 变量并对其进行了修改时，我们必须调用 `put_cpu_var` 宏通过函数 `preempt_enable` 使能抢占。因此典型的 per-cpu 变量的使用如下：
 
 ```C
 get_cpu_var(var);
@@ -182,7 +182,7 @@ put_cpu_var(var);
 })
 ```
 
-就像我们上面写的，这个宏返回了一个给定 cpu 的每 CPU 变量。首先它调用了 `__verify_pcpu_ptr`：
+就像我们上面写的，这个宏返回了一个给定 cpu 的 per-cpu 变量。首先它调用了 `__verify_pcpu_ptr`：
 
 ```C
 #define __verify_pcpu_ptr(ptr)
@@ -215,13 +215,13 @@ extern unsigned long __per_cpu_offset[NR_CPUS];
 
 `RELOC_HIDE` 只是取得偏移量 `(typeof(ptr)) (__ptr + (off))`，并返回一个指向该变量的指针。
 
-就这些了！当然这不是全部的 API，只是一个大概。开头是比较艰难，但是理解每 cpu 变量你只需理解 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 的奥秘。
+就这些了！当然这不是全部的 API，只是一个大概。开头是比较艰难，但是理解 per-cpu 变量你只需理解 [include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 的奥秘。
 
-让我们再看下获得每 cpu 变量指针的算法：
+让我们再看下获得 per-cpu 变量指针的算法：
 
-* 内核在初始化流程中创建多个 `.data..percpu` 段（一个每 cpu 变量一个）；
+* 内核在初始化流程中创建多个 `.data..percpu` 段（一个 per-cpu 变量一个）；
 * 所有 `DEFINE_PER_CPU` 宏创建的变量都将重新分配到首个扇区或者 CPU0；
 * `__per_cpu_offset` 数组以 (`BOOT_PERCPU_OFFSET`) 和 `.data..percpu` 扇区之间的距离填充；
-* 当 `per_cpu_ptr` 被调用时，例如取一个每 cpu 变量的第三个 CPU 的指针，将访问 `__per_cpu_offset` 数组，该数组的索引指向了所需 CPU。
+* 当 `per_cpu_ptr` 被调用时，例如取一个 per-cpu 变量的第三个 CPU 的指针，将访问 `__per_cpu_offset` 数组，该数组的索引指向了所需 CPU。
 
 就这么多了。
