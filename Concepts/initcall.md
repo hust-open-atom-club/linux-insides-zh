@@ -256,7 +256,7 @@ int __init_or_module do_one_initcall(initcall_t fn)
 }
 ```
 
-让我们来试着理解 `do_on_initcall` 函数做了什么。首先我们增加 [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 计数，以便我们稍后进行检查，以确保它不是不平衡的。这步以后，我们可以看到 `initcall_backlist` 函数的调用，这个函数遍历包含了 `initcalls` 黑名单的 `blacklisted_initcalls` 链表，如果 `initcall` 在黑名单里就释放它：
+让我们来试着理解 `do_on_initcall` 函数做了什么。首先我们增加 [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 计数，以便我们稍后进行检查，确保它不是不平衡的。这步以后，我们可以看到 `initcall_backlist` 函数的调用，这个函数遍历包含了 `initcalls` 黑名单的 `blacklisted_initcalls` 链表，如果 `initcall` 在黑名单里就释放它：
 
 ```C
 list_for_each_entry(entry, &blacklisted_initcalls, next) {
