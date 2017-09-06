@@ -1,4 +1,4 @@
-#翻译约定
+# 翻译约定
 
 ## 基本要求
 
@@ -45,7 +45,7 @@
 * 所有的英文人名统一不译，保留原文。
 * 章节标题只能出现中文字样；如有必要说明术语原文，在正文中第一次出现处注明，不应重复。
 
-#参见
+# 参见
  - [Ubuntu 简体中文小组工作指南](http://wiki.ubuntu.org.cn/Ubuntu_%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%E5%B0%8F%E7%BB%84%E5%B7%A5%E4%BD%9C%E6%8C%87%E5%8D%97)
  - [Markdown基础](https://help.github.com/articles/markdown-basics/)
  - [Markdown 语法说明 (简体中文版)](http://wowubuntu.com/markdown/index.html)
