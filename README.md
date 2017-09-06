@@ -6,7 +6,7 @@
 
 **目的很简单** - 分享我对 Linux 内核内在机理的一点知识，帮助对 Linux 内核内在机理感兴趣的人，和其他低级话题。
 
-**问题/建议**: 通过在 twitter 上 [@0xAX](https://twitter.com/0xAX) ，直接添加 [issue](https://github.com/0xAX/linux-insides/issues/new) 或者直接给我发[邮件](mailto:anotherworldofworld@gmail.com),请自由地向我提出任何问题或者建议。
+**问题/建议**: 若有相关问题，请提交issue。英文原文问题，找上游 repo - [linux-insides](https://github.com/0xAX/linux-insides) 提交 issue；翻译问题，在下游 repo - [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 中提交 issue。
 
 ## 贡献条目
 
