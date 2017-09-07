@@ -4,7 +4,7 @@ Interrupts and Interrupt Handling. Part 5.
 Implementation of exception handlers
 --------------------------------------------------------------------------------
 
-This is the fifth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-4.html) we stopped on the setting of interrupt gates to the [Interrupt descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table). We did it in the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file. We saw only setting of these interrupt gates in the previous part and in the current part we will see implementation of the exception handlers for these gates. The preparation before an exception handler will be executed is in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) assembly file and occurs in the [idtentry](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S#L820) macro that defines exceptions entry points:
+This is the fifth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-4.html) we stopped on the setting of interrupt gates to the [Interrupt descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table). We did it in the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file. We saw only setting of these interrupt gates in the previous part and in the current part we will see implementation of the exception handlers for these gates. The preparation before an exception handler will be executed is in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly file and occurs in the [idtentry](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S#L820) macro that defines exceptions entry points:
 
 ```assembly
 idtentry divide_error			        do_divide_error			       has_error_code=0
@@ -21,7 +21,7 @@ idtentry alignment_check		        do_alignment_check		       has_error_code=1
 idtentry simd_coprocessor_error		    do_simd_coprocessor_error	   has_error_code=0
 ```
 
-The `idtentry` macro does following preparation before an actual exception handler (`do_divide_error` for the `divide_error`, `do_overflow` for the `overflow` and etc.) will get control. In another words the `idtentry` macro allocates place for the registers ([pt_regs](https://github.com/torvalds/linux/blob/master/arch/x86/include/uapi/asm/ptrace.h#L43) structure) on the stack, pushes dummy error code for the stack consistency if an interrupt/exception has no error code, checks the segment selector in the `cs` segment register and switches depends on the previous state(userspace or kernelspace). After all of these preparations it makes a call of an actual interrupt/exception handler:
+The `idtentry` macro does following preparation before an actual exception handler (`do_divide_error` for the `divide_error`, `do_overflow` for the `overflow` and etc.) will get control. In another words the `idtentry` macro allocates place for the registers ([pt_regs](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/ptrace.h#L43) structure) on the stack, pushes dummy error code for the stack consistency if an interrupt/exception has no error code, checks the segment selector in the `cs` segment register and switches depends on the previous state(userspace or kernelspace). After all of these preparations it makes a call of an actual interrupt/exception handler:
 
 ```assembly
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
@@ -62,7 +62,7 @@ native_irq_return_iret:
 iretq
 ```
 
-More about the `idtentry` macro you can read in the third part of the [http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
+More about the `idtentry` macro you can read in the third part of the [http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) chapter. Ok, now we saw the preparation before an exception handler will be executed and now time to look on the handlers. First of all let's look on the following handlers:
 
 * divide_error
 * overflow
@@ -73,7 +73,7 @@ More about the `idtentry` macro you can read in the third part of the [http://0x
 * stack_segment
 * alignment_check
 
-All these handlers defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c) source code file with the `DO_ERROR` macro:
+All these handlers defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) source code file with the `DO_ERROR` macro:
 
 ```C
 DO_ERROR(X86_TRAP_DE,     SIGFPE,  "divide error",                divide_error)
@@ -127,7 +127,7 @@ enum ctx_state prev_state = exception_enter();
 exception_exit(prev_state);
 ```
 
-from the [include/linux/context_tracking.h](https://github.com/torvalds/linux/tree/master/include/linux/context_tracking.h). The context tracking in the Linux kernel subsystem which provide kernel boundaries probes to keep track of the transitions between level contexts with two basic initial contexts: `user` or `kernel`. The `exception_enter` function checks that context tracking is enabled. After this if it is enabled, the `exception_enter` reads previous context and compares it with the `CONTEXT_KERNEL`. If the previous context is `user`, we call `context_tracking_exit` function from the [kernel/context_tracking.c](https://github.com/torvalds/linux/blob/master/kernel/context_tracking.c) which inform the context tracking subsystem that a processor is exiting user mode and entering the kernel mode:
+from the [include/linux/context_tracking.h](https://github.com/torvalds/linux/tree/master/include/linux/context_tracking.h). The context tracking in the Linux kernel subsystem which provide kernel boundaries probes to keep track of the transitions between level contexts with two basic initial contexts: `user` or `kernel`. The `exception_enter` function checks that context tracking is enabled. After this if it is enabled, the `exception_enter` reads previous context and compares it with the `CONTEXT_KERNEL`. If the previous context is `user`, we call `context_tracking_exit` function from the [kernel/context_tracking.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/context_tracking.c) which inform the context tracking subsystem that a processor is exiting user mode and entering the kernel mode:
 
 ```C
 if (!context_tracking_is_enabled())
@@ -201,7 +201,7 @@ struct atomic_notifier_head {
 };
 ```
 
-The `atomic_notifier_call_chain` function calls each function in a notifier chain in turn and returns the value of the last notifier function called. If the `notify_die` in the `do_error_trap` does not return `NOTIFY_STOP` we execute `conditional_sti` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/traps.c) that checks the value of the [interrupt flag](https://en.wikipedia.org/wiki/Interrupt_flag) and enables interrupt depends on it:
+The `atomic_notifier_call_chain` function calls each function in a notifier chain in turn and returns the value of the last notifier function called. If the `notify_die` in the `do_error_trap` does not return `NOTIFY_STOP` we execute `conditional_sti` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) that checks the value of the [interrupt flag](https://en.wikipedia.org/wiki/Interrupt_flag) and enables interrupt depends on it:
 
 ```C
 static inline void conditional_sti(struct pt_regs *regs)
@@ -211,7 +211,7 @@ static inline void conditional_sti(struct pt_regs *regs)
 }
 ```
 
-more about `local_irq_enable` macro you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `task_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
+more about `local_irq_enable` macro you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-2.html) of this chapter. The next and last call in the `do_error_trap` is the `do_trap` function. First of all the `do_trap` function defined the `tsk` variable which has `task_struct` type and represents the current interrupted process. After the definition of the `tsk`, we can see the call of the `do_trap_no_signal` function:
 
 ```C
 struct task_struct *tsk = current;
@@ -247,14 +247,14 @@ if (!fixup_exception(regs)) {
 }
 ```
 
-The `die` function defined in the [arch/x86/kernel/dumpstack.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/dumpstack.c) source code file, prints useful information about stack, registers, kernel modules and caused kernel [oops](https://en.wikipedia.org/wiki/Linux_kernel_oops). If we came from the userspace the `do_trap_no_signal` function will return `-1` and the execution of the `do_trap` function will continue. If we passed through the `do_trap_no_signal` function and did not exit from the `do_trap` after this, it means that previous context was - `user`.  Most exceptions caused by the processor are interpreted by Linux as error conditions, for example division by zero, invalid opcode and etc. When an exception occurs the Linux kernel sends a [signal](https://en.wikipedia.org/wiki/Unix_signal) to the interrupted process that caused the exception to notify it of an incorrect condition. So, in the `do_trap` function we need to send a signal with the given number (`SIGFPE` for the divide error, `SIGILL` for the overflow exception and etc...). First of all we save error code and vector number in the current interrupts process with the filling `thread.error_code` and `thread_trap_nr`:
+The `die` function defined in the [arch/x86/kernel/dumpstack.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/dumpstack.c) source code file, prints useful information about stack, registers, kernel modules and caused kernel [oops](https://en.wikipedia.org/wiki/Linux_kernel_oops). If we came from the userspace the `do_trap_no_signal` function will return `-1` and the execution of the `do_trap` function will continue. If we passed through the `do_trap_no_signal` function and did not exit from the `do_trap` after this, it means that previous context was - `user`.  Most exceptions caused by the processor are interpreted by Linux as error conditions, for example division by zero, invalid opcode and etc. When an exception occurs the Linux kernel sends a [signal](https://en.wikipedia.org/wiki/Unix_signal) to the interrupted process that caused the exception to notify it of an incorrect condition. So, in the `do_trap` function we need to send a signal with the given number (`SIGFPE` for the divide error, `SIGILL` for the overflow exception and etc...). First of all we save error code and vector number in the current interrupts process with the filling `thread.error_code` and `thread_trap_nr`:
 
 ```C
 tsk->thread.error_code = error_code;
 tsk->thread.trap_nr = trapnr;
 ```
 
-After this we make a check do we need to print information about unhandled signals for the interrupted process. We check that `show_unhandled_signals` variable is set, that `unhandled_signal` function from the [kernel/signal.c](https://github.com/torvalds/linux/blob/master/kernel/signal.c) will return unhandled signal(s) and [printk](https://en.wikipedia.org/wiki/Printk) rate limit:
+After this we make a check do we need to print information about unhandled signals for the interrupted process. We check that `show_unhandled_signals` variable is set, that `unhandled_signal` function from the [kernel/signal.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/signal.c) will return unhandled signal(s) and [printk](https://en.wikipedia.org/wiki/Printk) rate limit:
 
 ```C
 #ifdef CONFIG_X86_64
@@ -463,7 +463,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-It is the end of the fifth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/Interrupts/index.html) chapter and we saw implementation of some interrupt handlers in this part. In the next part we will continue to dive into interrupt and exception handlers and will see handler for the [Non-Maskable Interrupts](https://en.wikipedia.org/wiki/Non-maskable_interrupt), handling of the math [coprocessor](https://en.wikipedia.org/wiki/Coprocessor) and [SIMD](https://en.wikipedia.org/wiki/SIMD) coprocessor exceptions and many many more.
+It is the end of the fifth part of the [Interrupts and Interrupt Handling](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) chapter and we saw implementation of some interrupt handlers in this part. In the next part we will continue to dive into interrupt and exception handlers and will see handler for the [Non-Maskable Interrupts](https://en.wikipedia.org/wiki/Non-maskable_interrupt), handling of the math [coprocessor](https://en.wikipedia.org/wiki/Coprocessor) and [SIMD](https://en.wikipedia.org/wiki/SIMD) coprocessor exceptions and many many more.
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
@@ -490,4 +490,4 @@ Links
 * [x87 FPU](https://en.wikipedia.org/wiki/X87)
 * [control register](https://en.wikipedia.org/wiki/Control_register)
 * [MMX](https://en.wikipedia.org/wiki/MMX_%28instruction_set%29)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/Interrupts/interrupts-4.html)
+* [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-4.html)
