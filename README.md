@@ -83,9 +83,9 @@
 | 8. SMP||上游未开始|
 | 9. [Concepts](https://github.com/MintCN/linux-insides-zh/tree/master/Concepts)||正在进行|
 |├ [9.0](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
-|├ [9.1](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/per-cpu.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
-|├ [9.2](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/cpumask.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
-|└ [9.3](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/initcall.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
+|├ [9.1](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/per-cpu.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
+|├ [9.2](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/cpumask.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
+|└ [9.3](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/initcall.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
 | 10. [DataStructures](https://github.com/MintCN/linux-insides-zh/tree/master/DataStructures)||已完成|
 |├ [10.0](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[99138e09](https://github.com/0xAX/linux-insides/commit/99138e0932dc25bf6c90dd102a70a6d15589e9ab)|
 |├ [10.1](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md)|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
@@ -101,7 +101,7 @@
 |├ [13.0](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[ddf0793f](https://github.com/0xAX/linux-insides/commit/ddf0793f6b74b6c541c4979b4deaf093b2b87c9b)|
 |├ [13.1](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/how_linux_compile.md)|[@oska874](https://github.com/oska874)|已完成|
 |├ [13.2](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linkers.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
-|├ [13.3](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/contribute.md)|[@hao-lee](https://github.com/hao-lee)|更新至[3ed5214](https://github.com/0xAX/linux-insides/commit/3ed521464e99a8ff2f8d438592a605a716a268e2)|
+|├ [13.3](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/contribute.md)|[@hao-lee](https://github.com/hao-lee)|更新至[3ed52146](https://github.com/0xAX/linux-insides/commit/3ed521464e99a8ff2f8d438592a605a716a268e2)|
 |└ [13.4](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/program_startup.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
 | 14. [KernelStructures](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures)||已完成|
 |├ [14.0](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[3cb550c0](https://github.com/0xAX/linux-insides/commit/3cb550c089c8fc609f667290434e9e98e93fa279)|
@@ -119,7 +119,7 @@
 * 首先，从上游的[英文库](https://github.com/0xAX/linux-insides)中得到该章节的最新版本，将修改提交到我们的中文库中；
 * 然后翻译你认领的章节；
 * 完成翻译之后，提交翻译内容的 PR (**注：大家最好以一个文件为基本单位来提交翻译 PR，方便我们进行 review，否则可能会因为 comments 导致展示 PR 的网页变得过于冗长，不方便 review 修改的内容**)。待 PR 被合并之后，请关闭 issue；
-* 最后，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“更新至上游 commit id”，同时不要忘记把自己添加到 [contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md) 中。
+* 最后，将 [README.md](https://github.com/MintCN/linux-insides-zh/blob/master/README.md) 中的翻译状态修改为“更新至上游 commit id”(**Note: just show commit id by 8 digits**)，同时不要忘记把自己添加到 [contributors.md](https://github.com/MintCN/linux-insides-zh/blob/master/contributors.md) 中。
 
 翻译前建议看 [TRANSLATION_NOTES.md](https://github.com/MintCN/linux-insides-zh/blob/master/TRANSLATION_NOTES.md) 。关于翻译约定，大家有任何问题或建议也请开 issue 讨论。
 
