@@ -288,7 +288,7 @@ static int vga_set_mode(struct mode_info *mode)
 在切换到保护模式之前的最后的准备工作
 --------------------------------------------------------------------------------
 
-在进入保护模式之前的最后一个函数调用发生在 [main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L184) 中的 `go_to_protected_mode` 函数，就像这个函数的注释说的，这个函数将进行最后的准备工作然后进入保护模式，下面就让我们来具体看看最后的准备工作是什么，以及系统是如何切换如保护模式的。
+在进入保护模式之前的最后一个函数调用发生在 [main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18#L184) 中的 `go_to_protected_mode` 函数，就像这个函数的注释说的，这个函数将进行最后的准备工作然后进入保护模式，下面就让我们来具体看看最后的准备工作是什么，以及系统是如何切换到保护模式的。
 
 `go_to_protected_mode` 函数本身定义在 [arch/x86/boot/pm.c](http://lxr.free-electrons.com/source/arch/x86/boot/pm.c?v=3.18#L104)。 这个函数调用了一些其他的函数进行最后的准备工作，下面就让我们来具体看看这些函数。
 
@@ -423,7 +423,7 @@ struct gdt_ptr {
 设置全局描述符表
 --------------------------------------------------------------------------------
 
-在设置完中断描述符表之后，我们将使用 `setup_gdt` 函数来设置全部描述符表（关于全局描述符表，大家可以参考[上一章](linux-bootstrap-2.md#protected-mode) 的内容）。在 `setup_gdt` 函数中，使用 `boot_gdt` 数组定义了需要引入 GDTR 寄存器的段描述符信息：
+在设置完中断描述符表之后，我们将使用 `setup_gdt` 函数来设置全局描述符表（关于全局描述符表，大家可以参考[上一章](linux-bootstrap-2.md#protected-mode) 的内容）。在 `setup_gdt` 函数中，使用 `boot_gdt` 数组定义了需要引入 GDTR 寄存器的段描述符信息：
 
 ```C
    //GDT_ENTRY_BOOT_CS 定义在http://lxr.free-electrons.com/source/arch/x86/include/asm/segment.h#L19 = 2
@@ -434,7 +434,7 @@ struct gdt_ptr {
 	};
 ```
 
-在上面的 `boot_gdt` 数组中，我们定义了代码，数据和 TSS 段(Task State Segment, 任务状态段)的段描述符，因为我们并没有设置任何的中断调用（记得上面所的 `null_idt`吗？），所以 TSS 段并不会被使用到。TSS 段存在的唯一目的就是让 Intel 处理器能够正确进入保护模式。下面让我们详细了解一下 `boot_gdt` 这个数组，首先，这个数组被 `__attribute__((aligned(16)))` 修饰，这就意味着这个数组将以 16 字节为单位对齐。让我们通过下面的例子来了解一下什么叫 16 字节对齐：
+在上面的 `boot_gdt` 数组中，我们定义了代码，数据和 TSS 段(Task State Segment, 任务状态段)的段描述符，因为我们并没有设置任何的中断调用（记得上面说的 `null_idt`吗？），所以 TSS 段并不会被使用到。TSS 段存在的唯一目的就是让 Intel 处理器能够正确进入保护模式。下面让我们详细了解一下 `boot_gdt` 这个数组，首先，这个数组被 `__attribute__((aligned(16)))` 修饰，这就意味着这个数组将以 16 字节为单位对齐。让我们通过下面的例子来了解一下什么叫 16 字节对齐：
 
 ```C
 #include <stdio.h>
