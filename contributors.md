@@ -35,3 +35,7 @@
 [@hao-lee](https://github.com/hao-lee)
 
 [@woodpenker](http://github.com/woodpenker)
+
+[@tjm-1990](http://github.com/tjm-1990)
+
+[@up2wing](https://github.com/up2wing)

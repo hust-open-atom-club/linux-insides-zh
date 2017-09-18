@@ -1,7 +1,7 @@
 你知道 Linux 内核是如何构建的吗？
 ================================================================================
 
-###介绍
+### 介绍
 
 我不会告诉你怎么在自己的电脑上去构建、安装一个定制化的 Linux 内核，这样的[资料](https://encrypted.google.com/search?q=building+linux+kernel#q=building+linux+kernel+from+source+code)太多了，它们会对你有帮助。本文会告诉你当你在内核源码路径里敲下 `make` 时会发生什么。
 
@@ -14,7 +14,7 @@
 让我们开始吧！
 
 
-###编译内核前的准备
+### 编译内核前的准备
 
 在开始编译前要进行很多准备工作。最主要的就是找到并配置好配置文件，`make` 命令要使用到的参数都需要从这些配置文件获取。现在就让我们深入内核的根 `Makefile` 吧。
 
@@ -506,7 +506,7 @@ System.map  vmlinux
 
 这就是全部了，`vmlinux` 构建好了，下一步就是创建 [bzImage](https://en.wikipedia.org/wiki/Vmlinux#bzImage).
 
-###制作bzImage
+### 制作bzImage
 
 `bzImage` 就是压缩了的 linux 内核镜像。我们可以在构建了 `vmlinux` 之后通过执行 `make bzImage` 获得 `bzImage`。同时我们可以仅仅执行 `make` 而不带任何参数也可以生成 `bzImage` ，因为它是在 [arch/x86/kernel/Makefile](https://github.com/torvalds/linux/blob/master/arch/x86/Makefile) 里预定义的、默认生成的镜像： 
 
@@ -658,14 +658,14 @@ Kernel: arch/x86/boot/bzImage is ready  (#5)
 
 全部结束。
 
-###结论
+### 结论
 
 这就是本文的结尾部分。本文我们了解了编译内核的全部步骤：从执行 `make` 命令开始，到最后生成 `bzImage` 。我知道，linux 内核的 Makefile 和构建 linux 的过程第一眼看起来可能比较迷惑，但是这并不是很难。希望本文可以帮助你理解构建 linux 内核的整个流程。
 
 
 注： 本文由 [LCTT](https://github.com/LCTT/TranslateProject) 原创翻译，[Linux中国](https://linux.cn/) 荣誉推出
 
-###链接
+### 链接
 
 * [GNU make util](https://en.wikipedia.org/wiki/Make_%28software%29)
 * [Linux kernel top Makefile](https://github.com/torvalds/linux/blob/master/Makefile)
