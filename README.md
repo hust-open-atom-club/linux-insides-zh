@@ -108,7 +108,7 @@
 |└ [14.1](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/idt.md)|[@woodpenker](https://github.com/woodpenker)|更新至[4521637d](https://github.com/0xAX/linux-insides/commit/4521637d9cb76e5d4e4dc951758b264a68504927)|
 | 15. [Cgroups](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups)||正在进行|
 |├ [15.0](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[e811ca4f](https://github.com/0xAX/linux-insides/commit/90f50c2ac5a197da044e5091c631dd43e811ca4f)|
-|└ [15.1](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/cgroups1.md)|[@tjm-1990](https://github.com/tjm-1990)|已完成|
+|└ [15.1](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/cgroups1.md)|[@tjm-1990](https://github.com/tjm-1990)|更新至[4f16103d](https://github.com/0xAX/linux-insides/commit/4f16103d446f8877bd140f5dbcb795f225c4c43b#diff-e4cbe6fa81b073d48019317d35264f5c)|
 
 ## 翻译认领规则
 
