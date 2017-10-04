@@ -19,7 +19,7 @@
 * `freezer` - 允许 `cgroup` 中的一组任务挂起/恢复；
 * `net_cls` - 允许对 `cgroup` 中的任务产生的网络数据包进行标记；
 * `net_prio` - 针对 `cgroup` 中的每个网络接口提供一种动态修改网络流量优先级的方法；
-* `perf_event` - 支持访问 `cgroup` 中的[性能事件](https://en.wikipedia.org/wiki/Perf_(Linux));
+* `perf_event` - 支持访问 `cgroup` 中的[性能事件](https://en.wikipedia.org/wiki/Perf_%28Linux%29);
 * `hugetlb` - 为 `cgroup` 开启对[大页内存](https://www.kernel.org/doc/Documentation/vm/hugetlbpage.txt)的支持;
 * `pid` - 限制 `cgroup` 中的进程数量。
 
@@ -174,7 +174,7 @@ print line
 ./cgroup_test_script.sh: line 5: /dev/tty: Operation not permitted
 ```
 
-在你运行 [docker](https://en.wikipedia.org/wiki/Docker_(software)) 容器的时候也会出现类似的情况：
+在你运行 [docker](https://en.wikipedia.org/wiki/Docker_%28software%29) 容器的时候也会出现类似的情况：
 
 ```
 ~$ docker ps
@@ -443,6 +443,6 @@ struct cgroup_subsys cpuset_cgrp_subsys = {
 * [cgroups kernel documentation](https://www.kernel.org/doc/Documentation/cgroup-v1/cgroups.txt)
 * [cgroups v2](https://www.kernel.org/doc/Documentation/cgroup-v2.txt)
 * [bash](https://www.gnu.org/software/bash/)
-* [docker](https://en.wikipedia.org/wiki/Docker_(software))
-* [perf events](https://en.wikipedia.org/wiki/Perf_(Linux))
+* [docker](https://en.wikipedia.org/wiki/Docker_%28software%29)
+* [perf events](https://en.wikipedia.org/wiki/Perf_%28Linux%29)
 * [Previous chapter](https://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html)
