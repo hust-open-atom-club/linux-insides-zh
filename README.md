@@ -57,7 +57,9 @@
 |├ [4.1](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-1.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.2](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-2.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.3](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-3.md)||未开始|
-|└ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-4.md)||未开始|
+|├ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-4.md)||未开始|
+|├ [4.5](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-5.md)||未开始|
+|└ [4.6](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/syscall-6.md)||未开始|
 | 5. [Timers and time management](https://github.com/MintCN/linux-insides-zh/tree/master/Timers)||正在进行|
 |├ [5.0](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[2a742fd4](https://github.com/0xAX/linux-insides/commit/2a742fd485df0260efce2078e7162c0de668e98b)|
 |├ [5.1](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-1.md)||未开始|
@@ -108,7 +110,7 @@
 |└ [14.1](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/idt.md)|[@woodpenker](https://github.com/woodpenker)|更新至[4521637d](https://github.com/0xAX/linux-insides/commit/4521637d9cb76e5d4e4dc951758b264a68504927)|
 | 15. [Cgroups](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups)||正在进行|
 |├ [15.0](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[e811ca4f](https://github.com/0xAX/linux-insides/commit/90f50c2ac5a197da044e5091c631dd43e811ca4f)|
-|└ [15.1](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/cgroups1.md)|[@tjm-1990](https://github.com/tjm-1990)|已完成|
+|└ [15.1](https://github.com/MintCN/linux-insides-zh/tree/master/Cgroups/cgroups1.md)|[@tjm-1990](https://github.com/tjm-1990)|更新至[b420e581](https://github.com/0xAX/linux-insides/commit/b420e581fe3cfee64d9c65103740d4fd98127b6f)|
 
 ## 翻译认领规则
 
