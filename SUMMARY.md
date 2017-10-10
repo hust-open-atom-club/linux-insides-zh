@@ -81,7 +81,7 @@
     * [链接器](Misc/linkers.md)
     * [Linux 内核开发](Misc/contribute.md)
     * [用户空间的程序启动过程](Misc/program_startup.md)
-    * [Write and Submit your first Linux kernel Patch]()    
+    * [书写并提交你第一个内核补丁]()    
 * [内核数据结构](KernelStructures/README.md)
     * [中断描述符表](KernelStructures/idt.md)
 * [有帮助的链接](LINKS.md)
