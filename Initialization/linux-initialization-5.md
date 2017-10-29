@@ -4,11 +4,11 @@ Part 5
 与系统架构有关的初始化后续分析
 ===========================================================
 
-在之前的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html) 中，
+在之前的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html)中，
 我们讲到了与系统架构有关的 [setup_arch](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L856) 函数部分，本文会继续从这里开始。
 为 [initrd](http://en.wikipedia.org/wiki/Initrd) 预留了内存之后，下一步是执行 `olpc_ofw_detect` 函数检测系统是否支持 [One Laptop Per Child](http://wiki.laptop.org/go/OFW_FAQ)。
 我们不会考虑与平台有关的东西，因此会忽略与平台有关的内容。所以我们继续往下看。
-下一步是执行 `early_trap_init` 函数。这个函数会初始化调试功能 （#DB -当TF标志位和rflags被设置时会被使用）和 `int3` （`#BP`）中断门。
+下一步是执行 `early_trap_init` 函数。这个函数会初始化调试功能 （`#DB` -当 `TF` 标志位和rflags被设置时会被使用）和 `int3` （`#BP`）中断门。
 如果你不了解中断，你可以从 [Early interrupt and exception handling](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html) 中学习有关中断的内容。
 在 `x86` 架构中，`INT`，`INT0` 和 `INT3` 是支持任务显式调用中断处理函数的特殊指令。`INT3` 指令调用断点（`#BP`）处理函数。
 你如果记得，我们在这[部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) 看到过中断和异常概念：
@@ -21,8 +21,7 @@ Part 5
 ----------------------------------------------------------------------------------------------
 ```
 
-调试中断 `#DB` 是激活调试器的重要方法。在 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) 中定义的 `early_trap_init` 函数设置了 `#DB` 和 `#BP` 处理函数，
-并且重新加载了 [IDT](http://en.wikipedia.org/wiki/Interrupt_descriptor_table)：
+调试中断 `#DB` 是激活调试器的重要方法。用来设置 `#DB` 和 `#BP` 处理函数，并且实现重新加载 [IDT](http://en.wikipedia.org/wiki/Interrupt_descriptor_table) 的 `early_trap_init` 函数的定义在 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) 中。
 
 ```C
 void __init early_trap_init(void)
@@ -40,10 +39,11 @@ void __init early_trap_init(void)
 * 中断/异常处理函数的基地址
 * 第三个参数是 `Interrupt Stack Table`。 `IST` 是 [TSS](http://en.wikipedia.org/wiki/Task_state_segment) 的部分内容，是 `x86_64` 引入的新机制。
 在内核态处于活跃状态的线程拥有 `16kb` 的内核栈空间。但是在用户空间的线程的内核栈是空的。
-除了线程栈，还有一些与每个 `CPU` 有关的特殊栈。你可以查阅 `linux` 内核文档 - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks) 部分了解这些栈信息。
+除了线程栈，还有一些与每个 `CPU` 有关的特殊栈。你可以查阅 `linux` 内核文档 - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/kernel-stacks) 部分了解这些栈信息。
 `x86_64` 提供了像在非屏蔽中断等类似事件中切换新的特殊栈的特性支持。这个特性的名字是 `Interrupt Stack Table`。
 每个CPU最多可以有7个 `IST` 条目，每个条目有自己特定的栈。在我们的案例中使用的是 `DEBUG_STACK`。
-`set_intr_gate_ist` 和 `set_system_intr_gate_ist` 和 `set_intr_gate` 的工作原理几乎一样，只有一个区别。
+
+`set_intr_gate_ist` 和 `set_system_intr_gate_ist` 与 `set_intr_gate` 的工作原理几乎一样，只有一个区别。
 这些函数检查中断号并在内部调用 `_set_gate` ：
 
 ```C
@@ -55,11 +55,14 @@ _set_gate(n, GATE_INTERRUPT, addr, 0, ist, __KERNEL_CS);
 但是 `set_intr_gate_ist` 和 `set_system_intr_gate_ist` 把 `ist` 设置为 `DEBUG_STACK`，并且 `set_system_intr_gate_ist` 把 `dpl` 设置为优先级最低的 `0x3`。
 当中断发生时，硬件加载这个描述符，然后硬件根据 `IST` 的值自动设置新的栈指针。
 之后激活对应的中断处理函数。所有的特殊内核栈会在 `cpu_init` 函数中设置好（我们会在后文中提到）。
+
 当 `#DB` 和 `#BP` 门向 `idt_descr` 有写操作，我们会调用 `load_idt` 函数来执行 `ldtr` 指令来重新加载 `IDT` 表。
 现在我们来了解下中断处理函数并尝试理解它的工作原理。当然，我们不可能在这本书中讲解所有的中断处理函数。
 深入学习linux的内核源码是很有意思的事情，我们会在这里讲解 `debug` 处理函数的实现。请自行学习其他的中断处理函数实现。
 
 `#DB` 处理函数
+-----------------------------------------------------------------------
+
 像上文中提到的，我们在 `set_intr_gate_ist` 中通过 `&debug` 的地址传送 `#DB` 处理函数。[lxr.free-electorns.com](http://lxr.free-electrons.com/ident) 是用来搜索 `linux` 源代码中标识符的很好的资源。
 遗憾的是，你在其中找不到 `debug` 处理函数。你只能在 [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/traps.h) 中找到 `debug` 的定义：
 
@@ -67,7 +70,7 @@ _set_gate(n, GATE_INTERRUPT, addr, 0, ist, __KERNEL_CS);
 asmlinkage void debug(void);
 ```
 
-从 `asmlinkage` 属性我们可以知道 `debug` 是由 [assembly](http://en.wikipedia.org/wiki/Assembly_language)语言实现的函数。是的，又是汇编语言 :)。
+从 `asmlinkage` 属性我们可以知道 `debug` 是由 [assembly](http://en.wikipedia.org/wiki/Assembly_language) 语言实现的函数。是的，又是汇编语言 :)。
 和其他处理函数一样，`#DB` 处理函数的实现可以在 [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) 文件中找到。
 都是由 `idtentry` 汇编宏定义的：
 
@@ -125,8 +128,8 @@ ENTRY(\sym)
 `idtentry` 实现中的另外两个宏分别是
 
 ```assembly
-		ASM_CLAC
-		PARAVIRT_ADJUST_EXCEPTION_FRAME
+	ASM_CLAC
+	PARAVIRT_ADJUST_EXCEPTION_FRAME
 ```
 
 第一个 `ASM_CLAC` 宏依赖于 `CONFIG_X86_SMAP` 这个配置项和考虑安全因素，你可以从[这里](https://lwn.net/Articles/517475)了解更多内容。
@@ -134,18 +137,18 @@ ENTRY(\sym)
 下一段代码会检查中断是否有错误码。如果没有则会把 `$-1`(在 `x86_64` 架构下值为 `0xffffffffffffffff`)压入栈：
 
 ```assembly
-		.ifeq \has_error_code
-		pushq_cfi $-1
-		.endif
+	.ifeq \has_error_code
+	pushq_cfi $-1
+	.endif
 ```
 
 为了保证对于所有中断的栈的一致性，我们会把它处理为 `dummy` 错误码。下一步我们从栈指针中减去 `$ORIG_RAX-R15`：
 
 ```assembly
-		subq $ORIG_RAX-R15, %rsp
+	subq $ORIG_RAX-R15, %rsp
 ```
 
-其中，`ORIG_RAX`，`R15` 和其他宏都定义在[arch/x86/include/asm/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/calling.h) 中。`ORIG_RAX-R15` 是120字节。
+其中，`ORIG_RAX`，`R15` 和其他宏都定义在 [arch/x86/include/asm/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) 中。`ORIG_RAX-R15` 是120字节。
 我们在中断处理过程中需要把所有的寄存器信息存储在栈中，所有通用寄存器会占用这个120字节。
 为通用寄存器设置完栈之后，下一步是检查从用户空间产生的中断：
 
@@ -169,7 +172,7 @@ movl $1,%ebx
 1:	ret
 ```
 
-下一步我们把 `pt_regs` 指针存在 `rdi` 中，如果存在错误码就把它存储到 `rsi` 中，然后调用中断处理函数，例如就像[arch/x86/kernel/trap.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/traps)中的 `do_debug`。
+下一步我们把 `pt_regs` 指针存在 `rdi` 中，如果存在错误码就把它存储到 `rsi` 中，然后调用中断处理函数，例如就像 [arch/x86/kernel/trap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c)中的 `do_debug`。
 `do_debug` 像其他处理函数一样需要两个参数：
 
 * pt_regs - 是一个存储在进程内存区域的一组CPU寄存器
@@ -189,7 +192,9 @@ movl $1,%ebx
 
 我们在 `linux` 内核启动[过程](http://0xax.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html)中见过第一种方法（通过 `outb/inb` 指令实现）。
 第二种方法是把 `I/O` 的物理地址映射到虚拟地址。当 `CPU` 读取一段物理地址时，它可以读取到映射了 `I/O` 设备的物理 `RAM` 区域。
-`ioremap` 就是用来把设备内存映射到内核地址空间的。像我上面提到的下一个函数时 `early_ioremap_init`，它可以在正常的像 `ioremap` 这样的映射函数可用之前，把 `I/O` 内存映射到内核地址空间以方便读取。
+`ioremap` 就是用来把设备内存映射到内核地址空间的。
+
+像我上面提到的下一个函数时 `early_ioremap_init`，它可以在正常的像 `ioremap` 这样的映射函数可用之前，把 `I/O` 内存映射到内核地址空间以方便读取。
 我们需要在初期的初始化代码中初始化临时的 `ioremap` 来映射 `I/O` 设备到内存区域。初期的 `ioremap` 实现在 [arch/x86/mm/ioremap.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/ioremap.c) 中可以找到。
 在 `early_ioremap_init` 的一开始我们可以看到 `pmd_t` 类型的 `pmd` 指针定义（代表页中间目录条目 `typedef struct {pmdval_t pmd; } pmd_t;` 其中 `pmdval_t` 是无符号长整型）。
 然后检查 `fixmap` 是正确对齐的：
@@ -221,14 +226,14 @@ pmd_populate_kernel(&init_mm, pmd, bm_pte);
 获取根设备的主次设备号
 ----------------------------------------------------------------------------
 
-经过 `ioremap` 初始化完成，你可以看到下面的代码：
+`ioremap` 初始化完成后，紧接着是执行下面的代码：
 
 ```C
 ROOT_DEV = old_decode_dev(boot_params.hdr.root_dev);
 ```
 
 这段代码用来获取根设备的主次设备号。后面 `initrd` 会通过 `do_mount_root` 函数挂载到这个根设备上。其中主设备号用来识别和这个设备有关的驱动。
-次设备号用来表示使用该驱动的各设备。注意 `old_decode_dev` 函数是从 `boot_params_structure` 中获取了一个参数。我们可以从`x86 linux` 内核启动协议中查到：
+次设备号用来表示使用该驱动的各设备。注意 `old_decode_dev` 函数是从 `boot_params_structure` 中获取了一个参数。我们可以从x86 linux内核启动协议中查到：
 
 ```
 Field name:	root_dev
@@ -306,7 +311,7 @@ cat /proc/iomem
   000f0000-000fffff : System ROM
 ```
 
-可以看到，根据不同属性划分为以十六进制符号表示的一段地址范围。`Linux` 内核提供了用来管理所有资源的一种通用 `API`。全局资源（比如 `PICs` 或者 `I/O` 端口）可以划分为与硬件总线插槽有关的子集。
+可以看到，根据不同属性划分为以十六进制符号表示的一段地址范围。linux 内核提供了用来管理所有资源的一种通用 API。全局资源（比如 PICs 或者 I/O 端口）可以划分为与硬件总线插槽有关的子集。
 `resource` 的主要结构是：
 
 ```C
@@ -350,7 +355,7 @@ EXPORT_SYMBOL(iomem_resource);
 TODO EXPORT_SYMBOL
 ```
 
-`iomem_resource` 利用 `PCI mem` 名字和 `IORESOURCE_MEM (0x00000200)` 标记定义了 `io` 内存的根地址范围。就像上文提到的，我们目前的目的是设置 `iomem` 的结束地址。我们需要这样做：
+`iomem_resource` 利用 `PCI mem` 名字和 `IORESOURCE_MEM (0x00000200)` 标记定义了 `io` 内存的根地址范围。就像上文提到的，我们目前的目的是设置 `iomem` 的结束地址，我们需要这样做：
 
 ```C
 iomem_resource.end = (1ULL << boot_cpu_data.x86_phys_bits) - 1;
@@ -447,7 +452,7 @@ static inline void __init copy_edd(void)
 下一步是在初始化阶段完成内存描述符的初始化。我们知道每个进程都有自己的运行内存地址空间。通过调用 `memory descriptor` 可以看到这些特殊数据结构。
 在 `linux` 内核源码中内存描述符是用 `mm_struct` 结构体表示的。`mm_struct` 包含许多不同的与进程地址空间有关的字段，像内核代码/数据段的起始和结束地址，
 `brk` 的起始和结束，内存区域的数量，内存区域列表等。这些结构定义在 [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mm_types.h) 中。`task_struct` 结构的 `mm` 和 `active_mm` 字段包含了每个进程自己的内存描述符。
-我们的第一个 `init` 进程也有自己的内存描述符。在之前的[章节](http://0xax.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html) 我们看到过通过 `INIT_TASK` 宏实现 `task_struct` 的部分初始化信息：
+我们的第一个 `init` 进程也有自己的内存描述符。在之前的[章节](http://0xax.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html)我们看到过通过 `INIT_TASK` 宏实现 `task_struct` 的部分初始化信息：
 
 ```C
 #define INIT_TASK(tsk)  \
@@ -461,7 +466,7 @@ static inline void __init copy_edd(void)
 }
 ```
 
-`mm` 指向进程地址空间，`active_mm` 指向像内核线程这样子不存在地址空间的有效地址空间（你可以在 [documentation](https://www.kernel.org/doc/Documentation/vm/active_mm.txt) 中了解更多内容）。
+`mm` 指向进程地址空间，`active_mm` 指向像内核线程这样子不存在地址空间的有效地址空间（你可以在这个[文档](https://www.kernel.org/doc/Documentation/vm/active_mm.txt) 中了解更多内容）。
 接下来我们在初始化阶段完成内存描述符中内核代码段，数据段和 `brk` 段的初始化：
 
 ```C
@@ -531,7 +536,7 @@ void x86_configure_nx(void)
 结论
 ---------------------------------------------------------------------------------------------------
 
-以上是 `linux` 内核初始化过程的第五部分。在这一章我们讲解了有关架构初始化的 `setup_arch` 函数。内容很多，但是我们还没有学习完。其中，`setup_arch`
+以上是linux内核初始化过程的第五部分。在这一章我们讲解了有关架构初始化的 `setup_arch` 函数。内容很多，但是我们还没有学习完。其中，`setup_arch`
  是一个很复杂的函数，甚至我不确定我们能在以后的章节中讲完它的所有内容。在这一章节中有一些很有趣的概念像 `Fix-mapped` 地址，`ioremap` 等等。
 如果没听明白也不用担心，在 [Linux kernel memory management Part2](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md) 还会有更详细的解释。在下一章节我们会继续讲解有关结构初始化的东西，
 以及初期内核参数的解析，`pci` 设备的早期转存，直接媒体接口扫描等等。
