@@ -39,7 +39,7 @@ void __init early_trap_init(void)
 * 中断/异常处理函数的基地址
 * 第三个参数是 `Interrupt Stack Table`。 `IST` 是 [TSS](http://en.wikipedia.org/wiki/Task_state_segment) 的部分内容，是 `x86_64` 引入的新机制。
 在内核态处于活跃状态的线程拥有 `16kb` 的内核栈空间。但是在用户空间的线程的内核栈是空的。
-除了线程栈，还有一些与每个 `CPU` 有关的特殊栈。你可以查阅 `linux` 内核文档 - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/kernel-stacks) 部分了解这些栈信息。
+除了线程栈，还有一些与每个 `CPU` 有关的特殊栈。你可以查阅 linux 内核文档 - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/kernel-stacks) 部分了解这些栈信息。
 `x86_64` 提供了像在非屏蔽中断等类似事件中切换新的特殊栈的特性支持。这个特性的名字是 `Interrupt Stack Table`。
 每个CPU最多可以有7个 `IST` 条目，每个条目有自己特定的栈。在我们的案例中使用的是 `DEBUG_STACK`。
 
@@ -58,12 +58,12 @@ _set_gate(n, GATE_INTERRUPT, addr, 0, ist, __KERNEL_CS);
 
 当 `#DB` 和 `#BP` 门向 `idt_descr` 有写操作，我们会调用 `load_idt` 函数来执行 `ldtr` 指令来重新加载 `IDT` 表。
 现在我们来了解下中断处理函数并尝试理解它的工作原理。当然，我们不可能在这本书中讲解所有的中断处理函数。
-深入学习linux的内核源码是很有意思的事情，我们会在这里讲解 `debug` 处理函数的实现。请自行学习其他的中断处理函数实现。
+深入学习 linux 的内核源码是很有意思的事情，我们会在这里讲解 `debug` 处理函数的实现。请自行学习其他的中断处理函数实现。
 
 `#DB` 处理函数
 -----------------------------------------------------------------------
 
-像上文中提到的，我们在 `set_intr_gate_ist` 中通过 `&debug` 的地址传送 `#DB` 处理函数。[lxr.free-electorns.com](http://lxr.free-electrons.com/ident) 是用来搜索 `linux` 源代码中标识符的很好的资源。
+像上文中提到的，我们在 `set_intr_gate_ist` 中通过 `&debug` 的地址传送 `#DB` 处理函数。[lxr.free-electorns.com](http://lxr.free-electrons.com/ident) 是用来搜索 linux 源代码中标识符的很好的资源。
 遗憾的是，你在其中找不到 `debug` 处理函数。你只能在 [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/traps.h) 中找到 `debug` 的定义：
 
 ```C
@@ -88,7 +88,7 @@ idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 现在我们来看下 `idtentry` 宏的实现。这个宏的定义也在相同的汇编文件中，并且定义了有 `ENTRY` 宏属性的 `debug` 函数。
 首先，`idtentry` 宏检查所有的参数是否正确，是否需要切换到特殊栈。接下来检查中断返回的错误码。例如本案例中的 `#DB` 不会返回错误码。
 如果有错误码返回，它会调用 `INTR_FRAME` 或者 `XCPT_FRAM` 宏。其实 `XCPT_FRAME` 和 `INTR_FRAME` 宏什么也不会做，只是对中断初始状态编译的时候有用。
-它们使用 `CFI` 指令用来调试。你可以查阅更多有关 `CFI` 指令的信息[CFI](https://sourceware.org/binutils/docs/as/CFI-directives.html)。
+它们使用 `CFI` 指令用来调试。你可以查阅更多有关 `CFI` 指令的信息 [CFI](https://sourceware.org/binutils/docs/as/CFI-directives.html)。
 就像 [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64) 中解释：`CFI` 宏是用来产生更好的回溯的 `dwarf2` 的解开信息。
 它们不会改变任何代码。因此我们可以忽略它们。
 
@@ -190,7 +190,7 @@ movl $1,%ebx
 * I/O端口
 * 设备内存
 
-我们在 `linux` 内核启动[过程](http://0xax.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html)中见过第一种方法（通过 `outb/inb` 指令实现）。
+我们在 linux 内核启动[过程](http://0xax.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html)中见过第一种方法（通过 `outb/inb` 指令实现）。
 第二种方法是把 `I/O` 的物理地址映射到虚拟地址。当 `CPU` 读取一段物理地址时，它可以读取到映射了 `I/O` 设备的物理 `RAM` 区域。
 `ioremap` 就是用来把设备内存映射到内核地址空间的。
 
@@ -233,7 +233,7 @@ ROOT_DEV = old_decode_dev(boot_params.hdr.root_dev);
 ```
 
 这段代码用来获取根设备的主次设备号。后面 `initrd` 会通过 `do_mount_root` 函数挂载到这个根设备上。其中主设备号用来识别和这个设备有关的驱动。
-次设备号用来表示使用该驱动的各设备。注意 `old_decode_dev` 函数是从 `boot_params_structure` 中获取了一个参数。我们可以从x86 linux内核启动协议中查到：
+次设备号用来表示使用该驱动的各设备。注意 `old_decode_dev` 函数是从 `boot_params_structure` 中获取了一个参数。我们可以从 x86 linux 内核启动协议中查到：
 
 ```
 Field name:	root_dev
@@ -450,7 +450,7 @@ static inline void __init copy_edd(void)
 --------------------------------------------------------------------------------------------------
 
 下一步是在初始化阶段完成内存描述符的初始化。我们知道每个进程都有自己的运行内存地址空间。通过调用 `memory descriptor` 可以看到这些特殊数据结构。
-在 `linux` 内核源码中内存描述符是用 `mm_struct` 结构体表示的。`mm_struct` 包含许多不同的与进程地址空间有关的字段，像内核代码/数据段的起始和结束地址，
+在 linux 内核源码中内存描述符是用 `mm_struct` 结构体表示的。`mm_struct` 包含许多不同的与进程地址空间有关的字段，像内核代码/数据段的起始和结束地址，
 `brk` 的起始和结束，内存区域的数量，内存区域列表等。这些结构定义在 [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mm_types.h) 中。`task_struct` 结构的 `mm` 和 `active_mm` 字段包含了每个进程自己的内存描述符。
 我们的第一个 `init` 进程也有自己的内存描述符。在之前的[章节](http://0xax.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html)我们看到过通过 `INIT_TASK` 宏实现 `task_struct` 的部分初始化信息：
 
@@ -536,7 +536,7 @@ void x86_configure_nx(void)
 结论
 ---------------------------------------------------------------------------------------------------
 
-以上是linux内核初始化过程的第五部分。在这一章我们讲解了有关架构初始化的 `setup_arch` 函数。内容很多，但是我们还没有学习完。其中，`setup_arch`
+以上是 linux 内核初始化过程的第五部分。在这一章我们讲解了有关架构初始化的 `setup_arch` 函数。内容很多，但是我们还没有学习完。其中，`setup_arch`
  是一个很复杂的函数，甚至我不确定我们能在以后的章节中讲完它的所有内容。在这一章节中有一些很有趣的概念像 `Fix-mapped` 地址，`ioremap` 等等。
 如果没听明白也不用担心，在 [Linux kernel memory management Part2](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md) 还会有更详细的解释。在下一章节我们会继续讲解有关结构初始化的东西，
 以及初期内核参数的解析，`pci` 设备的早期转存，直接媒体接口扫描等等。
