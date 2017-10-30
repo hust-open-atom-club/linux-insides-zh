@@ -341,7 +341,7 @@ Linux version 4.0.0-rc6+ (alex@localhost) (gcc version 4.9.1 (Ubuntu 4.9.1-16ubu
 依赖于体系结构的初始化部分
 ---------------------------------------------------------------------------------
 
-下个步骤我们就要进入到指定的体系架构的初始函数，Linux 内核初始化体系架构相关调用`setup_arch`函数，这又是一个类型于`start_kernel`一版的庞大函数，这里我们仅仅简单描述，在下一个章节我们将继续深入。指定体系架构的内容，我们需要再一次阅读`arch/`目录，`setup_arch`函数定义在[arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 文件中，此函数就一个参数-内核命令行。
+下个步骤我们就要进入到指定的体系架构的初始函数，Linux 内核初始化体系架构相关调用`setup_arch`函数，这又是一个类型于`start_kernel`的庞大函数，这里我们仅仅简单描述，在下一个章节我们将继续深入。指定体系架构的内容，我们需要再一次阅读`arch/`目录，`setup_arch`函数定义在[arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 文件中，此函数就一个参数-内核命令行。
 
 此函数解析内核的段`_text`和`_data`来自于`_text`符号和`_bss_stop`(你应该还记得此文件[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S#L46))。我们使用`memblock`来解析内存块。
 
