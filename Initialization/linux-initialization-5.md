@@ -9,9 +9,9 @@ Part 5
 为 [initrd](http://en.wikipedia.org/wiki/Initrd) 预留了内存之后，下一步是执行 `olpc_ofw_detect` 函数检测系统是否支持 [One Laptop Per Child](http://wiki.laptop.org/go/OFW_FAQ)。
 我们不会考虑与平台有关的东西，因此会忽略与平台有关的内容。所以我们继续往下看。
 下一步是执行 `early_trap_init` 函数。这个函数会初始化调试功能 （`#DB` -当 `TF` 标志位和rflags被设置时会被使用）和 `int3` （`#BP`）中断门。
-如果你不了解中断，你可以从 [Early interrupt and exception handling](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html) 中学习有关中断的内容。
+如果你不了解中断，你可以从 [初期中断和异常处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html) 中学习有关中断的内容。
 在 `x86` 架构中，`INT`，`INT0` 和 `INT3` 是支持任务显式调用中断处理函数的特殊指令。`INT3` 指令调用断点（`#BP`）处理函数。
-你如果记得，我们在这[部分](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) 看到过中断和异常概念：
+你如果记得，我们在这[部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html) 看到过中断和异常概念：
 
 ```
 ----------------------------------------------------------------------------------------------
@@ -190,7 +190,7 @@ movl $1,%ebx
 * I/O端口
 * 设备内存
 
-我们在 linux 内核启动[过程](http://0xax.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html)中见过第一种方法（通过 `outb/inb` 指令实现）。
+我们在 linux [内核启动过程](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html)中见过第一种方法（通过 `outb/inb` 指令实现）。
 第二种方法是把 `I/O` 的物理地址映射到虚拟地址。当 `CPU` 读取一段物理地址时，它可以读取到映射了 `I/O` 设备的物理 `RAM` 区域。
 `ioremap` 就是用来把设备内存映射到内核地址空间的。
 
@@ -221,7 +221,7 @@ memset(bm_pte, 0, sizeof(bm_pte));
 pmd_populate_kernel(&init_mm, pmd, bm_pte);
 ```
 
-这就是所有过程。如果你仍然觉得困惑，不要担心。在 [Linux Kernel Memory Managment. Part 2](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md) 章节会有单独一部分讲解 `ioremap` 和 `fixmaps`。
+这就是所有过程。如果你仍然觉得困惑，不要担心。在 [内核内存管理，第二部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html) 章节会有单独一部分讲解 `ioremap` 和 `fixmaps`。
 
 获取根设备的主次设备号
 ----------------------------------------------------------------------------
@@ -272,7 +272,7 @@ static inline dev_t new_decode_dev(u32 dev)
 Memory Map设置
 -----------------------------------------------------------------------
 
-下一步是调用 `setup_memory_map` 函数设置内存映射。但是在这之前我们需要设置与显示屏有关的参数（目前有行、列，视频页等，你可以在 [Video mode initialization and transition to protected mode](http://0xax.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html) 中了解），
+下一步是调用 `setup_memory_map` 函数设置内存映射。但是在这之前我们需要设置与显示屏有关的参数（目前有行、列，视频页等，你可以在 [显示模式初始化和进入保护模式](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html) 中了解），
 与拓展显示识别数据，视频模式，引导启动器类型等参数：
 
 ```C
@@ -393,7 +393,7 @@ struct x86_init_ops x86_init __initdata = {
 }
 ```
 
-我们可以看到，这里的 `memory_setup` 赋值为 `default_machine_specific_memory_setup`，它是我们在对 [boot time](http://0xax.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-2.html) 过程中的所有 [e820](http://en.wikipedia.org/wiki/E820) 条目经过整理和把内存分区填入 `e820map` 结构体中获得的。
+我们可以看到，这里的 `memory_setup` 赋值为 `default_machine_specific_memory_setup`，它是我们在对 [内核启动](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-2.html) 过程中的所有 [e820](http://en.wikipedia.org/wiki/E820) 条目经过整理和把内存分区填入 `e820map` 结构体中获得的。
 所有收集的内存分区会用 `printk` 打印出来。你可以通过运行 `dmesg` 命令找到类似于下面的信息：
 
 ```
@@ -452,7 +452,7 @@ static inline void __init copy_edd(void)
 下一步是在初始化阶段完成内存描述符的初始化。我们知道每个进程都有自己的运行内存地址空间。通过调用 `memory descriptor` 可以看到这些特殊数据结构。
 在 linux 内核源码中内存描述符是用 `mm_struct` 结构体表示的。`mm_struct` 包含许多不同的与进程地址空间有关的字段，像内核代码/数据段的起始和结束地址，
 `brk` 的起始和结束，内存区域的数量，内存区域列表等。这些结构定义在 [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mm_types.h) 中。`task_struct` 结构的 `mm` 和 `active_mm` 字段包含了每个进程自己的内存描述符。
-我们的第一个 `init` 进程也有自己的内存描述符。在之前的[章节](http://0xax.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html)我们看到过通过 `INIT_TASK` 宏实现 `task_struct` 的部分初始化信息：
+我们的第一个 `init` 进程也有自己的内存描述符。在之前的[章节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html)我们看到过通过 `INIT_TASK` 宏实现 `task_struct` 的部分初始化信息：
 
 ```C
 #define INIT_TASK(tsk)  \
@@ -538,14 +538,14 @@ void x86_configure_nx(void)
 
 以上是 linux 内核初始化过程的第五部分。在这一章我们讲解了有关架构初始化的 `setup_arch` 函数。内容很多，但是我们还没有学习完。其中，`setup_arch`
  是一个很复杂的函数，甚至我不确定我们能在以后的章节中讲完它的所有内容。在这一章节中有一些很有趣的概念像 `Fix-mapped` 地址，`ioremap` 等等。
-如果没听明白也不用担心，在 [Linux kernel memory management Part2](https://github.com/0xAX/linux-insides/blob/master/mm/linux-mm-2.md) 还会有更详细的解释。在下一章节我们会继续讲解有关结构初始化的东西，
+如果没听明白也不用担心，在 [内核内存管理，第二部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html) 还会有更详细的解释。在下一章节我们会继续讲解有关结构初始化的东西，
 以及初期内核参数的解析，`pci` 设备的早期转存，直接媒体接口扫描等等。
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+如果你有任何问题或者建议，你可以留言，也可以直接发送消息给我[twitter](https://twitter.com/0xAX)。
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，清提交一个 PR 到 [linux-insides](https://github.com/MintCN/linux-insides-zh)。**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [mm vs active_mm](https://www.kernel.org/doc/Documentation/vm/active_mm.txt)
