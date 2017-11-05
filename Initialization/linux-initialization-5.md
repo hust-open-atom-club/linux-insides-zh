@@ -6,8 +6,8 @@
 
 在之前的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html)中，
 我们讲到了与系统架构有关的 [setup_arch](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c#L856) 函数部分，本文会继续从这里开始。
-为 [initrd](http://en.wikipedia.org/wiki/Initrd) 预留了内存之后，下一步是执行 `olpc_ofw_detect` 函数检测系统是否支持 [One Laptop Per Child](http://wiki.laptop.org/go/OFW_FAQ)。
-我们不会考虑与平台有关的东西，因此会忽略与平台有关的内容。所以我们继续往下看。
+我们为 [initrd](http://en.wikipedia.org/wiki/Initrd) 预留了内存之后，下一步是执行 `olpc_ofw_detect` 函数检测系统是否支持 [One Laptop Per Child support](http://wiki.laptop.org/go/OFW_FAQ)。
+我们不会考虑与平台有关的东西，且会忽略与平台有关的函数。所以我们继续往下看。
 下一步是执行 `early_trap_init` 函数。这个函数会初始化调试功能 （`#DB` -当 `TF` 标志位和rflags被设置时会被使用）和 `int3` （`#BP`）中断门。
 如果你不了解中断，你可以从 [初期中断和异常处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html) 中学习有关中断的内容。
 在 `x86` 架构中，`INT`，`INT0` 和 `INT3` 是支持任务显式调用中断处理函数的特殊指令。`INT3` 指令调用断点（`#BP`）处理函数。
@@ -21,7 +21,7 @@
 ----------------------------------------------------------------------------------------------
 ```
 
-调试中断 `#DB` 是激活调试器的重要方法。用来设置 `#DB` 和 `#BP` 处理函数，并且实现重新加载 [IDT](http://en.wikipedia.org/wiki/Interrupt_descriptor_table) 的 `early_trap_init` 函数的定义在 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) 中。
+调试中断 `#DB` 是激活调试器的重要方法。`early_trap_init` 函数的定义在 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) 中。这个函数用来设置 `#DB` 和 `#BP` 处理函数，并且实现重新加载 [IDT](http://en.wikipedia.org/wiki/Interrupt_descriptor_table)。
 
 ```C
 void __init early_trap_init(void)
@@ -32,7 +32,7 @@ void __init early_trap_init(void)
 }
 ```
 
-我们之前已经看到过 `set_intr_gate` 中关于中断的实现。这里的 `set_intr_gate_ist` 和 `set_system_intr_gate_ist` 也是类似的实现。
+我们之前中断相关章节中看到过 `set_intr_gate` 的实现。这里的 `set_intr_gate_ist` 和 `set_system_intr_gate_ist` 也是类似的实现。
 这两个函数都需要三个参数：
 
 * 中断号
@@ -41,7 +41,7 @@ void __init early_trap_init(void)
 在内核态处于活跃状态的线程拥有 `16kb` 的内核栈空间。但是在用户空间的线程的内核栈是空的。
 除了线程栈，还有一些与每个 `CPU` 有关的特殊栈。你可以查阅 linux 内核文档 - [Kernel stacks](https://www.kernel.org/doc/Documentation/x86/kernel-stacks) 部分了解这些栈信息。
 `x86_64` 提供了像在非屏蔽中断等类似事件中切换新的特殊栈的特性支持。这个特性的名字是 `Interrupt Stack Table`。
-每个CPU最多可以有7个 `IST` 条目，每个条目有自己特定的栈。在我们的案例中使用的是 `DEBUG_STACK`。
+每个CPU最多可以有 7 个 `IST` 条目，每个条目有自己特定的栈。在我们的案例中使用的是 `DEBUG_STACK`。
 
 `set_intr_gate_ist` 和 `set_system_intr_gate_ist` 与 `set_intr_gate` 的工作原理几乎一样，只有一个区别。
 这些函数检查中断号并在内部调用 `_set_gate` ：
@@ -51,7 +51,7 @@ BUG_ON((unsigned)n > 0xFF);
 _set_gate(n, GATE_INTERRUPT, addr, 0, ist, __KERNEL_CS);
 ```
 
-其中， `set_intr_gate` 把 [dpl](http://en.wikipedia.org/wiki/Privilege_level) 和 `ist` 置为0来调用 `_set_gate`。
+其中， `set_intr_gate` 把 [dpl](http://en.wikipedia.org/wiki/Privilege_level) 和 `ist` 置为 0 来调用 `_set_gate`。
 但是 `set_intr_gate_ist` 和 `set_system_intr_gate_ist` 把 `ist` 设置为 `DEBUG_STACK`，并且 `set_system_intr_gate_ist` 把 `dpl` 设置为优先级最低的 `0x3`。
 当中断发生时，硬件加载这个描述符，然后硬件根据 `IST` 的值自动设置新的栈指针。
 之后激活对应的中断处理函数。所有的特殊内核栈会在 `cpu_init` 函数中设置好（我们会在后文中提到）。
@@ -63,7 +63,7 @@ _set_gate(n, GATE_INTERRUPT, addr, 0, ist, __KERNEL_CS);
 `#DB` 处理函数
 -----------------------------------------------------------------------
 
-像上文中提到的，我们在 `set_intr_gate_ist` 中通过 `&debug` 的地址传送 `#DB` 处理函数。[lxr.free-electorns.com](http://lxr.free-electrons.com/ident) 是用来搜索 linux 源代码中标识符的很好的资源。
+像上文中提到的，我们在 `set_intr_gate_ist` 中通过 `&debug` 的地址传送 `#DB` 处理函数。[lxr.free-electorns.com](http://lxr.free-electrons.com/ident) 是很好的用来搜索 linux 源代码中标识符的资源。
 遗憾的是，你在其中找不到 `debug` 处理函数。你只能在 [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/traps.h) 中找到 `debug` 的定义：
 
 ```C
@@ -82,7 +82,7 @@ idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 * 中断条目点的名字
 * 中断处理函数的名字
 * 是否有中断错误码
-* paranoid - 如果这个参数置为1，则切换到特殊栈
+* paranoid - 如果这个参数置为 1，则切换到特殊栈
 * shift_ist - 支持中断期间切换栈
 
 现在我们来看下 `idtentry` 宏的实现。这个宏的定义也在相同的汇编文件中，并且定义了有 `ENTRY` 宏属性的 `debug` 函数。
@@ -113,7 +113,7 @@ ENTRY(\sym)
 当中断发生后经过初期的中断/异常处理，我们可以知道栈内的格式是这样的：
 
 ```
- +-----------------------+
+    +-----------------------+
     |                       |
 +40 |         SS            |
 +32 |         RSP           |
@@ -148,8 +148,8 @@ ENTRY(\sym)
 	subq $ORIG_RAX-R15, %rsp
 ```
 
-其中，`ORIG_RAX`，`R15` 和其他宏都定义在 [arch/x86/include/asm/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) 中。`ORIG_RAX-R15` 是120字节。
-我们在中断处理过程中需要把所有的寄存器信息存储在栈中，所有通用寄存器会占用这个120字节。
+其中，`ORIG_RAX`，`R15` 和其他宏都定义在 [arch/x86/include/asm/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) 中。`ORIG_RAX-R15` 是 120 字节。
+我们在中断处理过程中需要把所有的寄存器信息存储在栈中，所有通用寄存器会占用这个 120 字节。
 为通用寄存器设置完栈之后，下一步是检查从用户空间产生的中断：
 
 ```assembly
@@ -213,7 +213,7 @@ for (i = 0; i < FIX_BTMAPS_SLOTS; i++)
     slot_virt[i] = __fix_to_virt(FIX_BTMAP_BEGIN - NR_FIX_BTMAPS*i);
 ```
 
-之后我们就获得了 `FIX_BTMAP_BEGIN` 的页中间目录条目，并把它赋值给了 `pmd` 变量，把启动时间页表 `bm_pte` 写满0。然后调用 `pmd_populate_kernel` 函数设置给定的页中间目录的页表条目：
+之后我们就获得了 `FIX_BTMAP_BEGIN` 的页中间目录条目，并把它赋值给了 `pmd` 变量，把启动时间页表 `bm_pte` 写满 0。然后调用 `pmd_populate_kernel` 函数设置给定的页中间目录的页表条目：
 
 ```C
 pmd = early_ioremap_pmd(fix_to_virt(FIX_BTMAP_BEGIN));
@@ -255,8 +255,8 @@ static inline dev_t old_decode_dev(u16 val)
 ```
 
 其中 `dev_t` 是用来表示主/次设备号对的一个内核数据类型。但是这个奇怪的 `old` 前缀代表了什么呢？出于历史原因，有两种管理主次设备号的方法。
-第一种方法主次设备号占用2字节。你可以在以前的代码中发现：主设备号占用8bit，次设备号占用8bit。但是这会引入一个问题：最多只能支持256个主设备号和256个次设备号。
-因此后来引入了32bit来表示主次设备号，其中12位用来表示主设备号，20位用来表示次设备号。你可以在 `new_decode_dev` 的实现中找到：
+第一种方法主次设备号占用 2 字节。你可以在以前的代码中发现：主设备号占用 8 bit，次设备号占用 8 bit。但是这会引入一个问题：最多只能支持 256 个主设备号和 256 个次设备号。
+因此后来引入了 32 bit 来表示主次设备号，其中 12 位用来表示主设备号，20 位用来表示次设备号。你可以在 `new_decode_dev` 的实现中找到：
 
 ```C
 static inline dev_t new_decode_dev(u32 dev)
@@ -267,7 +267,7 @@ static inline dev_t new_decode_dev(u32 dev)
 }
 ```
 
-如果 `dev` 的值是 `0xffffffff`，经过计算我们可以得到用来表示主设备号的12位值 `0xfff`，表示次设备号的20位值 `0xfffff`。因此经过 `old_decode_dev` 我们最终可以得到在 `ROOT_DEV` 中根设备的主次设备号。
+如果 `dev` 的值是 `0xffffffff`，经过计算我们可以得到用来表示主设备号的 12 位值 `0xfff`，表示次设备号的20位值 `0xfffff`。因此经过 `old_decode_dev` 我们最终可以得到在 `ROOT_DEV` 中根设备的主次设备号。
 
 Memory Map设置
 -----------------------------------------------------------------------
@@ -519,7 +519,7 @@ static struct resource code_resource = {
 };
 ```
 
-本章节涉及的最后一部分就是 `NX` 配置。`NX-bit` 或者 `no-execute` 位是页目录条目的第63比特位。它的作用是控制被映射的物理页面是否具有执行代码的能力。
+本章节涉及的最后一部分就是 `NX` 配置。`NX-bit` 或者 `no-execute` 位是页目录条目的第 63 比特位。它的作用是控制被映射的物理页面是否具有执行代码的能力。
 这个比特位只会在通过把 `EFER.NXE` 置为1使能 `no-execute` 页保护机制的时候被使用/设置。在 `x86_configure_nx` 函数中会检查 `CPU` 是否支持 `NX-bit`，以及是否被禁用。
 经过检查后，我们会根据结果给 `_supported_pte_mask` 赋值：
 
