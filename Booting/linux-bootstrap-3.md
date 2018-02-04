@@ -124,7 +124,7 @@ static inline bool heap_free(size_t n)
 
 首先函数初始化一个类型为 `biosregs` 的变量，将其中的 `AH` 寄存器内容设置成 `0x3`，然后调用 `0x10` BIOS 中断。当中断调用返回之后，`DL` 和 `DH` 寄存器分别包含了当前光标的行和列信息。接着，这2个信息将被保存到 `boot_params.screen_info` 字段的 `orig_x` 和 `orig_y`字段。
 
-在 `store_cursor_position` 函数执行完毕之后，`store_mode_params` 函数将调用 `store_vide_mode` 函数将当前使用的显示模式保存到 `boot_params.screen_info.orig_video_mode`。
+在 `store_cursor_position` 函数执行完毕之后，`store_mode_params` 函数将调用 `store_video_mode` 函数将当前使用的显示模式保存到 `boot_params.screen_info.orig_video_mode`。
 
 接下來 `store_mode_params` 函数将根据当前显示模式的设定，给 `video_segment` 变量设置正确的值（实际上就是设置显示内存的起始地址）。在 BIOS 将控制权转移到引导扇区的时候，显示内存地址和显示模式的对应关系如下表所示：
 
@@ -392,7 +392,7 @@ outb(0xff, 0xa1);       /* Mask all interrupts on the secondary PIC */
 outb(0xfb, 0x21);       /* Mask all but cascade on the primary PIC */
 ```
 
-这个函数调用激活主和从中断控制器 (Programmable Interrupt Controller)上的中断，唯一的例外是主中断控制器上的级联中断（所有从中断控制器的中断将通过这个级联中断报告给 CPU ）。
+这个函数调用屏蔽了从中断控制器的所有中断，和主中断控制器上除IRQ2以外的所有中断（IRQ2是主中断控制器上的级联中断，所有从中断控制器的中断将通过这个级联中断报告给 CPU ）。
 
 到这里位置，我们就完成了所有的准备工作，下面我们就将正式开始从实模式转换到保护模式。
 
