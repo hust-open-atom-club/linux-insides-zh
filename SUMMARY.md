@@ -57,7 +57,7 @@
     * [内存块](MM/linux-mm-1.md)
     * [固定映射地址和 ioremap](MM/linux-mm-2.md)
     * [kmemcheck](MM/linux-mm-3.md)
-* [Cgroups](Cgroups/README.md)
+* [控制组](Cgroups/README.md)
 	* [控制组简介](Cgroups/linux-cgroups-1.md)
 * [SMP]()
 * [概念](Concepts/README.md)
