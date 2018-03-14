@@ -97,9 +97,9 @@
 |└ [10.3](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/linux-datastructures-3.md)|[@cposture](https://github.com/cposture)|已完成|
 | 11. [Theory](https://github.com/MintCN/linux-insides-zh/tree/master/Theory)||正在进行|
 |├ [11.0](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[99ad0799](https://github.com/0xAX/linux-insides/commit/99ad07999636b76985218e02e5a52140050cbbde)|
-|├ [11.1](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/Paging.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
-|├ [11.2](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/ELF.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
-|└ [11.3](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/asm.md)||未开始|
+|├ [11.1](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/linux-theory-1.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ [11.2](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/linux-theory-2.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
+|└ [11.3](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/linux-theory-3.md)||未开始|
 | 12. Initial ram disk||上游未开始|
 | 13. [Misc](https://github.com/MintCN/linux-insides-zh/tree/master/Misc)||已完成|
 |├ [13.0](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[ddf0793f](https://github.com/0xAX/linux-insides/commit/ddf0793f6b74b6c541c4979b4deaf093b2b87c9b)|
