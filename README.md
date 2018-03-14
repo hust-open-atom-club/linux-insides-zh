@@ -63,13 +63,13 @@
 |└ [4.6](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-6.md)|[@BMEI1314](https://github.com/BMEI1314)|正在进行|
 | 5. [Timers and time management](https://github.com/MintCN/linux-insides-zh/tree/master/Timers)||正在进行|
 |├ [5.0](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[2a742fd4](https://github.com/0xAX/linux-insides/commit/2a742fd485df0260efce2078e7162c0de668e98b)|
-|├ [5.1](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-1.md)|[@luoxiaobing](https://github.com/luoxiaobing)|正在进行|
-|├ [5.2](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-2.md)|[@jekfish](https://github.com/jekfish)|正在进行|
-|├ [5.3](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-3.md)||未开始|
-|├ [5.4](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-4.md)||未开始|
-|├ [5.5](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-5.md)||未开始|
-|├ [5.6](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-6.md)||未开始|
-|└ [5.7](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-7.md)||未开始|
+|├ [5.1](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-1.md)|[@luoxiaobing](https://github.com/luoxiaobing)|正在进行|
+|├ [5.2](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-2.md)|[@jekfish](https://github.com/jekfish)|正在进行|
+|├ [5.3](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-3.md)||未开始|
+|├ [5.4](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-4.md)||未开始|
+|├ [5.5](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-5.md)||未开始|
+|├ [5.6](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-6.md)||未开始|
+|└ [5.7](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-7.md)||未开始|
 | 6. [Synchronization primitives](https://github.com/MintCN/linux-insides-zh/tree/master/SyncPrim)||正在进行|
 |├ [6.0](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[6f85b63e](https://github.com/0xAX/linux-insides/commit/6f85b63e347b636e08e965e9dc22c177e972afe2)|
 |├ [6.1](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-1.md)|[@keltoy](https://github.com/keltoy)|已完成|
