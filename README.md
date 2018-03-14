@@ -86,9 +86,10 @@
 | 8. SMP||上游未开始|
 | 9. [Concepts](https://github.com/MintCN/linux-insides-zh/tree/master/Concepts)||正在进行|
 |├ [9.0](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
-|├ [9.1](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/per-cpu.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
-|├ [9.2](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/cpumask.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
-|└ [9.3](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/initcall.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
+|├ [9.1](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/linux-cpu-1.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
+|├ [9.2](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/linux-cpu-2.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
+|├ [9.3](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/linux-cpu-3.md)|[@up2wing](https://github.com/up2wing)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-0460583622f03a52d7693094d6fa2452)|
+|└ [9.4](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/linux-cpu-3.md)||未开始|
 | 10. [DataStructures](https://github.com/MintCN/linux-insides-zh/tree/master/DataStructures)||已完成|
 |├ [10.0](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[99138e09](https://github.com/0xAX/linux-insides/commit/99138e0932dc25bf6c90dd102a70a6d15589e9ab)|
 |├ [10.1](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md)|[@oska874](http://github.com/oska874) [@mudongliang](https://github.com/mudongliang)|已完成|
