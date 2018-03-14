@@ -19,7 +19,7 @@
     * [RCU 初始化](Initialization/linux-initialization-9.md)
     * [初始化结束](Initialization/linux-initialization-10.md)
 * [中断](Interrupts/README.md)
-    * [中断和中断处理 Part 1.](Interrupts/linux-interrupts-1.md)
+    * [中断和中断处理第一部分](Interrupts/linux-interrupts-1.md)
     * [深入 Linux 内核中的中断](Interrupts/linux-interrupts-2.md)
     * [初步中断处理](Interrupts/linux-interrupts-3.md)
     * [中断处理](Interrupts/linux-interrupts-4.md)
