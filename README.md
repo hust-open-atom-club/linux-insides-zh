@@ -72,12 +72,12 @@
 |└ [5.7](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/timers-7.md)||未开始|
 | 6. [Synchronization primitives](https://github.com/MintCN/linux-insides-zh/tree/master/SyncPrim)||正在进行|
 |├ [6.0](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[6f85b63e](https://github.com/0xAX/linux-insides/commit/6f85b63e347b636e08e965e9dc22c177e972afe2)|
-|├ [6.1](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-1.md)|[@keltoy](https://github.com/keltoy)|已完成|
-|├ [6.2](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-2.md)|[@keltoy](https://github.com/keltoy)|已完成|
-|├ [6.3](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-3.md)|[@huxq](https://github.com/huxq)|已完成|
-|├ [6.4](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-4.md)||未开始|
-|├ [6.5](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-5.md)||未开始|
-|└ [6.6](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/sync-6.md)||未开始|
+|├ [6.1](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-1.md)|[@keltoy](https://github.com/keltoy)|已完成|
+|├ [6.2](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-2.md)|[@keltoy](https://github.com/keltoy)|已完成|
+|├ [6.3](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-3.md)|[@huxq](https://github.com/huxq)|已完成|
+|├ [6.4](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-4.md)||未开始|
+|├ [6.5](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-5.md)||未开始|
+|└ [6.6](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-6.md)||未开始|
 | 7. [Memory management](https://github.com/MintCN/linux-insides-zh/tree/master/MM)||未开始|
 |├ [7.0](https://github.com/MintCN/linux-insides-zh/blob/master/MM/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[f83c8ee2](https://github.com/0xAX/linux-insides/commit/f83c8ee29e2051a8f4c08d6a0fa8247d934e14d9)|
 |├ [7.1](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-1.md)|[@choleraehyq](https://github.com/choleraehyq)|已完成|
