@@ -42,15 +42,15 @@
 |├ [2.9](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-9.md)||未开始|
 |└ [2.10](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-10.md)||未开始|
 | 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/Interrupts)||正在进行|
-|├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|正在进行|
+|├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|更新至[57279321](5727932167a2ff6a1e647081c85d081d4ed8b508)|
 |├ [3.1](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-1.md)||未开始|
-|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-2.md)|[@up2wing](https://github.com/up2wing)|正在进行|
-|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-3.md)|[@up2wing](https://github.com/up2wing)|正在进行|
-|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-4.md)|[@up2wing](https://github.com/up2wing)|正在进行|
-|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-5.md)|[@up2wing](https://github.com/up2wing)|正在进行|
-|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-6.md)|[@up2wing](https://github.com/up2wing)|正在进行|
-|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-7.md)|[@up2wing](https://github.com/up2wing)|正在进行|
-|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-8.md)|[@up2wing](https://github.com/up2wing)|正在进行|
+|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-2.md)||未开始|
+|├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-3.md)||未开始|
+|├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-4.md)||未开始|
+|├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-5.md)||未开始|
+|├ [3.6](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-6.md)||未开始|
+|├ [3.7](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-7.md)||未开始|
+|├ [3.8](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-8.md)||未开始|
 |├ [3.9](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-9.md)|[@zhangyangjing](https://github.com/zhangyangjing)|已完成|
 |└ [3.10](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-10.md)|[@worldwar](https://github.com/worldwar)|已完成|
 | 4. [System calls](https://github.com/MintCN/linux-insides-zh/tree/master/SysCall)||正在进行|
@@ -58,13 +58,13 @@
 |├ [4.1](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-1.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.2](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-2.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.3](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-3.md)||未开始|
-|├ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-4.md)|[@BMEI1314](https://github.com/BMEI1314)|正在进行|
-|├ [4.5](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-5.md)|[@BMEI1314](https://github.com/BMEI1314)|正在进行|
-|└ [4.6](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-6.md)|[@BMEI1314](https://github.com/BMEI1314)|正在进行|
+|├ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-4.md)||未开始|
+|├ [4.5](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-5.md)||未开始|
+|└ [4.6](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-6.md)||未开始|
 | 5. [Timers and time management](https://github.com/MintCN/linux-insides-zh/tree/master/Timers)||正在进行|
 |├ [5.0](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[2a742fd4](https://github.com/0xAX/linux-insides/commit/2a742fd485df0260efce2078e7162c0de668e98b)|
-|├ [5.1](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-1.md)|[@luoxiaobing](https://github.com/luoxiaobing)|正在进行|
-|├ [5.2](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-2.md)|[@jekfish](https://github.com/jekfish)|正在进行|
+|├ [5.1](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-1.md)||未开始|
+|├ [5.2](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-2.md)||未开始|
 |├ [5.3](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-3.md)||未开始|
 |├ [5.4](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-4.md)||未开始|
 |├ [5.5](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-5.md)||未开始|
@@ -82,7 +82,7 @@
 |├ [7.0](https://github.com/MintCN/linux-insides-zh/blob/master/MM/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[f83c8ee2](https://github.com/0xAX/linux-insides/commit/f83c8ee29e2051a8f4c08d6a0fa8247d934e14d9)|
 |├ [7.1](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-1.md)|[@choleraehyq](https://github.com/choleraehyq)|已完成|
 |├ [7.2](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-2.md)|[@choleraehyq](https://github.com/choleraehyq)|已完成|
-|└ [7.3](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-3.md)|[@1a1a11a](https://github.com/1a1a11a)|正在进行|
+|└ [7.3](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-3.md)||未开始|
 | 8. SMP||上游未开始|
 | 9. [Concepts](https://github.com/MintCN/linux-insides-zh/tree/master/Concepts)||正在进行|
 |├ [9.0](https://github.com/MintCN/linux-insides-zh/blob/master/Concepts/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
