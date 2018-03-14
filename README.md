@@ -103,10 +103,10 @@
 | 12. Initial ram disk||上游未开始|
 | 13. [Misc](https://github.com/MintCN/linux-insides-zh/tree/master/Misc)||已完成|
 |├ [13.0](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[ddf0793f](https://github.com/0xAX/linux-insides/commit/ddf0793f6b74b6c541c4979b4deaf093b2b87c9b)|
-|├ [13.1](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/how_linux_compile.md)|[@oska874](https://github.com/oska874)|已完成|
-|├ [13.2](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linkers.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
-|├ [13.3](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/contribute.md)|[@hao-lee](https://github.com/hao-lee)|更新至[3ed52146](https://github.com/0xAX/linux-insides/commit/3ed521464e99a8ff2f8d438592a605a716a268e2)|
-|└ [13.4](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/program_startup.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
+|├ [13.1](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linux-misc-1.md)|[@hao-lee](https://github.com/hao-lee)|更新至[3ed52146](https://github.com/0xAX/linux-insides/commit/3ed521464e99a8ff2f8d438592a605a716a268e2)|
+|├ [13.2](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linux-misc-2.md)|[@oska874](https://github.com/oska874)|已完成|
+|├ [13.3](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linux-misc-3.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
+|└ [13.4](https://github.com/MintCN/linux-insides-zh/blob/master/Misc/linux-misc-4.md)|[@mudongliang](https://github.com/mudongliang)|已完成|
 | 14. [KernelStructures](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures)||已完成|
 |├ [14.0](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[3cb550c0](https://github.com/0xAX/linux-insides/commit/3cb550c089c8fc609f667290434e9e98e93fa279)|
 |└ [14.1](https://github.com/MintCN/linux-insides-zh/tree/master/KernelStructures/linux-kernelstructure-1.md)|[@woodpenker](https://github.com/woodpenker)|更新至[4521637d](https://github.com/0xAX/linux-insides/commit/4521637d9cb76e5d4e4dc951758b264a68504927)|
