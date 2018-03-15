@@ -230,7 +230,7 @@ pgtable_init();
 vmalloc_init();
 ```
 
-The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/index.html) chapter.
+The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html) chapter.
 
 That's all. Now we can look on the `scheduler`.
 
@@ -465,7 +465,7 @@ Links
 * [high-resolution kernel timer](https://www.kernel.org/doc/Documentation/timers/hrtimers.txt)
 * [spinlock](http://en.wikipedia.org/wiki/Spinlock)
 * [Run queue](http://en.wikipedia.org/wiki/Run_queue)
-* [Linux kernem memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
+* [Linux kernem memory manager](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)
 * [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29)
 * [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system)
 * [Linux kernel hotplug documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)

@@ -97,7 +97,7 @@ After this we can see call of the:
 	memblock_x86_reserve_range_setup_data();
 ```
 
-function. This function is defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/index.html)).
+function. This function is defined in the same [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) source code file and remaps memory for the `setup_data` and reserved memory block for the `setup_data` (more about `setup_data` you can read in the previous [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html) and about `ioremap` and `memblock` you can read in the [Linux kernel memory management](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)).
 
 In the next step we can see following conditional statement:
 
@@ -536,7 +536,7 @@ Links
 * [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
 * [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
-* [Linux kernel memory management](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/index.html)
+* [Linux kernel memory management](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)
 * [PCI](http://en.wikipedia.org/wiki/Conventional_PCI)
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS)

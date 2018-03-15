@@ -80,7 +80,7 @@ __vsyscall_page:
 	ret
 ```
 
-回到 `map_vsyscall` 函数及 `__vsyscall_page` 的实现，在得到 `__vsyscall_page` 的物理地址之后，使用 `__set_fixmap` 为  `vsyscall` 内存页 检查设置 [fix-mapped](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)地址的变量`vsyscall_mode`:
+回到 `map_vsyscall` 函数及 `__vsyscall_page` 的实现，在得到 `__vsyscall_page` 的物理地址之后，使用 `__set_fixmap` 为  `vsyscall` 内存页 检查设置 [fix-mapped](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)地址的变量`vsyscall_mode`:
 
 ```C
 if (vsyscall_mode != NONE)
@@ -390,7 +390,7 @@ Links
 * [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space)
 * [Segmentation](https://en.wikipedia.org/wiki/Memory_segmentation)
 * [enum](https://en.wikipedia.org/wiki/Enumerated_type)
-* [fix-mapped addresses](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)
+* [fix-mapped addresses](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)
 * [BUILD_BUG_ON](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)

@@ -257,7 +257,7 @@ if (!action)
     return -ENOMEM;
 ```
 
-欲知 `kzalloc` 详情，请查阅专门介绍 Linux 内核[内存管理](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/index.html)的章节。为 `irqaction` 分配空间后，我们即对这个结构体进行初始化，设置它的中断处理程序，中断标志，设备名称等等：
+欲知 `kzalloc` 详情，请查阅专门介绍 Linux 内核[内存管理](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)的章节。为 `irqaction` 分配空间后，我们即对这个结构体进行初始化，设置它的中断处理程序，中断标志，设备名称等等：
 
 ```C
 action->handler = handler;
@@ -460,7 +460,7 @@ native_irq_return_iret:
 * [initcall](http://kernelnewbies.org/Documents/InitcallMechanism)
 * [uart](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter) 
 * [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) 
-* [内存管理](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/index.html)
+* [内存管理](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)
 * [i2c](https://en.wikipedia.org/wiki/I%C2%B2C)
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [GNU 汇编器](https://en.wikipedia.org/wiki/GNU_Assembler)

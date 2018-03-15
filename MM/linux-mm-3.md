@@ -4,7 +4,7 @@ Linux内核内存管理 第三节
 内核中 kmemcheck 介绍
 --------------------------------------------------------------------------------
 
-Linux内存管理[章节](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/)描述了Linux内核中[内存管理](https://en.wikipedia.org/wiki/Memory_management)；本小节是第三部分。 在本章[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)中我们遇到了两个与内存管理相关的概念：
+Linux内存管理[章节](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/)描述了Linux内核中[内存管理](https://en.wikipedia.org/wiki/Memory_management)；本小节是第三部分。 在本章[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)中我们遇到了两个与内存管理相关的概念：
 
 * `固定映射地址`;
 * `输入输出重映射`.
@@ -62,7 +62,7 @@ $ sudo cat /proc/ioports
 ...
 ```
 
-`ioports` 的输出列出了系统中物理设备所注册的各种类型的I/O端口。内核不能直接访问设备的输入/输出地址。在内核能够使用这些内存之前，必须将这些地址映射到虚拟地址空间，这就是`io remap`机制的主要目的。在前面[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)中只介绍了早期的 `io remap` 。很快我们就要来看一看常规的 `io remap` 实现机制。但在此之前，我们需要学习一些其他的知识，例如不同类型的内存分配器等，不然的话我们很难理解该机制。
+`ioports` 的输出列出了系统中物理设备所注册的各种类型的I/O端口。内核不能直接访问设备的输入/输出地址。在内核能够使用这些内存之前，必须将这些地址映射到虚拟地址空间，这就是`io remap`机制的主要目的。在前面[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)中只介绍了早期的 `io remap` 。很快我们就要来看一看常规的 `io remap` 实现机制。但在此之前，我们需要学习一些其他的知识，例如不同类型的内存分配器等，不然的话我们很难理解该机制。
 
 在进入Linux内核常规期的[内存管理](https://en.wikipedia.org/wiki/Memory_management)之前，我们要看一些特殊的内存机制，例如[调试](https://en.wikipedia.org/wiki/Debugging)，检查[内存泄漏](https://en.wikipedia.org/wiki/Memory_leak)，内存控制等等。学习这些内容有助于我们理解Linux内核的内存管理。
 
@@ -431,4 +431,4 @@ Links
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html)
 * [Paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
-* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)
+* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)

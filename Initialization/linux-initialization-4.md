@@ -349,7 +349,7 @@ Linux version 4.0.0-rc6+ (alex@localhost) (gcc version 4.9.1 (Ubuntu 4.9.1-16ubu
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-你可以阅读关于`memblock`的相关内容在[Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-1.html)，你应该还记得`memblock_reserve`函数的两个参数：
+你可以阅读关于`memblock`的相关内容在[Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-1.html)，你应该还记得`memblock_reserve`函数的两个参数：
 
 * base physical address of a memory block;
 * size of a memory block.
