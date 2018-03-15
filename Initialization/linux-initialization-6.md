@@ -128,7 +128,7 @@ int __init acpi_mps_check(void)
 }
 ```
 
-It checks the built-in `MPS` or [MultiProcessor Specification](http://en.wikipedia.org/wiki/MultiProcessor_Specification) table. If `CONFIG_X86_LOCAL_APIC` is set and `CONFIG_x86_MPPAARSE` is not set, `acpi_mps_check` prints warning message if the one of the command line options: `acpi=off`, `acpi=noirq` or `pci=noacpi` passed to the kernel. If `acpi_mps_check` returns `1` it means that we disable local [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) and clear `X86_FEATURE_APIC` bit in the of the current CPU with the `setup_clear_cpu_cap` macro. (more about CPU mask you can read in the [CPU masks](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)).
+It checks the built-in `MPS` or [MultiProcessor Specification](http://en.wikipedia.org/wiki/MultiProcessor_Specification) table. If `CONFIG_X86_LOCAL_APIC` is set and `CONFIG_x86_MPPAARSE` is not set, `acpi_mps_check` prints warning message if the one of the command line options: `acpi=off`, `acpi=noirq` or `pci=noacpi` passed to the kernel. If `acpi_mps_check` returns `1` it means that we disable local [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) and clear `X86_FEATURE_APIC` bit in the of the current CPU with the `setup_clear_cpu_cap` macro. (more about CPU mask you can read in the [CPU masks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html)).
 
 Early PCI dump
 --------------------------------------------------------------------------------

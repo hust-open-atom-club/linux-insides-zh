@@ -491,7 +491,7 @@ INIT_PER_CPU(gdt_page);
 
 `INIT_PER_CPU` 扩展后也将得到 `init_per_cpu__gdt_page` 并将它的值设置为相对于 `__per_cpu_load` 的偏移量。这样，我们就得到了新GDT的正确的基地址。
 
-per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `per-CPU` 变量时，每个CPU都会拥有一份它自己的拷贝，在这里我们创建的是 `gdt_page` per-CPU变量。这种类型的变量有很多有点，比如由于每个CPU都只访问自己的变量而不需要锁等。因此在多处理器的情况下，每一个处理器核心都将拥有一份自己的 `GDT` 表，其中的每一项都代表了一块内存，这块内存可以由在这个核心上运行的线程访问。这里 [Theory/per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 有关于 `per-CPU` 变量的更详细的介绍。
+per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `per-CPU` 变量时，每个CPU都会拥有一份它自己的拷贝，在这里我们创建的是 `gdt_page` per-CPU变量。这种类型的变量有很多有点，比如由于每个CPU都只访问自己的变量而不需要锁等。因此在多处理器的情况下，每一个处理器核心都将拥有一份自己的 `GDT` 表，其中的每一项都代表了一块内存，这块内存可以由在这个核心上运行的线程访问。这里 [Concepts/per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 有关于 `per-CPU` 变量的更详细的介绍。
 
 在加载好了新的全局描述附表之后，跟之前一样我们重新加载一下各个段：
 

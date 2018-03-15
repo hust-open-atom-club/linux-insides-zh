@@ -76,7 +76,7 @@ struct semaphore {
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
 ```
 
- `信号量` 的最后两个域 `count` 和 `wait_list` 是通过现有资源的数量和空 [链表](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)来初始化。
+ `信号量` 的最后两个域 `count` 和 `wait_list` 是通过现有资源的数量和空 [链表](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/linux-datastructures-1.html)来初始化。
 第二种初始化 `信号量` 的方式是将 `信号量` 和现有资源数目传送给 `sema_init` 函数。 这个函数是在 [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) 头文件中定义的。
 
 ```C
@@ -180,7 +180,7 @@ struct semaphore_waiter waiter;
 #define current get_current()
 ```
 
-`get_current` 函数返回 `current_task` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 变量的值。
+`get_current` 函数返回 `current_task` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 变量的值。
 
 
 ```C
@@ -339,10 +339,10 @@ static noinline void __sched __up(struct semaphore *sem)
 * [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [deadlocks](https://en.wikipedia.org/wiki/Deadlock)
 * [scheduler](https://en.wikipedia.org/wiki/Scheduling_%28computing%29)
-* [Doubly linked list in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)
+* [Doubly linked list in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/linux-datastructures-1.html)
 * [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-1.html)
 * [interrupts](https://en.wikipedia.org/wiki/Interrupt)
-* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29)
 * [SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL)
 * [errno](https://en.wikipedia.org/wiki/Errno.h)

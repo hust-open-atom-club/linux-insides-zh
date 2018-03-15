@@ -226,7 +226,7 @@ void __init softirq_init(void)
 }
 ```
 
-可以看到在函数开头定义了一个名为 cpu 的 integer 类型变量。接下来他会作为参数传递给宏 `for_each_possible_cpu` 来获得系统中所有的处理器。如果 `possible_cpu` 对你来说是一个新的术语，你可以阅读 [CPU masks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html) 章节来了解更多知识。简单的说，`possible_cpu` 是系统运行期间插入的处理器集合。所有的 `possible processor` 存储在 `cpu_possible_bits` 位图中，你可以在 [kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c) 中找到他的定义：
+可以看到在函数开头定义了一个名为 cpu 的 integer 类型变量。接下来他会作为参数传递给宏 `for_each_possible_cpu` 来获得系统中所有的处理器。如果 `possible_cpu` 对你来说是一个新的术语，你可以阅读 [CPU masks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html) 章节来了解更多知识。简单的说，`possible_cpu` 是系统运行期间插入的处理器集合。所有的 `possible processor` 存储在 `cpu_possible_bits` 位图中，你可以在 [kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c) 中找到他的定义：
 
 ```C
 static DECLARE_BITMAP(cpu_possible_bits, CONFIG_NR_CPUS) __read_mostly;
@@ -520,7 +520,7 @@ insert_work(pwq, work, worklist, work_flags);
 * [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/index.html)
 * [IF](https://en.wikipedia.org/wiki/Interrupt_flag)
 * [eflags](https://en.wikipedia.org/wiki/FLAGS_register)
-* [CPU masks](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
-* [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [CPU masks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html)
+* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [Workqueue](https://github.com/torvalds/linux/blob/master/Documentation/workqueue.txt)
 * [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-8.html)

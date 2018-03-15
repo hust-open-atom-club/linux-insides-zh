@@ -296,7 +296,7 @@ __do_page_fault(struct pt_regs *regs, unsigned long error_code,
 }
 ```
 
-`kmemcheck_active` 函数获取 `kmemcheck_context` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 结构体，并返回该结构体成员 `balance` 和0的比较结果：
+`kmemcheck_active` 函数获取 `kmemcheck_context` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 结构体，并返回该结构体成员 `balance` 和0的比较结果：
 
 ```
 bool kmemcheck_active(struct pt_regs *regs)
@@ -423,10 +423,10 @@ Links
 * [kmemcheck documentation](https://www.kernel.org/doc/Documentation/kmemcheck.txt)
 * [valgrind](https://en.wikipedia.org/wiki/Valgrind)
 * [page fault](https://en.wikipedia.org/wiki/Page_fault)
-* [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/initcall.html)
+* [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-3.html)
 * [opcode](https://en.wikipedia.org/wiki/Opcode)
 * [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-9.html)
 * [Paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html)

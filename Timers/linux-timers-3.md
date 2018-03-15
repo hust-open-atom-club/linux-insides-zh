@@ -102,7 +102,7 @@ void __init tick_broadcast_init(void)
 }
 ```
 
-As we can see, the `tick_broadcast_init` function allocates different [cpumasks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html) with the help of the `zalloc_cpumask_var` function. The `zalloc_cpumask_var` function defined in the [lib/cpumask.c](https://github.com/torvalds/linux/blob/master/lib/cpumask.c) source code file and expands to the call of the following function:
+As we can see, the `tick_broadcast_init` function allocates different [cpumasks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html) with the help of the `zalloc_cpumask_var` function. The `zalloc_cpumask_var` function defined in the [lib/cpumask.c](https://github.com/torvalds/linux/blob/master/lib/cpumask.c) source code file and expands to the call of the following function:
 
 ```C
 bool zalloc_cpumask_var(cpumask_var_t *mask, gfp_t flags)
@@ -407,7 +407,7 @@ for_each_cpu(cpu, tick_nohz_full_mask)
 	context_tracking_cpu_set(cpu);
 ```
 
-The `context_tracking_cpu_set` function defined in the [kernel/context_tracking.c](https://github.com/torvalds/linux/blob/master/kernel/context_tracking.c) source code file and main point of this function is to set the `context_tracking.active` [percpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) variable to `true`. When the `active` field will be set to `true` for the certain processor, all [context switches](https://en.wikipedia.org/wiki/Context_switch) will be ignored by the Linux kernel context tracking subsystem for this processor.
+The `context_tracking_cpu_set` function defined in the [kernel/context_tracking.c](https://github.com/torvalds/linux/blob/master/kernel/context_tracking.c) source code file and main point of this function is to set the `context_tracking.active` [percpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) variable to `true`. When the `active` field will be set to `true` for the certain processor, all [context switches](https://en.wikipedia.org/wiki/Context_switch) will be ignored by the Linux kernel context tracking subsystem for this processor.
 
 That's all. This is the end of the `tick_nohz_init` function. After this `NO_HZ` related data structures will be initialzed. We didn't see API of the `NO_HZ` mode, but will see it soon.
 
@@ -433,12 +433,12 @@ Links
 * [CPU idle](https://en.wikipedia.org/wiki/Idle_%28CPU%29)
 * [power management](https://en.wikipedia.org/wiki/Power_management)
 * [NO_HZ documentation](https://github.com/torvalds/linux/blob/master/Documentation/timers/NO_HZ.txt)
-* [cpumasks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
+* [cpumasks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html)
 * [high precision event timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
 * [irq](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [IPI](https://en.wikipedia.org/wiki/Inter-processor_interrupt)
 * [CPUID](https://en.wikipedia.org/wiki/CPUID)
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
-* [percpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [percpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [context switches](https://en.wikipedia.org/wiki/Context_switch)
 * [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html)

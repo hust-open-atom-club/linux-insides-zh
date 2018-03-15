@@ -342,7 +342,7 @@ common_interrupt:
 	interrupt do_IRQ
 ```
 
-`interrupt` 宏定义在同一个源文件中。它把[通用](https://en.wikipedia.org/wiki/Processor_register)寄存器的值保存在栈中。如果需要，它还会通过 `SWAPGS` 汇编指令在内核中改变用户空间 `gs` 寄存器。它会增加 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 的 `irq_count` 变量，来表明我们处于中断状态，然后调用 `do_IRQ` 函数。该函数定义于 [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) 源文件中，作用是处理我们的设备中断。让我们一起考察这个函数。`do_IRQ` 函数接受一个参数 - `pt_regs` 结构体，它存放着用户空间寄存器的值：
+`interrupt` 宏定义在同一个源文件中。它把[通用](https://en.wikipedia.org/wiki/Processor_register)寄存器的值保存在栈中。如果需要，它还会通过 `SWAPGS` 汇编指令在内核中改变用户空间 `gs` 寄存器。它会增加 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 的 `irq_count` 变量，来表明我们处于中断状态，然后调用 `do_IRQ` 函数。该函数定义于 [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) 源文件中，作用是处理我们的设备中断。让我们一起考察这个函数。`do_IRQ` 函数接受一个参数 - `pt_regs` 结构体，它存放着用户空间寄存器的值：
 
 ```C
 __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
@@ -409,7 +409,7 @@ return 1;
 退出中断
 ---------------------
 
-好了，中断处理程序执行完毕，我们必须从中断中返回。在 `do_IRQ` 函数将工作处理完毕后，我们将回到 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) 汇编代码的 `ret_from_intr` 标签处。首先，我们通过 `DISABLE_INTERRUPTS` 宏禁止中断，这个宏被扩展成 `cli` 指令，将 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 的 `irq_count` 变量值减 1。记住，当我们处于中断上下文的时候，这个变量的值是 `1`：
+好了，中断处理程序执行完毕，我们必须从中断中返回。在 `do_IRQ` 函数将工作处理完毕后，我们将回到 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) 汇编代码的 `ret_from_intr` 标签处。首先，我们通过 `DISABLE_INTERRUPTS` 宏禁止中断，这个宏被扩展成 `cli` 指令，将 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 的 `irq_count` 变量值减 1。记住，当我们处于中断上下文的时候，这个变量的值是 `1`：
 
 ```assembly
 DISABLE_INTERRUPTS(CLBR_NONE)
@@ -465,7 +465,7 @@ native_irq_return_iret:
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [GNU 汇编器](https://en.wikipedia.org/wiki/GNU_Assembler)
 * [处理器寄存器](https://en.wikipedia.org/wiki/Processor_register)
-* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [pid](https://en.wikipedia.org/wiki/Process_identifier)
 * [设备树](https://en.wikipedia.org/wiki/Device_tree)
 * [系统调用](https://en.wikipedia.org/wiki/System_call)

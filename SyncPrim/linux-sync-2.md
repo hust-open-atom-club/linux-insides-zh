@@ -100,7 +100,7 @@ int unlock(lock)
 
 这一部分的主旨是 `队列自旋锁`。这个方法能够帮助解决上述的两个问题。`队列自旋锁`允许每个处理器对自旋过程使用他自己的内存地址。通过学习名为 [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) 锁的这种基于队列自旋锁的实现，能够最好理解基于队列自旋锁的基本原则。在了解`队列自旋锁`的实现之前，我们先尝试理解什么是 `MCS` 锁。
 
-`MCS`锁的基本理念就在上一段已经写到了，一个线程在本地变量上自旋然后每个系统的处理器自己拥有这些变量的拷贝。换句话说这个概念建立在 Linux 内核中的 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 变量概念之上。
+`MCS`锁的基本理念就在上一段已经写到了，一个线程在本地变量上自旋然后每个系统的处理器自己拥有这些变量的拷贝。换句话说这个概念建立在 Linux 内核中的 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 变量概念之上。
 
 当第一个线程想要获取锁，线程在`队列`中注册了自身，或者换句话说，因为线程现在是闲置的，线程要加入特殊`队列`并且获取锁。当第二个线程想要在第一个线程释放锁之前获取相同锁，这个线程就会把他自身的所变量的拷贝加入到这个特殊`队列`中。这个例子中第一个线程会包含一个 `next` 字段指向第二个线程。从这一时刻，第二个线程会等待直到第一个线程释放它的锁并且关于这个事件通知给 `next` 线程。第一个线程从`队列`中删除而第二个线程持有该锁。
 
@@ -473,7 +473,7 @@ smp_cond_acquire(!((val = atomic_read(&lock->val)) & _Q_LOCKED_PENDING_MASK));
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Test and Set](https://en.wikipedia.org/wiki/Test-and-set)
 * [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
-* [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [atomic instruction](https://en.wikipedia.org/wiki/Linearizability)
 * [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)

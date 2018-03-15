@@ -210,7 +210,7 @@ SWAPGS_UNSAFE_STACK
 #define SWAPGS_UNSAFE_STACK	swapgs
 ```
 
-宏将交换 GS 段选择符及 `MSR_KERNEL_GS_BASE ` 特殊模式寄存器中的值。换句话说，将其入内核堆栈 。之后使老的堆栈指针指向 `rsp_scratch` [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 变量设置堆栈指针指向当前处理器的栈顶：
+宏将交换 GS 段选择符及 `MSR_KERNEL_GS_BASE ` 特殊模式寄存器中的值。换句话说，将其入内核堆栈 。之后使老的堆栈指针指向 `rsp_scratch` [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 变量设置堆栈指针指向当前处理器的栈顶：
 
 ```assembly
 movq	%rsp, PER_CPU_VAR(rsp_scratch)
@@ -401,7 +401,7 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
-* [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [general purpose registers](https://en.wikipedia.org/wiki/Processor_register)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)
 * [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf)
