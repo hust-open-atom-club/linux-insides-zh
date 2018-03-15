@@ -126,7 +126,7 @@ SYSCALL 引起操作系统系统调用处理器处于特权级0，通过加载IA
 
 ```
 
-这就是说我们需要将系统调用入口放置到 `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register) 。 这一操作在 Linux 内核初始过程时完成。若已阅读关于 Linux 内核中断及中断处理政界的 [第四节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-4.html) , Linux 内核调用在初始化过程中调用 `trap_init` 函数。该函数在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码文件中定义，执行 `non-early` 异常处理（如除法错误，[协处理器](https://en.wikipedia.org/wiki/Coprocessor) 错误等 ）的初始化。除了  `non-early` 异常处理的初始化外, 函数调用  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/blob/arch/x86/kernel/cpu/common.c) 中 `cpu_init` 函数，调用相同源码文件中的 `syscall_init` 完成`per-cpu` 状态初始化。
+这就是说我们需要将系统调用入口放置到 `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register) 。 这一操作在 Linux 内核初始过程时完成。若已阅读关于 Linux 内核中断及中断处理政界的 [第四节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-4.html) , Linux 内核调用在初始化过程中调用 `trap_init` 函数。该函数在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码文件中定义，执行 `non-early` 异常处理（如除法错误，[协处理器](https://en.wikipedia.org/wiki/Coprocessor) 错误等 ）的初始化。除了  `non-early` 异常处理的初始化外, 函数调用  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/blob/arch/x86/kernel/cpu/common.c) 中 `cpu_init` 函数，调用相同源码文件中的 `syscall_init` 完成`per-cpu` 状态初始化。
 
 该函数执行系统调用入口的初始化。查看函数的实现，函数没有参数且首先填充两个特殊模块寄存器：
 

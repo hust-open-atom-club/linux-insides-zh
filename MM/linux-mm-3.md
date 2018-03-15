@@ -337,7 +337,7 @@ if (!pte)
 static struct kmemcheck_error error_fifo[CONFIG_KMEMCHECK_QUEUE_SIZE];
 ```
 
-`kmemcheck` 声明了一个特殊的 [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html) :
+`kmemcheck` 声明了一个特殊的 [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-9.html) :
 
 ```C
 static DECLARE_TASKLET(kmemcheck_tasklet, &do_wakeup, 0);
@@ -428,6 +428,6 @@ Links
 * [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer)
 * [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
-* [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html)
+* [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-9.html)
 * [Paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html)
 * [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)
