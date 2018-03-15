@@ -104,7 +104,7 @@ int  down_timeout(struct semaphore *sem, long jiffies);
 
 `down_killable` 函数和 `down_interruptible` 函数提供类似的功能，但是它还将当前进程的 `TASK_KILLABLE` 标志置位。这表示等待的进程可以被杀死信号中断。
 
-`down_trylock` 函数和 `spin_trylock` 函数相似。这个函数试图去获取一个锁并且退出如果这个操作是失败的。在这个例子中，想获取锁的进程不会等待。最后的 `down_timeout`函数试图去获取一个锁。当前进程将会被中断进入到等待状态当超过传入的可等待时间。除此之外你也许注意到，这个等待的时间是以 [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-1.html)计数。
+`down_trylock` 函数和 `spin_trylock` 函数相似。这个函数试图去获取一个锁并且退出如果这个操作是失败的。在这个例子中，想获取锁的进程不会等待。最后的 `down_timeout`函数试图去获取一个锁。当前进程将会被中断进入到等待状态当超过传入的可等待时间。除此之外你也许注意到，这个等待的时间是以 [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-1.html)计数。
 
 我们刚刚看了 `信号量` [API](https://en.wikipedia.org/wiki/Application_programming_interface)的定义。我们从 `down` 函数开始看。这个函数是在 [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) 源代码定义的。我们来看看函数实现：
 
@@ -340,7 +340,7 @@ static noinline void __sched __up(struct semaphore *sem)
 * [deadlocks](https://en.wikipedia.org/wiki/Deadlock)
 * [scheduler](https://en.wikipedia.org/wiki/Scheduling_%28computing%29)
 * [Doubly linked list in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)
-* [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-1.html)
+* [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-1.html)
 * [interrupts](https://en.wikipedia.org/wiki/Interrupt)
 * [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
 * [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29)

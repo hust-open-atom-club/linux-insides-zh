@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 7.
 Time related system calls in the Linux kernel
 --------------------------------------------------------------------------------
 
-This is the seventh and last part [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. In the previous [part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-6.html) we saw some [x86_64](https://en.wikipedia.org/wiki/X86-64) like [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) and [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). Internal time management is interesting part of the Linux kernel, but of course not only the kernel needs in the `time` concept. Our programs need to know time too. In this part, we will consider implementation of some time management related [system calls](https://en.wikipedia.org/wiki/System_call). These system calls are:
+This is the seventh and last part [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. In the previous [part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-6.html) we saw some [x86_64](https://en.wikipedia.org/wiki/X86-64) like [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) and [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). Internal time management is interesting part of the Linux kernel, but of course not only the kernel needs in the `time` concept. Our programs need to know time too. In this part, we will consider implementation of some time management related [system calls](https://en.wikipedia.org/wiki/System_call). These system calls are:
 
 * `clock_gettime`;
 * `gettimeofday`;
@@ -369,7 +369,7 @@ static inline bool timespec_valid(const struct timespec *ts)
 }
 ```
 
-which just checks that the given `timespec` does not represent date before `1970` and nanoseconds does not overflow `1` second. The `nanosleep` function ends with the call of the `hrtimer_nanosleep` function from the same source code file. The `hrtimer_nanosleep` function creates a [timer](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-4.html) and calls the `do_nanosleep` function. The `do_nanosleep` does main job for us. This function provides loop:
+which just checks that the given `timespec` does not represent date before `1970` and nanoseconds does not overflow `1` second. The `nanosleep` function ends with the call of the `hrtimer_nanosleep` function from the same source code file. The `hrtimer_nanosleep` function creates a [timer](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-4.html) and calls the `do_nanosleep` function. The `do_nanosleep` does main job for us. This function provides loop:
 
 ```C
 do {
@@ -412,10 +412,10 @@ Links
 * [register](https://en.wikipedia.org/wiki/Processor_register)
 * [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf)
 * [context switch](https://en.wikipedia.org/wiki/Context_switch)
-* [Introduction to timers in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-4.html)
+* [Introduction to timers in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-4.html)
 * [uptime](https://en.wikipedia.org/wiki/Uptime#Using_uptime)
 * [system calls table for x86_64](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)
 * [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
 * [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-6.html)
+* [previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-6.html)

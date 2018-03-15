@@ -4,7 +4,7 @@ Timers and time management in the Linux kernel. Part 5.
 Introduction to the `clockevents` framework
 --------------------------------------------------------------------------------
 
-This is fifth part of the [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. As you might noted from the title of this part, the `clockevents` framework will be discussed. We already saw one framework in the [second](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-2.html) part of this chapter. It was `clocksource` framework. Both of these frameworks represent timekeeping abstractions in the Linux kernel.
+This is fifth part of the [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. As you might noted from the title of this part, the `clockevents` framework will be discussed. We already saw one framework in the [second](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html) part of this chapter. It was `clocksource` framework. Both of these frameworks represent timekeeping abstractions in the Linux kernel.
 
 At first let's refresh your memory and try to remember what is it `clocksource` framework and and what its purpose. The main goal of the `clocksource` framework is to provide `timeline`. As described in the [documentation](https://github.com/0xAX/linux/blob/master/Documentation/timers/timekeeping.txt):
 
@@ -412,4 +412,4 @@ Links
 * [CPU masks in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
 * [deadlock](https://en.wikipedia.org/wiki/Deadlock)
 * [CPU hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-3.html)
+* [previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-3.html)
