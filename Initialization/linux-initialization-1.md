@@ -90,7 +90,7 @@ rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 	jnz	bad_address
 ```
 
-在这里我们将 `rbp` 寄存器的低32位与 `PMD_PAGE_MASK` 进行比较。`PMD_PAGE_MASK` 代表中层页目录（`Page middle directory`）屏蔽位（相关信息请阅读 [paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html) 一节），它的定义如下：
+在这里我们将 `rbp` 寄存器的低32位与 `PMD_PAGE_MASK` 进行比较。`PMD_PAGE_MASK` 代表中层页目录（`Page middle directory`）屏蔽位（相关信息请阅读 [paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html) 一节），它的定义如下：
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
@@ -162,7 +162,7 @@ NEXT_PAGE(level1_fixmap_pgt)
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-更多信息请阅读 [分页](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html) 部分.
+更多信息请阅读 [分页](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html) 部分.
 
 `level3_kernel_pgt` 中保存的两项用来映射内核空间，在它的前 `510`（即 `L3_START_KERNEL`）项均为 `0`。这里的 `L3_START_KERNEL` 保存的是在上层页目录（Page Upper Directory）中包含`__START_KERNEL_map` 地址的那一条索引，它等于 `510`。后面一项 `level2_kernel_pgt - __START_KERNEL_map + _KERNPG_TABLE` 中的 `level2_kernel_pgt` 比较容易理解，它是一条页表项，包含了指向中层页目录的指针，它用来映射内核空间，并且具有如下的访问权限：
 
@@ -620,7 +620,7 @@ write_cr3(__pa_nodebug(early_level4_pgt));
 --------------------------------------------------------------------------------
 
 * [Model Specific Register](http://en.wikipedia.org/wiki/Model-specific_register)
-* [Paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
+* [Paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html)
 * [Previous part - Kernel decompression](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)
 * [NX](http://en.wikipedia.org/wiki/NX_bit)
 * [ASLR](http://en.wikipedia.org/wiki/Address_space_layout_randomization)

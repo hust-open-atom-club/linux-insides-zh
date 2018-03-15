@@ -519,5 +519,5 @@ prev_map[slot] = NULL;
 * [e820](http://en.wikipedia.org/wiki/E820)
 * [Memory management unit](http://en.wikipedia.org/wiki/Memory_management_unit)
 * [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [Paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
+* [Paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html)
 * [内核内存管理第一部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-1.html)

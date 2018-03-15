@@ -148,7 +148,7 @@ config X86
 struct my_struct *my_struct = kmalloc(sizeof(struct my_struct), GFP_KERNEL);
 ```
 
-或者换句话说，在内核访问 [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29) 时会发生[缺页中断](https://en.wikipedia.org/wiki/Page_fault)。这是由于 `kmemcheck` 将内存页标记为`不存在`（关于Linux内存分页的相关信息，你可以参考[分页](https://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)）。如果一个`缺页中断`异常发生了，异常处理程序会来处理这个异常，如果异常处理程序检测到内核使能了 `kmemcheck`，那么就会将控制权提交给 `kmemcheck` 来处理；`kmemcheck` 检查完之后，该内存页会被标记为 `present`，然后被中断的程序得以继续执行下去。 这里的处理方式比较巧妙，被中断程序的第一条指令执行时，`kmemcheck` 又会标记内存页为 `not present`，按照这种方式，下一个对内存页的访问也会被捕获。 
+或者换句话说，在内核访问 [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29) 时会发生[缺页中断](https://en.wikipedia.org/wiki/Page_fault)。这是由于 `kmemcheck` 将内存页标记为`不存在`（关于Linux内存分页的相关信息，你可以参考[分页](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)）。如果一个`缺页中断`异常发生了，异常处理程序会来处理这个异常，如果异常处理程序检测到内核使能了 `kmemcheck`，那么就会将控制权提交给 `kmemcheck` 来处理；`kmemcheck` 检查完之后，该内存页会被标记为 `present`，然后被中断的程序得以继续执行下去。 这里的处理方式比较巧妙，被中断程序的第一条指令执行时，`kmemcheck` 又会标记内存页为 `not present`，按照这种方式，下一个对内存页的访问也会被捕获。 
 
 目前我们只是从理论层面考察了 `kmemcheck`，接下来我们看一下Linux内核是怎么来实现该机制的。
 
@@ -422,7 +422,6 @@ Links
 * [memory leaks](https://en.wikipedia.org/wiki/Memory_leak)
 * [kmemcheck documentation](https://www.kernel.org/doc/Documentation/kmemcheck.txt)
 * [valgrind](https://en.wikipedia.org/wiki/Valgrind)
-* [paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
 * [page fault](https://en.wikipedia.org/wiki/Page_fault)
 * [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/initcall.html)
 * [opcode](https://en.wikipedia.org/wiki/Opcode)
@@ -430,5 +429,5 @@ Links
 * [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html)
-* [Paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
+* [Paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html)
 * [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)
