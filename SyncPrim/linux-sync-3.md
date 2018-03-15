@@ -5,7 +5,7 @@
 信号量
 --------------------------------------------------------------------------------
 
-这是本章的第三部分 [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/index.html)，本章描述了内核中的同步原语,在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-2.html) 是和 `自旋锁` 相关的描述。我们将描述更多同步原语。
+这是本章的第三部分 [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/index.html)，本章描述了内核中的同步原语,在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/linux-sync-2.html) 是和 `自旋锁` 相关的描述。我们将描述更多同步原语。
 
 在 `自旋锁` 之后的下一个我们将要讲到的 [内核同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)是 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)。我们会从理论角度开始学习什么是 `信号量`， 然后我们会像前几章一样讲到Linux内核是如何实现信号量的。
 
@@ -70,7 +70,7 @@ struct semaphore {
 }
 ```
 
-`__SEMAPHORE_INITIALIZER` 宏传入了 `信号量` 结构体的名字并且初始化这个结构体的各个域。首先我们使用 `__RAW_SPIN_LOCK_UNLOCKED` 宏对给予的 `信号量` 初始化一个 `自旋锁`。就像你从 [之前](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-1.html) 的部分看到那样，`__RAW_SPIN_LOCK_UNLOCKED` 宏是在 [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) 头文件中定义，它展开到 `__ARCH_SPIN_LOCK_UNLOCKED` 宏，而 `__ARCH_SPIN_LOCK_UNLOCKED` 宏又展开到零或者无锁状态
+`__SEMAPHORE_INITIALIZER` 宏传入了 `信号量` 结构体的名字并且初始化这个结构体的各个域。首先我们使用 `__RAW_SPIN_LOCK_UNLOCKED` 宏对给予的 `信号量` 初始化一个 `自旋锁`。就像你从 [之前](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/linux-sync-1.html) 的部分看到那样，`__RAW_SPIN_LOCK_UNLOCKED` 宏是在 [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) 头文件中定义，它展开到 `__ARCH_SPIN_LOCK_UNLOCKED` 宏，而 `__ARCH_SPIN_LOCK_UNLOCKED` 宏又展开到零或者无锁状态
 
 ```C
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
@@ -348,5 +348,5 @@ static noinline void __sched __up(struct semaphore *sem)
 * [errno](https://en.wikipedia.org/wiki/Errno.h)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
-* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-2.html)
+* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/linux-sync-2.html)
 

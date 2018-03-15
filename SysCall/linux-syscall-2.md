@@ -4,7 +4,7 @@ Linux 系统内核调用 第二节
 Linux 内核如何处理系统调用
 --------------------------------------------------------------------------------
 
-前一[小节](http://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-1.html) 作为本章节的第一部分描述了 Linux 内核[system call](https://en.wikipedia.org/wiki/System_call) 概念。
+前一[小节](http://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html) 作为本章节的第一部分描述了 Linux 内核[system call](https://en.wikipedia.org/wiki/System_call) 概念。
 前一节中提到通常系统调用处于内核处于操作系统层面。前一节内容从用户空间的角度介绍，并且 [write](http://man7.org/linux/man-pages/man2/write.2.html)系统调用实现的一部分内容没有讨论。在这一小节继续关注系统调用，在深入 Linux 内核之前，从一些理论开始。
 
 程序中一个用户程序并不直接使用系统调用。我们并未这样写 `Hello World`程序代码：
@@ -377,7 +377,7 @@ USERGS_SYSRET64
 结论
 --------------------------------------------------------------------------------
 
-这是 Linux 内核相关概念的第二节。在前一 [节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-1.html) ，从用户应用程序的角度讨论了这些概念的原理。在这一节继续深入系统调用概念的相关内容，讨论了系统调用发生时 Linux 内核执行的内容。
+这是 Linux 内核相关概念的第二节。在前一 [节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-1.html) ，从用户应用程序的角度讨论了这些概念的原理。在这一节继续深入系统调用概念的相关内容，讨论了系统调用发生时 Linux 内核执行的内容。
 
 若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
 
@@ -405,4 +405,4 @@ Links
 * [general purpose registers](https://en.wikipedia.org/wiki/Processor_register)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)
 * [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf)
-* [previous chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-1.html)
+* [previous chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-1.html)

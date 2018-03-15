@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 4.
 How does the Linux kernel run a program
 --------------------------------------------------------------------------------
 
-This is the fourth part of the [chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-3.html) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
+This is the fourth part of the [chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-3.html) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
 
 * `vsyscall`;
 * `vDSO`;
@@ -73,7 +73,7 @@ So, an user application (`bash` in our case) calls the system call and as we alr
 execve system call
 --------------------------------------------------------------------------------
 
-We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
+We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
 
 ```
 SYSCALL_DEFINE3(execve,
@@ -427,4 +427,4 @@ Links
 * [Linkers](http://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
-* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-3.html)
+* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-3.html)

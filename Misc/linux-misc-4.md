@@ -6,7 +6,7 @@
 
 虽然 [linux-insides-zh](https://www.gitbook.com/book/xinqiu/linux-insides-cn/details) 大多描述的是内核相关的东西，但是我已经决定写一个大多与用户空间相关的部分。
 
-[系统调用](https://zh.wikipedia.org/wiki/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8)章节的[第四部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-4.html)已经描述了当我们想运行一个程序， Linux 内核的行为。这部分我想研究一下从用户空间的角度，当我们在 Linux 系统上运行一个程序，会发生什么。
+[系统调用](https://zh.wikipedia.org/wiki/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8)章节的[第四部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-4.html)已经描述了当我们想运行一个程序， Linux 内核的行为。这部分我想研究一下从用户空间的角度，当我们在 Linux 系统上运行一个程序，会发生什么。
 
 我不知道你知识储备如何，但是在我的大学时期我学到，一个 `C` 程序从一个叫做 main 的函数开始执行。而且，这是部分正确的。每时每刻，当我们开始写一个新的程序时，我们从下面的实例代码开始编程：
 
@@ -123,7 +123,7 @@ x + y + z = 6
 
 > The exec() family of functions replaces the current process image with a new process image.
 
-如果你已经阅读过[系统调用](https://zh.wikipedia.org/wiki/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8)章节的[第四部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-4.html)，你可能就知道 execve 这个系统调用定义在 [files/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c#L1859) 文件中，并且如下所示，
+如果你已经阅读过[系统调用](https://zh.wikipedia.org/wiki/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8)章节的[第四部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-4.html)，你可能就知道 execve 这个系统调用定义在 [files/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c#L1859) 文件中，并且如下所示，
 
 ```C
 SYSCALL_DEFINE3(execve,
@@ -135,7 +135,7 @@ SYSCALL_DEFINE3(execve,
 }
 ```
 
-它以可执行文件的名字，命令行参数的集合以及环境变量的集合作为参数。正如你猜测的，每一件事都是 `do_execve` 函数完成的。在这里我将不描述这个函数的实现细节，因为你可以从[这里](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-4.html)读到。但是，简而言之，`do_execve` 函数会检查诸如文件名是否有效，未超出进程数目限制等等。在这些检查之后，这个函数会解析 [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) 格式的可执行文件，为新的可执行文件创建内存描述符，并且在栈，堆等内存区域填上适当的值。当二进制镜像设置完成，`start_thread` 函数会设置一个新的进程。这个函数是框架相关的，而且对于 [x86_64](https://en.wikipedia.org/wiki/X86-64) 框架，它的定义是在 [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/process_64.c#L231) 文件中。
+它以可执行文件的名字，命令行参数的集合以及环境变量的集合作为参数。正如你猜测的，每一件事都是 `do_execve` 函数完成的。在这里我将不描述这个函数的实现细节，因为你可以从[这里](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-4.html)读到。但是，简而言之，`do_execve` 函数会检查诸如文件名是否有效，未超出进程数目限制等等。在这些检查之后，这个函数会解析 [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) 格式的可执行文件，为新的可执行文件创建内存描述符，并且在栈，堆等内存区域填上适当的值。当二进制镜像设置完成，`start_thread` 函数会设置一个新的进程。这个函数是框架相关的，而且对于 [x86_64](https://en.wikipedia.org/wiki/X86-64) 框架，它的定义是在 [arch/x86/kernel/process_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/process_64.c#L231) 文件中。
 
 `start_thread` 为[段寄存器](https://en.wikipedia.org/wiki/X86_memory_segmentation)设置新的值。从这一点开始，新进程已经准备就绪。一旦[进程切换]((https://en.wikipedia.org/wiki/Context_switch))完成，控制权就会返回到用户空间，并且新的可执行文件将会执行。
 
