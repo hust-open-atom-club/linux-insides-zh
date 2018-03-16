@@ -49,7 +49,7 @@ char *after_dashes;
 lockdep_init();
 ```
 
-`lockdep_init` 初始化 [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). 其实现是相当简单的，它只是初始化了两个哈希表 [list_head](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md)并设置`lockdep_initialized` 全局变量为`1`。
+`lockdep_init` 初始化 [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). 其实现是相当简单的，它只是初始化了两个哈希表 [list_head](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/linux-datastructures-1.md)并设置`lockdep_initialized` 全局变量为`1`。
 关于自旋锁 [spinlock](http://en.wikipedia.org/wiki/Spinlock)以及互斥锁[mutex](http://en.wikipedia.org/wiki/Mutual_exclusion) 如何获取请参考链接.
 
 下一个函数是`set_task_stack_end_magic`，参数为`init_task`和设置`STACK_END_MAGIC` (`0x57AC6E9D`)。`init_task`代表初始化进程(任务)数据结构:

@@ -190,7 +190,7 @@ early_param("kmemcheck", param_kmemcheck);
 
 从前面的介绍我们知道 `param_kmemcheck` 可能存在三种情况：`0` (使能), `1` (禁止) or `2` (一次性)。 `param_kmemcheck` 的实现很简单：将command line传递的 `kmemcheck` 参数的值由字符串转换为整数，然后赋值给变量 `kmemcheck_enabled` 。
 
-第二阶段在内核初始化阶段执行，而不是在早期初始化过程 [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/initcall.html) 。第二阶断的过程体现在 `kmemcheck_init` : 
+第二阶段在内核初始化阶段执行，而不是在早期初始化过程 [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-3.html) 。第二阶断的过程体现在 `kmemcheck_init` : 
 
 ```C
 int __init kmemcheck_init(void)
