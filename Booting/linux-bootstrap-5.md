@@ -1,15 +1,15 @@
-Kernel booting process. Part 5.
+内核引导过程. Part 5.
 ================================================================================
 
-Kernel decompression
+内核解压
 --------------------------------------------------------------------------------
 
-This is the fifth part of the `Kernel booting process` series. We saw transition to the 64-bit mode in the previous [part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#transition-to-the-long-mode) and we will continue from this point in this part. We will see the last steps before we jump to the kernel code as preparation for kernel decompression, relocation and directly kernel decompression. So... let's start to dive in the kernel code again.
+这是`内核引导过程`系列文章的第五部分。在[前一部分](linux-bootstrap-4.md#transition-to-the-long-mode)我们看到了切换到64位模式的过程，在这一部分我们会从这里继续。我们会看到跳进内核代码的最后步骤：内核解压前的准备、重定位和直接内核解压。所以...让我们再次深入内核源码。
 
-Preparation before kernel decompression
+内核解压前的准备
 --------------------------------------------------------------------------------
 
-We stopped right before the jump on the `64-bit` entry point - `startup_64` which is located in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) source code file. We already saw the jump to the `startup_64` in the `startup_32`:
+我们停在了跳转到`64位`入口点——`startup_64`的跳转之前，它在源文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) 里面。在之前的部分，我们已经在`startup_32`里面看到了到`startup_64`的跳转：
 
 ```assembly
 	pushl	$__KERNEL_CS
@@ -24,7 +24,7 @@ We stopped right before the jump on the `64-bit` entry point - `startup_64` whic
 	lret
 ```
 
-in the previous part. Since we loaded the new `Global Descriptor Table` and there was CPU transition in other mode (`64-bit` mode in our case), we can see the setup of the data segments:
+由于我们加载了新的`全局描述符表`并且在其他模式有CPU的模式转换（在我们这里是`64位`模式），我们可以在`startup_64`的开头看到数据段的建立：
 
 ```assembly
 	.code64
@@ -38,9 +38,9 @@ ENTRY(startup_64)
 	movl	%eax, %gs
 ```
 
-in the beginning of the `startup_64`. All segment registers besides `cs` register now reseted as we joined into the `long mode`.
+除`cs`之外的段寄存器在我们进入`长模式`时已经重置。
 
-The next step is computation of difference between where the kernel was compiled and where it was loaded:
+下一步是计算内核编译时的位置和它被加载的位置的差：
 
 ```assembly
 #ifdef CONFIG_RELOCATABLE
@@ -60,9 +60,9 @@ The next step is computation of difference between where the kernel was compiled
 	addq	%rbp, %rbx
 ```
 
-The `rbp` contains the decompressed kernel start address and after this code executes `rbx` register will contain address to relocate the kernel code for decompression. We already saw code like this in the `startup_32` ( you can read about it in the previous part - [Calculate relocation address](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#calculate-relocation-address)), but we need to do this calculation again because the bootloader can use 64-bit boot protocol and `startup_32` just will not be executed in this case.
+`rbp`包含了解压后内核的起始地址，在这段代码执行之后`rbx`会包含用于解压的重定位内核代码的地址。我们已经在`startup_32`看到类似的代码（你可以看之前的部分[计算重定位地址](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md#calculate-relocation-address)），但是我们需要再做这个计算，因为引导加载器可以用64位引导协议，而`startup_32`在这种情况下不会执行。
 
-In the next step we can see setup of the stack pointer and resetting of the flags register:
+下一步，我们可以看到栈指针的设置和标志寄存器的重置：
 
 ```assembly
 	leaq	boot_stack_end(%rbx), %rsp
@@ -71,7 +71,7 @@ In the next step we can see setup of the stack pointer and resetting of the flag
 	popfq
 ```
 
-As you can see above, the `rbx` register contains the start address of the kernel decompressor code and we just put this address with `boot_stack_end` offset to the `rsp` register which represents pointer to the top of the stack. After this step, the stack will be correct. You can find definition of the `boot_stack_end` in the end of [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly source code file:
+如上所述，`rbx`寄存器包含了内核解压代码的起始地址，我们把这个地址的`boot_stack_entry`偏移地址相加放到表示栈顶指针的`rsp`寄存器。在这一步之后，栈就是正确的。你可以在汇编源码文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) 的末尾找到`boot_stack_end`的定义：
 
 ```assembly
 	.bss
@@ -83,9 +83,9 @@ boot_stack:
 boot_stack_end:
 ```
 
-It located in the end of the `.bss` section, right before the `.pgtable`. If you will look into [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/vmlinux.lds.S) linker script, you will find  Definition of the `.bss` and `.pgtable` there.
+它在`.bss`节的末尾，就在`.pgtable`前面。如果你查看 [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/vmlinux.lds.S) 链接脚本，你会找到`.bss`和`.pgtable`的定义。
 
-As we set the stack, now we can copy the compressed kernel to the address that we got above, when we calculated the relocation address of the decompressed kernel. Before details, let's look at this assembly code:
+由于我们设置了栈，在我们计算了解压了的内核的重定位地址后，我们可以复制压缩了的内核到以上地址。在查看细节之前，我们先看这段汇编代码：
 
 ```assembly
 	pushq	%rsi
@@ -99,9 +99,9 @@ As we set the stack, now we can copy the compressed kernel to the address that w
 	popq	%rsi
 ```
 
-First of all we push `rsi` to the stack. We need preserve the value of `rsi`, because this register now stores a pointer to the `boot_params` which is real mode structure that contains booting related data (you must remember this structure, we filled it in the start of kernel setup). In the end of this code we'll restore the pointer to the `boot_params` into `rsi` again. 
+首先我们把`rsi`压进栈。我们需要保存`rsi`的值，因为这个寄存器现在存放指向`boot_params`的指针，这是包含引导相关数据的实模式结构体（你一定记得这个结构体，我们在开始设置内核的时候就填充了它）。在代码的结尾，我们会重新恢复指向`boot_params`的指针到`rsi`.
 
-The next two `leaq` instructions calculates effective addresses of the `rip` and `rbx` with `_bss - 8` offset and put it to the `rsi` and `rdi`. Why do we calculate these addresses? Actually the compressed kernel image is located between this copying code (from `startup_32` to the current code) and the decompression code. You can verify this by looking at the linker script - [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/vmlinux.lds.S):
+接下来两个`leaq`指令用`_bss - 8`偏移和`rip`和`rbx`计算有效地址并存放到`rsi`和`rdi`. 我们为什么要计算这些地址？实际上，压缩了的代码镜像存放在这份复制了的代码（从`startup_32`到当前的代码）和解压了的代码之间。你可以通过查看链接脚本 [arch/x86/boot/compressed/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/vmlinux.lds.S) 验证：
 
 ```
 	. = 0;
@@ -121,7 +121,7 @@ The next two `leaq` instructions calculates effective addresses of the `rip` and
 	}
 ```
 
-Note that `.head.text` section contains `startup_32`. You may remember it from the previous part:
+注意`.head.text`节包含了`startup_32`. 你可以从之前的部分回忆起它：
 
 ```assembly
 	__HEAD
@@ -132,7 +132,7 @@ ENTRY(startup_32)
 ...
 ```
 
-The `.text` section contains decompression code:
+`.text`节包含解压代码：
 
 ```assembly
 	.text
@@ -146,21 +146,21 @@ relocated:
 ...
 ```
 
-And `.rodata..compressed` contains the compressed kernel image. So `rsi` will contain the absolute address of `_bss - 8`, and `rdi` will contain the relocation relative address of `_bss - 8`. As we store these addresses in registers, we put the address of `_bss` in the `rcx` register. As you can see in the `vmlinux.lds.S` linker script, it's located at the end of all sections with the setup/kernel code. Now we can start to copy data from `rsi` to `rdi`, `8` bytes at the time, with the `movsq` instruction. 
+`.rodata..compressed`包含了压缩了的内核镜像。所以`rsi`包含`_bss - 8`的绝对地址，`rdi`包含`_bss - 8`的重定位的相对地址。在我们把这些地址放入寄存器时，我们把`_bss`的地址放到了`rcx`寄存器。正如你在`vmlinux.lds.S`链接脚本中看到了一样，它和设置/内核代码一起在所有节的末尾。现在我们可以开始用`movsq`指令每次8字节地从`rsi`到`rdi`复制代码。
 
-Note that there is an `std` instruction before data copying: it sets the `DF` flag, which means that `rsi` and `rdi` will be decremented. In other words, we will copy the bytes backwards. At the end, we clear the `DF` flag with the `cld` instruction, and restore `boot_params` structure to `rsi`.
+注意在数据复制前有`std`指令：它设置`DF`标志，意味着`rsi`和`rdi`会递减。换句话说，我们会从后往前复制这些字节。最后，我们用`cld`指令清除`DF`标志，并恢复`boot_params`到`rsi`.
 
-Now we have the address of the `.text` section address after relocation, and we can jump to it:
+现在我们有`.text`节的重定位后的地址，我们可以跳到那里：
 
 ```assembly
 	leaq	relocated(%rbx), %rax
 	jmp	*%rax
 ```
 
-Last preparation before kernel decompression
+在内核解压前的最后准备
 --------------------------------------------------------------------------------
 
-In the previous paragraph we saw that the `.text` section starts with the `relocated` label. The first thing it does is clearing the `bss` section with:
+在上一段我们看到了`.text`节从`relocated`标签开始。它做的第一件事是清空`.bss`节：
 
 ```assembly
 	xorl	%eax, %eax
@@ -171,9 +171,9 @@ In the previous paragraph we saw that the `.text` section starts with the `reloc
 	rep	stosq
 ```
 
-We need to initialize the `.bss` section, because we'll soon jump to [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) code. Here we just clear `eax`, put the address of `_bss` in `rdi` and `_ebss` in `rcx`, and fill it with zeros with the `rep stosq` instruction.
+我们要初始化`.bss`节，因为我们很快要跳转到[C](https://en.wikipedia.org/wiki/C_%28programming_language%29)代码。这里我们就清空`eax`，把`_bss`的地址放到`rdi`，把`_ebss`放到`rcx`，然后用`rep stosq`填零。
 
-At the end, we can see the call to the `extract_kernel` function:
+最后，我们可以调用`extract_kernel`函数：
 
 ```assembly
 	pushq	%rsi
@@ -187,49 +187,49 @@ At the end, we can see the call to the `extract_kernel` function:
 	popq	%rsi
 ```
 
-Again we set `rdi` to a pointer to the `boot_params` structure and preserve it on the stack. In the same time we set `rsi` to point to the area which should be usedd for kernel uncompression. The last step is preparation of the `extract_kernel` parameters and call of this function which will uncompres the kernel. The `extract_kernel` function is defined in the  [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c) source code file and takes six arguments:
+我们再一次设置`rdi`为指向`boot_params`结构体的指针并把它保存到栈中。同时我们设置`rsi`指向用于内核解压的区域。最后一步是准备`extract_kernel`的参数并调用这个解压内核的函数。`extract_kernel`函数在 [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c) 源文件定义并有六个参数：
 
-* `rmode` - pointer to the [boot_params](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973//arch/x86/include/uapi/asm/bootparam.h#L114) structure which is filled by bootloader or during early kernel initialization;
-* `heap` - pointer to the `boot_heap` which represents start address of the early boot heap;
-* `input_data` - pointer to the start of the compressed kernel or in other words pointer to the `arch/x86/boot/compressed/vmlinux.bin.bz2`;
-* `input_len` - size of the compressed kernel;
-* `output` - start address of the future decompressed kernel;
-* `output_len` - size of decompressed kernel;
+* `rmode` - 指向 [boot_params](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973//arch/x86/include/uapi/asm/bootparam.h#L114) 结构体的指针，`boot_params`被引导加载器填充或在早期内核初始化时填充
+* `heap` - 指向早期启动堆的起始地址 `boot_heap` 的指针
+* `input_data` - 指向压缩的内核，即 `arch/x86/boot/compressed/vmlinux.bin.bz2` 的指针
+* `input_len` - 压缩的内核的大小
+* `output` - 解压后内核的起始地址
+* `output_len` - 解压后内核的大小
 
-All arguments will be passed through the registers according to [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf). We've finished all preparation and can now look at the kernel decompression.
+所有参数根据 [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf) 通过寄存器传递。我们已经完成了所有的准备工作，现在我们可以看内核解压的过程。
 
-Kernel decompression
+内核解压
 --------------------------------------------------------------------------------
 
-As we saw in previous paragraph, the `extract_kernel` function is defined in the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c) source code file and takes six arguments. This function starts with the video/console initialization that we already saw in the previous parts. We need to do this again because we don't know if we started in [real mode](https://en.wikipedia.org/wiki/Real_mode) or a bootloader was used, or whether the bootloader used the `32` or `64-bit` boot protocol.
+就像我们在之前的段落中看到了那样，`extract_kernel`函数在源文件 [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c) 定义并有六个参数。正如我们在之前的部分看到的，这个函数从图形/控制台初始化开始。我们要再次做这件事，因为我们不知道我们是不是从[实模式](https://en.wikipedia.org/wiki/Real_mode)开始，或者是使用了引导加载器，或者引导加载器用了32位还是64位启动协议。
 
-After the first initialization steps, we store pointers to the start of the free memory and to the end of it:
+在最早的初始化步骤后，我们保存空闲内存的起始和末尾地址。
 
 ```C
 free_mem_ptr     = heap;
 free_mem_end_ptr = heap + BOOT_HEAP_SIZE;
 ```
 
-where the `heap` is the second parameter of the `extract_kernel` function which we got in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S):
+在这里 `heap` 是我们在 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) 得到的 `extract_kernel` 函数的第二个参数：
 
 ```assembly
 leaq	boot_heap(%rip), %rsi
 ```
 
-As you saw above, the `boot_heap` is defined as:
+如上所述，`boot_heap`定义为：
 
 ```assembly
 boot_heap:
 	.fill BOOT_HEAP_SIZE, 1, 0
 ```
 
-where the `BOOT_HEAP_SIZE` is macro which expands to `0x10000` (`0x400000` in a case of `bzip2` kernel) and represents the size of the heap.
+在这里`BOOT_HEAP_SIZE`是一个展开为`0x10000`(对`bzip2`内核是`0x400000`)的宏，代表堆的大小。
 
-After heap pointers initialization, the next step is the call of the `choose_random_location` function from [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/kaslr.c#L425) source code file. As we can guess from the function name, it chooses the memory location where the kernel image will be decompressed. It may look weird that we need to find or even `choose` location where to decompress the compressed kernel image, but the Linux kernel supports [kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization) which allows decompression of the kernel into a random address, for security reasons.
+在堆指针初始化后，下一步是从 [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/kaslr.c#L425) 调用`choose_random_location`函数。我们可以从函数名猜到，它选择内核镜像解压到的内存地址。看起来很奇怪，我们要寻找甚至是`选择`内核解压的地址，但是Linux内核支持[kASLR](https://en.wikipedia.org/wiki/Address_space_layout_randomization)，为了安全，它允许解压内核到随机的地址。
 
-We will not consider randomization of the Linux kernel load address in this part, but will do it in the next part.
+在这一部分，我们不会考虑Linux内核的加载地址的随机化，我们会在下一部分讨论。
 
-Now let's back to [misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c#L404). After getting the address for the kernel image, there need to be some checks to be sure that the retrieved random address is correctly aligned and address is not wrong:
+现在我们回头看 [misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c#L404). 在获得内核镜像的地址后，需要有一些检查以确保获得的随机地址是正确对齐的，并且地址没有错误：
 
 ```C
 if ((unsigned long)output & (MIN_KERNEL_ALIGN - 1))
@@ -251,19 +251,19 @@ if (virt_addr != LOAD_PHYSICAL_ADDR)
 	error("Destination virtual address changed when not relocatable");
 ```
 
-After all these checks we will see the familiar message:
+在所有这些检查后，我们可以看到熟悉的消息：
 
 ```
 Decompressing Linux... 
 ```
 
-and call the `__decompress` function:
+然后调用解压内核的`__decompress`函数：
 
 ```C
 __decompress(input_data, input_len, NULL, NULL, output, output_len, NULL, error);
 ```
 
-which will decompress the kernel. The implementation of the `__decompress` function depends on what decompression algorithm was chosen during kernel compilation:
+`__decompress`函数的实现取决于在内核编译期间选择什么压缩算法：
 
 ```C
 #ifdef CONFIG_KERNEL_GZIP
@@ -291,7 +291,7 @@ which will decompress the kernel. The implementation of the `__decompress` funct
 #endif
 ```
 
-After kernel is decompressed, the last two functions are `parse_elf` and `handle_relocations`. The main point of these functions is to move the uncompressed kernel image to the correct memory place. The fact is that the decompression will decompress [in-place](https://en.wikipedia.org/wiki/In-place_algorithm), and we still need to move kernel to the correct address. As we already know, the kernel image is an [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) executable, so the main goal of the `parse_elf` function is to move loadable segments to the correct address. We can see loadable segments in the output of the `readelf` program:
+在内核解压之后，最后两个函数是`parse_elf`和`handle_relocations`.这些函数的主要用途是把解压后的内核移动到正确的位置。事实上，解压过程会[原地](https://en.wikipedia.org/wiki/In-place_algorithm)解压，我们还是要把内核移动到正确的地址。我们已经知道，内核镜像是一个[ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)可执行文件，所以`parse_elf`的主要目标是移动可加载的段到正确的地址。我们可以在`readelf`的输出看到可加载的段：
 
 ```
 readelf -l vmlinux
@@ -313,7 +313,7 @@ Program Headers:
                  0x0000000000138000 0x000000000029b000  RWE    200000
 ```
 
-The goal of the `parse_elf` function is to load these segments to the `output` address we got from the `choose_random_location` function. This function starts with checking the [ELF](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) signature:
+`parse_elf`函数的目标是加载这些段到从`choose_random_location`函数得到的`output`地址。这个函数从检查ELF签名标志开始：
 
 ```C
 Elf64_Ehdr ehdr;
@@ -330,7 +330,7 @@ if (ehdr.e_ident[EI_MAG0] != ELFMAG0 ||
 }
 ```
 
-and if it's not valid, it prints an error message and halts. If we got a valid `ELF` file, we go through all program headers from the given `ELF` file and copy all loadable segments with correct address to the output buffer:
+如果是无效的，它会打印一条错误消息并停机。如果我们得到一个有效的`ELF`文件，我们从给定的`ELF`文件遍历所有程序头，并用正确的地址复制所有可加载的段到输出缓冲区：
 
 ```C
 	for (i = 0; i < ehdr.e_phnum; i++) {
@@ -352,41 +352,41 @@ and if it's not valid, it prints an error message and halts. If we got a valid `
 	}
 ```
 
-That's all.
+这就是全部的工作。
 
-From this moment, all loadable segments are in the correct place.
+从现在开始，所有可加载的段都在正确的位置。
 
-The next step after the `parse_elf` function is the call of the `handle_relocations` function. Implementation of this function depends on the `CONFIG_X86_NEED_RELOCS` kernel configuration option and if it is enabled, this function adjusts addresses in the kernel image, and is called only if the `CONFIG_RANDOMIZE_BASE` configuration option was enabled during kernel configuration. Implementation of the `handle_relocations` function is easy enough. This function subtracts value of the `LOAD_PHYSICAL_ADDR` from the value of the base load address of the kernel and thus we obtain the difference between where the kernel was linked to load and where it was actually loaded. After this we can perform kernel relocation as we know actual address where the kernel was loaded, its address where it was linked to run and relocation table which is in the end of the kernel image.
+在`parse_elf`函数之后是调用`handle_relocations`函数。这个函数的实现依赖于`CONFIG_X86_NEED_RELOCS`内核配置选项，如果它被启用，这个函数调整内核镜像的地址，只有在内核配置时启用了`CONFIG_RANDOMIZE_BASE`配置选项才会调用。`handle_relocations`函数的实现足够简单。这个函数从基准内核加载地址的值减掉`LOAD_PHYSICAL_ADDR`的值，从而我们获得内核链接后要加载的地址和实际加载地址的差值。在这之后我们可以进行内核重定位，因为我们知道内核加载的实际地址、它被链接的运行的地址和内核镜像末尾的重定位表。
 
-After the kernel is relocated, we return back from the `extract_kernel` to [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S).
+在内核重定位后，我们从`extract_kernel`回来，到 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S).
 
-The address of the kernel will be in the `rax` register and we jump to it:
+内核的地址在`rax`寄存器，我们跳到那里：
 
 ```assembly
 jmp	*%rax
 ```
 
-That's all. Now we are in the kernel!
+就是这样。现在我们就在内核里！
 
-Conclusion
+结论
 --------------------------------------------------------------------------------
 
-This is the end of the fifth part about linux kernel booting process. We will not see posts about kernel booting anymore (maybe updates to this and previous posts), but there will be many posts about other kernel internals. 
+这是关于内核引导过程的第五部分的结尾。我们不会再看到关于内核引导的文章（可能有这篇和前面的文章的更新），但是会有关于其他内核内部细节的很多文章。
 
-Next chapter will describe more advanced details about linux kernel booting process, like a load address randomization and etc.
+下一章会描述更高级的关于内核引导过程的细节，如加载地址随机化等等。
 
-If you have any questions or suggestions write me a comment or ping me in [twitter](https://twitter.com/0xAX).
+如果你有什么问题或建议，写个评论或在 [twitter](https://twitter.com/0xAX) 找我。
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
+**如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 。**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [address space layout randomization](https://en.wikipedia.org/wiki/Address_space_layout_randomization)
-* [initrd](http://en.wikipedia.org/wiki/Initrd)
-* [long mode](http://en.wikipedia.org/wiki/Long_mode)
+* [initrd](https://en.wikipedia.org/wiki/Initrd)
+* [long mode](https://en.wikipedia.org/wiki/Long_mode)
 * [bzip2](http://www.bzip.org/)
-* [RDdRand instruction](http://en.wikipedia.org/wiki/RdRand)
-* [Time Stamp Counter](http://en.wikipedia.org/wiki/Time_Stamp_Counter)
-* [Programmable Interval Timers](http://en.wikipedia.org/wiki/Intel_8253)
+* [RDRand instruction](https://en.wikipedia.org/wiki/RdRand)
+* [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
+* [Programmable Interval Timers](https://en.wikipedia.org/wiki/Intel_8253)
 * [Previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-4.md)
