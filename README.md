@@ -27,8 +27,8 @@
 |├ [1.2](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.3](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.4](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-4.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
-|├ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)||正在进行|
-|└ [1.6](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-6.md)||正在进行|
+|├ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)|[@mytbk](https://github.com/mytbk)|更新至[31998d14](https://github.com/0xAX/linux-insides/commit/31998d14320f25399d67d4fff446a65178931e90)|
+|└ [1.6](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-6.md)|[@mytbk](https://github.com/mytbk)|更新至[31998d14](https://github.com/0xAX/linux-insides/commit/31998d14320f25399d67d4fff446a65178931e90)|
 | 2. [Initialization](https://github.com/MintCN/linux-insides-zh/tree/master/Initialization)||正在进行|
 |├ [2.0](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
 |├ [2.1](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-1.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
