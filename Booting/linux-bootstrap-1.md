@@ -72,25 +72,27 @@ PhysicalAddress = Segment * 16 + Offset
 得到的 `0xfffffff0` 是 4GB - 16 字节。 这个地方是 [复位向量(Reset vector)](http://en.wikipedia.org/wiki/Reset_vector) 。 这是CPU在重置后期望执行的第一条指令的内存地址。它包含一个 [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) 指令，这个指令通常指向BIOS入口点。举个例子，如果访问 [coreboot](http://www.coreboot.org/) 源代码，将看到：
 
 ```assembly
-	.section ".reset"
+	.section ".reset", "ax", %progbits
 	.code16
-.globl	reset_vector
-reset_vector:
+.globl	_start
+_start:
 	.byte  0xe9
-	.int   _start - ( . + 2 )
+	.int   _start16bit - ( . + 2 )
 	...
 ```
 
-上面的跳转指令（ [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9）跳转到地址  `_start - ( . + 2)` 去执行代码。 `reset` 段是16字节代码段， 起始于地址 
-`0xfffffff0`，因此 CPU 复位之后，就会跳到这个地址来执行相应的代码 ：
+上面的跳转指令（ [opcode](http://ref.x86asm.net/coder32.html#xE9) - 0xe9）跳转到地址  `_start16bit - ( . + 2)` 去执行代码。 `reset` 段是 `16` 字节代码段， 起始于地址 
+`0xfffffff0`(`src/cpu/x86/16bit/reset16.ld`)，因此 CPU 复位之后，就会跳到这个地址来执行相应的代码 ：
 
 ```
 SECTIONS {
+	/* Trigger an error if I have an unuseable start address */
+ 	_bogus = ASSERT(_start16bit >= 0xffff0000, "_start16bit too low. Please report.");
 	_ROMTOP = 0xfffffff0;
 	. = _ROMTOP;
 	.reset . : {
-		*(.reset)
-		. = 15 ;
+		*(.reset);
+		. = 15;
 		BYTE(0x00);
 	}
 }
