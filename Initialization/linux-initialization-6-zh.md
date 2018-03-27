@@ -410,3 +410,136 @@ struct mpf_intel {
         unsigned char feature5;
 };
 ```
+
+正如我们在文档中看到的那样 - 系统 BIOS的主要功能之一就是创建MP指针结构和MP配置表。然后操作系统必须拥有访问多处理器配置信息，并且 `mpf_intel` 存储了多处理器配置表的物理地址(看结构体的第二个参数),然后，`smp_scan_config` 在指定的内存区域中循环查找 `MP floating pointer structure` 。它检查当前浮动指针是否指向 `SMP` 签名，并且检查他的校验和，在循环中检查 `mpf->specification` 是1还是4(这个值只能是1或者是4):   
+
+```C
+while (length > 0) {
+if ((*bp == SMP_MAGIC_IDENT) &&
+    (mpf->length == 1) &&
+    !mpf_checksum((unsigned char *)bp, 16) &&
+    ((mpf->specification == 1)
+    || (mpf->specification == 4))) {
+
+        mem = virt_to_phys(mpf);
+        memblock_reserve(mem, sizeof(*mpf));
+        if (mpf->physptr)
+            smp_reserve_memory(mpf);
+	}
+}
+```
+
+其他的早期内存初始化程序
+--------------------------------------------------------------------------------
+
+在 `setup_arch` 的下一步，我们可以看到 `early_alloc_pgt_buf` 函数的调用,这个函数为早期阶段分配页表缓冲区。页表缓冲区将被防止在  `brk` 段中。让我们一起看看这个函数的实现:   
+
+
+```C
+void  __init early_alloc_pgt_buf(void)
+{
+        unsigned long tables = INIT_PGT_BUF_SIZE;
+        phys_addr_t base;
+
+        base = __pa(extend_brk(tables, PAGE_SIZE));
+
+        pgt_buf_start = base >> PAGE_SHIFT;
+        pgt_buf_end = pgt_buf_start;
+        pgt_buf_top = pgt_buf_start + (tables >> PAGE_SHIFT);
+}
+```
+
+首先这个函数获得页表缓冲区的大小，它的值是 `INIT_PGT_BUF_SIZE` ，这个值在目前的linux 4.0 内核中是 `(6 * PAGE_SIZE)`。因为我们已经得到了页表缓冲区的大小，我们调用 `extend_brk` 函数并且传入两个参数: size和align。你可以从他们的名称中了解到,这个函数扩展 `brk` 段。正如我们在linux 内核链接脚本中看到的，`brk`在内存中的位置恰好在 [BSS](http://en.wikipedia.org/wiki/.bss) 后面:
+
+```C
+	. = ALIGN(PAGE_SIZE);
+	.brk : AT(ADDR(.brk) - LOAD_OFFSET) {
+		__brk_base = .;
+		. += 64 * 1024;		/* 64k alignment slop space */
+		*(.brk_reservation)	/* areas brk users have reserved */
+		__brk_limit = .;
+	}
+```
+
+或者我们可以使用 `readelf` 工具来找到它:    
+
+![brk area](http://oi61.tinypic.com/71lkeu.jpg) 
+
+之后我们用 `_pa` 宏得到了新的 `brk`段的物理地址，我们计算页表缓冲区的基地址和结束地址。下一步因为我们之前创建了页面缓冲区，我们使用 `reserve_brk` 函数为 brk 段保留内存块:   
+
+```C
+static void __init reserve_brk(void)
+{
+	if (_brk_end > _brk_start)
+		memblock_reserve(__pa_symbol(_brk_start),
+				 _brk_end - _brk_start);
+
+	_brk_start = 0;
+}
+```
+注意在 `reserve_brk` 的最后，我们把 `_brk_start` 设置为0,因为在这之后我们不会再为它分配内存了，我们需要使用 `cleanup_highmap` 函数来取消内核映射中越界的内存区域。请记住内核映射是 `__START_KERNEL_map` 和 `_end - _text` 或者 `level2_kernel_pgt` 对内核 `_text`、`data` 和 `bss` 的映射。在 `clean_high_map` 的开始部分我们定义这些参数: 
+
+```C
+unsigned long vaddr = __START_KERNEL_map;
+unsigned long end = roundup((unsigned long)_end, PMD_SIZE) - 1;
+pmd_t *pmd = level2_kernel_pgt;
+pmd_t *last_pmd = pmd + PTRS_PER_PMD;
+```
+
+现在，因为我们已经定义了内核映射的开始和结束部分，我们在循环中遍历所有内核页中间目录调墨油, 并清除不在 `_text` 和 `end` 段之间的条目:  
+
+```C
+for (; pmd < last_pmd; pmd++, vaddr += PMD_SIZE) {
+        if (pmd_none(*pmd))
+            continue;
+        if (vaddr < (unsigned long) _text || vaddr > end)
+            set_pmd(pmd, __pmd(0));
+}
+```
+
+在这之后，我们使用 `memblock_set_current_limit` (你可以在[linux 内存管理 第二章节](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-2.md) 阅读关于 `memblock` 的更多内容) 函数来设置 `memblock` 分配的限制，它将是`ISA_END_ADDRESS` 或者 `0x100000` 并且它会调用 `memblock_x86_fill` 函数根据 `e820` 来填充 `memblock` 信息。你可以在内核初始化的时候看到这个函数运行的结果: 
+
+```
+MEMBLOCK configuration:
+ memory size = 0x1fff7ec00 reserved size = 0x1e30000
+ memory.cnt  = 0x3
+ memory[0x0]	[0x00000000001000-0x0000000009efff], 0x9e000 bytes flags: 0x0
+ memory[0x1]	[0x00000000100000-0x000000bffdffff], 0xbfee0000 bytes flags: 0x0
+ memory[0x2]	[0x00000100000000-0x0000023fffffff], 0x140000000 bytes flags: 0x0
+ reserved.cnt  = 0x3
+ reserved[0x0]	[0x0000000009f000-0x000000000fffff], 0x61000 bytes flags: 0x0
+ reserved[0x1]	[0x00000001000000-0x00000001a57fff], 0xa58000 bytes flags: 0x0
+ reserved[0x2]	[0x0000007ec89000-0x0000007fffffff], 0x1377000 bytes flags: 0x0
+```
+在 `memblock_x86_fill` 之后的其他函数: `early_reserve_e820_mpc_new` 在 `e820map` 中为多处理器规格表分配额外的槽， `reserve_real_mode` - 保留从 `0x0` 到1M的低内存用作实模式的跳板(用于重启等...)，`trim_platform_memory_ranges` 函数删除掉以 `0x20050000`, `0x20110000` 等地址开头的内存空间。这些内存区域必须被排除在外，因为 [Sandy Bridge](http://en.wikipedia.org/wiki/Sandy_Bridge) 会在这些区域出现一些故障， `trim_low_memory_range` 保留 `memblock` 中的前4KB页面，`init_mem_mapping` 函数重新创建直接内存映射并且建立在 `PAGE_OFFSET` 处物理内存的直接映射, `early_trap_pf_init` 建立了 `#PF` 处理函数(我们将会在有关中断的章节看到它),然后 `setup_real_mode` 函数建立到 [实模式]http://en.wikipedia.org/wiki/Real_mode) 代码的跳板。  
+
+这就是本章的全部内容了。您可能注意到这部分并没有包括 `setup_arch` 中的所有函数 (如 "early_gart_iommu_check"、[mtrr](http://en.wikipedia.org/wiki/Memory_type_range_register) 初始化等...)。正如我已经写了很多次的, `setup_arch` 很复杂 linux 内核也很复杂。这就是为什么我不能囊括 linux 内核中的每一行。我认为我们并没有错过重要的东西, 但是你可以这样说: 每行代码都很重要。是的, 这是真的, 但是不管怎样我错过了他们, 因为我认为对于整个linux内核面面俱到是不现实的。无论如何, 我们会经常回到我们已经看到的想法, 如果有什么不熟悉的, 我们将讨论这个主题。
+
+结束语
+-------------------------------------------------------------------------------- 
+
+这里是linux 内核初始化进程第六章节的结尾。在这一章节中，我们再次深入研究了 `setup_arch` 函数，然而这是个很长的部分，我们目前还没有完成它。没错, `setup_arch`很复杂，希望下个章节将会是这个函数的最后一个部分。(译者注:假的)。   
+
+如果你有任何的疑问或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)。  
+
+**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides](https://github.com/MintCN/linux-insides-zh).** 
+
+链接
+--------------------------------------------------------------------------------
+
+* [MultiProcessor Specification](http://en.wikipedia.org/wiki/MultiProcessor_Specification)
+* [NX bit](http://en.wikipedia.org/wiki/NX_bit)
+* [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
+* [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
+* [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [Linux kernel memory management](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)
+* [PCI](http://en.wikipedia.org/wiki/Conventional_PCI)
+* [e820](http://en.wikipedia.org/wiki/E820)
+* [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS)
+* [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS)
+* [EFI](http://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface)
+* [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
+* [MultiProcessor Specification](http://www.intel.com/design/pentium/datashts/24201606.pdf)
+* [BSS](http://en.wikipedia.org/wiki/.bss)
+* [SMBIOS specification](http://www.dmtf.org/sites/default/files/standards/documents/DSP0134v2.5Final.pdf)
+* [前一个章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html)
