@@ -44,7 +44,7 @@
 | 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/Interrupts)||正在进行|
 |├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|更新至[57279321](https://github.com/0xAX/linux-insides/commit/5727932167a2ff6a1e647081c85d081d4ed8b508)|
 |├ [3.1](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-1.md)||未开始|
-|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-2.md)||未开始|
+|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-2.md)|[@narcijie](https://github.com/narcijie)|正在进行|
 |├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-3.md)||未开始|
 |├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-4.md)||未开始|
 |├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-5.md)||未开始|
