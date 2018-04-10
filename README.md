@@ -22,7 +22,7 @@
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
 | 1. [Booting](https://github.com/MintCN/linux-insides-zh/tree/master/Booting)||正在进行|
-|├ [1.0](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/README.md)|[@xinqiu](https://github.com/xinqiu)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-2e735523a4c3de2e72adcedac13682c7)|
+|├ [1.0](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/README.md)|[@xinqiu](https://github.com/xinqiu)|更新至[527b2b8](https://github.com/0xAX/linux-insides/commit/527b2b8921c3d9c043bd914c5990d6a991e3035b)|
 |├ [1.1](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-1.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.2](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.3](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)|[@hailincai](https://github.com/hailincai)|已完成|
