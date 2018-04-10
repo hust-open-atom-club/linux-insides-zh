@@ -1,12 +1,12 @@
-Kernel booting process. Part 6.
+内核引导过程. Part 6.
 ================================================================================
 
-Introduction
+简介
 --------------------------------------------------------------------------------
 
-This is the sixth part of the `Kernel booting process` series. In the [previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-5.md) we have seen the end of the kernel boot process. But we have skipped some important advanced parts.
+这是`内核引导过程`系列文章的第六部分。在[前一部分](linux-bootstrap-5.md)，我们已经看到了内核引导过程的结尾，但是我们跳过了一些高级部分。
 
-As you may remember the entry point of the Linux kernel is the `start_kernel` function from the [main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file started to execute at `LOAD_PHYSICAL_ADDR` address. This address depends on the `CONFIG_PHYSICAL_START` kernel configuration option which is `0x1000000` by default:
+你可能还记得，Linux内核的入口点是 [main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 的`start_kernel`函数，它在`LOAD_PHYSICAL_ADDR`地址开始执行。这个地址依赖于`CONFIG_PHYSICAL_START`内核配置选项，默认为`0x1000000`:
 
 ```
 config PHYSICAL_START
@@ -19,18 +19,18 @@ config PHYSICAL_START
       ...
 ```
 
-This value may be changed during kernel configuration, but also load address can be selected as a random value. For this purpose the `CONFIG_RANDOMIZE_BASE` kernel configuration option should be enabled during kernel configuration.
+这个选项在内核配置时可以修改，但是加载地址可以选择为一个随机值。为此，`CONFIG_RANDOMIZE_BASE`内核配置选项在内核配置时应该启用。
 
-In this case a physical address at which Linux kernel image will be decompressed and loaded will be randomized. This part considers the case when this option is enabled and load address of the kernel image will be randomized for [security reasons](https://en.wikipedia.org/wiki/Address_space_layout_randomization).
+在这种情况下，Linux内核镜像解压和加载的物理地址会被随机化。我们在这一部分考虑这个选项被启用，并且为了[安全原因](https://en.wikipedia.org/wiki/Address_space_layout_randomization)，内核镜像的加载地址被随机化的情况。
 
-Initialization of page tables
+页表的初始化
 --------------------------------------------------------------------------------
 
-Before the kernel decompressor will start to find random memory range where the kernel will be decompressed and loaded, the identity mapped page tables should be initialized. If a [bootloader](https://en.wikipedia.org/wiki/Booting) used [16-bit or 32-bit boot protocol](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt), we already have page tables. But in any case, we may need new pages by demand if the kernel decompressor selects memory range outside of them. That's why we need to build new identity mapped page tables.
+在内核解压器要开始找随机的内核解压和加载地址之前，应该初始化恒等映射（identity mapped,虚拟地址和物理地址相同）页表。如果[引导加载器](https://en.wikipedia.org/wiki/Booting)使用[16位或32位引导协议](https://github.com/torvalds/linux/blob/master/Documentation/x86/boot.txt)，那么我们已经有了页表。但在任何情况下，如果内核解压器选择它们之外的内存区域，我们需要新的页。这就是为什么我们需要建立新的恒等映射页表。
 
-Yes, building of identity mapped page tables is the one of the first step during randomization of load address. But before we will consider it, let's try to remember where did we come from to this point.
+是的，建立恒等映射页表是随机化加载地址的最早的步骤之一。但是在此之前，让我们回忆一下我们是怎么来到这里的。
 
-In the [previous part](https://github.com/0xAX/linux-insides/blob/master/Booting/linux-bootstrap-5.md), we saw transition to [long mode](https://en.wikipedia.org/wiki/Long_mode) and jump to the kernel decompressor entry point - `extract_kernel` function. The randomization stuff starts here from the call of the:
+在[前一部分](linux-bootstrap-5.md)，我们看到了到[长模式](https://en.wikipedia.org/wiki/Long_mode)的转换，并跳转到了内核解压器的入口点——`extract_kernel`函数。随机化从调用这个函数开始：
 
 ```C
 void choose_random_location(unsigned long input,
@@ -41,7 +41,7 @@ void choose_random_location(unsigned long input,
 {}
 ```
 
-function. As you may see, this function takes following five parameters:
+你可以看到，这个函数有五个参数：
 
   * `input`;
   * `input_size`;
@@ -49,7 +49,7 @@ function. As you may see, this function takes following five parameters:
   * `output_isze`;
   * `virt_addr`.
 
-Let's try to understand what these parameters are. The first `input` parameter came from parameters of the `extract_kernel` function from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) source code file:
+让我们试着理解一下这些参数是什么。第一个`input`参数来自源文件 [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/misc.c) 里的`extract_kernel`函数：
 
 ```C
 asmlinkage __visible void *extract_kernel(void *rmode, memptr heap,
@@ -71,13 +71,13 @@ asmlinkage __visible void *extract_kernel(void *rmode, memptr heap,
 }
 ```
 
-This parameter is passed from assembler code:
+这个参数由 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 的汇编代码传递：
 
 ```C
 leaq	input_data(%rip), %rdx
 ```
 
-from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S). The `input_data` is generated by the little [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) program. If you have compiled linux kernel source code under your hands, you may find the generated file by this program which should be placed in the `linux/arch/x86/boot/compressed/piggy.S`. In my case this file looks:
+`input_data`由 [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) 程序生成。如果你亲手编译过Linux内核源码，你会找到这个程序生成的文件，它应该位于 `linux/arch/x86/boot/compressed/piggy.S`. 在我这里，这个文件是这样的：
 
 ```assembly
 .section ".rodata..compressed","a",@progbits
@@ -91,21 +91,21 @@ input_data:
 input_data_end:
 ```
 
-As you may see it contains four global symbols. The first two `z_input_len` and `z_output_len` which are sizes of compressed and uncompressed `vmlinux.bin.gz`. The third is our `input_data` and as you may see it points to linux kernel image in raw binary format (all debugging symbols, comments and relocation information are stripped). And the last `input_data_end` points to the end of the compressed linux image.
+你能看到它有四个全局符号。前两个`z_input_len`和`z_output_len`是压缩的和解压后的`vmlinux.bin.gz`的大小。第三个是我们的`input_data`，你可以看到，它指向二进制格式（去掉所有调试符号、注释和重定位信息）的Linux内核镜像。最后的`input_data_end`指向压缩的Linux镜像的末尾。
 
-So, our first parameter of the `choose_random_location` function is the pointer to the compressed kernel image that is embedded into the `piggy.o` object file.
+所以我们`choose_random_location`函数的第一个参数是指向嵌入在`piggy.o`目标文件的压缩的内核镜像的指针。
 
-The second parameter of the `choose_random_location` function is the `z_input_len` that we have seen just now.
+`choose_random_location`函数的第二个参数是我们刚刚看到的`z_input_len`.
 
-The third and fourth parameters of the `choose_random_location` function are address where to place decompressed kernel image and the length of decompressed kernel image respectively. The address where to put decompressed kernel came from [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) and it is address of the `startup_32` aligned to 2 megabytes boundary. The size of the decompressed kernel came from the same `piggy.S` and it is `z_output_len`.
+`choose_random_location`函数的第三和第四个参数分别是解压后的内核镜像的位置和长度。放置解压后内核的地址来自 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S)，并且它是`startup_32`对齐到 2MB 边界的地址。解压后的内核的大小来自同样的`piggy.S`，并且它是`z_output_len`.
 
-The last parameter of the `choose_random_location` function is the virtual address of the kernel load address. As we may see, by default it coincides with the default physical load address:
+`choose_random_location`函数的最后一个参数是内核加载地址的虚拟地址。我们可以看到，它和默认的物理加载地址相同：
 
 ```C
 unsigned long virt_addr = LOAD_PHYSICAL_ADDR;
 ```
 
-which depends on kernel configuration:
+它依赖于内核配置：
 
 ```C
 #define LOAD_PHYSICAL_ADDR ((CONFIG_PHYSICAL_START \
@@ -113,7 +113,7 @@ which depends on kernel configuration:
 				& ~(CONFIG_PHYSICAL_ALIGN - 1))
 ```
 
-Now, as we considered parameters of the `choose_random_location` function, let's look at implementation of it. This function starts from the checking of `nokaslr` option in the kernel command line:
+现在，由于我们考虑`choose_random_location`函数的参数，让我们看看它的实现。这个函数从检查内核命令行的`nokaslr`选项开始：
 
 ```C
 if (cmdline_find_option_bool("nokaslr")) {
@@ -122,7 +122,7 @@ if (cmdline_find_option_bool("nokaslr")) {
 }
 ```
 
-and if the options was given we exit from the `choose_random_location` function ad kernel load address will not be randomized. Related command line options can be found in the [kernel documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt):
+如果有这个选项，那么我们就退出`choose_random_location`函数，并且内核的加载地址不会随机化。相关的命令行选项可以在[内核文档](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/kernel-parameters.txt)找到：
 
 ```
 kaslr/nokaslr [X86]
@@ -134,15 +134,15 @@ kASLR is disabled by default. When kASLR is enabled,
 hibernation will be disabled.
 ```
 
-Let's assume that we didn't pass `nokaslr` to the kernel command line and the `CONFIG_RANDOMIZE_BASE` kernel configuration option is enabled.
+假设我们没有把`nokaslr`传到内核命令行，并且`CONFIG_RANDOMIZE_BASE`启用了内核配置选项。
 
-The next step is the call of the:
+下一步是以下函数的调用：
 
 ```C
 initialize_identity_maps();
 ```
 
-function which is defined in the [arch/x86/boot/compressed/pagetable.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/pagetable.c) source code file. This function starts from initialization of `mapping_info` an instance of the `x86_mapping_info` structure:
+它在 [arch/x86/boot/compressed/pagetable.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/pagetable.c) 源码文件定义。这个函数从初始化`mapping_info`,`x86_mapping_info`结构体的一个实例开始。
 
 ```C
 mapping_info.alloc_pgt_page = alloc_pgt_page;
@@ -151,7 +151,7 @@ mapping_info.page_flag = __PAGE_KERNEL_LARGE_EXEC | sev_me_mask;
 mapping_info.kernpg_flag = _KERNPG_TABLE | sev_me_mask;
 ```
 
-The `x86_mapping_info` structure is defined in the [arch/x86/include/asm/init.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/init.h) header file and looks:
+`x86_mapping_info`结构体在 [arch/x86/include/asm/init.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/init.h) 头文件定义：
 
 ```C
 struct x86_mapping_info {
@@ -164,18 +164,19 @@ struct x86_mapping_info {
 };
 ```
 
-This structure provides information about memory mappings. As you may remember from the previous part, we already setup'ed initial page tables from 0 up to `4G`. For now we may need to access memory above `4G` to load kernel at random position. So, the `initialize_identity_maps` function executes initialization of a memory region for a possible needed new page table. First of all let's try to look at the definition of the `x86_mapping_info` structure.
+这个结构体提供了关于内存映射的信息。你可能还记得，在前面的部分，我们已经建立了初始的从0到`4G`的页表。现在我们可能需要访问`4G`以上的内存来在随机的位置加载内核。所以，`initialize_identity_maps`函数初始化一个内存区域，它用于可能需要的新页表。首先，让我们尝试查看`x86_mapping_info`结构体的定义。
 
-The `alloc_pgt_page` is a callback function that will be called to allocate space for a page table entry. The `context` field is an instance of the `alloc_pgt_data` structure in our case which will be used to track allocated page tables. The `page_flag` and `kernpg_flag` fields are page flags. The first represents flags for `PMD` or `PUD` entries. The second `kernpg_flag` field represents flags for kernel pages which can be overridden later. The `direct_gbpages` field represents support for huge pages and the last `offset` field represents offset between kernel virtual addresses and physical addresses up to `PMD` level.
+`alloc_pgt_page`是一个会在为一个页表项分配空间时调用的回调函数。`context`域是一个用于跟踪已分配页表的`alloc_pgt_data`结构体的实例。`page_flag`和`kernpg_flag`是页标志。第一个代表`PMD`或`PUD`表项的标志。第二个`kernpg_flag`域代表会在之后被覆盖的内核页的标志。`direct_gbpages`域代表对大页的支持。最后的`offset`域代表内核虚拟地址到`PMD`级物理地址的偏移。
 
-The `alloc_pgt_page` callback just validates that there is space for a new page, allocates new page:
+`alloc_pgt_page`回调函数检查有一个新页的空间，从缓冲区分配新页并返回新页的地址：
+
 
 ```C
 entry = pages->pgt_buf + pages->pgt_buf_offset;
 pages->pgt_buf_offset += PAGE_SIZE;
 ```
 
-in the buffer from the:
+缓冲区在此结构体中：
 
 ```C
 struct alloc_pgt_data {
@@ -185,36 +186,36 @@ struct alloc_pgt_data {
 };
 ```
 
-structure and returns address of a new page. The last goal of the `initialize_identity_maps` function is to initialize `pgdt_buf_size` and `pgt_buf_offset`. As we are only in initialization phase, the `initialze_identity_maps` function sets `pgt_buf_offset` to zero:
+`initialize_identity_maps`函数最后的目标是初始化`pgdt_buf_size`和`pgt_buf_offset`. 由于我们只是在初始化阶段，`initialize_identity_maps`函数设置`pgt_buf_offset`为0:
 
 ```C
 pgt_data.pgt_buf_offset = 0;
 ```
 
-and the `pgt_data.pgt_buf_size` will be set to `77824` or `69632` depends on which boot protocol will be used by bootloader (64-bit or 32-bit). The same is for `pgt_data.pgt_buf`. If a bootloader loaded the kernel at `startup_32`, the `pgdt_data.pgdt_buf` will point to the end of the page table which already was initialzed in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S):
+而`pgt_data.pgt_buf_size`会根据引导加载器所用的引导协议（64位或32位）被设置为`77824`或`69632`. `pgt_data.pgt_buf`也是一样。如果引导加载器在`startup_32`引导内核，`pgdt_data.pgdt_buf`会指向已经在 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 初始化的页表的末尾：
 
 ```C
 pgt_data.pgt_buf = _pgtable + BOOT_INIT_PGT_SIZE;
 ```
 
-where `_pgtable` points to the beginning of this page table [_pgtable](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S). In other way, if a bootloader have used 64-bit boot protocol and loaded the kernel at `startup_64`, early page tables should be built by bootloader itself and `_pgtable` will be just overwrote:
+其中`_pgtable`指向这个页表 [_pgtable](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/vmlinux.lds.S) 的开头。另一方面，如果引导加载器用64位引导协议并在`startup_64`加载内核，早期页表应该由引导加载器建立，并且`_pgtable`会被重写：
 
 ```C
 pgt_data.pgt_buf = _pgtable
 ```
 
-As the buffer for new page tables is initialized, we may return back to the `choose_random_location` function.
+在新页表的缓冲区被初始化之下，我们回到`choose_random_location`函数。
 
-Avoid reserved memory ranges
+避开保留的内存范围
 --------------------------------------------------------------------------------
 
-After the stuff related to identity page tables is initilized, we may start to choose random location where to put decompressed kernel image. But as you may guess, we can't choose any address. There are some reseved addresses in memory ranges. Such addresses occupied by important things, like [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk), kernel command line and etc. The
+在恒等映射页表相关的数据被初始化之后，我们可以开始选择放置解压后内核的随机位置。但是正如你猜的那样，我们不能选择任意地址。在内存的范围中，有一些保留的地址。这些地址被重要的东西占用，如[initrd](https://en.wikipedia.org/wiki/Initial_ramdisk), 内核命令行等等。这个函数：
 
 ```C
 mem_avoid_init(input, input_size, *output);
 ```
 
-function will help us to do this. All non-safe memory regions will be collected in the:
+会帮我们做这件事。所有不安全的内存区域会收集到：
 
 ```C
 struct mem_vector {
@@ -225,7 +226,7 @@ struct mem_vector {
 static struct mem_vector mem_avoid[MEM_AVOID_MAX];
 ```
 
-array. Where `MEM_AVOID_MAX` is from `mem_avoid_index` [enum](https://en.wikipedia.org/wiki/Enumerated_type#C) which represents different types of reserved memory regions:
+数组。其中`MEM_AVOID_MAX`来自[枚举类型](https://en.wikipedia.org/wiki/Enumerated_type#C)`mem_avoid_index`, 它代表不同类型的保留内存区域：
 
 ```C
 enum mem_avoid_index {
@@ -239,9 +240,9 @@ enum mem_avoid_index {
 };
 ```
 
-Both are defined in the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) source code file.
+它们都定义在源文件 [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) 中。
 
-Let's look at the implementation of the `mem_avoid_init` function. The main goal of this function is to store information about reseved memory regions described by the `mem_avoid_index` enum in the `mem_avoid` array and create new pages for such regions in our new identity mapped buffer. Numerous parts fo the `mem_avoid_index` function are similar, but let's take a look at the one of them:
+让我们看看`mem_avoid_init`函数的实现。这个函数的主要目标是在`mem_avoid`数组存放关于被`mem_avoid_index`枚举类型描述的保留内存区域的信息，并且在我们新的恒等映射缓冲区为这样的区域创建新页。`mem_avoid_index`函数的几个部分很相似，但是先看看其中一个：
 
 ```C
 mem_avoid[MEM_AVOID_ZO_RANGE].start = input;
@@ -250,7 +251,7 @@ add_identity_map(mem_avoid[MEM_AVOID_ZO_RANGE].start,
 		 mem_avoid[MEM_AVOID_ZO_RANGE].size);
 ```
 
-At the beginning of the `mem_avoid_init` function tries to avoid memory region that is used for current kernel decompression. We fill an entry from the `mem_avoid` array with the start and size of such region and call the `add_identity_map` function which should build identity mapped pages for this region. The `add_identity_map` function is defined in the [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) source code file and looks:
+`mem_avoid_init`函数的开头尝试避免用于当前内核解压的内存区域。我们用这个区域的起始地址和大小填写`mem_avoid`数组的一项，并调用`add_identity_map`函数，它会为这个区域建立恒等映射页。`add_identity_map`函数在源文件 [arch/x86/boot/compressed/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) 定义：
 
 ```C
 void add_identity_map(unsigned long start, unsigned long size)
@@ -267,18 +268,18 @@ void add_identity_map(unsigned long start, unsigned long size)
 }
 ```
 
-As you may see it aligns memory region to 2 megabytes boundary and checks given start and end addresses.
+你可以看到，它对齐内存到 2MB 边界并检查给定的起始地址和终止地址。
 
-In the end it just calls the `kernel_ident_mapping_init` function from the [arch/x86/mm/ident_map.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ident_map.c) source code file and pass `mapping_info` instance that was initilized above, address of the top level page table and addresses of memory region for which new identity mapping should be built.
+最后它调用`kernel_ident_mapping_init`函数，它在源文件 [arch/x86/mm/ident_map.c](https://github.com/torvalds/linux/blob/master/arch/x86/mm/ident_map.c) 中，并传入以上初始化好的`mapping_info`实例、顶层页表的地址和建立新的恒等映射的内存区域的地址。
 
-The `kernel_ident_mapping_init` function sets default flags for new pages if they were not given:
+`kernel_ident_mapping_init`函数为新页设置默认的标志，如果它们没有被给出：
 
 ```C
 if (!info->kernpg_flag)
 	info->kernpg_flag = _KERNPG_TABLE;
 ```
 
-and starts to build new 2-megabytes (because of `PSE` bit in the `mapping_info.page_flag`) page entries (`PGD -> P4D -> PUD -> PMD` in a case of [five-level page tables](https://lwn.net/Articles/717293/) or `PGD -> PUD -> PMD` in a case of [four-level page tables](https://lwn.net/Articles/117749/)) related to the given addresses.
+并且开始建立新的2MB (因为`mapping_info.page_flag`中的`PSE`位) 给定地址相关的页表项（[五级页表](https://lwn.net/Articles/717293/)中的`PGD -> P4D -> PUD -> PMD`或者[四级页表](https://lwn.net/Articles/117749/)中的`PGD -> PUD -> PMD`）。
 
 ```C
 for (; addr < end; addr = next) {
@@ -295,32 +296,32 @@ for (; addr < end; addr = next) {
 }
 ```
 
-First of all here we find next entry of the `Page Global Directory` for the given address and if it is greater than `end` of the given memory region, we set it to `end`. After this we allocater a new page with our `x86_mapping_info` callback that we already considered above and call the `ident_p4d_init` function. The `ident_p4d_init` function will do the same, but for low-level page directories (`p4d` -> `pud` -> `pmd`).
+首先我们找给定地址在 `页全局目录` 的下一项，如果它大于给定的内存区域的末地址`end`，我们把它设为`end`.之后，我们用之前看过的`x86_mapping_info`回调函数分配一个新页，然后调用`ident_p4d_init`函数。`ident_p4d_init`函数做同样的事情，但是用于低层的页目录 (`p4d` -> `pud` -> `pmd`).
 
-That's all.
+就是这样。
 
-New page entries related to reserved addresses are in our page tables. This is not the end of the `mem_avoid_init` function, but other parts are similar. It just build pages for [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk), kernel command line and etc.
+和保留地址相关的新页表项已经在我们的页表中。这不是`mem_avoid_init`函数的末尾，但是其他部分类似。它建立用于 [initrd](https://en.wikipedia.org/wiki/Initial_ramdisk)、内核命令行等数据的页。
 
-Now we may return back to `choose_random_location` function.
+现在我们可以回到`choose_random_location`函数。
 
-Physical address randomization
+物理地址随机化
 --------------------------------------------------------------------------------
 
-After the reserved memory regions were stored in the `mem_avoid` array and identity mapping pages were built for them, we select minimal available address to choose random memory region to decompress the kernel:
+在保留内存区域存储在`mem_avoid`数组并且为它们建立了恒等映射页之后，我们选择最小可用的地址作为解压内核的随机内存区域：
 
 ```C
 min_addr = min(*output, 512UL << 20);
 ```
 
-As you may see it should be smaller than `512` megabytes. This `512` megabytes value was selected just to avoid unknown things in lower memory.
+你可以看到，它应该小于512MB. 选择这个512MB的值只是避免低内存区域中未知的东西。
 
-The next step is to select random physical and virtual addresses to load kernel. The first is physical addresses:
+下一步是选择随机的物理和虚拟地址来加载内核。首先是物理地址：
 
 ```C
 random_addr = find_random_phys_addr(min_addr, output_size);
 ```
 
-The `find_random_phys_addr` function is defined in the [same](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c) source code file:
+`find_random_phys_addr`函数在[同一个](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/kaslr.c)源文件中定义：
 
 ```
 static unsigned long find_random_phys_addr(unsigned long minimum,
@@ -336,7 +337,7 @@ static unsigned long find_random_phys_addr(unsigned long minimum,
 }
 ```
 
-The main goal of `process_efi_entries` function is to find all suitable memory ranges in full accessible memory to load kernel. If the kernel compiled and runned on the system without [EFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface) support, we continue to search such memory regions in the [e820](https://en.wikipedia.org/wiki/E820) regions. All founded memory regions will be stored in the
+`process_efi_entries`函数的主要目标是在整个可用的内存找到所有的合适的内存区域来加载内核。如果内核没有在支持[EFI](https://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface)的系统中编译和运行，我们继续在[e820](https://en.wikipedia.org/wiki/E820)区域中找这样的内存区域。所有找到的内存区域会存储在
 
 ```C
 struct slot_area {
@@ -349,20 +350,20 @@ struct slot_area {
 static struct slot_area slot_areas[MAX_SLOT_AREA];
 ```
 
-array. The kernel decompressor should select random index of this array and it will be random place where kernel will be decompressed. This selection will be executed by the `slots_fetch_random` function. The main goal of the `slots_fetch_random` function is to select random memory range from the `slot_areas` array via `kaslr_get_random_long` function:
+数组中。内核解压器应该选择这个数组随机的索引，并且它会是内核解压的随机位置。这个选择会被`slots_fetch_random`函数执行。`slots_fetch_random`函数的主要目标是通过`kaslr_get_random_long`函数从`slot_areas`数组选择随机的内存范围：
 
 ```C
 slot = kaslr_get_random_long("Physical") % slot_max;
 ```
 
-The `kaslr_get_random_long` function is defined in the [arch/x86/lib/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/lib/kaslr.c) source code file and it just returns random number. Note that the random number will be get via different ways depends on kernel configuration and system opportunities (select random number base on [time stamp counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter), [rdrand](https://en.wikipedia.org/wiki/RdRand) and so on).
+`kaslr_get_random_long`函数在源文件 [arch/x86/lib/kaslr.c](https://github.com/torvalds/linux/blob/master/arch/x86/lib/kaslr.c) 中定义，它返回一个随机数。注意这个随机数会通过不同的方式得到，取决于内核配置、系统机会（基于[时间戳计数器](https://en.wikipedia.org/wiki/Time_Stamp_Counter)的随机数、[rdrand](https://en.wikipedia.org/wiki/RdRand)等等）。
 
-That's all from this point random memory range will be selected.
+这就是随机内存范围的选择方法。
 
-Virtual address randomization
+虚拟地址随机化
 --------------------------------------------------------------------------------
 
-After random memory region was selected by the kernel decompressor, new identity mapped pages will be built for this region by demand:
+在内核解压器选择了随机内存区域后，新的恒等映射页会为这个区域按需建立：
 
 ```C
 random_addr = find_random_phys_addr(min_addr, output_size);
@@ -373,7 +374,7 @@ if (*output != random_addr) {
 }
 ```
 
-From this time `output` will store the base address of a memory region where kernel will be decompressed. But for this moment, as you may remember we randomized only physical address. Virtual address should be randomized too in a case of [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture:
+这时，`output`会存放内核将会解压的一个内存区域的基地址。但是现在，正如你还记得的那样，我们只是随机化了物理地址。在[x86_64](https://en.wikipedia.org/wiki/X86-64)架构，虚拟地址也应该被随机化：
 
 ```C
 if (IS_ENABLED(CONFIG_X86_64))
@@ -382,22 +383,22 @@ if (IS_ENABLED(CONFIG_X86_64))
 *virt_addr = random_addr;
 ```
 
-As you may see in a case of non `x86_64` architecture, randomzed virtual address will coincide with randomized physical address. The `find_random_virt_addr` function calculates amount of virtual memory ranges that may hold kernel image and calls the `kaslr_get_random_long` that we already saw in a previous case when we tried to find random `physical` address.
+正如你所看到的，对于非`x86_64`架构，随机化的虚拟地址和随机化的物理地址相同。`find_random_virt_addr`函数计算可以保存内存镜像的虚拟内存范围的数量并且调用我们在尝试找到随机的`物理`地址的时候，之前已经看到的`kaslr_get_random_long`函数。
 
-From this moment we have both randomized base physical (`*output`) and virtual (`*virt_addr`) addresses for decompressed kernel.
+这时，我们同时有了用于解压内核的随机化的物理(`*output`)和虚拟(`*virt_addr`)基地址。
 
-That's all.
+就是这样。
 
-Conclusion
+结论
 --------------------------------------------------------------------------------
 
-This is the end of the sixth and the last part about linux kernel booting process. We will not see posts about kernel booting anymore (maybe updates to this and previous posts), but there will be many posts about other kernel internals. 
+这是关于Linux内核引导过程的第六，并且是最后一部分的结尾。我们不再会看到关于内核引导的帖子（可能有对这篇和之前文章的更新），但是会有很多关于其他内核内部细节的文章。
 
-Next chapter will be about kernel initialization and we will see the first steps in the Linux kernel initialization code.
+下一章是关于内核初始化的，我们会看到Linux内核初始化代码的早期步骤。
 
-If you have any questions or suggestions write me a comment or ping me in [twitter](https://twitter.com/0xAX).
+如果你有什么问题或建议，写个评论或在 [twitter](https://twitter.com/0xAX) 找我。
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
+**如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 。**
 
 Links
 --------------------------------------------------------------------------------
