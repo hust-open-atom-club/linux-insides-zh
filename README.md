@@ -22,13 +22,13 @@
 | 章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
 | 1. [Booting](https://github.com/MintCN/linux-insides-zh/tree/master/Booting)||正在进行|
-|├ [1.0](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/README.md)|[@xinqiu](https://github.com/xinqiu)|更新至[28a39fe6](https://github.com/0xAX/linux-insides/commit/28a39fe6653e780641e80ab6e37c79ffafca07b0#diff-2e735523a4c3de2e72adcedac13682c7)|
+|├ [1.0](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/README.md)|[@xinqiu](https://github.com/xinqiu)|更新至[527b2b8](https://github.com/0xAX/linux-insides/commit/527b2b8921c3d9c043bd914c5990d6a991e3035b)|
 |├ [1.1](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-1.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.2](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-2.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.3](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-3.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.4](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-4.md)|[@zmj1316](https://github.com/zmj1316)|已完成|
-|├ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)||未开始|
-|└ [1.6](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-6.md)||未开始|
+|├ [1.5](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-5.md)|[@mytbk](https://github.com/mytbk)|更新至[31998d14](https://github.com/0xAX/linux-insides/commit/31998d14320f25399d67d4fff446a65178931e90)|
+|└ [1.6](https://github.com/MintCN/linux-insides-zh/blob/master/Booting/linux-bootstrap-6.md)|[@mytbk](https://github.com/mytbk)|更新至[31998d14](https://github.com/0xAX/linux-insides/commit/31998d14320f25399d67d4fff446a65178931e90)|
 | 2. [Initialization](https://github.com/MintCN/linux-insides-zh/tree/master/Initialization)||正在进行|
 |├ [2.0](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
 |├ [2.1](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-1.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
@@ -36,7 +36,7 @@
 |├ [2.3](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-3.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[44017507](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
 |├ [2.4](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-4.md)|[@bjwrkj](https://github.com/bjwrkj)|已完成|
 |├ [2.5](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-5.md)|[@NeoCui](https://github.com/NeoCui)|更新至[cf32dc6c](https://github.com/0xAX/linux-insides/commit/cf32dc6c81abce567af330c480afc3d58678443d)|
-|├ [2.6](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-6.md)||未开始|
+|├ [2.6](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-6.md)|[@kele1997](https://github.com/kele1997)|更新至[e896e56](https://github.com/0xAX/linux-insides/commit/e896e56c867876397ef78da58d5e2a31b2e690b6)|
 |├ [2.7](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md)||未开始|
 |├ [2.8](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-8.md)||未开始|
 |├ [2.9](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-9.md)||未开始|
@@ -44,7 +44,7 @@
 | 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/Interrupts)||正在进行|
 |├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|更新至[57279321](https://github.com/0xAX/linux-insides/commit/5727932167a2ff6a1e647081c85d081d4ed8b508)|
 |├ [3.1](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-1.md)||未开始|
-|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-2.md)||未开始|
+|├ [3.2](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-2.md)|[@narcijie](https://github.com/narcijie)|正在进行|
 |├ [3.3](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-3.md)||未开始|
 |├ [3.4](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-4.md)||未开始|
 |├ [3.5](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/linux-interrupts-5.md)||未开始|
