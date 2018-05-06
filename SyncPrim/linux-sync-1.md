@@ -20,7 +20,7 @@ clocksource_select();
 ...
 mutex_unlock(&clocksource_mutex);
 ```
-出自 [kernel/time/clocksource.c](https://github.com/torvalds/linux/master/kernel/time/clocksource.c) 源文件。这段代码来自于 `__clocksource_register_scale` 函数，此函数添加给定的 [clocksource](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-2.html) 到时钟源列表中。这个函数在注册时钟源列表中生成两个不同的操作。例如 `clocksource_enqueue` 函数就是添加给定时钟源到注册时钟源列表——`clocksource_list` 中。注意这几行代码被两个函数所包围：`mutex_lock` 和 `mutex_unlock`，这两个函数都带有一个参数——在本例中为 `clocksource_mutex`。
+出自 [kernel/time/clocksource.c](https://github.com/torvalds/linux/master/kernel/time/clocksource.c) 源文件。这段代码来自于 `__clocksource_register_scale` 函数，此函数添加给定的 [clocksource](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html) 到时钟源列表中。这个函数在注册时钟源列表中生成两个不同的操作。例如 `clocksource_enqueue` 函数就是添加给定时钟源到注册时钟源列表——`clocksource_list` 中。注意这几行代码被两个函数所包围：`mutex_lock` 和 `mutex_unlock`，这两个函数都带有一个参数——在本例中为 `clocksource_mutex`。
 
 这些函数展示了基于[互斥锁 (mutex)](https://en.wikipedia.org/wiki/Mutual_exclusion) 同步原语的加锁和解锁。当 `mutex_lock` 被执行，允许我们阻止两个或两个以上线程执行这段代码，而 `mute_unlock` 还没有被互斥锁的处理拥有者锁执行。换句话说，就是阻止在 `clocksource_list`上的并行操作。为什么在这里需要使用`互斥锁`？ 如果两个并行处理尝试去注册一个时钟源会怎样。正如我们已经知道的那样，其中具有最大的等级（其具有最高的频率在系统中注册的时钟源）的列表中选择一个时钟源后，`clocksource_enqueue` 函数立即将一个给定的时钟源到 `clocksource_list` 列表：
 
@@ -409,7 +409,7 @@ head |   7   | - - - |   7   | tail
 
 * [Concurrent computing](https://en.wikipedia.org/wiki/Concurrent_computing)
 * [Synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)
-* [Clocksource framework](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-2.html)
+* [Clocksource framework](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html)
 * [Mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
 * [Race condition](https://en.wikipedia.org/wiki/Race_condition)
 * [Atomic operations](https://en.wikipedia.org/wiki/Linearizability)

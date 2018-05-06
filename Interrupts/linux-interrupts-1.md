@@ -306,7 +306,7 @@ union irq_stack_union {
 
 第一个 `irq_stack` 域是一个 16KB 的数组。然后你可以看到 `irq_stack_union` 联合包含了一个结构体，这个结构体有两个域：
 
-* `gs_base` - 总是指向 `irqstack` 联合底部的 `gs` 寄存器。在 `x86_64` 中， per-cpu（更多关于 `per-cpu` 变量的信息可以阅读特定的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)） 和 stack canary 共享 `gs` 寄存器。所有的 per-cpu 标志初始值为零，并且 `gs` 指向 per-cpu 区域的开始。你已经知道[段内存模式](http://en.wikipedia.org/wiki/Memory_segmentation)已经废除很长时间了，但是我们可以使用[特殊模块寄存器（Model specific registers）](http://en.wikipedia.org/wiki/Model-specific_register)给这两个段寄存器 - `fs` 和 `gs` 设置基址，并且这些寄存器仍然可以被用作地址寄存器。如果你记得 Linux 内核初始程序的第一[部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)，你会记起我们设置了 `gs` 寄存器：
+* `gs_base` - 总是指向 `irqstack` 联合底部的 `gs` 寄存器。在 `x86_64` 中， per-cpu（更多关于 `per-cpu` 变量的信息可以阅读特定的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)） 和 stack canary 共享 `gs` 寄存器。所有的 per-cpu 标志初始值为零，并且 `gs` 指向 per-cpu 区域的开始。你已经知道[段内存模式](http://en.wikipedia.org/wiki/Memory_segmentation)已经废除很长时间了，但是我们可以使用[特殊模块寄存器（Model specific registers）](http://en.wikipedia.org/wiki/Model-specific_register)给这两个段寄存器 - `fs` 和 `gs` 设置基址，并且这些寄存器仍然可以被用作地址寄存器。如果你记得 Linux 内核初始程序的第一[部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)，你会记起我们设置了 `gs` 寄存器：
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx

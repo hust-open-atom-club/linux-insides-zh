@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 4.
 How does the Linux kernel run a program
 --------------------------------------------------------------------------------
 
-This is the fourth part of the [chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-3.html) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
+This is the fourth part of the [chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-3.html) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
 
 * `vsyscall`;
 * `vDSO`;
@@ -73,7 +73,7 @@ So, an user application (`bash` in our case) calls the system call and as we alr
 execve system call
 --------------------------------------------------------------------------------
 
-We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
+We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
 
 ```
 SYSCALL_DEFINE3(execve,
@@ -334,7 +334,7 @@ if (!elf_phdata)
 	goto out;
 ```
 
-that describes [segments](https://en.wikipedia.org/wiki/Memory_segmentation). Read the `program interpreter` and libraries that linked with the our executable binary file from disk and load it to memory. The `program interpreter` specified in the `.interp` section of the executable file and as you can read in the part that describes [Linkers](http://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html) it is - `/lib64/ld-linux-x86-64.so.2` for the `x86_64`. It setups the stack and map `elf` binary into the correct location in memory. It maps the [bss](https://en.wikipedia.org/wiki/.bss) and the [brk](http://man7.org/linux/man-pages/man2/sbrk.2.html) sections and does many many other different things to prepare executable file to execute.
+that describes [segments](https://en.wikipedia.org/wiki/Memory_segmentation). Read the `program interpreter` and libraries that linked with the our executable binary file from disk and load it to memory. The `program interpreter` specified in the `.interp` section of the executable file and as you can read in the part that describes [Linkers](https://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linux-misc-3.html) it is - `/lib64/ld-linux-x86-64.so.2` for the `x86_64`. It setups the stack and map `elf` binary into the correct location in memory. It maps the [bss](https://en.wikipedia.org/wiki/.bss) and the [brk](http://man7.org/linux/man-pages/man2/sbrk.2.html) sections and does many many other different things to prepare executable file to execute.
 
 In the end of the execution of the `load_elf_binary` we call the `start_thread` function and pass three arguments to it:
 
@@ -424,7 +424,7 @@ Links
 * [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha)
 * [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF)
 * [segments](https://en.wikipedia.org/wiki/Memory_segmentation)
-* [Linkers](http://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html)
+* [Linkers](https://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linux-misc-3.html)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
-* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-3.html)
+* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-3.html)

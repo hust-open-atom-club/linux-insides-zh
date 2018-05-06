@@ -4,7 +4,7 @@ Linux内核内存管理 第三节
 内核中 kmemcheck 介绍
 --------------------------------------------------------------------------------
 
-Linux内存管理[章节](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/)描述了Linux内核中[内存管理](https://en.wikipedia.org/wiki/Memory_management)；本小节是第三部分。 在本章[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)中我们遇到了两个与内存管理相关的概念：
+Linux内存管理[章节](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/)描述了Linux内核中[内存管理](https://en.wikipedia.org/wiki/Memory_management)；本小节是第三部分。 在本章[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)中我们遇到了两个与内存管理相关的概念：
 
 * `固定映射地址`;
 * `输入输出重映射`.
@@ -62,7 +62,7 @@ $ sudo cat /proc/ioports
 ...
 ```
 
-`ioports` 的输出列出了系统中物理设备所注册的各种类型的I/O端口。内核不能直接访问设备的输入/输出地址。在内核能够使用这些内存之前，必须将这些地址映射到虚拟地址空间，这就是`io remap`机制的主要目的。在前面[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)中只介绍了早期的 `io remap` 。很快我们就要来看一看常规的 `io remap` 实现机制。但在此之前，我们需要学习一些其他的知识，例如不同类型的内存分配器等，不然的话我们很难理解该机制。
+`ioports` 的输出列出了系统中物理设备所注册的各种类型的I/O端口。内核不能直接访问设备的输入/输出地址。在内核能够使用这些内存之前，必须将这些地址映射到虚拟地址空间，这就是`io remap`机制的主要目的。在前面[第二节](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)中只介绍了早期的 `io remap` 。很快我们就要来看一看常规的 `io remap` 实现机制。但在此之前，我们需要学习一些其他的知识，例如不同类型的内存分配器等，不然的话我们很难理解该机制。
 
 在进入Linux内核常规期的[内存管理](https://en.wikipedia.org/wiki/Memory_management)之前，我们要看一些特殊的内存机制，例如[调试](https://en.wikipedia.org/wiki/Debugging)，检查[内存泄漏](https://en.wikipedia.org/wiki/Memory_leak)，内存控制等等。学习这些内容有助于我们理解Linux内核的内存管理。
 
@@ -148,7 +148,7 @@ config X86
 struct my_struct *my_struct = kmalloc(sizeof(struct my_struct), GFP_KERNEL);
 ```
 
-或者换句话说，在内核访问 [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29) 时会发生[缺页中断](https://en.wikipedia.org/wiki/Page_fault)。这是由于 `kmemcheck` 将内存页标记为`不存在`（关于Linux内存分页的相关信息，你可以参考[分页](https://0xax.gitbooks.io/linux-insides/content/Theory/Paging.html)）。如果一个`缺页中断`异常发生了，异常处理程序会来处理这个异常，如果异常处理程序检测到内核使能了 `kmemcheck`，那么就会将控制权提交给 `kmemcheck` 来处理；`kmemcheck` 检查完之后，该内存页会被标记为 `present`，然后被中断的程序得以继续执行下去。 这里的处理方式比较巧妙，被中断程序的第一条指令执行时，`kmemcheck` 又会标记内存页为 `not present`，按照这种方式，下一个对内存页的访问也会被捕获。 
+或者换句话说，在内核访问 [page](https://en.wikipedia.org/wiki/Page_%28computer_memory%29) 时会发生[缺页中断](https://en.wikipedia.org/wiki/Page_fault)。这是由于 `kmemcheck` 将内存页标记为`不存在`（关于Linux内存分页的相关信息，你可以参考[分页](https://0xax.gitbooks.io/linux-insides/content/Theory/linux-theory-1.html)）。如果一个`缺页中断`异常发生了，异常处理程序会来处理这个异常，如果异常处理程序检测到内核使能了 `kmemcheck`，那么就会将控制权提交给 `kmemcheck` 来处理；`kmemcheck` 检查完之后，该内存页会被标记为 `present`，然后被中断的程序得以继续执行下去。 这里的处理方式比较巧妙，被中断程序的第一条指令执行时，`kmemcheck` 又会标记内存页为 `not present`，按照这种方式，下一个对内存页的访问也会被捕获。 
 
 目前我们只是从理论层面考察了 `kmemcheck`，接下来我们看一下Linux内核是怎么来实现该机制的。
 
@@ -190,7 +190,7 @@ early_param("kmemcheck", param_kmemcheck);
 
 从前面的介绍我们知道 `param_kmemcheck` 可能存在三种情况：`0` (使能), `1` (禁止) or `2` (一次性)。 `param_kmemcheck` 的实现很简单：将command line传递的 `kmemcheck` 参数的值由字符串转换为整数，然后赋值给变量 `kmemcheck_enabled` 。
 
-第二阶段在内核初始化阶段执行，而不是在早期初始化过程 [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/initcall.html) 。第二阶断的过程体现在 `kmemcheck_init` : 
+第二阶段在内核初始化阶段执行，而不是在早期初始化过程 [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-3.html) 。第二阶断的过程体现在 `kmemcheck_init` : 
 
 ```C
 int __init kmemcheck_init(void)
@@ -296,7 +296,7 @@ __do_page_fault(struct pt_regs *regs, unsigned long error_code,
 }
 ```
 
-`kmemcheck_active` 函数获取 `kmemcheck_context` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 结构体，并返回该结构体成员 `balance` 和0的比较结果：
+`kmemcheck_active` 函数获取 `kmemcheck_context` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 结构体，并返回该结构体成员 `balance` 和0的比较结果：
 
 ```
 bool kmemcheck_active(struct pt_regs *regs)
@@ -337,7 +337,7 @@ if (!pte)
 static struct kmemcheck_error error_fifo[CONFIG_KMEMCHECK_QUEUE_SIZE];
 ```
 
-`kmemcheck` 声明了一个特殊的 [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html) :
+`kmemcheck` 声明了一个特殊的 [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-9.html) :
 
 ```C
 static DECLARE_TASKLET(kmemcheck_tasklet, &do_wakeup, 0);
@@ -422,13 +422,12 @@ Links
 * [memory leaks](https://en.wikipedia.org/wiki/Memory_leak)
 * [kmemcheck documentation](https://www.kernel.org/doc/Documentation/kmemcheck.txt)
 * [valgrind](https://en.wikipedia.org/wiki/Valgrind)
-* [paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
 * [page fault](https://en.wikipedia.org/wiki/Page_fault)
-* [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/initcall.html)
+* [initcalls](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-3.html)
 * [opcode](https://en.wikipedia.org/wiki/Opcode)
 * [translation lookaside buffer](https://en.wikipedia.org/wiki/Translation_lookaside_buffer)
-* [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [per-cpu variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
-* [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/interrupts-9.html)
-* [Paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/Paging.html)
-* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)
+* [tasklet](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-9.html)
+* [Paging](https://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html)
+* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)

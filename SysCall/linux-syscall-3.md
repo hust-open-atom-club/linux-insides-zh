@@ -4,7 +4,7 @@ Linux 内核系统调用 第三节
 vsyscalls 和 vDSO
 --------------------------------------------------------------------------------
 
-这是讲解 Linux 内核中系统调用[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html)的第三部分，[前一节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-2.html)讨论了用户空间应用程序发起的系统调用的准备工作及系统调用的处理过程。在这一节将讨论两个与系统调用十分相似的概念，这两个概念是`vsyscall` 和 `vdso`。
+这是讲解 Linux 内核中系统调用[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html)的第三部分，[前一节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html)讨论了用户空间应用程序发起的系统调用的准备工作及系统调用的处理过程。在这一节将讨论两个与系统调用十分相似的概念，这两个概念是`vsyscall` 和 `vdso`。
 
 我们已经了解什么是`系统调用`。这是 Linux 内核一种特殊的运行机制，使得用户空间的应用程序可以请求，像写入文件和打开套接字等特权级下的任务。正如你所了解的，在 Linux 内核中发起一个系统调用是特别昂贵的操作，因为处理器需要中断当前正在执行的任务，切换内核模式的上下文，在系统调用处理完毕后跳转至用户空间。以下的两种机制  - `vsyscall` 和d `vdso` 被设计用来加速系统调用的处理，在这一节我们将了解两种机制的工作原理。
 
@@ -80,7 +80,7 @@ __vsyscall_page:
 	ret
 ```
 
-回到 `map_vsyscall` 函数及 `__vsyscall_page` 的实现，在得到 `__vsyscall_page` 的物理地址之后，使用 `__set_fixmap` 为  `vsyscall` 内存页 检查设置 [fix-mapped](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)地址的变量`vsyscall_mode`:
+回到 `map_vsyscall` 函数及 `__vsyscall_page` 的实现，在得到 `__vsyscall_page` 的物理地址之后，使用 `__set_fixmap` 为  `vsyscall` 内存页 检查设置 [fix-mapped](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)地址的变量`vsyscall_mode`:
 
 ```C
 if (vsyscall_mode != NONE)
@@ -252,7 +252,7 @@ Here we can see that [uname](https://en.wikipedia.org/wiki/Uname) util was linke
 * `libc.so.6`;
 * `ld-linux-x86-64.so.2`.
 
-The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](http://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
+The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](https://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linux-misc-3.html)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
 
 Initialization of the `vDSO` occurs in the `init_vdso` function that defined in the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vma.c) source code file. This function starts from the initialization of the `vDSO` images for 32-bits and 64-bits depends on the `CONFIG_X86_X32_ABI` kernel configuration option:
 
@@ -370,7 +370,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the third part about the system calls concept in the Linux kernel. In the previous [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-2.html) we discussed the implementation of the preparation from the Linux kernel side, before a system call will be handled and implementation of the `exit` process from a system call handler. In this part we continued to dive into the stuff which is related to the system call concept and learned two new concepts that are very similar to the system call - the `vsyscall` and the `vDSO`.
+This is the end of the third part about the system calls concept in the Linux kernel. In the previous [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html) we discussed the implementation of the preparation from the Linux kernel side, before a system call will be handled and implementation of the `exit` process from a system call handler. In this part we continued to dive into the stuff which is related to the system call concept and learned two new concepts that are very similar to the system call - the `vsyscall` and the `vDSO`.
 
 After all of these three parts, we know almost all things that are related to system calls, we know what system call is and why user applications need them.  We also know what occurs when a user application calls a system call and how the kernel handles system calls.
 
@@ -390,7 +390,7 @@ Links
 * [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space)
 * [Segmentation](https://en.wikipedia.org/wiki/Memory_segmentation)
 * [enum](https://en.wikipedia.org/wiki/Enumerated_type)
-* [fix-mapped addresses](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-2.html)
+* [fix-mapped addresses](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)
 * [BUILD_BUG_ON](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
@@ -399,5 +399,5 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [stack pointer](https://en.wikipedia.org/wiki/Stack_register)
 * [uname](https://en.wikipedia.org/wiki/Uname)
-* [Linkers](http://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linkers.html)
-* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/syscall-2.html)
+* [Linkers](https://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linux-misc-3.html)
+* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html)

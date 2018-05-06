@@ -4,7 +4,7 @@ Kernel initialization. Part 8.
 Scheduler initialization
 ================================================================================
 
-This is the eighth [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html) of the Linux kernel initialization process and we stopped on the `setup_nr_cpu_ids` function in the [previous](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md) part. The main point of the current part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) is the `setup_per_cpu_areas` function. This function setups areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function. This function does some preparations for the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing):
+This is the eighth [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html) of the Linux kernel initialization process and we stopped on the `setup_nr_cpu_ids` function in the [previous](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md) part. The main point of the current part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) is the `setup_per_cpu_areas` function. This function setups areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function. This function does some preparations for the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing):
 
 ```C
 static inline void smp_prepare_boot_cpu(void)
@@ -86,7 +86,7 @@ DEFINE_PER_CPU_PAGE_ALIGNED(struct gdt_page, gdt_page) = { .gdt = {
     ...
 ```
 
-more about `percpu` variables you can read in the [Per-CPU variables](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) part. As we got address and size of the `GDT` descriptor we reload `GDT` with the `load_gdt` which just execute `lgdt` instruct and load `percpu_segment` with the following function:
+more about `percpu` variables you can read in the [Per-CPU variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) part. As we got address and size of the `GDT` descriptor we reload `GDT` with the `load_gdt` which just execute `lgdt` instruct and load `percpu_segment` with the following function:
 
 ```C
 void load_percpu_segment(int cpu) {
@@ -205,7 +205,7 @@ pid_hash = alloc_large_system_hash("PID", sizeof(*pid_hash), 0, 18,
 ```
 
 The number of elements of the `pid_hash` depends on the `RAM` configuration, but it can be between `2^4` and `2^12`. The `pidhash_init` computes the size
-and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](http://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/master/include/linux/types.h)]. The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
+and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/linux-datastructures-1.html), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/master/include/linux/types.h)]. The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
 
 The result we can see in the `dmesg` output:
 
@@ -230,7 +230,7 @@ pgtable_init();
 vmalloc_init();
 ```
 
-The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/index.html) chapter.
+The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of they it in the [Linux kernel memory manager](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html) chapter.
 
 That's all. Now we can look on the `scheduler`.
 
@@ -290,7 +290,7 @@ The root task group is the task group which belongs to every task in system. As 
 DECLARE_PER_CPU(cpumask_var_t, load_balance_mask);
 ```
 
-Here `cpumask_var_t` is the `cpumask_t` with one difference: `cpumask_var_t` is allocated only `nr_cpu_ids` bits when the `cpumask_t` always has `NR_CPUS` bits (more about `cpumask` you can read in the [CPU masks](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html) part). As you can see:
+Here `cpumask_var_t` is the `cpumask_t` with one difference: `cpumask_var_t` is allocated only `nr_cpu_ids` bits when the `cpumask_t` always has `NR_CPUS` bits (more about `cpumask` you can read in the [CPU masks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html) part). As you can see:
 
 ```C
 #ifdef CONFIG_CPUMASK_OFFSTACK
@@ -461,11 +461,11 @@ If you have any questions or suggestions write me a comment or ping me at [twitt
 Links
 --------------------------------------------------------------------------------
 
-* [CPU masks](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html)
+* [CPU masks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html)
 * [high-resolution kernel timer](https://www.kernel.org/doc/Documentation/timers/hrtimers.txt)
 * [spinlock](http://en.wikipedia.org/wiki/Spinlock)
 * [Run queue](http://en.wikipedia.org/wiki/Run_queue)
-* [Linux kernem memory manager](http://0xax.gitbooks.io/linux-insides/content/mm/index.html)
+* [Linux kernem memory manager](http://0xax.gitbooks.io/linux-insides/content/MM/index.html)
 * [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29)
 * [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system)
 * [Linux kernel hotplug documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)

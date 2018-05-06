@@ -5,7 +5,7 @@
 信号量
 --------------------------------------------------------------------------------
 
-这是本章的第三部分 [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/index.html)，本章描述了内核中的同步原语,在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-2.html) 是和 `自旋锁` 相关的描述。我们将描述更多同步原语。
+这是本章的第三部分 [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/index.html)，本章描述了内核中的同步原语,在之前的部分我们见到了特殊的 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) - `排队自旋锁`。 在更前的 [部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/linux-sync-2.html) 是和 `自旋锁` 相关的描述。我们将描述更多同步原语。
 
 在 `自旋锁` 之后的下一个我们将要讲到的 [内核同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)是 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)。我们会从理论角度开始学习什么是 `信号量`， 然后我们会像前几章一样讲到Linux内核是如何实现信号量的。
 
@@ -70,13 +70,13 @@ struct semaphore {
 }
 ```
 
-`__SEMAPHORE_INITIALIZER` 宏传入了 `信号量` 结构体的名字并且初始化这个结构体的各个域。首先我们使用 `__RAW_SPIN_LOCK_UNLOCKED` 宏对给予的 `信号量` 初始化一个 `自旋锁`。就像你从 [之前](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-1.html) 的部分看到那样，`__RAW_SPIN_LOCK_UNLOCKED` 宏是在 [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) 头文件中定义，它展开到 `__ARCH_SPIN_LOCK_UNLOCKED` 宏，而 `__ARCH_SPIN_LOCK_UNLOCKED` 宏又展开到零或者无锁状态
+`__SEMAPHORE_INITIALIZER` 宏传入了 `信号量` 结构体的名字并且初始化这个结构体的各个域。首先我们使用 `__RAW_SPIN_LOCK_UNLOCKED` 宏对给予的 `信号量` 初始化一个 `自旋锁`。就像你从 [之前](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/linux-sync-1.html) 的部分看到那样，`__RAW_SPIN_LOCK_UNLOCKED` 宏是在 [include/linux/spinlock_types.h](https://github.com/torvalds/linux/blob/master/include/linux/spinlock_types.h) 头文件中定义，它展开到 `__ARCH_SPIN_LOCK_UNLOCKED` 宏，而 `__ARCH_SPIN_LOCK_UNLOCKED` 宏又展开到零或者无锁状态
 
 ```C
 #define __ARCH_SPIN_LOCK_UNLOCKED       { { 0 } }
 ```
 
- `信号量` 的最后两个域 `count` 和 `wait_list` 是通过现有资源的数量和空 [链表](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)来初始化。
+ `信号量` 的最后两个域 `count` 和 `wait_list` 是通过现有资源的数量和空 [链表](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/linux-datastructures-1.html)来初始化。
 第二种初始化 `信号量` 的方式是将 `信号量` 和现有资源数目传送给 `sema_init` 函数。 这个函数是在 [include/linux/semaphore.h](https://github.com/torvalds/linux/blob/master/include/linux/semaphore.h) 头文件中定义的。
 
 ```C
@@ -104,7 +104,7 @@ int  down_timeout(struct semaphore *sem, long jiffies);
 
 `down_killable` 函数和 `down_interruptible` 函数提供类似的功能，但是它还将当前进程的 `TASK_KILLABLE` 标志置位。这表示等待的进程可以被杀死信号中断。
 
-`down_trylock` 函数和 `spin_trylock` 函数相似。这个函数试图去获取一个锁并且退出如果这个操作是失败的。在这个例子中，想获取锁的进程不会等待。最后的 `down_timeout`函数试图去获取一个锁。当前进程将会被中断进入到等待状态当超过传入的可等待时间。除此之外你也许注意到，这个等待的时间是以 [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-1.html)计数。
+`down_trylock` 函数和 `spin_trylock` 函数相似。这个函数试图去获取一个锁并且退出如果这个操作是失败的。在这个例子中，想获取锁的进程不会等待。最后的 `down_timeout`函数试图去获取一个锁。当前进程将会被中断进入到等待状态当超过传入的可等待时间。除此之外你也许注意到，这个等待的时间是以 [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-1.html)计数。
 
 我们刚刚看了 `信号量` [API](https://en.wikipedia.org/wiki/Application_programming_interface)的定义。我们从 `down` 函数开始看。这个函数是在 [kernel/locking/semaphore.c](https://github.com/torvalds/linux/blob/master/kernel/locking/semaphore.c) 源代码定义的。我们来看看函数实现：
 
@@ -180,7 +180,7 @@ struct semaphore_waiter waiter;
 #define current get_current()
 ```
 
-`get_current` 函数返回 `current_task` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html) 变量的值。
+`get_current` 函数返回 `current_task` [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 变量的值。
 
 
 ```C
@@ -339,14 +339,14 @@ static noinline void __sched __up(struct semaphore *sem)
 * [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [deadlocks](https://en.wikipedia.org/wiki/Deadlock)
 * [scheduler](https://en.wikipedia.org/wiki/Scheduling_%28computing%29)
-* [Doubly linked list in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/dlist.html)
-* [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/timers-1.html)
+* [Doubly linked list in the Linux kernel](https://xinqiu.gitbooks.io/linux-insides-cn/content/DataStructures/linux-datastructures-1.html)
+* [jiffies](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-1.html)
 * [interrupts](https://en.wikipedia.org/wiki/Interrupt)
-* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/per-cpu.html)
+* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
 * [bitmask](https://en.wikipedia.org/wiki/Mask_%28computing%29)
 * [SIGKILL](https://en.wikipedia.org/wiki/Unix_signal#SIGKILL)
 * [errno](https://en.wikipedia.org/wiki/Errno.h)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
-* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/sync-2.html)
+* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/linux-sync-2.html)
 

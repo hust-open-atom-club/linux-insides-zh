@@ -49,7 +49,7 @@ char *after_dashes;
 lockdep_init();
 ```
 
-`lockdep_init` 初始化 [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). 其实现是相当简单的，它只是初始化了两个哈希表 [list_head](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/dlist.md)并设置`lockdep_initialized` 全局变量为`1`。
+`lockdep_init` 初始化 [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt). 其实现是相当简单的，它只是初始化了两个哈希表 [list_head](https://github.com/MintCN/linux-insides-zh/blob/master/DataStructures/linux-datastructures-1.md)并设置`lockdep_initialized` 全局变量为`1`。
 关于自旋锁 [spinlock](http://en.wikipedia.org/wiki/Spinlock)以及互斥锁[mutex](http://en.wikipedia.org/wiki/Mutual_exclusion) 如何获取请参考链接.
 
 下一个函数是`set_task_stack_end_magic`，参数为`init_task`和设置`STACK_END_MAGIC` (`0x57AC6E9D`)。`init_task`代表初始化进程(任务)数据结构:
@@ -208,7 +208,7 @@ int cpu = smp_processor_id();
 #define raw_smp_processor_id() (this_cpu_read(cpu_number))
 ```
 
-`this_cpu_read` 函数与其它很多函数一样如(`this_cpu_write`, `this_cpu_add` 等等...) 被定义在[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 此部分函数主要为对 `this_cpu` 进行操作. 这些操作提供不同的对每cpu[per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/per-cpu.html) 变量相关访问方式. 譬如让我们来看看这个函数 `this_cpu_read`:
+`this_cpu_read` 函数与其它很多函数一样如(`this_cpu_write`, `this_cpu_add` 等等...) 被定义在[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 此部分函数主要为对 `this_cpu` 进行操作. 这些操作提供不同的对每cpu[per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 变量相关访问方式. 譬如让我们来看看这个函数 `this_cpu_read`:
 
 ```
 __pcpu_size_call_return(this_cpu_read_, pcp)
@@ -311,7 +311,7 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 
 原来此函数始终返回1，事实上我们需要这样的函数才达到我们的目的： 它在编译时给定一个`bitmap`，换句话将就是检查`bitmap`的类型是否是`unsigned long *`,因此我们仅仅通过`to_cpumask`宏指令将类型为`unsigned long`的数组转化为`struct cpumask *`。现在我们可以调用`cpumask_set_cpu` 函数，这个函数仅仅是一个 `set_bit`给CPU掩码的功能函数。所有的这些`set_cpu_*`函数的原理都是一样的。
 
-如果你还不确定`set_cpu_*`这些函数的操作并且不能理解 `cpumask`的概念，不要担心。你可以通过读取这些章节[cpumask](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/cpumask.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).来继续了解和学习这些函数的原理。
+如果你还不确定`set_cpu_*`这些函数的操作并且不能理解 `cpumask`的概念，不要担心。你可以通过读取这些章节[cpumask](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).来继续了解和学习这些函数的原理。
 
 现在我们已经激活第一个CPU，我们继续接着start_kernel函数往下走，下面的函数是`page_address_init`,但是此函数不执行任何操作，因为只有当所有内存不能直接映射的时候才会执行。
 
@@ -349,7 +349,7 @@ Linux version 4.0.0-rc6+ (alex@localhost) (gcc version 4.9.1 (Ubuntu 4.9.1-16ubu
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-你可以阅读关于`memblock`的相关内容在[Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/mm/linux-mm-1.html)，你应该还记得`memblock_reserve`函数的两个参数：
+你可以阅读关于`memblock`的相关内容在[Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-1.html)，你应该还记得`memblock_reserve`函数的两个参数：
 
 * base physical address of a memory block;
 * size of a memory block.

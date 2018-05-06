@@ -371,7 +371,7 @@ fdput_pos(f);
 
 总结Linux内核中关于系统调用概念的 the first part covering system call concepts in the Linux kernel. 本节中讨论了系统调用的原理，接下来的一节将深入该主题，了解 Linux 内核系统调用相关代码。
 
-若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/MintCN/linux-insides-zh/new).
+若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
 
 **由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/MintCN/linux-insides-zh).**
 
