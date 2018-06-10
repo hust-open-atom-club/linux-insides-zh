@@ -57,8 +57,8 @@
 |├ [4.0](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[194d0c83](https://github.com/0xAX/linux-insides/commit/194d0c83e3273c6167830c29d9ba13ec57bfbcb6)|
 |├ [4.1](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-1.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.2](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-2.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
-|├ [4.3](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-3.md)||未开始|
-|├ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-4.md)||未开始|
+|├ [4.3](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-3.md)|[@Newester](https://github.com/Newester)|正在进行|
+|├ [4.4](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-4.md)|[@Newester](https://github.com/Newester)|正在进行|
 |├ [4.5](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-5.md)||未开始|
 |└ [4.6](https://github.com/MintCN/linux-insides-zh/blob/master/SysCall/linux-syscall-6.md)||未开始|
 | 5. [Timers and time management](https://github.com/MintCN/linux-insides-zh/tree/master/Timers)||正在进行|
