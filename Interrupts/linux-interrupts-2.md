@@ -1,86 +1,86 @@
-Interrupts and Interrupt Handling. Part 2.
+中断和中断处理 Part 2.
 ================================================================================
 
-Start to dive into interrupt and exceptions handling in the Linux kernel
+深入Linux内核中的中断和异常处理
 --------------------------------------------------------------------------------
 
-We saw some theory about interrupts and exception handling in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) and as I already wrote in that part, we will start to dive into interrupts and exceptions in the Linux kernel source code in this part. As you already can note, the previous part mostly described theoretical aspects and in this part we will start to dive directly into the Linux kernel source code. We will start to do it as we did it in other chapters, from the very early places. We will not see the Linux kernel source code from the earliest [code lines](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292) as we saw it for example in the [Linux kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html) chapter, but we will start from the earliest code which is related to the interrupts and exceptions. In this part we will try to go through the all interrupts and exceptions related stuff which we can find in the Linux kernel source code.
+在 [上一章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)中我们学习了中断和异常处理的一些理论知识，在本章节中，我们将深入了解Linux内核源代码中关于中断与异常处理的部分。之前的章节中主要从理论方面描述了Linux中断和异常处理的相关内容，而在本章节中，我们将直接深入Linux源代码来了解相关内容。像其他章节一样，我们将从启动早期的代码开始阅读。本章将不会像 [Linux内核启动过程](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html)中那样从Linux内核启动的 [最开始](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292)几行代码读起，而是从与中断与异常处理相关的最早期代码开始阅读，了解Linux内核源代码中所有与中断和异常处理相关的代码。
 
-If you've read the previous parts, you can remember that the earliest place in the Linux kernel `x86_64` architecture-specific source code which is related to the interrupt is located in the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c) source code file and represents the first setup of the [Interrupt Descriptor Table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table). It occurs right before the transition into the [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the `go_to_protected_mode` function by the call of the `setup_idt`:
+如果你读过本书的前面部分，你可能记得Linux内核中关于 `x86_64`架构的代码中与中断相关的最早期代码出现在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c)文件中，该文件首次配置了 [中断描述符表](http://en.wikipedia.org/wiki/Interrupt_descriptor_table)(IDT)。对IDT的配置在`go_to_protected_mode`函数中完成，该函数首先调用了 `setup_idt`函数配置了IDT，然后将处理器的工作模式切换为 [保护模式](http://en.wikipedia.org/wiki/Protected_mode):
 
 ```C
 void go_to_protected_mode(void)
 {
-	...
-	setup_idt();
-	...
+        ...
+        setup_idt();
+        ...
 }
 ```
 
-The `setup_idt` function is defined in the same source code file as the `go_to_protected_mode` function and just loads the address of the `NULL` interrupts descriptor table:
+`setup_idt`函数在同一文件中定义，它仅仅是用 `NULL`填充了中断描述符表:
 
 ```C
 static void setup_idt(void)
 {
-	static const struct gdt_ptr null_idt = {0, 0};
-	asm volatile("lidtl %0" : : "m" (null_idt));
+        static const struct gdt_ptr null_idt = {0, 0};
+        asm volatile("lidtl %0" : : "m" (null_idt));
 }
 ```
 
-where `gdt_ptr` represents a special 48-bit `GDTR` register which must contain the base address of the `Global Descriptor Table`:
+其中，`gdt_ptr`表示了一个48-bit的特殊功能寄存器 `GDTR`，其包含了全局描述符表 `Global Descriptor`的基地址:
 
 ```C
 struct gdt_ptr {
-	u16 len;
-	u32 ptr;
+        u16 len;
+        u32 ptr;
 } __attribute__((packed));
 ```
 
-Of course in our case the `gdt_ptr` does not represent the `GDTR` register, but `IDTR` since we set `Interrupt Descriptor Table`. You will not find an `idt_ptr` structure, because if it had been in the Linux kernel source code, it would have been the same as `gdt_ptr` but with different name. So, as you can understand there is no sense to have two similar structures which differ only by name. You can note here, that we do not fill the `Interrupt Descriptor Table` with entries, because it is too early to handle any interrupts or exceptions at this point. That's why we just fill the `IDT` with `NULL`.
+显然，在此处的 `gdt_prt`不是代表 `GDTR`寄存器而是代表 `IDTR`寄存器，因为我们将其设置到了中断描述符表中。之所以在Linux内核代码中没有`idt_ptr`结构体，是因为其与`gdt_prt`具有相同的结构而仅仅是名字不同，因此没必要定义两个重复的数据结构。可以看到，内核在此处并没有填充`Interrupt Descriptor Table`，这是因为此刻处理任何中断或异常还为时尚早，因此我们仅仅以`NULL`来填充`IDT`。
 
-After the setup of the [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT) and other stuff we jump into [protected mode](http://en.wikipedia.org/wiki/Protected_mode) in the - [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S). You can read more about it in the [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html) which describes the transition to protected mode.
+在设置完 [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT)和其他一些东西以后，内核开始进入保护模式，这部分代码在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S)中实现，你可以在描述如何进入保护模式的 [章节](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html)中了解到更多细节。
 
-We already know from the earliest parts that entry to protected mode is located in the `boot_params.hdr.code32_start` and you can see that we pass the entry of the protected mode and `boot_params` to the `protected_mode_jump` in the end of the [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c):
+在最早的章节中我们已经了解到进入保护模式的代码位于 `boot_params.hdr.code32_start`，你可以在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c)的末尾看到内核将入口函数指针和启动参数 `boot_params`传递给了 `protected_mode_jump`函数:
 
 ```C
 protected_mode_jump(boot_params.hdr.code32_start,
-			    (u32)&boot_params + (ds() << 4));
+                            (u32)&boot_params + (ds() << 4));
 ```
 
-The `protected_mode_jump` is defined in the [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S) and gets these two parameters in the `ax` and `dx` registers using one of the [8086](http://en.wikipedia.org/wiki/Intel_8086) calling  [conventions](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions):
+定义在文件 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S)中的函数`protected_mode_jump`通过一种[8086](http://en.wikipedia.org/wiki/Intel_8086)的调用 [约定](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions)，通过 `ax`和 `dx`两个寄存器来获取参数:
 
 ```assembly
 GLOBAL(protected_mode_jump)
-	...
-	...
-	...
-	.byte	0x66, 0xea		# ljmpl opcode
-2:	.long	in_pm32			# offset
-	.word	__BOOT_CS		# segment
+        ...
+        ...
+        ...
+        .byte   0x66, 0xea              # ljmpl opcode
+2:      .long   in_pm32                 # offset
+        .word   __BOOT_CS               # segment
 ...
 ...
 ...
 ENDPROC(protected_mode_jump)
 ```
 
-where `in_pm32` contains a jump to the 32-bit entry point:
+其中 `in_pm32`包含了对32-bit入口的跳转语句:
 
 ```assembly
 GLOBAL(in_pm32)
-	...
-	...
-	jmpl	*%eax // %eax contains address of the `startup_32`
-	...
-	...
+        ...
+        ...
+        jmpl    *%eax // %eax contains address of the `startup_32`
+        ...
+        ...
 ENDPROC(in_pm32)
 ```
 
-As you can remember the 32-bit entry point is in the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) assembly file, although it contains `_64` in its name. We can see the two similar files in the `arch/x86/boot/compressed` directory:
+你可能还记得32-bit的入口地址位于汇编文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S)中，尽管它的名字包含 `_64`后缀。我们可以在 `arch/x86/boot/compressed`目录下看到两个相似的文件:
 
 * `arch/x86/boot/compressed/head_32.S`.
 * `arch/x86/boot/compressed/head_64.S`;
 
-But the 32-bit mode entry point is the second file in our case. The first file is not even compiled for `x86_64`. Let's look at the [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile):
+然而32-bit模式的入口位于第二个文件中，而第一个文件在 `x86_64`配置下不会参与编译。如 [arch/x86/boot/compressed/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/Makefile):
 
 ```
 vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
@@ -88,48 +88,48 @@ vmlinux-objs-y := $(obj)/vmlinux.lds $(obj)/head_$(BITS).o $(obj)/misc.o \
 ...
 ```
 
-We can see here that `head_*` depends on the `$(BITS)` variable which depends on the architecture. You can find it in the [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile):
+代码中的 `head_*`取决于 `$(BITS)` 变量的值，而该值由"架构"决定。我们可以在 [arch/x86/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/Makefile)找到相关信息:
 
 ```
 ifeq ($(CONFIG_X86_32),y)
 ...
-	BITS := 32
+        BITS := 32
 else
-	BITS := 64
-	...
+        BITS := 64
+        ...
 endif
 ```
 
-Now as we jumped on the `startup_32` from the [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) we will not find anything related to the interrupt handling here. The `startup_32` contains code that makes preparations before the transition into [long mode](http://en.wikipedia.org/wiki/Long_mode) and directly jumps in to it. The `long mode` entry is located in `startup_64` and it makes preparations before the [kernel decompression](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html) that occurs in the `decompress_kernel` from the [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c). After the kernel is decompressed, we jump on the `startup_64` from the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S). In the `startup_64` we start to build identity-mapped pages. After we have built identity-mapped pages, checked the [NX](http://en.wikipedia.org/wiki/NX_bit) bit, setup the `Extended Feature Enable Register` (see in links), and updated the early `Global Descriptor Table` with the `lgdt` instruction, we need to setup `gs` register with the following code:
+现在我们从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S)跳入了 `startup_32`函数，在这个函数中没有与中断处理相关的内容。`startup_32`函数包含了进入 [long mode](http://en.wikipedia.org/wiki/Long_mode)之前必须的准备工作，并直接进入了 `long mode`。 `long mode`的入口位于 `startup_64`函数中，在这个函数中完成了 [内核解压](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)的准备工作。内核解压的代码位于 [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c)中的 `decompress_kernel`函数中。内核解压完成以后，程序跳入 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)中的 `startup_64`函数。在这个函数中，我们开始构建 `identity-mapped pages`，并在之后检查 [NX](http://en.wikipedia.org/wiki/NX_bit)位，配置 `Extended Feature Enable Register`(见链接)，使用 `lgdt`指令更新早期的`Global Descriptor Table`，在此之后我们还需要使用如下代码来设置 `gs`寄存器:
 
 ```assembly
-movl	$MSR_GS_BASE,%ecx
-movl	initial_gs(%rip),%eax
-movl	initial_gs+4(%rip),%edx
+movl    $MSR_GS_BASE,%ecx
+movl    initial_gs(%rip),%eax
+movl    initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-We already saw this code in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html). First of all pay attention on the last `wrmsr` instruction. This instruction writes data from the `edx:eax` registers to the [model specific register](http://en.wikipedia.org/wiki/Model-specific_register) specified by the `ecx` register. We can see that `ecx` contains `$MSR_GS_BASE` which is declared in the [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/msr-index.h) and looks like:
+这段代码在之前的 [章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)中也出现过。请注意代码最后的 `wrmsr`指令，这个指令将 `edx:eax`寄存器指定的地址中的数据写入到由 `ecx`寄存器指定的 [model specific register](http://en.wikipedia.org/wiki/Model-specific_register)中。由代码可以看到，`ecx`中的值是 `$MSR_GS_BASE`，该值在 [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/msr-index.h)中定义:
 
 ```C
 #define MSR_GS_BASE             0xc0000101
 ```
 
-From this we can understand that `MSR_GS_BASE` defines the number of the `model specific register`. Since registers `cs`, `ds`, `es`, and `ss` are not used in the 64-bit mode, their fields are ignored. But we can access memory over `fs` and `gs` registers. The model specific register provides a `back door` to the hidden parts of these segment registers and allows to use 64-bit base address for segment register addressed by the `fs` and `gs`. So the `MSR_GS_BASE` is the hidden part and this part is mapped on the `GS.base` field. Let's look on the `initial_gs`:
+由此可见，`MSR_GS_BASE`定义了 `model specific register`的编号。由于 `cs`, `ds`, `es`,和 `ss`在64-bit模式中不再使用，这些寄存器中的值将会被忽略，但我们可以通过 `fs`和 `gs`寄存器来访问内存空间。`model specific register`提供了一种后门 `back door`来访问这些段寄存器，也让我们可以通过段寄存器 `fs`和 `gs`来访问64-bit的基地址。看起来这部分代码映射在 `GS.base`域中。再看到 `initial_gs`函数的定义:
 
 ```assembly
 GLOBAL(initial_gs)
-	.quad	INIT_PER_CPU_VAR(irq_stack_union)
+        .quad   INIT_PER_CPU_VAR(irq_stack_union)
 ```
 
-We pass `irq_stack_union` symbol to the `INIT_PER_CPU_VAR` macro which just concatenates the `init_per_cpu__` prefix with the given symbol. In our case we will get the `init_per_cpu__irq_stack_union` symbol. Let's look at the [linker](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S) script. There we can see following definition:
+这段代码将 `irq_stack_union`传递给 `INIT_PER_CPU_VAR`宏，后者只是给输入参数添加了 `init_per_cpu__`前缀而已。在此得出了符号 `init_per_cpu__irq_stack_union`。再看到 [链接脚本](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S)，其中可以看到如下定义:
 
 ```
 #define INIT_PER_CPU(x) init_per_cpu__##x = x + __per_cpu_load
 INIT_PER_CPU(irq_stack_union);
 ```
 
-It tells us that the address of the `init_per_cpu__irq_stack_union` will be `irq_stack_union + __per_cpu_load`. Now we need to understand where `init_per_cpu__irq_stack_union` and `__per_cpu_load` are what they mean. The first `irq_stack_union` is defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h) with the `DECLARE_INIT_PER_CPU` macro which expands to call the `init_per_cpu_var` macro:
+这段代码告诉我们符号 `init_per_cpu__irq_stack_union`的地址将会是 `irq_stack_union + __per_cpu_load`。现在再来看看 `init_per_cpu__irq_stack_union`和 `__per_cpu_load`在哪里。`irq_stack_union`的定义出现在 [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h)中，其中的 `DECLARE_INIT_PER_CPU`宏展开后又调用了 `init_per_cpu_var`宏:
 
 ```C
 DECLARE_INIT_PER_CPU(irq_stack_union);
@@ -140,13 +140,13 @@ DECLARE_INIT_PER_CPU(irq_stack_union);
 #define init_per_cpu_var(var)  init_per_cpu__##var
 ```
 
-If we expand all macros we will get the same `init_per_cpu__irq_stack_union` as we got after expanding the `INIT_PER_CPU` macro, but you can note that it is not just a symbol, but a variable. Let's look at the `typeof(per_cpu_var(var))` expression. Our `var` is `irq_stack_union` and the `per_cpu_var` macro is defined in the [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/percpu.h):
+将所有的宏展开之后我们可以得到与之前相同的名称 `init_per_cpu__irq_stack_union`，但此时它不再只是一个符号，而成了一个变量。请注意表达式 `typeof(per_cpu_var(var))`,在此时 `var`是 `irq_stack_union`，而 `per_cpu_var`宏在 [arch/x86/include/asm/percpu.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/percpu.h)中定义:
 
 ```C
 #define PER_CPU_VAR(var)        %__percpu_seg:var
 ```
 
-where:
+其中:
 
 ```C
 #ifdef CONFIG_X86_64
@@ -154,13 +154,13 @@ where:
 endif
 ```
 
-So, we are accessing `gs:irq_stack_union` and getting its type which is `irq_union`. Ok, we defined the first variable and know its address, now let's look at the second `__per_cpu_load` symbol. There are a couple of `per-cpu` variables which are located after this symbol. The `__per_cpu_load` is defined in the [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic-sections.h):
+因此，我们实际访问的是 `gs:irq_stack_union`，它的类型是 `irq_union`。到此为止，我们定义了上面所说的第一个变量并且知道了它的地址。再看到第二个符号 `__per_cpu_load`，该符号定义在 [include/asm-generic/sections.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic-sections.h)，这个符号定义了一系列 `per-cpu`变量:
 
 ```C
 extern char __per_cpu_load[], __per_cpu_start[], __per_cpu_end[];
 ```
 
-and presented base address of the `per-cpu` variables from the data area. So, we know the address of the `irq_stack_union`, `__per_cpu_load` and we know that `init_per_cpu__irq_stack_union` must be placed right after `__per_cpu_load`. And we can see it in the [System.map](http://en.wikipedia.org/wiki/System.map):
+同时，符号代表了这一系列变量的数据区域的基地址。因此我们知道了 `irq_stack_union`和 `__per_cpu_load`的地址，并且知道变量 `init_per_cpu__irq_stack_union`位于 `__per_cpu_load`。并且看到 [System.map](http://en.wikipedia.org/wiki/System.map):
 
 ```
 ...
@@ -174,47 +174,46 @@ ffffffff819ed000 A init_per_cpu__irq_stack_union
 ...
 ```
 
-Now we know about `initial_gs`, so let's look at the code:
+现在我们终于知道了 `initial_gs`是什么，回到之前的代码中:
 
 ```assembly
-movl	$MSR_GS_BASE,%ecx
-movl	initial_gs(%rip),%eax
-movl	initial_gs+4(%rip),%edx
+movl    $MSR_GS_BASE,%ecx
+movl    initial_gs(%rip),%eax
+movl    initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-Here we specified a model specific register with `MSR_GS_BASE`, put the 64-bit address of the `initial_gs` to the `edx:eax` pair and execute the `wrmsr` instruction for filling the `gs` register with the base address of the `init_per_cpu__irq_stack_union` which will be at the bottom of the interrupt stack. After this we will jump to the C code on the `x86_64_start_kernel` from the [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c). In the `x86_64_start_kernel` function we do the last preparations before we jump into the generic and architecture-independent kernel code and one of these preparations is filling the early `Interrupt Descriptor Table` with the interrupts handlers entries or `early_idt_handlers`. You can remember it, if you have read the part about the [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html) and can remember following code:
+此时我们通过 `MSR_GS_BASE`指定了一个平台相关寄存器，然后将 `initial_gs`的64-bit地址放到了 `edx:eax`段寄存器中，然后执行 `wrmsr`指令，将 `init_per_cpu__irq_stack_union`的基地址放入了 `gs`寄存器，而这个地址将是中断栈的栈底地址。在此之后我们将进入 `x86_64_start_kernel`函数的C语言代码中，此函数定义在 [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c)。在这个函数中，我们将完成最后的准备工作，之后就要进入到与平台无关的通用内核代码。如果你读过前文的 [早期中断和异常处理](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)章节，你可能记得其中之一的工作就是将中断服务程序入口地址填写到早期 `Interrupt Descriptor Table`中。
 
 ```C
 for (i = 0; i < NUM_EXCEPTION_VECTORS; i++)
-	set_intr_gate(i, early_idt_handlers[i]);
+        set_intr_gate(i, early_idt_handlers[i]);
 
 load_idt((const struct desc_ptr *)&idt_descr);
 ```
 
-but I wrote `Early interrupt and exception handling` part when Linux kernel version was - `3.18`. For this day actual version of the Linux kernel is `4.1.0-rc6+` and ` Andy Lutomirski` sent the [patch](https://lkml.org/lkml/2015/6/2/106) and soon it will be in the mainline kernel that changes behaviour for the `early_idt_handlers`. **NOTE** While I wrote this part the [patch](https://github.com/torvalds/linux/commit/425be5679fd292a3c36cb1fe423086708a99f11a) already turned in the Linux kernel source code. Let's look on it. Now the same part looks like:
+当我写 `早期中断和异常处理`章节时Linux内核版本是 `3.18`，而如今Linux内核版本已经生长到了 `4.1.0-rc6+`，并且 `Andy Lutomirski`提交了一个与 `early_idt_handlers`相关的修改 [patch](https://lkml.org/lkml/2015/6/2/106)，该修改即将并入内核代码主线中。**NOTE**在我写这一段时，这个 [patch](https://github.com/torvalds/linux/commit/425be5679fd292a3c36cb1fe423086708a99f11a)已经进入了Linux内核源代码中。现在这段代码变成了:
 
 ```C
 for (i = 0; i < NUM_EXCEPTION_VECTORS; i++)
-	set_intr_gate(i, early_idt_handler_array[i]);
+        set_intr_gate(i, early_idt_handler_array[i]);
 
 load_idt((const struct desc_ptr *)&idt_descr);
 ```
-
-AS you can see it has only one difference in the name of the array of the interrupts handlers entry points. Now it is `early_idt_handler_arry`:
+如你所见，这段代码与之前相比唯一的区别在于中断服务程序入口点数组的名称现在改为了 `early_idt_handler_array`:
 
 ```C
 extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDLER_SIZE];
 ```
 
-where `NUM_EXCEPTION_VECTORS` and `EARLY_IDT_HANDLER_SIZE` are defined as:
+其中 `NUM_EXCEPTION_VECTORS` 和 `EARLY_IDT_HANDLER_SIZE` 的定义如下:
 
 ```C
 #define NUM_EXCEPTION_VECTORS 32
 #define EARLY_IDT_HANDLER_SIZE 9
 ```
 
-So, the `early_idt_handler_array` is an array of the interrupts handlers entry points and contains one entry point on every nine bytes. You can remember that previous `early_idt_handlers` was defined in the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S). The `early_idt_handler_array` is defined in the same source code file too:  
+因此，数组 `early_idt_handler_array` 存放着中断服务程序入口，其中每个入口占据9个字节。`early_idt_handlers` 定义在文件[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)中。`early_idt_handler_array` 也定义在这个文件中:
 
 ```assembly
 ENTRY(early_idt_handler_array)
@@ -224,14 +223,13 @@ ENTRY(early_idt_handler_array)
 ENDPROC(early_idt_handler_common)
 ```
 
-It fills `early_idt_handler_arry` with the `.rept NUM_EXCEPTION_VECTORS` and contains entry of the `early_make_pgtable` interrupt handler (more about its implementation you can read in the part about [Early interrupt and exception handling](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)). For now we come to the end of the `x86_64` architecture-specific code and the next part is the generic kernel code. Of course you already can know that we will return to the architecture-specific code in the `setup_arch` function and other places, but this is the end of the `x86_64` early code.
+这里使用 `.rept NUM_EXCEPTION_VECTORS` 填充了 `early_idt_handler_array` ，其中也包含了 `early_make_pgtable` 的中断服务函数入口(关于该中断服务函数的实现请参考章节 [早期的中断和异常控制](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html))。现在我们完成了所有`x86-64`平台相关的代码，即将进入通用内核代码中。当然，我们之后还会在 `setup_arch` 函数中重新回到平台相关代码，但这已经是 `x86_64` 平台早期代码的最后部分。
 
-Setting stack canary for the interrupt stack
+为中断堆栈设置`Stack Canary`值
 -------------------------------------------------------------------------------
 
-The next stop after the [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S) is the biggest `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). If you've read the previous [chapter](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html) about the Linux kernel initialization process, you must remember it. This function does all initialization stuff before kernel will launch first `init` process with the [pid](https://en.wikipedia.org/wiki/Process_identifier) - `1`. The first thing that is related to the interrupts and exceptions handling is the call of the `boot_init_stack_canary` function.
-
-This function sets the [canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries) value to protect interrupt stack overflow. We already saw a little some details about implementation of the `boot_init_stack_canary` in the previous part and now let's take a closer look on it. You can find implementation of this function in the [arch/x86/include/asm/stackprotector.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/stackprotector.h) and its depends on the `CONFIG_CC_STACKPROTECTOR` kernel configuration option. If this option is not set this function will not do anything:
+正如之前阅读过的关于Linux内核初始化过程的[章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html)，在[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)之后的下一步进入到了[init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c)中的函数体最大的函数 `start_kernel` 中。这个函数将完成内核以[pid](https://en.wikipedia.org/wiki/Process_identifier) - `1`运行第一个`init`进程
+之前的所有初始化工作。其中，与中断和异常处理相关的第一件事是调用 `boot_init_stack_canary` 函数。这个函数通过设置[canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries)值来防止中断栈溢出。前面我们已经看过了 `boot_init_stack_canary` 实现的一些细节，现在我们更进一步地认识它。你可以在[arch/x86/include/asm/stackprotector.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/stackprotector.h)中找到这个函数的实现，它的实现取决于 `CONFIG_CC_STACKPROTECTOR` 这个内核配置选项。如果该选项没有置位，那该函数将是一个空函数:
 
 ```C
 #ifdef CONFIG_CC_STACKPROTECTOR
@@ -245,7 +243,7 @@ static inline void boot_init_stack_canary(void)
 #endif
 ```
 
-If the `CONFIG_CC_STACKPROTECTOR` kernel configuration option is set, the `boot_init_stack_canary` function starts from the check stat `irq_stack_union` that represents [per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html) interrupt stack has offset equal to forty bytes from the `stack_canary` value:
+如果设置了内核配置选项 `CONFIG_CC_STACKPROTECTOR` ，那么函数`boot_init_stack_canary` 一开始将检查联合体 `irq_stack_union` 的状态，这个联合体代表了[per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)中断栈，其与 `stack_canary` 值中间有40个字节的 `offset` :
 
 ```C
 #ifdef CONFIG_X86_64
@@ -253,43 +251,41 @@ If the `CONFIG_CC_STACKPROTECTOR` kernel configuration option is set, the `boot_
 #endif
 ```
 
-As we can read in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) the `irq_stack_union` represented by the following union:
+如之前[章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)所描述， `irq_stack_union` 联合体的定义如下:
 
 ```C
 union irq_stack_union {
-	char irq_stack[IRQ_STACK_SIZE];
+        char irq_stack[IRQ_STACK_SIZE];
 
     struct {
-		char gs_base[40];
-		unsigned long stack_canary;
-	};
+                char gs_base[40];
+                unsigned long stack_canary;
+        };
 };
 ```
 
-which defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h). We know that [union](http://en.wikipedia.org/wiki/Union_type) in the [C](http://en.wikipedia.org/wiki/C_%28programming_language%29) programming language is a data structure which stores only one field in a memory. We can see here that structure has first field - `gs_base` which is 40 bytes size and represents bottom of the `irq_stack`. So, after this our check with the `BUILD_BUG_ON` macro should end successfully. (you can read the first part about Linux kernel initialization [process](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html) if you're interesting about the `BUILD_BUG_ON` macro).
+以上定义位于文件[arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h)。总所周知，[C语言](http://en.wikipedia.org/wiki/C_%28programming_language%29)中的[联合体](http://en.wikipedia.org/wiki/Union_type)是一种描述多个数据结构共用一片内存的数据结构。可以看到，第一个数据域 `gs_base` 大小为40 bytes，代表了 `irq_stack` 的栈底。因此，当我们使用 `BUILD_BUG_ON` 对该表达式进行检查时结果应为成功。(关于 `BUILD_BUG_ON` 宏的详细信息可见[Linux内核初始化过程章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html))。
 
-After this we calculate new `canary` value based on the random number and [Time Stamp Counter](http://en.wikipedia.org/wiki/Time_Stamp_Counter):
+紧接着我们使用随机数和[时戳计数器](http://en.wikipedia.org/wiki/Time_Stamp_Counter)计算新的 `canary` 值:
 
 ```C
 get_random_bytes(&canary, sizeof(canary));
 tsc = __native_read_tsc();
 canary += tsc + (tsc << 32UL);
 ```
-
-and write `canary` value to the `irq_stack_union` with the `this_cpu_write` macro:
+并且通过 `this_cpu_write` 宏将 `canary` 值写入了 `irq_stack_union` 中:
 
 ```C
 this_cpu_write(irq_stack_union.stack_canary, canary);
 ```
 
-more about `this_cpu_*` operation you can read in the [Linux kernel documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/this_cpu_ops.txt).
+关于  `this_cpu_*` 系列宏的更多信息参见[Linux kernel documentation](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/this_cpu_ops.txt)。
 
-Disabling/Enabling local interrupts
+禁用/使能本地中断
 --------------------------------------------------------------------------------
+在 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中，与中断和中断处理相关的操作中，设置的 `canary` 的下一步是调用 `local_irq_disable` 宏。
 
-The next step in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) which is related to the interrupts and interrupts handling after we have set the `canary` value to the interrupt stack - is the call of the `local_irq_disable` macro.
-
-This macro defined in the [include/linux/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqflags.h) header file and as you can understand, we can disable interrupts for the CPU with the call of this macro. Let's look on its implementation. First of all note that it depends on the `CONFIG_TRACE_IRQFLAGS_SUPPORT` kernel configuration option:
+这个宏定义在头文件 [include/linux/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/irqflags.h) 中，宏如其名，调用这个宏将禁用本地CPU的中断。我们来仔细了解一下这个宏的实现，首先，它依赖于内核配置选项 `CONFIG_TRACE_IRQFLAGS_SUPPORT` :
 
 ```C
 #ifdef CONFIG_TRACE_IRQFLAGS_SUPPORT
@@ -304,7 +300,7 @@ This macro defined in the [include/linux/irqflags.h](https://github.com/torvalds
 #endif
 ```
 
-They are both similar and as you can see have only one difference: the `local_irq_disable` macro contains call of the `trace_hardirqs_off` when `CONFIG_TRACE_IRQFLAGS_SUPPORT` is enabled. There is special feature in the [lockdep](http://lwn.net/Articles/321663/) subsystem - `irq-flags tracing` for tracing `hardirq` and `softirq` state. In our case `lockdep` subsystem can give us interesting information about hard/soft irqs on/off events which are occurs in the system. The `trace_hardirqs_off` function defined in the [kernel/locking/lockdep.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/lockdep.c):
+如你所见，两者唯一的区别在于当 `CONFIG_TRACE_IRQFLAGS_SUPPORT` 选项使能时， `local_irq_disable` 宏将同时调用 `trace_hardirqs_off` 函数。在Linux死锁检测模块[lockdep](http://lwn.net/Articles/321663/)中有一项功能 `irq-flags tracing` 可以追踪 `hardirq` 和 `softirq` 的状态。在这种情况下， `lockdep` 死锁检测模块可以提供系统中关于硬/软中断的开/关事件的相关信息。函数 `trace_hardirqs_off` 的定义位于[kernel/locking/lockdep.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/lockdep.c):
 
 ```C
 void trace_hardirqs_off(void)
@@ -314,7 +310,7 @@ void trace_hardirqs_off(void)
 EXPORT_SYMBOL(trace_hardirqs_off);
 ```
 
-and just calls `trace_hardirqs_off_caller` function. The `trace_hardirqs_off_caller` checks the `hardirqs_enabled` field of the current process and increases the `redundant_hardirqs_off` if call of the `local_irq_disable` was redundant or the `hardirqs_off_events` if it was not. These two fields and other `lockdep` statistic related fields are defined in the [kernel/locking/lockdep_insides.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/lockdep_insides.h) and located in the `lockdep_stats` structure:
+可见它只是调用了 `trace_hardirqs_off_caller` 函数。 `trace_hardirqs_off_caller` 函数,该函数检查了当前进程的 `hardirqs_enabled` 域，如果本次 `local_irq_disable` 调用是冗余的话，便使 `redundant_hardirqs_off` 域的值增长，否则便使 `hardirqs_off_events` 域的值增加。这两个域或其它与死锁检测模块 `lockdep` 统计相关的域定义在文件[kernel/locking/lockdep_insides.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/lockdep_insides.h)中的 `lockdep_stats` 结构体中:
 
 ```C
 struct lockdep_stats {
@@ -329,18 +325,18 @@ int     redundant_softirqs_off;
 }
 ```
 
-If you will set `CONFIG_DEBUG_LOCKDEP` kernel configuration option, the `lockdep_stats_debug_show` function will write all tracing information to the `/proc/lockdep`:
+如果你使能了 `CONFIG_DEBUG_LOCKDEP` 内核配置选项，`lockdep_stats_debug_show`函数会将所有的调试信息写入 `/proc/lockdep` 文件中:
 
 ```C
 static void lockdep_stats_debug_show(struct seq_file *m)
 {
 #ifdef CONFIG_DEBUG_LOCKDEP
-	unsigned long long hi1 = debug_atomic_read(hardirqs_on_events),
-	                         hi2 = debug_atomic_read(hardirqs_off_events),
-							 hr1 = debug_atomic_read(redundant_hardirqs_on),
+    unsigned long long hi1 = debug_atomic_read(hardirqs_on_events),
+        hi2 = debug_atomic_read(hardirqs_off_events),
+        hr1 = debug_atomic_read(redundant_hardirqs_on),
+        ...
     ...
-	...
-	...
+    ...
     seq_printf(m, " hardirq on events:             %11llu\n", hi1);
     seq_printf(m, " hardirq off events:            %11llu\n", hi2);
     seq_printf(m, " redundant hardirq ons:         %11llu\n", hr1);
@@ -348,7 +344,7 @@ static void lockdep_stats_debug_show(struct seq_file *m)
 }
 ```
 
-and you can see its result with the:
+你可以如下命令查看其内容:
 
 ```
 $ sudo cat /proc/lockdep
@@ -362,7 +358,7 @@ $ sudo cat /proc/lockdep
  redundant softirq offs:                  0
 ```
 
-Ok, now we know a little about tracing, but more info will be in the separate part about `lockdep` and `tracing`. You can see that the both `local_disable_irq` macros have the same part - `raw_local_irq_disable`. This macro defined in the [arch/x86/include/asm/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/irqflags.h) and expands to the call of the:
+现在我们总算了解了调试函数 `trace_hardirqs_off` 的一些信息，下文将有独立的章节介绍 `lockdep` 和 `trancing`。`local_disable_irq` 宏的实现中都包含了一个宏 `raw_local_irq_disable` ，这个定义在 [arch/x86/include/asm/irqflags.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/irqflags.h) 中，其展开后的样子是:
 
 ```C
 static inline void native_irq_disable(void)
@@ -371,7 +367,7 @@ static inline void native_irq_disable(void)
 }
 ```
 
-And you already must remember that `cli` instruction clears the [IF](http://en.wikipedia.org/wiki/Interrupt_flag) flag which determines ability of a processor to handle an interrupt or an exception. Besides the `local_irq_disable`, as you already can know there is an inverse macro - `local_irq_enable`. This macro has the same tracing mechanism and very similar on the `local_irq_enable`, but as you can understand from its name, it enables interrupts with the `sti` instruction:
+你可能还记得， `cli` 指令将清除[IF](http://en.wikipedia.org/wiki/Interrupt_flag) 标志位，这个标志位控制着处理器是否响应中断或异常。与 `local_irq_disable` 相对的还有宏 `local_irq_enable` ，这个宏的实现与 `local_irq_disable` 很相似，也具有相同的调试机制，区别在于使用 `sti` 指令使能了中断:
 
 ```C
 static inline void native_irq_enable(void)
@@ -380,29 +376,29 @@ static inline void native_irq_enable(void)
 }
 ```
 
-Now we know how `local_irq_disable` and `local_irq_enable` work. It was the first call of the `local_irq_disable` macro, but we will meet these macros many times in the Linux kernel source code. But for now we are in the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) and we just disabled `local` interrupts. Why local and why we did it? Previously kernel provided a method to disable interrupts on all processors and it was called `cli`. This function was [removed](https://lwn.net/Articles/291956/) and now we have `local_irq_{enabled,disable}` to disable or enable interrupts on the current processor. After we've disabled the interrupts with the `local_irq_disable` macro, we set the:
+如今我们了解了 `local_irq_disable` 和 `local_irq_enable` 宏的实现机理。此处是首次调用 `local_irq_disable` 宏，我们还将在Linux内核源代码中多次看到它的倩影。现在我们位于 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中的 `start_kernel` 函数，并且刚刚禁用了`本地`中断。为什么叫"本地"中断？为什么要禁用本地中断呢？早期版本的内核中提供了一个叫做 `cli` 的函数来禁用所有处理器的中断，该函数已经被[移除](https://lwn.net/Articles/291956/)，替代它的是 `local_irq_{enabled,disable}` 宏，用于禁用或使能当前处理器的中断。我们在调用 `local_irq_disable` 宏禁用中断以后，接着设置了变量值:
 
 ```C
 early_boot_irqs_disabled = true;
 ```
 
-The `early_boot_irqs_disabled` variable defined in the [include/linux/kernel.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/kernel.h):
+变量 `early_boot_irqs_disabled` 定义在文件 [include/linux/kernel.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/kernel.h) 中:
 
 ```C
 extern bool early_boot_irqs_disabled;
 ```
 
-and used in the different places. For example it used in the `smp_call_function_many` function from the [kernel/smp.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/smp.c) for the checking possible deadlock when interrupts are disabled:
+并在另外的地方使用。例如在 [kernel/smp.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/smp.c) 中的 `smp_call_function_many` 函数中，通过这个变量来检查当前是否由于中断禁用而处于死锁状态:
 
 ```C
 WARN_ON_ONCE(cpu_online(this_cpu) && irqs_disabled()
                      && !oops_in_progress && !early_boot_irqs_disabled);
 ```
 
-Early trap initialization during kernel initialization
+内核初始化过程中的早期 `trap` 初始化
 --------------------------------------------------------------------------------
 
-The next functions after the `local_disable_irq` are `boot_cpu_init` and `page_address_init`, but they are not related to the interrupts and exceptions (more about this functions you can read in the chapter about Linux kernel [initialization process](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html)). The next is the `setup_arch` function. As you can remember this function located in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel.setup.c) source code file and makes initialization of many different architecture-dependent [stuff](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html). The first interrupts related function which we can see in the `setup_arch` is the - `early_trap_init` function. This function defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) and fills `Interrupt Descriptor Table` with the couple of entries:
+在 `local_disable_irq` 之后执行的函数是 `boot_cpu_init` 和 `page_address_init`，但这两个函数与中断和异常处理无关(更多与这两个函数有关的信息请阅读内核初始化过程[章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html))。接下来是 `setup_arch` 函数。你可能还有印象，这个函数定义在[arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel.setup.c) 文件中，并完成了很多[架构相关的初始化工作](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)。在 `setup_arch` 函数中与中断相关的第一个函数是 `early_trap_init` 函数，该函数定义于 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) ，其用许多对程序入口填充了中断描述符表 `Interrupt Descriptor Table` :
 
 ```C
 void __init early_trap_init(void)
@@ -416,13 +412,13 @@ void __init early_trap_init(void)
 }
 ```
 
-Here we can see calls of three different functions:
+这里出现了三个不同的函数调用
 
 * `set_intr_gate_ist`
 * `set_system_intr_gate_ist`
 * `set_intr_gate`
 
-All of these functions defined in the [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h) and do the similar thing but not the same. The first `set_intr_gate_ist` function inserts new an interrupt gate in the `IDT`. Let's look on its implementation:
+这些函数都定义在 [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/desc.h) 中，他们做的事情也差不多。第一个函数 `set_intr_gate_ist` 将一个新的中断门插入到`IDT`中，其实现如下:
 
 ```C
 static inline void set_intr_gate_ist(int n, void *addr, unsigned ist)
@@ -432,7 +428,7 @@ static inline void set_intr_gate_ist(int n, void *addr, unsigned ist)
 }
 ```
 
-First of all we can see the check that `n` which is [vector number](http://en.wikipedia.org/wiki/Interrupt_vector_table) of the interrupt is not greater than `0xff` or 255. We need to check it because we remember from the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) that vector number of an interrupt must be between `0` and `255`. In the next step we can see the call of the `_set_gate` function that sets a given interrupt gate to the `IDT` table:
+该函数首先检查了参数 `n` 即[中断向量编号](http://en.wikipedia.org/wiki/Interrupt_vector_table) 是否不大于 `0xff` 或 255。之前的 [章节] (http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) 中提到过，中断的向量号必须处于 0 到 255 的闭区间。然后调用了 `_set_gate` 函数将中断门设置到了 `IDT` 表中:
 
 ```C
 static inline void _set_gate(int gate, unsigned type, void *addr,
@@ -446,14 +442,14 @@ static inline void _set_gate(int gate, unsigned type, void *addr,
 }
 ```
 
-Here we start from the `pack_gate` function which takes clean `IDT` entry represented by the `gate_desc` structure and fills it with the base address and limit, [Interrupt Stack Table](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks), [Privilege level](http://en.wikipedia.org/wiki/Privilege_level), type of an interrupt which can be one of the following values:
+首先，通过 `pack_gate` 函数填充了一个表示 `IDT` 入口项的 `gate_desc` 类型的结构体，参数包括基地址，限制范围，[中断栈表](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks), [特权等级](http://en.wikipedia.org/wiki/Privilege_level) 和中断类型。中断类型的取值如下:
 
 * `GATE_INTERRUPT`
 * `GATE_TRAP`
 * `GATE_CALL`
 * `GATE_TASK`
 
-and set the present bit for the given `IDT` entry:
+并设置了该 `IDT` 项的`present`位域:
 
 ```C
 static inline void pack_gate(gate_desc *gate, unsigned type, unsigned long func,
@@ -472,7 +468,7 @@ static inline void pack_gate(gate_desc *gate, unsigned type, unsigned long func,
 }
 ```
 
-After this we write just filled interrupt gate to the `IDT` with the `write_idt_entry` macro which expands to the `native_write_idt_entry` and just copy the interrupt gate to the `idt_table` table by the given index:
+然后，我们把这个中断门通过 `write_idt_entry` 宏填入了 `IDT` 中。这个宏展开后是 `native_write_idt_entry` ，其将中断门信息通过索引拷贝到了 `idt_table` 之中:
 
 ```C
 #define write_idt_entry(dt, entry, g)           native_write_idt_entry(dt, entry, g)
@@ -483,13 +479,13 @@ static inline void native_write_idt_entry(gate_desc *idt, int entry, const gate_
 }
 ```
 
-where `idt_table` is just array of `gate_desc`:
+其中 `idt_table` 是一个 `gate_desc` 类型的数组:
 
 ```C
 extern gate_desc idt_table[];
 ```
 
-That's all. The second `set_system_intr_gate_ist` function has only one difference from the `set_intr_gate_ist`:
+函数 `set_intr_gate_ist` 的内容到此为止。第二个函数 `set_system_intr_gate_ist` 的实现仅有一个地方不同:
 
 ```C
 static inline void set_system_intr_gate_ist(int n, void *addr, unsigned ist)
@@ -499,31 +495,31 @@ static inline void set_system_intr_gate_ist(int n, void *addr, unsigned ist)
 }
 ```
 
-Do you see it? Look on the fourth parameter of the `_set_gate`. It is `0x3`. In the `set_intr_gate` it was `0x0`. We know that this parameter represent `DPL` or privilege level. We also know that `0` is the highest privilege level and `3` is the lowest.Now we know how `set_system_intr_gate_ist`, `set_intr_gate_ist`, `set_intr_gate` are work and we can return to the `early_trap_init` function. Let's look on it again:
+注意 `_set_gate` 函数的第四个参数是 `0x3`，而在 `set_intr_gate_ist`函数中这个值是 `0x0`，这个参数代表的是 `DPL`或称为特权等级。其中，`0`代表最高特权等级而 `3`代表最低等级。现在我们了解了 `set_system_intr_gate_ist`, `set_intr_gate_ist`, `set_intr_gate`这三函数的作用并回到 `early_trap_init`函数中:
 
 ```C
 set_intr_gate_ist(X86_TRAP_DB, &debug, DEBUG_STACK);
 set_system_intr_gate_ist(X86_TRAP_BP, &int3, DEBUG_STACK);
 ```
 
-We set two `IDT` entries for the `#DB` interrupt and `int3`. These functions takes the same set of parameters:
+我们设置了 `#DB`和 `int3`两个 `IDT`入口项。这些函数输入相同的参数组:
 
 * vector number of an interrupt;
 * address of an interrupt handler;
 * interrupt stack table index.
 
-That's all. More about interrupts and handlers you will know in the next parts.
+这就是 `early_trap_init`函数的全部内容，你将在下一章节中看到更多与中断和服务函数相关的内容。
 
-Conclusion
+总结
 --------------------------------------------------------------------------------
 
-It is the end of the second part about interrupts and interrupt handling in the Linux kernel. We saw the some theory in the previous part and started to dive into interrupts and exceptions handling in the current part. We have started from the earliest parts in the Linux kernel source code which are related to the interrupts. In the next part we will continue to dive into this interesting theme and will know more about interrupt handling process.
+现在已经到了Linux内核中断和中断服务部分的第二部分的结尾。我们在之前的章节中了解了中断与异常处理的相关理论，并在本部分中开始深入阅读中断和异常处理的代码。我们从Linux内核启动最早期的代码中与中断相关的代码开始。下一部分中我们将继续深入这个有趣的主题，并学习更多关于中断处理相关的内容。
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+如果你有任何建议或疑问，请在我的 [twitter](https://twitter.com/0xAX)页面中留言或抖一抖我。
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [IDT](http://en.wikipedia.org/wiki/Interrupt_descriptor_table)
