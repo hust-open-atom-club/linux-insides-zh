@@ -6,9 +6,9 @@
 
 本节是详述 Linux 内核中的 [系统调用](https://en.wikipedia.org/wiki/System_call) 机制章节的第五部分。之前的内容部分概述了这个机制，现在我将试着详细讲解 Linux 内核中不同系统调用的实现。本章之前的部分和本书其他章节描述的 Linux 内核机制大部分对用户空间是隐约可见或完全不可见。但是 Linux 内核代码不仅仅是有关内核的。大量的内核代码为我们的应用代码提供了支持。通过 Linux 内核，我们的程序可以在不知道 sector,tracks 和磁盘的其他结构的情况下对文件进行读写操作，我们也不需要手动去构造和封装网络数据包就可以通过网络发送数据。
 
-你觉得怎么样，我认为这非常有趣耶，操作系统如何工作，我们的软件如何与（系统）交互呢。你或许了解，我们的程序通过特定的机制和内核进行交互，这个机制就是[系统调用](https://en.wikipedia.org/wiki/System_call)。因此，我决定去写一些系统调用的实现及其行为，比如我们每天会用到的 `read`,`write`,`open`,`close`,`dup` 等等。
+你觉得怎么样，我认为这些非常有趣耶，操作系统如何工作，我们的软件如何与（系统）交互呢。你或许了解，我们的程序通过特定的机制和内核进行交互，这个机制就是[系统调用](https://en.wikipedia.org/wiki/System_call)。因此，我决定去写一些系统调用的实现及其行为，比如我们每天会用到的 `read`,`write`,`open`,`close`,`dup` 等等。
 
-我决定从 `open` 系统调用开始。如果你对 C 程序有了解，你应该知道在我们能对一个文件进行读写或执行其他操作前，我们需要使用 `open` 函数打开这个文件：
+我决定从 [open](http://man7.org/linux/man-pages/man2/open.2.html) 系统调用开始。如果你对 C 程序有了解，你应该知道在我们能对一个文件进行读写或执行其他操作前，我们需要使用 `open` 函数打开这个文件：
 
 ```C
 #include <fcntl.h>
@@ -105,7 +105,7 @@ if (force_o_largefile())
 >    in length. When compiling with _FILE_OFFSET_BITS == 64 this type 
 >    is available under the name off_t.
 
-因此不难猜到 `off_t`,`off64_t` 和 `O_LARGEFILE` 是关于文件大小的。就 Linux 内核而言，在32 位系统中打开大文件时如果调用者没有加上 `O_LARGEFILE` 标志，打开大文件会操作会被禁止。在 64 位系统上，我们在 `open` 系统调用时强制加上了这个标志。[include/linux/fcntl.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/fcntl.h#L7) linux 内核头文件中详述了 `force_o_largefile` 宏：
+因此不难猜到 `off_t`,`off64_t` 和 `O_LARGEFILE` 是关于文件大小的。就 Linux 内核而言，在32 位系统中打开大文件时如果调用者没有加上 `O_LARGEFILE` 标志，打开大文件的操作就会被禁止。在 64 位系统上，我们在 `open` 系统调用时强制加上了这个标志。[include/linux/fcntl.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/fcntl.h#L7) linux 内核头文件中详述了 `force_o_largefile` 宏：
 
 ```C
 #ifndef force_o_largefile
@@ -160,7 +160,7 @@ open(2) flags 参数
 - flags - 控制打开一个文件
 - mode - 新建文件的权限
 
-最后的参数 - `op` 在 `open_flags` 结构体中表示如下：
+最后一个参数 - `op` 在 `open_flags` 结构体中表示如下：
 
 ```C
 struct open_flags {
@@ -255,7 +255,7 @@ if (flags & __O_TMPFILE) {
 - 在文件系统(目录)树中指示一个位置
 - 仅仅只在文件描述符层面执行操作
 
-因此，在这种情况下文件自身是没有被打开的，但是像 `dup`,`fcntl` 等其他操作能使用。因此，如果所有的文件相关的操作，像 	`read`,`write` 和其他操作是允许的，仅 `O_DIRECTORY | O_NOFOLLOW | O_PATH` 标志能被使用。现在我们已经在 `build_open_flags` 函数中分析完成了这些标志，我们可以使用下列代码填充我们的 `open_flags->open_flag` ：
+在这种情况下文件自身是没有被打开的，但是像 `dup`, `fcntl` 等操作能被使用。因此如果想使用所有与文件内容相关的操作，像 `read`, `write` 等，就（必须）使用 `O_DIRECTORY | O_NOFOLLOW | O_PATH` 标志。现在我们已经在 `build_open_flags` 函数中分析完成了这些标志，我们可以使用下列代码填充我们的 `open_flags->open_flag` ：
 
 ```C
 op->open_flag = flags;
@@ -273,13 +273,13 @@ op->acc_mode = acc_mode;
 
 `O_TRUNC` 标志表示如果已打开的文件之前已经存在则删节为 0 ，`O_APPEND` 标志允许以 append mode (追加模式) 打开一个文件。因此在写已打开的文件会追加，而不是覆写。
 
-`open_flags` 中接下来的字段是 - `intent`。它允许我们知道我们的目的，换句话说就是我们真正想对文件做什么，打开，新建，重命名等等操作。如果我们的 flags 参数包含这个 `O_PATH` 标志，`open_flags` 会被设置为 0 ：
+`open_flags` 中接下来的字段是 - `intent`。它允许我们知道我们的目的，换句话说就是我们真正想对文件做什么，打开，新建，重命名等等操作。如果我们的 flags 参数包含这个 `O_PATH` 标志，即我们不能对文件内容做任何事情，`open_flags` 会被设置为 0 ：
 
 ```C
 op->intent = flags & O_PATH ? 0 : LOOKUP_OPEN;
 ```
 
-或仅仅为了 `LOOK_OPEN` 目的。如果我们想要新建文件，我们可以设置 `LOOKUP_CREATE`，并且使用 `O_EXEC` 标志来确认文件之前不存在：
+否则 `open_flags` 会被设置为 `LOOKUP_OPEN`。如果我们想要新建文件，我们可以设置 `LOOKUP_CREATE`，并且使用 `O_EXEC` 标志来确认文件之前不存在：
 
 ```C
 if (flags & O_CREAT) {
@@ -301,7 +301,7 @@ op->lookup_flags = lookup_flags;
 return 0;
 ```
 
-如果我们想要打开一个目录并且遍历但不想使用[软链接](https://en.wikipedia.org/wiki/Symbolic_link)，我们可以使用 `LOOKUP_DIRECTORY` 。这就是 `build_open_flags` 函数的全部内容了。`open_flags` 结构体也用各种打开文件的 modes 和 flags 填完了。我们可以返回到 `do_sys_open`。
+如果我们想要打开一个目录，我们可以使用 `LOOKUP_DIRECTORY`；如果想要遍历但不想使用[软链接](https://en.wikipedia.org/wiki/Symbolic_link)，可以使用 `LOOKUP_FOLLOW`。这就是 `build_open_flags` 函数的全部内容了。`open_flags` 结构体也用各种与打开文件相关的 modes 和 flags 填完了。我们可以返回到 `do_sys_open` 函数。
 
 
 打开文件的实际操作
@@ -356,7 +356,7 @@ if (IS_ERR(f)) {
 
 `do_filp_open()` 函数主要解析给定的文件路径名到 `file` 结构体，`file` 结构体描述一个程序里已打开的文件。如果传过来的参数有误，则 `do_filp_open` 执行失败，并使用 `put_unused_fd` 释放文件描述符。如果 `do_filp_open()` 执行成功并返回 `file` 结构体，将会在当前程序的文件描述符表中存储这个 `file` 结构体。
 
-现在让我们来简短看下 `do_filp_open()` 函数的实现。这个函数定义在 [fs/namei.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/namei.c) Linux 内核源码中，函数开始就初始化了 `nameidata` 结构体。这个结构体提供了一个链接到文件 [inode](https://en.wikipedia.org/wiki/Inode)。事实上，这就是 `do_filp_open()` 函数指针，这个函数获取一个传递给 open 系统调用的文件名 `inode` ，在 `nameidata` 结构体被初始化后，`path_openat` 函数会被调用。
+现在让我们来简短看下 `do_filp_open()` 函数的实现。这个函数定义在 [fs/namei.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/namei.c) Linux 内核源码中，函数开始就初始化了 `nameidata` 结构体。这个结构体提供了一个链接到文件 [inode](https://en.wikipedia.org/wiki/Inode)。事实上，这就是一个 `do_filp_open()` 函数指针，这个函数通过传递到 `open` 系统调用的的文件名获取 `inode` ，在 `nameidata` 结构体被初始化后，`path_openat` 函数会被调用。
 
 ```C
 filp = path_openat(&nd, op, flags | LOOKUP_RCU);
