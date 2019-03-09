@@ -209,7 +209,7 @@ hdr:
 
 bootloader必须填充在 Linux boot protocol 中标记为 `write` 的头信息，比如 [type_of_loader](http://lxr.free-electrons.com/source/Documentation/x86/boot.txt?v=3.18#L354)，这些头信息可能来自命令行，或者通过计算得到。在这里我们不会详细介绍所有的 kernel setup header，我们将在需要的时候逐个介绍。不过，你可以自己通过 [boot protocol](http://lxr.free-electrons.com/source/Documentation/x86/boot.txt?v=3.18#L156) 来了解这些设置。
 
-通过阅读 kernel boot protocol，在内核被引导入内存后，内存使用情况将入下表所示：
+通过阅读 kernel boot protocol，在内核被引导入内存后，内存使用情况将如下表所示：
 
 ```shell
          | Protected-mode kernel  |
