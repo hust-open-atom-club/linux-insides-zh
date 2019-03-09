@@ -4,7 +4,7 @@
 Introduction
 --------------------------------------------------------------------------------
 
-这是 [linux 内核揭密](http://xinqiu.gitbooks.io/linux-insides-cn/content/) 这本书最新章节的第一部分。我们已经在这本书前面的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html)中走过了漫长的道路。从内核初始化的[第一步](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)开始，结束于第一个 `init` 程序的[启动](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-10.html)。我们见证了一系列与各种内核子系统相关的初始化步骤，但是我们并没有深入这些子系统。在这一章中，我们将会试着去了解这些内核子系统是如何工作和实现的。就像你在这章标题中看到的，第一个子系统是[中断（interrupts）](http://en.wikipedia.org/wiki/Interrupt)。
+这是 [linux 内核揭秘](http://xinqiu.gitbooks.io/linux-insides-cn/content/) 这本书最新章节的第一部分。我们已经在这本书前面的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html)中走过了漫长的道路。从内核初始化的[第一步](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)开始，结束于第一个 `init` 程序的[启动](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-10.html)。我们见证了一系列与各种内核子系统相关的初始化步骤，但是我们并没有深入这些子系统。在这一章中，我们将会试着去了解这些内核子系统是如何工作和实现的。就像你在这章标题中看到的，第一个子系统是[中断（interrupts）](http://en.wikipedia.org/wiki/Interrupt)。
 
 什么是中断？
 --------------------------------------------------------------------------------
