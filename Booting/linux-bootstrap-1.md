@@ -132,7 +132,7 @@ nasm -f bin boot.nasm && qemu-system-x86_64 boot
 
 将看到:
 
-![Simple bootloader which prints only `!`](http://oi60.tinypic.com/2qbwup0.jpg)
+![Simple bootloader which prints only `!`](https://github.com/0xAX/linux-insides/raw/master/Booting/images/simple_bootloader.png)
 
 在这个例子中，这段代码被执行在16位的实模式，起始于内存0x7c00。之后调用 [0x10](http://www.ctyme.com/intr/rb-0106.htm) 中断打印 `!` 符号。用0填充剩余的510字节并用两个Magic Bytes `0xaa` 和 `0x55` 结束。
 
