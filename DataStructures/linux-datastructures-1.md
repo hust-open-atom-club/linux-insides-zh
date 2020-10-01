@@ -4,7 +4,7 @@ Linux 内核里的数据结构——双向链表
 双向链表
 --------------------------------------------------------------------------------
 
-Linux 内核自己实现了双向链表，可以在 [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h) 找到定义。我们将会从双向链表数据结构开始`内核的数据结构`。为什么？因为它在内核里使用的很广泛，你只需要在 [free-electrons.com](http://lxr.free-electrons.com/ident?i=list_head) 检索一下就知道了。
+Linux 内核自己实现了双向链表，可以在 [include/linux/list.h](https://github.com/torvalds/linux/blob/master/include/linux/list.h) 找到定义。我们将会从双向链表数据结构开始`内核的数据结构`。为什么？因为它在内核里使用的很广泛，你只需要在 [free-electrons.com](https://elixir.bootlin.com/linux/latest/A/ident/list_head) 检索一下就知道了。
 
 首先让我们看一下在 [include/linux/types.h](https://github.com/torvalds/linux/blob/master/include/linux/types.h) 里的主结构体：
 
@@ -96,7 +96,7 @@ static LIST_HEAD(misc_list);
 	struct list_head name = LIST_HEAD_INIT(name)
 ```
 
-然后使用宏 `LIST_HEAD_INIT` 进行初始化，这会使用变量 `name` 的地址来填充 `prev` 和 `next` 结构体的两个变量。
+然后使用宏 `LIST_HEAD_INIT` 进行初始化，这会使用变量 `name` 的地址来填充结构体的 `prev` 和 `next` 两个变量。
 
 ```C
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
@@ -231,9 +231,13 @@ int main() {
 #define offsetof(TYPE, MEMBER) ((size_t) &((TYPE *)0)->MEMBER)
 ```
 
-现在我们来总结一下宏 `container_of`。只需要知道结构体里面类型为 `list_head` 的变量的名字和结构体容器的类型，它可以通过结构体的变量 `list_head` 获得结构体的起始地址。在宏定义的第一行，声明了一个指向结构体成员变量 `ptr` 的指针 `__mptr` ，并且把 `ptr` 的地址赋给它。现在 `ptr` 和 `__mptr` 指向了同一个地址。从技术上讲我们并不需要这一行，但是它可以方便的进行类型检查。第一行保证了特定的结构体（参数 `type`）包含成员变量 `member`。第二行代码会用宏 `offsetof` 计算成员变量相对于结构体起始地址的偏移，然后从结构体的地址减去这个偏移，最后就得到了结构体的起始地址。
+现在我们来总结一下宏`container_of`。只需要知道结构体的类型（`type`），及里面类型为 `list_head` 的变量的名字（`member`）和地址（`ptr`)，就可以获得该结构体的起始地址。在宏定义的第一行，声明了一个`__mptr`指针，并将参数`ptr`赋值给了它，现在，它们共同指向了结构体的`list_head`的成员变量。确切来说我们其实并不需要这一行，但是它可以辅助进行类型检查。第一行保证了特定的结构体（参数 `type`）包含成员变量 `member`。
 
-当然了 `list_add` 和 `list_entry` 不是 `<linux/list.h>` 提供的唯一函数。双向链表的实现还提供了如下API：
+> 译注：若传入的`ptr`参数并不是`struct list_head *`类型，编译器会报`imcompatible pointer types`的warning；同时，`((type *)0)->member`还能让编译器检查`type`是否的确有`member`这个成员，因此加上这一行可以大大提高代码的鲁棒性。
+
+第二行代码会用宏 `offsetof` 计算成员变量相对于结构体起始地址的偏移，然后从结构体的地址减去这个偏移，最后就得到了结构体的起始地址。
+
+ `list_add` 和 `list_entry` 当然不是 `<linux/list.h>` 提供的唯一函数。双向链表的实现还提供了如下API：
 
 * list_add
 * list_add_tail
