@@ -68,7 +68,7 @@
 |├ [5.3](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-3.md)||未开始|
 |├ [5.4](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-4.md)||未开始|
 |├ [5.5](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-5.md)||未开始|
-|├ [5.6](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-6.md)||未开始|
+|├ [5.6](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-6.md)||正在进行|
 |└ [5.7](https://github.com/MintCN/linux-insides-zh/blob/master/Timers/linux-timers-7.md)||未开始|
 | 6. [Synchronization primitives](https://github.com/MintCN/linux-insides-zh/tree/master/SyncPrim)||正在进行|
 |├ [6.0](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[6f85b63e](https://github.com/0xAX/linux-insides/commit/6f85b63e347b636e08e965e9dc22c177e972afe2)|
