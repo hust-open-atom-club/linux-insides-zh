@@ -37,7 +37,7 @@ Introduction
 BUG_ON((unsigned)n > 0xFF);
 ```
 
-你可以在 Linux 内核源码中关于中断设置的地方找到这个检查(例如：`set_intr_gate`, `void set_system_intr_gate` 在 [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)中)。从 `0` 到 `31` 的 32 个中断标识码被处理器保留，用作处理架构定义的异常和中断。你可以在 Linux 内核初始化程序的第二部分 - [早期中断和异常处理](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html)中找到这个表和关于这些中断标识码的描述。从 `32` 到 `255` 的中断标识码设计为用户定义中断并且不被系统保留。这些中断通常分配给外部 I/O 设备，使这些设备可以发送中断给处理器。
+你可以在 Linux 内核源码中关于中断设置的地方找到这个定义(例如：`set_intr_gate`, `void set_system_intr_gate` 在 [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)中)。从 `0` 到 `31` 的 32 个中断标识码被处理器保留，用作处理架构定义的异常和中断。你可以在 Linux 内核初始化程序的第二部分 - [早期中断和异常处理](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html)中找到这个表和关于这些中断标识码的描述。从 `32` 到 `255` 的中断标识码设计为用户定义中断并且不被系统保留。这些中断通常分配给外部 I/O 设备，使这些设备可以发送中断给处理器。
 
 现在，我们来讨论中断的类型。笼统地来讲，我们可以把中断分为两个主要类型：
 
@@ -381,12 +381,14 @@ void load_percpu_segment(int cpu)
         ...
         ...
         ...
-        loadsegment(gs, 0);
-        wrmsrl(MSR_GS_BASE, (unsigned long)per_cpu(irq_stack_union.gs_base, cpu));
+        __loadsegment_simple(gs, 0);
+        wrmsrl(MSR_GS_BASE, cpu_kernelmode_gs_base(cpu));
+        ...
+        load_stack_canary_segment();
 }
 ```
 
-就像我们所知道的一样，`gs` 寄存器指向中断栈的栈底：
+正如我们所知的一样，`gs` 寄存器指向中断栈的栈底：
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -394,14 +396,14 @@ void load_percpu_segment(int cpu)
 	movl	initial_gs+4(%rip),%edx
 	wrmsr
 
-	GLOBAL(initial_gs)
-	.quad	INIT_PER_CPU_VAR(irq_stack_union)
+SYM_DATA(initial_gs,
+.quad INIT_PER_CPU_VAR(fixed_percpu_data))
 ```
 
-现在我们可以看到 `wrmsr` 指令，这个指令从 `edx:eax` 加载数据到 被 `ecx` 指向的[MSR寄存器]((http://en.wikipedia.org/wiki/Model-specific_register))。在这里MSR寄存器是 `MSR_GS_BASE`，它保存了被 `gs` 寄存器指向的内存段的基址。`edx:eax` 指向 `initial_gs` 的地址，它就是 `irq_stack_union`	的基址。
+现在我们可以看到 `wrmsr` 指令，这个指令从 `edx:eax` 加载数据到 被 `ecx` 指向的[MSR寄存器]((http://en.wikipedia.org/wiki/Model-specific_register))。在这里MSR寄存器是 `MSR_GS_BASE`，它保存了被 `gs` 寄存器指向的内存段的基址。`edx:eax` 指向 `initial_gs` ，的地址，它就是 `fixed_percpu_data`	的基址。
 
 我们还知道，`x86_64` 有一个叫 `中断栈表（Interrupt Stack Table）` 或者 `IST` 的组件，当发生不可屏蔽中断、双重错误等等的时候，这个组件提供了切换到新栈的功能。这可以到达7个 `IST` per-cpu 入口。其中一些如下;
-There can be up to seven `IST` entries per-cpu. Some of them are:
+
 
 * `DOUBLEFAULT_STACK`
 * `NMI_STACK`
@@ -420,32 +422,34 @@ There can be up to seven `IST` entries per-cpu. Some of them are:
 所有被 `IST` 切换到新栈的中断门描述符都由 `set_intr_gate_ist` 函数初始化。例如:
 
 ```C
-set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
-...
-...
-...
-set_intr_gate_ist(X86_TRAP_DF, &double_fault, DOUBLEFAULT_STACK);
+static const __initconst struct idt_data def_idts[] = {
+    ...
+	INTG(X86_TRAP_NMI,		nmi),
+    ...
+	INTG(X86_TRAP_DF,		double_fault),
 ```
 
-其中 `&nmi` 和 `&double_fault` 是中断函数的入口地址：
+其中 `&nmi` 和 `&double_fault` 在以下位置创建入口点：
 
+
+[arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S)中
+
+```assembly
+idtentry double_fault			do_double_fault			has_error_code=1 paranoid=2 read_cr2=1
+...
+...
+...
+SYM_CODE_START(nmi)
+...
+...
+...
+SYM_CODE_END(nmi)
+SYM_CODE_END(nmi)
+```
+在以下位置给出了中断处理程序的声明 [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/traps.h):
 ```C
 asmlinkage void nmi(void);
 asmlinkage void double_fault(void);
-```
-
-定义在 [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/entry_64.S)中
-
-```assembly
-idtentry double_fault do_double_fault has_error_code=1 paranoid=2
-...
-...
-...
-ENTRY(nmi)
-...
-...
-...
-END(nmi)
 ```
 
 当一个中断或者异常发生时，新的 `ss` 选择器被强制置为 `NULL`，并且 `ss` 选择器的 `rpl` 域被设置为新的 `cpl`。旧的 `ss`、`rsp`、寄存器标志、`cs`、`rip` 被压入新栈。在 64 位模型下，中断栈帧大小固定为 8 字节，所以我们可以得到下面的栈:
