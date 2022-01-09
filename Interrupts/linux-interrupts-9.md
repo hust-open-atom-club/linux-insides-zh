@@ -207,7 +207,7 @@ Tasklets
 * `TASKLET_SOFTIRQ`;
 * `HI_SOFTIRQ`.
 
-简而言之，`tasklets` 是运行时分配和初始化的软中断。和软中断不同的是，同一类型的 `tasklets` 可以在同一时间运行于不同的处理器上。我们已经了解到一些关于软中断的知识，当然上面的文字并不能详细讲解所有的细节，但我们现在可以通过直接阅读代码一步步的更深入了解软中断。我们返回到开始部分讨论的 `softirq_init` 函数实现，这个函数在 [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c) 中定义如下：
+简而言之，`tasklets` 是运行时分配和初始化的软中断。和软中断不同的是，同一类型的 `tasklets` 不能同时运行在多个处理器上。我们已经了解到一些关于软中断的知识，当然上面的文字并不能详细讲解所有的细节，但我们现在可以通过直接阅读代码一步步的更深入了解软中断。我们返回到开始部分讨论的 `softirq_init` 函数实现，这个函数在 [kernel/softirq.c](https://github.com/torvalds/linux/blob/master/kernel/softirq.c) 中定义如下：
 
 ```C
 void __init softirq_init(void)
