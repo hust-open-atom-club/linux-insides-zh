@@ -37,7 +37,7 @@
 |├ [2.4](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-4.md)|[@bjwrkj](https://github.com/bjwrkj)|已完成|
 |├ [2.5](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-5.md)|[@NeoCui](https://github.com/NeoCui)|更新至[cf32dc6c](https://github.com/0xAX/linux-insides/commit/cf32dc6c81abce567af330c480afc3d58678443d)|
 |├ [2.6](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-6.md)|[@kele1997](https://github.com/kele1997)|更新至[e896e56](https://github.com/0xAX/linux-insides/commit/e896e56c867876397ef78da58d5e2a31b2e690b6)|
-|├ [2.7](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md)||未开始|
+|├ [2.7](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md)|[@kele1997](https://github.com/kele1997)|正在进行|
 |├ [2.8](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-8.md)||未开始|
 |├ [2.9](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-9.md)||未开始|
 |└ [2.10](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-10.md)||未开始|
