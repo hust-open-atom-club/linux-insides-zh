@@ -39,7 +39,7 @@
 |├ [2.6](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-6.md)|[@kele1997](https://github.com/kele1997)|更新至[e896e56](https://github.com/0xAX/linux-insides/commit/e896e56c867876397ef78da58d5e2a31b2e690b6)|
 |├ [2.7](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md)|[@kele1997](https://github.com/kele1997)|正在进行|
 |├ [2.8](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-8.md)||未开始|
-|├ [2.9](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-9.md)||未开始|
+|├ [2.9](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-9.md)|[@hindlee](https://github.com/hindlee)|正在进行|
 |└ [2.10](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-10.md)||未开始|
 | 3. [Interrupts](https://github.com/MintCN/linux-insides-zh/tree/master/Interrupts)||正在进行|
 |├ [3.0](https://github.com/MintCN/linux-insides-zh/blob/master/Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|更新至[57279321](https://github.com/0xAX/linux-insides/commit/5727932167a2ff6a1e647081c85d081d4ed8b508)|
