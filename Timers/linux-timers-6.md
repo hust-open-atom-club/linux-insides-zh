@@ -1,39 +1,38 @@
-Timers and time management in the Linux kernel. Part 6.
+Linux内核中的时钟和时间管理 第6部分
 ================================================================================
 
-x86_64 related clock sources
+x86_64有关的时钟资源
 --------------------------------------------------------------------------------
 
-This is sixth part of the [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) which describes timers and time management related stuff in the Linux kernel. In the previous [part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-5.html) we saw `clockevents` framework and now we will continue to dive into time management related stuff in the Linux kernel. This part will describe implementation of [x86](https://en.wikipedia.org/wiki/X86) architecture related clock sources (more about `clocksource` concept you can read in the [second part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html) of this chapter).
+这是[本章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html)的第六部分，讲述Linux内核中的时钟和时间管理的相关内容。上一节中，我们了解了clockevents框架，现在继续深入研究Linux内核中的时间管理相关内容，本节将讲述x86架构中时钟源的实现（更多关于时钟源的概念可以参考在本章的第二节）
 
-First of all we must know what clock sources may be used at `x86` architecture. It is easy to know from the [sysfs](https://en.wikipedia.org/wiki/Sysfs) or from content of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. The `/sys/devices/system/clocksource/clocksourceN` provides two special files to achieve this:
+首先，需要知道在x86架构上可以使用哪些时钟源？很容易从[sysfs](https://en.wikipedia.org/wiki/Sysfs)中，也就是文件`/sys/devices/system/clocksource/clocksource0/available_clocksource`中获得。文件夹`/sys/devices/system/clocksource/clocksourceN`内有两个特殊文件保存：
 
-* `available_clocksource` - provides information about available clock sources in the system;
-* `current_clocksource`   - provides information about currently used clock source in the system.
+* `available_clocksource` - 提供系统中可用的时钟资源信息。
+* `current_clocksource`   - 提供系统中当前使用的时钟资源。
 
-So, let's look:
+所以，来试一下：
 
 ```
 $ cat /sys/devices/system/clocksource/clocksource0/available_clocksource 
 tsc hpet acpi_pm 
 ```
 
-We can see that there are three registered clock sources in my system:
+可以看到有三个已注册的时钟资源：
 
 * `tsc` - [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter);
 * `hpet` - [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer);
 * `acpi_pm` - [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf).
 
-Now let's look at the second file which provides best clock source (a clock source which has the best rating in the system):
 
+现在来看第二个文件，其中记录了最好的时钟资源（系统中，拥有最高频率的时钟资源）:
 ```
 $ cat /sys/devices/system/clocksource/clocksource0/current_clocksource 
 tsc
 ```
+作者的系统中是[Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)。本章第二节介绍了Linux内核中`clocksource`的内部框架，系统中最好的时钟源是具有最佳（最高）等级的时钟源，或者说是具有最高频率的时钟源。
 
-For me it is [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). As we may know from the [second part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html) of this chapter, which describes internals of the `clocksource` framework in the Linux kernel, the best clock source in a system is a clock source with the best (highest) rating or in other words with the highest [frequency](https://en.wikipedia.org/wiki/Frequency).
-
-Frequency of the [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) power management timer is `3.579545 MHz`. Frequency of the [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) is at least `10 MHz`. And the frequency of the [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) depends on processor. For example On older processors, the `Time Stamp Counter` was counting internal processor clock cycles. This means its frequency changed when the processor's frequency scaling changed. The situation has changed for newer processors. Newer processors have an `invariant Time Stamp counter` that increments at a constant rate in all operational states of processor. Actually we can get its frequency in the output of the `/proc/cpuinfo`. For example for the first processor in the system:
+[ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)电源管理时钟的频率是3.579545MHz。而[High Precision Event Timer(高精度事件定时器)](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)的频率至少是10MHz，而[Time Stamp Counter(时间戳计数器)](https://en.wikipedia.org/wiki/Time_Stamp_Counter)的频率取决于处理器。例如在较早的处理器上，`TSC`用来计算处理器内部的时钟周期，就是说当处理器的频率比生变化时，其频率也会发生变化。这种现象在较新的处理器上有所改善。新的处理器有一个不变的时间戳计数器，无论处理器在什么状态下都会以恒定的速率递增。我们可以在`/proc/cpuinfo`的输出中获得它的频率。例如：
 
 ```
 $ cat /proc/cpuinfo
@@ -41,18 +40,17 @@ $ cat /proc/cpuinfo
 model name	: Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz
 ...
 ```
+而尽管英特尔的开发者手册说，`TSC`的频率虽然是恒定的，但不一定是处理器的最大频率或者品牌名称中中给出的频率。总之，可以发现，TSC远超`ACPI PM`计时器以及`HPET`的频率，而且具有最佳速度或最高频率的时钟源是系统中当前正在使用的时钟。
 
-And although Intel manual says that the frequency of the `Time Stamp Counter`, while constant, is not necessarily the maximum qualified frequency of the processor, or the frequency given in the brand string, anyway we may see that it will be much more than frequency of the `ACPI PM` timer or `High Precision Event Timer`. And we can see that the clock source with the best rating or highest frequency is current in the system.
+注意到，除了这三个时钟源之外，在`/sys/devices/system/clocksource/clocksource0/available_clocksource`的输出中没有看到另外两个熟悉的时钟源，`jiffy`和`refined_jiffies`。看不到它们，因为这个文件只映射高分辨率的时钟源，也就是带有[CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h#L113)标志的时钟源。
 
-You can note that besides these three clock source, we don't see yet another two familiar us clock sources in the output of the `/sys/devices/system/clocksource/clocksource0/available_clocksource`. These clock sources are `jiffy` and `refined_jiffies`. We don't see them because this filed maps only high resolution clock sources or in other words clock sources with the [CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/master/include/linux/clocksource.h#L113) flag.
+正如上面所述，本节将会涵盖所有这三个时钟源，将按照它们初始化的顺序来逐一分析。
 
-As I already wrote above, we will consider all of these three clock sources in this part. We will consider it in order of their initialization or:
+* `hpet`
+* `acpi_pm`
+* `tsc`
 
-* `hpet`;
-* `acpi_pm`;
-* `tsc`.
-
-We can make sure that the order is exactly like this in the output of the [dmesg](https://en.wikipedia.org/wiki/Dmesg) util:
+在dmesg的输出中，有确定的顺序：
 
 ```
 $ dmesg | grep clocksource
@@ -66,19 +64,16 @@ $ dmesg | grep clocksource
 [    2.413748] clocksource: Switched to clocksource tsc
 ```
 
-The first clock source is the [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer), so let's start from it.
+第一个时钟源是 [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)，那就从它开始。
 
 High Precision Event Timer
 --------------------------------------------------------------------------------
-
-The implementation of the `High Precision Event Timer` for the [x86](https://en.wikipedia.org/wiki/X86) architecture is located in the [arch/x86/kernel/hpet.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/hpet.c) source code file. Its initialization starts from the call of the `hpet_enable` function. This function is called during Linux kernel initialization. If we will look into `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) source code file, we will see that after the all architecture-specific stuff initialized, early console is disabled and time management subsystem already ready, call of the following function:
-
+用于[x86](https://en.wikipedia.org/wiki/X86)架构的HPET的内核代码位于[arch/x86/kernel/hpet.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/hpet.c)文件中。它的初始化是从调用`hpet_enable`函数开始的。这个函数在Linux内核初始化时被调用。从[init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c)文件中的`start_kernel`函数中可以发现，在所有那些'架构特有的'的事物被初始化之后，以及'early console'被禁用，并且时间管理子系统已经准备就绪时，调用以下函数。
 ```C
 if (late_time_init)
 	late_time_init();
 ```
-
-which does initialization of the late architecture specific timers after early jiffy counter already initialized. The definition of the `late_time_init` function for the `x86` architecture is located in the [arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/time.c) source code file. It looks pretty easy:
+该函数在早期jiffy计数器被初始化后，对后期的架构特有的定时器进行初始化。`x86`架构的`late_time_init`函数的定义位于[arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/time.c) 文件中。它看起来这样：
 
 ```C
 static __init void x86_late_time_init(void)
@@ -88,7 +83,8 @@ static __init void x86_late_time_init(void)
 }
 ```
 
-As we may see, it does initialization of the `x86` related timer and initialization of the `Time Stamp Counter`. The seconds we will see in the next paragraph, but now let's consider the call of the `x86_init.timers.timer_init` function. The `timer_init` points to the `hpet_time_init` function from the same source code file. We can verify this by looking on the definition of the `x86_init` structure from the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c):
+可以看到，这里完成`x86`相关定时器的初始化和`TSC`的初始化。现在来考虑调用函数`x86_init.timers.timer_init`。`timer_init`指向同一源文件中的`hpet_time_init`。可以通过查看 `x86_init`结构图的定义来验证这一点。
+[arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/x86_init.c):
 
 ```C
 struct x86_init_ops x86_init __initdata = {
@@ -105,7 +101,7 @@ struct x86_init_ops x86_init __initdata = {
    ...
 ```
 
-The `hpet_time_init` function does setup of the [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer) if we can not enable `High Precision Event Timer` and setups default timer [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) for the enabled timer:
+如果`HPET`支持没有开启，那么函数`hpet_time_init` 会初始化[programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer)，并且设置默认时钟[IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29):
 
 ```C
 void __init hpet_time_init(void)
@@ -116,7 +112,7 @@ void __init hpet_time_init(void)
 }
 ```
 
-First of all the `hpet_enable` function check we can enable `High Precision Event Timer` in the system by the call of the `is_hpet_capable` function and if we can, we map a virtual address space for it:
+首先，函数`hpet_enable`通过调用`is_hpet_capable'检查能否在系统中启用`HPET`，如果可以，我们就为它映射一个虚拟地址空间。
 
 ```C
 int __init hpet_enable(void)
@@ -128,23 +124,23 @@ int __init hpet_enable(void)
 }
 ```
 
-The `is_hpet_capable` function checks that we didn't pass `hpet=disable` to the kernel command line and the `hpet_address` is received from the [ACPI HPET](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) table. The `hpet_set_mapping` function just maps the virtual address spaces for the timer registers:
+函数`is_hpet_capable`确认没有向内核命令行传递`hpet=disable`，并且`hpet_address`是来自表[ACPI HPET](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)。函数`hpet_set_mapping`为时钟相关寄存器映射虚拟地址空间。
 
 ```C
 hpet_virt_address = ioremap_nocache(hpet_address, HPET_MMAP_SIZE);
 ```
 
-As we can read in the  [IA-PC HPET (High Precision Event Timers) Specification](http://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/software-developers-hpet-spec-1-0a.pdf):
+[IA-PC HPET (High Precision Event Timers) Specification](http://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/software-developers-hpet-spec-1-0a.pdf) 有讲述：
 
-> The timer register space is 1024 bytes
+> 时钟寄存器空间有1024字节
 
-So, the `HPET_MMAP_SIZE` is `1024` bytes too:
+因此，`HPET_MMAP_SIZE` 也是 `1024`字节。
 
 ```C
 #define HPET_MMAP_SIZE		1024
 ```
 
-After we mapped virtual space for the `High Precision Event Timer`, we read `HPET_ID` register to get number of the timers:
+在为`HPET`映射了虚拟地址空间之后，就可以通过读寄存器`HPET_ID`得到时钟号:
 
 ```C
 id = hpet_readl(HPET_ID);
@@ -152,7 +148,7 @@ id = hpet_readl(HPET_ID);
 last = (id & HPET_ID_NUMBER) >> HPET_ID_NUMBER_SHIFT;
 ```
 
-We need to get this number to allocate correct amount of space for the `General Configuration Register` of the `High Precision Event Timer`:
+这个数字是用来为`HPET`的 `配置寄存器` 分配适当大小的空间。
 
 ```C
 cfg = hpet_readl(HPET_CFG);
@@ -160,20 +156,20 @@ cfg = hpet_readl(HPET_CFG);
 hpet_boot_cfg = kmalloc((last + 2) * sizeof(*hpet_boot_cfg), GFP_KERNEL);
 ```
 
-After the space is allocated for the configuration register of the `High Precision Event Timer`, we allow to main counter to run, and allow timer interrupts if they are enabled by the setting of `HPET_CFG_ENABLE` bit in the configuration register for all timers. In the end we just register new clock source by the call of the `hpet_clocksource_register` function:
+在为 `HPET`的配置寄存器分配空间后，主计时钟开始运行，并可以通过配置寄存器的`HPET_CFG_ENABLE`位，为每一个时钟设置定时器中断。前提是，所有的时钟都通过配置寄存器中的`HPET_CFG_ENABLE`位所启用。最后，只是通过调用`hpet_clocksource_register`函数来注册新的时钟源。
 
 ```C
 if (hpet_clocksource_register())
 	goto out_nohpet;
 ```
 
-which just calls already familiar
+这个函数调用已经很熟悉了：
 
 ```C
 clocksource_register_hz(&clocksource_hpet, (u32)hpet_freq);
 ```
 
-function. Where the `clocksource_hpet` is the `clocksource` structure with the rating `250` (remember rating of the previous `refined_jiffies` clock source was `2`), name - `hpet` and `read_hpet` callback for the reading of atomic counter provided by the `High Precision Event Timer`:
+其中`clocksource_hpet`是`clocksource`结构体对象，成员`rating`是`250`（之前`refined_jiffies`时钟源的`rating`是`2`），`hpet`和`read_hpet`两个回调函数用于读取`HPET`提供的原子计数器。
 
 ```C
 static struct clocksource clocksource_hpet = {
@@ -186,31 +182,29 @@ static struct clocksource clocksource_hpet = {
 	.archdata	= { .vclock_mode = VCLOCK_HPET },
 };
 ```
-
-After the `clocksource_hpet` is registered, we can return to the `hpet_time_init()` function from the [arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/time.c) source code file. We can remember that the last step is the call of the:
+在注册`clocksource_hpet`后，可以回看[arch/x86/kernel/time.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/time.c)源文件中的函数`hpet_time_init()`。最后一步的调用：
 
 ```C
 setup_default_timer_irq();
 ```
 
-function in the `hpet_time_init()`. The `setup_default_timer_irq` function checks existence of `legacy` IRQs or in other words support for the [i8259](https://en.wikipedia.org/wiki/Intel_8259) and setups [IRQ0](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29#Master_PIC) depends on this.
+函数`setup_default_timer_irq`检查`legacy`IRQ是否存在，也就是对[i8259](https://en.wikipedia.org/wiki/Intel_8259)的支持，并且配置[IRQ0](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29#Master_PIC)。
 
-That's all. From this moment the [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) clock source registered in the Linux kernel `clock source` framework and may be used from generic kernel code via the `read_hpet`:
+代码到这里[High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)，时钟源在Linux内核的时钟框架中完成注册，可以在内核中使用`read_hpet`。
+
 ```C
 static cycle_t read_hpet(struct clocksource *cs)
 {
 	return (cycle_t)hpet_readl(HPET_COUNTER);
 }
 ```
-
-function which just reads and returns atomic counter from the `Main Counter Register`.
+该函数读取并返回`Main Counter Register`中的原子计数器。
 
 ACPI PM timer
 --------------------------------------------------------------------------------
 
-The seconds clock source is [ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf). Implementation of this clock source is located in the [drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/master/drivers/clocksource_acpi_pm.c) source code file and starts from the call of the `init_acpi_pm_clocksource` function during `fs` [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html).
-
-If we will look at implementation of the `init_acpi_pm_clocksource` function, we will see that it starts from the check of the value of `pmtmr_ioport` variable:
+第二个时钟源是[ACPI Power Management Timer](http://uefi.org/sites/default/files/resources/ACPI_5.pdf)。这个时钟源的实现位于[drivers/clocksource/acpi_pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/clocksource_acpi_pm.c)源文件中，从`fs`[initcall](https://kernelnewbies.org/Documents/InitcallMechanism)中调用`init_acpi_pm_clocksource`函数开始。
+如果看一下 `init_acpi_pm_clocksource`函数的实现，会发现它是从检查 `pmtmr_ioport`变量的值开始的。
 
 ```C
 static int __init init_acpi_pm_clocksource(void)
@@ -224,8 +218,7 @@ static int __init init_acpi_pm_clocksource(void)
     ...
     ...
 ```
-
-This `pmtmr_ioport` variable contains extended address of the `Power Management Timer Control Register Block`. It gets its value in the `acpi_parse_fadt` function which is defined in the [arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/acpi/boot.c) source code file. This function parses `FADT` or `Fixed ACPI Description Table` [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) table and tries to get the values of the `X_PM_TMR_BLK` field which contains extended address of the `Power Management Timer Control Register Block`, represented in `Generic Address Structure` format:
+变量`pmtmr_ioport`包含`Power Management Timer Control Register Block`的扩展地址。在源文件[arch/x86/kernel/acpi/boot.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/acpi/boot.c) 中定义的函数`acpi_parse_fadt`中获取其值。该函数解析 `FADT` 或 `Fixed ACPI Description Table` [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) 并获取包含扩展地址的 `X_PM_TMR_BLK` 字段的值`Power Management Timer Control Register Blcok`, 并以结构体`Generic Address Structure`格式表示：
 
 ```C
 static int __init acpi_parse_fadt(struct acpi_table_header *table)
@@ -242,15 +235,12 @@ static int __init acpi_parse_fadt(struct acpi_table_header *table)
 	return 0;
 }
 ```
-
-So, if the `CONFIG_X86_PM_TIMER` Linux kernel configuration option is disabled or something going wrong in the `acpi_parse_fadt` function, we can't access the `Power Management Timer` register and return from the `init_acpi_pm_clocksource`. In other way, if the value of the `pmtmr_ioport` variable is not zero, we check rate of this timer and register this clock source by the call of the:
+因此，如果内核配置`CONFIG_X86_PM_TIMER`被禁用，或者`acpi_parse_fadt`函数出错，就不能访问`Power Management Timer`中的寄存器，并从`init_acpi_pm_clocksource`返回。也就是说，如果`pmtmr_ioport`变量的值不是0，就会检查这个时钟的速率，并通过调用下面这个函数来注册这个时钟源。
 
 ```C
 clocksource_register_hz(&clocksource_acpi_pm, PMTMR_TICKS_PER_SEC);
 ```
-    
-function. After the call of the `clocksource_register_hs`, the `acpi_pm` clock source will be registered in the `clocksource` framework of the Linux kernel:
-
+调用函数`clocksource_register_hs`之后，`acpi_pm` 时钟源被注册到`clocksource` 内核框架中:
 ```C
 static struct clocksource clocksource_acpi_pm = {
 	.name		= "acpi_pm",
@@ -260,8 +250,7 @@ static struct clocksource clocksource_acpi_pm = {
 	.flags		= CLOCK_SOURCE_IS_CONTINUOUS,
 };
 ```
-
-with the rating - `200` and the `acpi_pm_read` callback to read atomic counter provided by the `acpi_pm` clock source. The `acpi_pm_read` function just executes `read_pmtmr` function:
+成员`rating` 是 `200`，并且`acpi_pm_read`回调函数读`apci_pm`时钟源提供的原子计数器。 函数`acpi_pm_read`正是执行`read_pmtmr`:
 
 ```C
 static cycle_t acpi_pm_read(struct clocksource *cs)
@@ -270,7 +259,7 @@ static cycle_t acpi_pm_read(struct clocksource *cs)
 }
 ```
 
-which reads value of the `Power Management Timer` register. This register has following structure:
+这个函数读`Power Management Timer`寄存器的值。寄存器结构如下：
 
 ```
 +-------------------------------+----------------------------------+
@@ -281,8 +270,7 @@ which reads value of the `Power Management Timer` register. This register has fo
 +-------------------------------+----------------------------------+
 31          E_TMR_VAL           24               TMR_VAL           0
 ```
-
-Address of this register is stored in the `Fixed ACPI Description Table` [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) table and we already have it in the `pmtmr_ioport`. So, the implementation of the `read_pmtmr` function is pretty easy:
+这个寄存器的地址是存在`Fixed ACPI Description Table` [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) 表中，并且可以通过`pmtmr_ioport`访问。所以，函数`read_pmtmr`的实现就非常简单了：
 
 ```C
 static inline u32 read_pmtmr(void)
@@ -290,17 +278,16 @@ static inline u32 read_pmtmr(void)
 	return inl(pmtmr_ioport) & ACPI_PM_MASK;
 }
 ```
+只需要读去寄存器`Power Management Timer`的值，并且取出第`24`位。
 
-We just read the value of the `Power Management Timer` register and mask its `24` bits.
-
-That's all. Now we move to the last clock source in this part - `Time Stamp Counter`.
+现在来看本章最后一个时钟源`Time Stamp Counter`。
 
 Time Stamp Counter
 --------------------------------------------------------------------------------
 
-The third and last clock source in this part is - [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) clock source and its implementation is located in the [arch/x86/kernel/tsc.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/tsc.c) source code file. We already saw the `x86_late_time_init` function in this part and initialization of the [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) starts from this place. This function calls the `tsc_init()` function from the [arch/x86/kernel/tsc.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/tsc.c) source code file.
+这第三个也是最后一个时钟源是[Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)，它的实现位于源文件[arch/x86/kernel/tsc.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/tsc.c)。前文已经看到过函数`x86_late_time_init`，以及[Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)的初始化函数，也从这个开始，这个函数调用了`tsc_init()` 。
 
-At the beginning of the `tsc_init` function we can see check, which checks that a processor has support of the `Time Stamp Counter`:
+在函数`tsc_init`开始的地方，可以看到它确认处理器是否支持`Time Stamp Counter`:
 
 ```C
 void __init tsc_init(void)
@@ -317,19 +304,16 @@ void __init tsc_init(void)
     ...
 ```
 
-The `cpu_has_tsc` macro expands to the call of the `cpu_has` macro:
+宏`cpu_has_tsc`展开，调用宏`cpu_has` macro:
 
 ```C
 #define cpu_has_tsc		boot_cpu_has(X86_FEATURE_TSC)
-
 #define boot_cpu_has(bit)	cpu_has(&boot_cpu_data, bit)
-
 #define cpu_has(c, bit)							\
 	(__builtin_constant_p(bit) && REQUIRED_MASK_BIT_SET(bit) ? 1 :	\
 	 test_cpu_cap(c, bit))
 ```
-
-which check the given bit (the `X86_FEATURE_TSC_DEADLINE_TIMER` in our case) in the `boot_cpu_data` array which is filled during early Linux kernel initialization. If the processor has support of the `Time Stamp Counter`, we get the frequency of the `Time Stamp Counter` by the call of the `calibrate_tsc` function from the same source code file which tries to get frequency from the different source like [Model Specific Register](https://en.wikipedia.org/wiki/Model-specific_register), calibrate over [programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer) and etc, after this we initialize frequency and scale factor for the all processors in the system:
+上面的宏检查在内核初始化时填充的`boot_cpu_data`数组中的给定位，这里是`X86_FEATURE_TSC_DEADLINE_TIMER`。如果处理器支持`Time Stamp Counter`，通过调用同一源代码文件中的`calibrate_tsc`函数来获得`TSC`的频率，该函数会尝试从不同的时钟源获得频率，如[MSR](https://en.wikipedia.org/wiki/Model-specific_register)，通过[programmable interval timer](https://en.wikipedia.org/wiki/Programmable_interval_timer)校准等等，之后为系统中所有处理器初始化频率和比例因子。
 
 ```C
 tsc_khz = x86_platform.calibrate_tsc();
@@ -341,7 +325,7 @@ for_each_possible_cpu(cpu) {
 }
 ```
 
-because only first bootstrap processor will call the `tsc_init`. After this we check hat `Time Stamp Counter` is not disabled:
+因为只有第一个引导处理器会调用 `tsc_init`，此后，检查`TSC`是否被禁用。
 
 ```
 if (tsc_disabled > 0)
@@ -352,7 +336,7 @@ if (tsc_disabled > 0)
 check_system_tsc_reliable();
 ```
 
-and call the `check_system_tsc_reliable` function which sets the `tsc_clocksource_reliable` if bootstrap processor has the `X86_FEATURE_TSC_RELIABLE` feature. Note that we went through the `tsc_init` function, but did not register our clock source. Actual registration of the `Time Stamp Counter` clock source occurs in the:
+并调用函数`check_system_tsc_reliable`，如果bootstrap处理器有`X86_FEATURE_TSC_RELIABLE`特性，则设置`tsc_clocksource_reliable`。注意，到这里函数`tsc_init`结束，但没有注册时钟源。实际注册`TSC`时钟源是在:
 
 ```C
 static int __init init_tsc_clocksource(void)
@@ -367,10 +351,8 @@ static int __init init_tsc_clocksource(void)
 		return 0;
 	}
 ```
-
-function. This function called during the `device` [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html). We do it to be sure that the `Time Stamp Counter` clock source will be registered after the  [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) clock source.
-
-After these all three clock sources will be registered in the `clocksource` framework and the `Time Stamp Counter` clock source will be selected as active, because it has the highest rating among other clock sources:
+这个函数在`device`[initcall](https://kernelnewbies.org/Documents/InitcallMechanism)期间调用。这样做是为了确保`TSC` 时钟源在[HPET](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)时钟源之后被注册。
+在这之后，所有三个时钟源都在 `clocksource`框架中注册，`TSC`时钟源将被选为当前时钟源，因为它其他时钟源中具有最高等级。
 
 ```C
 static struct clocksource clocksource_tsc = {
@@ -383,18 +365,14 @@ static struct clocksource clocksource_tsc = {
 };
 ```
 
-That's all.
-
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the sixth part of the [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `clockevents` framework. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about three different clock sources which are used in the [x86](https://en.wikipedia.org/wiki/X86) architecture. The next part will be last part of this [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) and we will see some user space related stuff, i.e. how some time related [system calls](https://en.wikipedia.org/wiki/System_call) implemented in the Linux kernel.
+这是[本章](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html)的第六节，描述了Linux内核中的时钟和时钟管理。上一节中，熟悉了`clockevents`框架。这一节中，继续学习了Linux内核中时钟管理，并且看到了在[x86](https://en.wikipedia.org/wiki/X86)架构中使用的三种不同的时钟源。下一节将是[本章](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html)的最后一节，将看到一些与用户空间有关的事情，即一些与时间有关的[系统调用](https://en.wikipedia.org/wiki/System_call)如何在Linux内核中实现。
+如果有问题或建议，请随时在twitter[0xAX](https://twitter.com/0xAX)上与我联系，给我发[email](https://0xax.gitbooks.io/linux-insides/content/Timers/anotherworldofworld@gmail.com)或直接创建[issue](https://github.com/0xAX/linux-insides/issues/new)。
+**请注意，英语不是我的第一语言，我真的很抱歉给你带来的不便。如果你发现任何错误，请给我发送PR到[linux-insides](https://github.com/0xAX/linux-insides)**。
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
-
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
-
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [x86](https://en.wikipedia.org/wiki/X86)
