@@ -1,19 +1,17 @@
-Interrupts and Interrupt Handling. Part 3.
+中断和中断处理. Part 3.
 ================================================================================
 
-Exception Handling
+异常处理
 --------------------------------------------------------------------------------
 
-This is the third part of the [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) about an interrupts and an exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we stopped at the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) source code file.
+这是第三部分 [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) Linux内核中有关中断和异常处理 在前面的内容中 [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) 我们停止了 `setup_arch` 函数 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blame/master/arch/x86/kernel/setup.c) 源代码文件.
 
-We already know that this function executes initialization of architecture-specific stuff. In our case the `setup_arch` function does [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture related initializations. The `setup_arch` is big function, and in the previous part we stopped on the setting of the two exceptions handlers for the two following exceptions:
+我们已经知道该函数执行特定于体系结构的东西的初始化。 在我们的例子中，`setup_arch`函数执行与[x86_64](https://en.wikipedia.org/wiki/X86-64) architecture相关的初始化工作。 `setup_arch`是一个大功能，在上一部分中，我们停止了以下两个异常的两个异常处理程序的设置：
+* `#DB` - 调试异常，将控制从中断的进程转移到调试处理程序；
+* `#BP` - 由`int`指令引起的断点异常。
 
-* `#DB` - debug exception, transfers control from the interrupted process to the debug handler;
-* `#BP` - breakpoint exception, caused by the `int 3` instruction.
-
-These exceptions allow the `x86_64` architecture to have early exception processing for the purpose of debugging via the [kgdb](https://en.wikipedia.org/wiki/KGDB).
-
-As you can remember we set these exceptions handlers in the `early_trap_init` function:
+这些异常允许x86_64体系结构具有早期异常处理功能，以便于通过[kgdb](https://en.wikipedia.org/wiki/KGDB) 进行调试
+正如您记得的，我们在`early_trap_init`函数中设置了这些异常处理程序：
 
 ```C
 void __init early_trap_init(void)
@@ -24,19 +22,18 @@ void __init early_trap_init(void)
 }
 ```
 
-from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). We already saw implementation of the `set_intr_gate_ist` and `set_system_intr_gate_ist` functions in the previous part and now we will look on the implementation of these two exceptions handlers.
+来自 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c). 我们已经在上一部分中看到了`set_intr_gate_ist`和`set_system_intr_gate_ist`函数的实现，现在我们将看看这两个异常处理程序的实现。
 
-Debug and Breakpoint exceptions
+调试和断点异常
 --------------------------------------------------------------------------------
 
-Ok, we setup exception handlers in the `early_trap_init` function for the `#DB` and `#BP` exceptions and now time is to consider their implementations. But before we will do this, first of all let's look on details of these exceptions.
+Ok，我们在`early_trap_init`函数中为`#DB`和`#BP`异常设置了异常处理程序，现在是时候考虑它们的实现了。但是，在执行此操作之前，我们首先看一下这些异常的详细信息。
 
-The first exceptions - `#DB` or `debug` exception occurs when a debug event occurs. For example - attempt to change the contents of a [debug register](http://en.wikipedia.org/wiki/X86_debug_register). Debug registers are special registers that were presented in `x86` processors starting from the [Intel 80386](http://en.wikipedia.org/wiki/Intel_80386) processor and as you can understand from name of this CPU extension, main purpose of these registers is debugging.
+第一个异常-`＃DB`或`debug`异常是在发生调试事件时发生的。例如-尝试更改[debug register](http://en.wikipedia.org/wiki/X86_debug_register) 的内容。debug register是从 [Intel 80386](http://en.wikipedia.org/wiki/Intel_80386) 处理器开始在`x86`处理器中提供的特殊寄存器，从CPU扩展的名可以知道，这些寄存器中的正在调试这些功能。
 
-These registers allow to set breakpoints on the code and read or write data to trace it. Debug registers may be accessed only in the privileged mode and an attempt to read or write the debug registers when executing at any other privilege level causes a [general protection fault](https://en.wikipedia.org/wiki/General_protection_fault) exception. That's why we have used `set_intr_gate_ist` for the `#DB` exception, but not the `set_system_intr_gate_ist`.
+这些寄存器允许在代码上设置断点，并读取或写入数据以对其进行跟踪。debug register只能在特权模式下访问，以任何其他特权级别执行时尝试读取或写入调试寄存器都会导致[general protection fault](https://en.wikipedia.org/wiki/General_protection_fault) 异常。这就是为什么我们对`#DB`异常使用了`set_intr_gate_ist`，而不对`set_system_intr_gate_ist`使用。
 
-The verctor number of the `#DB` exceptions is `1` (we pass it as `X86_TRAP_DB`) and as we may read in specification, this exception has no error code:
-
+`#DB`异常的记录编号为1（我们将其作为X86_TRAP_DB传递），并且正如我们在规范中可能会看到的那样，该异常没有错误代码：
 ```
 +-----------------------------------------------------+
 |Vector|Mnemonic|Description         |Type |Error Code|
@@ -45,8 +42,7 @@ The verctor number of the `#DB` exceptions is `1` (we pass it as `X86_TRAP_DB`) 
 +-----------------------------------------------------+
 ```
 
-The second exception is `#BP` or `breakpoint` exception occurs when processor executes the [int 3](http://en.wikipedia.org/wiki/INT_%28x86_instruction%29#INT_3) instruction. Unlike the `DB` exception, the `#BP` exception may occur in userspace. We can add it anywhere in our code, for example let's look on the simple program:
-
+第二个异常是处理器执行[int 3](http://en.wikipedia.org/wiki/INT_%28x86_instruction%29#INT_3) 指令时发生的`#BP`或`breakpointv`异常。 与`DB`异常不同，`＃BP`异常可能在用户空间中发生。 我们可以将其添加到代码中的任何位置，让我们看一下简单的程序：
 ```C
 // breakpoint.c
 #include <stdio.h>
@@ -61,7 +57,7 @@ int main() {
 }
 ```
 
-If we will compile and run this program, we will see following output:
+如果我们编译并运行该程序，我们将看到以下输出：
 
 ```
 $ gcc breakpoint.c -o breakpoint
@@ -69,7 +65,7 @@ i equal to: 0
 Trace/breakpoint trap
 ```
 
-But if will run it with gdb, we will see our breakpoint and can continue execution of our program:
+但是，如果将其与gdb一起运行，我们将看到断点并可以继续执行程序：
 
 ```
 $ gdb breakpoint
@@ -102,17 +98,16 @@ Program received signal SIGTRAP, Trace/breakpoint trap.
 ...
 ```
 
-From this moment we know a little about these two exceptions and we can move on to consideration of their handlers.
+从这一刻起，我们对这两个异常有所了解，我们可以把关注点转移到它们的处理程序。
 
-Preparation before an exception handler
+异常处理程序之前的准备
 --------------------------------------------------------------------------------
 
-As you may note before, the `set_intr_gate_ist` and `set_system_intr_gate_ist` functions takes an addresses of exceptions handlers in theirs second parameter. In or case our two exception handlers will be:
-
+正如您之前可能注意到的那样，`set_intr_gate_ist`和`set_system_intr_gate_ist`函数在其第二个参数中使用异常处理程序的地址。 否则，我们的两个异常处理程序将是：
 * `debug`;
 * `int3`.
 
-You will not find these functions in the C code. all of that could be found in the kernel's `*.c/*.h` files only definition of these functions which are located in the [arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/traps.h) kernel header file:
+你在C代码中找不到这些功能。这些所有功能都可以在内核的`*.c/*.h`文件中找到，这些功能的定义位于[arch/x86/include/asm/traps.h](https://github.com/torvalds/linux/tree/master/arch/x86/include/asm/traps.h)内核头文件：
 
 ```C
 asmlinkage void debug(void);
@@ -124,10 +119,10 @@ and
 asmlinkage void int3(void);
 ```
 
-You may note `asmlinkage` directive in definitions of these functions. The directive is the special specificator of the [gcc](http://en.wikipedia.org/wiki/GNU_Compiler_Collection). Actually for a `C` functions which are called from assembly, we need in explicit declaration of the function calling convention. In our case, if function made with `asmlinkage` descriptor, then `gcc` will compile the function to retrieve parameters from stack.
-
+您可能会在这些函数的定义中注意到`asmlinkage`指令。 该指令是[gcc](http://en.wikipedia.org/wiki/GNU_Compiler_Collection) 的特殊说明符。 实际上，对于从汇编中调用的C函数，我们需要显式声明函数调用约定。在我们的例子中，如果函数使用`asmlinkage`描述符创建，则`gcc`将编译该函数以从堆栈中检索参数。
 So, both handlers are defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly source code file with the `idtentry` macro:
 
+因此，这两个处理程序都在[arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) 汇编源代码文件中定义`idtentry`宏：
 ```assembly
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 ```
@@ -138,20 +133,19 @@ and
 idtentry int3 do_int3 has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 ```
 
-Each exception handler may be consists from two parts. The first part is generic part and it is the same for all exception handlers. An exception handler should to save  [general purpose registers](https://en.wikipedia.org/wiki/Processor_register) on the stack, switch to kernel stack if an exception came from userspace and transfer control to the second part of an exception handler. The second part of an exception handler does certain work depends on certain exception. For example page fault exception handler should find virtual page for given address, invalid opcode exception handler should send `SIGILL` [signal](https://en.wikipedia.org/wiki/Unix_signal) and etc.
+每个异常处理程序可以由两部分组成。 第一部分是通用部分，所有异常处理程序都相同。 异常处理程序应将[general purpose registers](https://en.wikipedia.org/wiki/Processor_register) 保存在堆栈上，如果异常来自用户空间，则应切换到内核堆栈，并将控制权转移到异常的第二部分 处理程序。 异常处理程序的第二部分完成某些工作取决于某些异常。 例如，页面错误异常处理程序应找到给定地址的虚拟页面，无效的操作码异常处理程序应发送`SIGILL` [signal](https://en.wikipedia.org/wiki/Unix_signal) 等。
+正如我们所见，异常处理程序从[arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) 汇编源代码文件，因此让我们看一下该宏的实现。 我们可以会看到，`idtentry`宏接受五个参数：
 
-As we just saw, an exception handler starts from definition of the `idtentry` macro from the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) assembly source code file, so let's look at implementation of this macro. As we may see, the `idtentry` macro takes five arguments:
+*`sym`用`globl name`定义全局符号，它将作为异常处理程序的入口；
+*`do_sym`符号名称，代表异常处理程序的辅助条目；
+*`has_error_code`有关异常错误代码的存在的信息。
 
-* `sym` - defines global symbol with the `.globl name` which will be an an entry of exception handler;
-* `do_sym` - symbol name which represents a secondary entry of an exception handler;
-* `has_error_code` - information about existence of an error code of exception.
+最后两个参数是可选的：
 
-The last two parameters are optional:
+*`paranoid`-向我们展示了如何检查当前模式（稍后将详细解释）；
+*`shift_ist`-显示我们是在“中断堆栈表”上运行的异常。
 
-* `paranoid` - shows us how we need to check current mode (will see explanation in details later);
-* `shift_ist` - shows us is an exception running at `Interrupt Stack Table`.
-
-Definition of the `.idtentry` macro looks:
+`idtentry`宏的定义如下：
 
 ```assembly
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
@@ -165,6 +159,7 @@ END(\sym)
 
 Before we will consider internals of the `idtentry` macro, we should to know state of stack when an exception occurs. As we may read in the [Intel® 64 and IA-32 Architectures Software Developer’s Manual 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html), the state of stack when an exception occurs is following:
 
+在考虑`identry`宏的内部之前，我们应该知道发生异常时的堆栈状态。 正如我们可能会在[Intel®64 and IA-32 Architectures Software Developer's Manual 3A](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html) ，则发生异常时的堆栈状态如下：
 ```
     +------------+
 +40 | %SS        |
@@ -176,26 +171,24 @@ Before we will consider internals of the `idtentry` macro, we should to know sta
     +------------+
 ```
 
-Now we may start to consider implementation of the `idtmacro`. Both `#DB` and `BP` exception handlers are defined as:
-
+现在我们可以开始考虑`idtmacro`的实现了。 `#DB`和`BP`异常处理程序都定义为：
 ```assembly
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 idtentry int3 do_int3 has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 ```
 
-If we will look at these definitions, we may know that compiler will generate two routines with `debug` and `int3` names and both of these exception handlers will call `do_debug` and `do_int3` secondary handlers after some preparation. The third parameter defines existence of error code and as we may see both our exception do not have them. As we may see on the diagram above, processor pushes error code on stack if an exception provides it. In our case, the `debug` and `int3` exception do not have error codes. This may bring some difficulties because stack will look differently for exceptions which provides error code and for exceptions which not. That's why implementation of the `idtentry` macro starts from putting a fake error code to the stack if an exception does not provide it:
-
+如果我们看一下这些定义，我们可能知道编译器将生成两个带有`debug`和`int3`名称的例程，并且这两个异常处理程序在经过一些准备后将调用`do_debug`和`do_int3`辅助处理程序。 第三个参数定义了错误代码的存在，并且我们可以看到我们的两个异常都没有它们。 如上图所示，如果有异常，处理器会将错误代码压入堆栈。 在我们的例子中，`debug`和`int3`异常没有错误代码。 这可能会带来一些困难，因为对于提供错误代码的异常和未提供错误代码的异常，堆栈的外观会有所不同。 这就是为什么`idtentry`宏的实现始于在异常未提供的情况下将伪造的错误代码放入堆栈的原因：
 ```assembly
 .ifeq \has_error_code
     pushq	$-1
 .endif
 ```
 
-But it is not only fake error-code. Moreover the `-1` also represents invalid system call number, so that the system call restart logic will not be triggered.
+这不仅是伪造的错误代码。此外，“-1”还代表无效的系统调用号码，因此系统调用重启逻辑将不会被触发。
 
-The last two parameters of the `idtentry` macro `shift_ist` and `paranoid` allow to know do an exception handler runned at stack from `Interrupt Stack Table` or not. You already may know that each kernel thread in the system has own stack. In addition to these stacks, there are some specialized stacks associated with each processor in the system. One of these stacks is - exception stack. The [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture provides special feature which is called - `Interrupt Stack Table`. This feature allows to switch to a new stack for designated events such as an atomic exceptions like `double fault` and etc. So the `shift_ist` parameter allows us to know do we need to switch on `IST` stack for an exception handler or not.
+`idtentry`宏`shift_ist`和`paranoid`的最后两个参数允许您知道是否从`Interrupt Stack Table`运行在堆栈上的异常处理程序。您可能已经知道系统中的每个内核线程都有自己的堆栈。除了这些堆栈外，还有一些专用堆栈与系统中的每个处理器相关联。这些堆栈之一是-异常堆栈。 [x86_64](https://en.wikipedia.org/wiki/X86-64) 架构提供了称为`中断堆栈表`的特殊功能。此功能允许针对指定事件（例如原子异常（如double fault）等）切换到新堆栈。因此，使用shift_ist参数可以让我们知道是否需要为异常处理程序打开IST堆栈。
 
-The second parameter - `paranoid` defines the method which helps us to know did we come from userspace or not to an exception handler. The easiest way to determine this is to via `CPL` or `Current Privilege Level` in `CS` segment register. If it is equal to `3`, we came from userspace, if zero we came from kernel space:
+第二个参数`paranoid`定义了一种方法，该方法可以帮助我们知道我们是来自用户空间还是来自异常处理程序。确定这一点的最简单方法是通过`CS`段寄存器中的`CPL`或`Current Privilege Level`。如果等于`3`，则来自用户空间；如果为零，则来自内核空间：
 
 ```
 testl $3,CS(%rsp)
@@ -203,18 +196,18 @@ jnz userspace
 ...
 ...
 ...
-// we are from the kernel space
+
+// 我们来自内核空间
 ```
 
-But unfortunately this method does not give a 100% guarantee. As described in the kernel documentation:
-
+但是不幸的是，这种方法不能100％的保证。如内核文档中所述：
 > if we are in an NMI/MCE/DEBUG/whatever super-atomic entry context,
 > which might have triggered right after a normal entry wrote CS to the
 > stack but before we executed SWAPGS, then the only safe way to check
 > for GS is the slower method: the RDMSR.
 
-In other words for example `NMI` could happen inside the critical section of a [swapgs](http://www.felixcloutier.com/x86/SWAPGS.html) instruction. In this way we should check value of the `MSR_GS_BASE` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register) which stores pointer to the start of per-cpu area. So to check did we come from userspace or not, we should to check value of the `MSR_GS_BASE` model specific register and if it is negative we came from kernel space, in other way we came from userspace:
 
+换句话说，例如，`NMI`可能发生在[swapgs](http://www.felixcloutier.com/x86/SWAPGS.html) 指令的关键部分内。 这样，我们应该检查`MSR_GS_BASE` [模型专用寄存器](https://en.wikipedia.org/wiki/Model-specific_register) 的值，该值存储指向每个cpu区域开始的指针。 因此，要检查我们是否来自用户空间，我们应该检查`MSR_GS_BASE`模型特定寄存器的值，如果它是负数，则来自内核空间，否则来自用户空间：
 ```assembly
 movl $MSR_GS_BASE,%ecx
 rdmsr
@@ -222,15 +215,14 @@ testl %edx,%edx
 js 1f
 ```
 
-In first two lines of code we read value of the `MSR_GS_BASE` model specific register into `edx:eax` pair. We can't set negative value to the `gs` from userspace. But from other side we know that direct mapping of the physical memory starts from the `0xffff880000000000` virtual address. In this way, `MSR_GS_BASE` will contain an address from `0xffff880000000000` to `0xffffc7ffffffffff`. After the `rdmsr` instruction will be executed, the smallest possible value in the `%edx` register will be - `0xffff8800` which is `-30720` in unsigned 4 bytes. That's why kernel space `gs` which points to start of `per-cpu` area will contain negative value.
-
-After we pushed fake error code on the stack, we should allocate space for general purpose registers with:
+在前两行代码中，我们将模型专用寄存器`MSR_GS_BASE`的值读入edx:eax对。 我们不能从用户空间为gs设置负值。 但是从另一面我们知道，物理内存的直接映射是从虚拟地址`0xffff880000000000`开始的。 这样，`MSR_GS_BASE`将包含从`0xffff880000000000`到`0xffffc7ffffffffff`的地址。 执行完`rdmsr`指令后，`％edx`寄存器中的最小可能值为-`0xffff8800`，即无符号4个字节的`-30720`。 这就是指向`每个CPU`区域开始的内核空间`gs`包含负值的原因。
+将伪错误代码压入堆栈后，我们应该使用以下命令为通用寄存器分配空间：
 
 ```assembly
 ALLOC_PT_GPREGS_ON_STACK
 ```
 
-macro which is defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) header file. This macro just allocates 15*8 bytes space on the stack to preserve general purpose registers:
+在[arch / x86 / entry / calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) 头文件中定义的宏。 该宏仅在堆栈上分配15 * 8字节空间以保留通用寄存器：
 
 ```assembly
 .macro ALLOC_PT_GPREGS_ON_STACK addskip=0
@@ -238,7 +230,8 @@ macro which is defined in the [arch/x86/entry/calling.h](https://github.com/torv
 .endm
 ```
 
-So the stack will look like this after execution of the `ALLOC_PT_GPREGS_ON_STACK`:
+
+因此，在执行`ALLOC_PT_GPREGS_ON_STACK`之后，堆栈将如下所示：
 
 ```
      +------------+
@@ -267,7 +260,9 @@ So the stack will look like this after execution of the `ALLOC_PT_GPREGS_ON_STAC
      +------------+
 ```
 
-After we allocated space for general purpose registers, we do some checks to understand did an exception come from userspace or not and if yes, we should move back to an interrupted process stack or stay on exception stack:
+
+在为通用寄存器分配空间之后，我们进行一些检查以了解异常是否来自用户空间，如果是，则应移回中断的进程堆栈或保留在异常堆栈上：
+
 
 ```assembly
 .if \paranoid
@@ -281,28 +276,31 @@ After we allocated space for general purpose registers, we do some checks to und
 .endif
 ```
 
-Let's consider all of these there cases in course.
 
-An exception occured in userspace
+
+让我们考虑一下所有情况
+
+用户空间中发生异常
 --------------------------------------------------------------------------------
 
-In the first let's consider a case when an exception has `paranoid=1` like our `debug` and `int3` exceptions. In this case we check selector from `CS` segment register and jump at `1f` label if we came from userspace or the `paranoid_entry` will be called in other way.
 
+首先，让我们考虑一个异常具有像我们的`debug`和`int3`异常这样的`paranoid = 1`的情况。 在这种情况下，如果来自用户空间，否则我们将从CS段寄存器中检查选择器，并跳转到`1f`标签上，否则将以其他方式调用`paranoid_entry`。
 Let's consider first case when we came from userspace to an exception handler. As described above we should jump at `1` label. The `1` label starts from the call of the
 
 ```assembly
 call	error_entry
 ```
 
-routine which saves all general purpose registers in the previously allocated area on the stack:
-
+该例程将所有通用寄存器保存在堆栈中先前分配的区域中:
 ```assembly
 SAVE_C_REGS 8
 SAVE_EXTRA_REGS 8
 ```
 
-These both macros are defined in the  [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) header file and just move values of general purpose registers to a certain place at the stack, for example:
 
+
+
+这两个宏都在[arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) 头文件中定义并移动 通用寄存器的值到堆栈中的某个位置，例如：
 ```assembly
 .macro SAVE_EXTRA_REGS offset=0
 	movq %r15, 0*8+\offset(%rsp)
@@ -314,7 +312,7 @@ These both macros are defined in the  [arch/x86/entry/calling.h](https://github.
 .endm
 ```
 
-After execution of `SAVE_C_REGS` and `SAVE_EXTRA_REGS` the stack will look:
+执行`SAVE_C_REGS`和`SAVE_EXTRA_REGS`之后，堆栈将如下所示:
 
 ```
      +------------+
@@ -343,23 +341,21 @@ After execution of `SAVE_C_REGS` and `SAVE_EXTRA_REGS` the stack will look:
      +------------+
 ```
 
-After the kernel saved general purpose registers at the stack, we should check that we came from userspace space again with:
-
+在内核将通用寄存器保存在堆栈中之后，应该使用以下命令再次检查来自用户空间：
 ```assembly
 testb	$3, CS+8(%rsp)
 jz	.Lerror_kernelspace
 ```
 
-because we may have potentially fault if as described in documentation truncated `%RIP` was reported. Anyway, in both cases the [SWAPGS](http://www.felixcloutier.com/x86/SWAPGS.html) instruction will be executed and values from `MSR_KERNEL_GS_BASE` and `MSR_GS_BASE` will be swapped. From this moment the `%gs` register will point to the base address of kernel structures. So, the `SWAPGS` instruction is called and it was main point of the `error_entry` routing.
+因为如果报告文档中描述的`％RIP`被截断，我们可能有潜在的错误。 无论如何，在两种情况下，都将执行[SWAPGS](http://www.felixcloutier.com/x86/SWAPGS.html) 指令，并且将交换` MSR_KERNEL_GS_BASE`和` MSR_GS_BASE`中的值。 从这一刻开始，`％gs`寄存器将指向内核结构的基址。 因此，调用了`SWAPGS`指令，这是`error_entry`路由的要点。
 
-Now we can back to the `idtentry` macro. We may see following assembler code after the call of `error_entry`:
-
+现在我们可以回到`idtentry`宏。 调用`error_entry`之后，我们可能会看到以下汇编代码：
 ```assembly
 movq	%rsp, %rdi
 call	sync_regs
 ```
 
-Here we put base address of stack pointer `%rdi` register which will be first argument (according to [x86_64 ABI](https://www.uclibc.org/docs/psABI-x86_64.pdf)) of the `sync_regs` function and call this function which is defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) source code file:
+在这里，我们将堆栈指针`％rdi`寄存器的基地址放入其中，这将是`sync_regs`的第一个参数(根据[x86_64 ABI](https://www.uclibc.org/docs/psABI-x86_64.pdf) ) 函数并调用[arch / x86 / kernel / traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) 源代码中定义的函数 文件：
 
 ```C
 asmlinkage __visible notrace struct pt_regs *sync_regs(struct pt_regs *eregs)
@@ -370,29 +366,31 @@ asmlinkage __visible notrace struct pt_regs *sync_regs(struct pt_regs *eregs)
 }
 ```
 
-This function takes the result of the `task_ptr_regs` macro which is defined in the [arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h) header file, stores it in the stack pointer and return it. The `task_ptr_regs` macro expands to the address of `thread.sp0` which represents pointer to the normal kernel stack:
-
+此函数采用在[arch/x86/include/asm/processor.h]中定义的`task_ptr_regs`宏的结果(https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/ include / asm / processor.h)头文件，将其存储在堆栈指针中并返回。 宏`task_ptr_regs`扩展为`thread.sp0`的地址，该地址表示指向普通内核堆栈的指针：
 ```C
 #define task_pt_regs(tsk)       ((struct pt_regs *)(tsk)->thread.sp0 - 1)
 ```
 
-As we came from userspace, this means that exception handler will run in real process context. After we got stack pointer from the `sync_regs` we switch stack:
+
+正如来自用户空间一样，这意味着异常处理程序将在实际流程上下文中运行。 从`sync_regs`获取堆栈指针后，我们切换堆栈：
 
 ```assembly
 movq	%rax, %rsp
 ```
 
-The last two steps before an exception handler will call secondary handler are:
+异常处理程序将调用辅助处理程序之前的最后两个步骤是：
 
-1. Passing pointer to `pt_regs` structure which contains preserved general purpose registers to the `%rdi` register:
+1.传递指向`pt_regs`结构的指针，该结构包含保留的通用寄存器到`％rdi`寄存器：
 
 ```assembly
 movq	%rsp, %rdi
 ```
 
-as it will be passed as first parameter of secondary exception handler.
 
-2. Pass error code to the `%rsi` register as it will be second argument of an exception handler and set it to `-1` on the stack for the same purpose as we did it before - to prevent restart of a system call:
+因为它将作为辅助异常处理程序的第一个参数传递。
+
+
+2.将错误代码传递到`％rsi`寄存器，因为它将是异常处理程序的第二个参数，并在堆栈上将其设置为-1，其目的与我们之前相同 防止重新启动系统调用 ：
 
 ```
 .if \has_error_code
@@ -403,10 +401,10 @@ as it will be passed as first parameter of secondary exception handler.
 .endif
 ```
 
-Additionally you may see that we zeroed the `%esi` register above in a case if an exception does not provide error code. 
 
-In the end we just call secondary exception handler:
+另外，如果异常不提供错误代码，可能会看到我们将上面的`％esi`寄存器清零了。
 
+最后，我们只调用辅助异常处理程序：
 ```assembly
 call	\do_sym
 ```
@@ -417,20 +415,22 @@ which:
 dotraplinkage void do_debug(struct pt_regs *regs, long error_code);
 ```
 
-will be for `debug` exception and:
+将用于`debug`异常和：
 
 ```C
 dotraplinkage void notrace do_int3(struct pt_regs *regs, long error_code);
 ```
 
-will be for `int 3` exception. In this part we will not see implementations of secondary handlers, because of they are very specific, but will see some of them in one of next parts.
 
-We just considered first case when an exception occurred in userspace. Let's consider last two.
 
-An exception with paranoid > 0 occurred in kernelspace
+将用于`int 3`例外。 在本部分中，我们将看不到辅助处理程序的实现，因为它们非常具体，但是在下一部分中将看到其中的一些。
+
+我们只是考虑了在用户空间中发生异常的第一种情况。 我们考虑最后两个。
+
+内核空间中发生了偏执> 0的异常
 --------------------------------------------------------------------------------
 
-In this case an exception was occurred in kernelspace and `idtentry` macro is defined with `paranoid=1` for this exception. This value of `paranoid` means that we should use slower way that we saw in the beginning of this part to check do we really came from kernelspace or not. The `paranoid_entry` routing allows us to know this:
+在这种情况下，内核空间中发生了异常，并且为该异常使用`paranoid = 1`定义了`idtentry`宏。 `paranoid`的值意味着我们应该使用在本部分开头看到的更慢的方式来检查我们是否真的来自内核空间。 `paranoid_entry`路由使我们知道这一点：
 
 ```assembly
 ENTRY(paranoid_entry)
@@ -448,7 +448,7 @@ ENTRY(paranoid_entry)
 END(paranoid_entry)
 ```
 
-As you may see, this function represents the same that we covered before. We use second (slow) method to get information about previous state of an interrupted task. As we checked this and executed `SWAPGS` in a case if we came from userspace, we should to do the same that we did before: We need to put pointer to a structure which holds general purpose registers to the `%rdi` (which will be first parameter of a secondary handler) and put error code if an exception provides it to the `%rsi` (which will be second parameter of a secondary handler):
+如您所见，此功能代表了我们之前介绍的功能。 我们使用第二（慢）方法来获取有关被中断任务的先前状态的信息。 当我们检查并在来自用户空间的情况下执行`SWAPGS`时，我们应该做与之前相同的操作：我们需要将指针指向一个结构，该结构将通用寄存器保存到`％rdi`（ 将是辅助处理程序的第一个参数），如果异常将其提供给％rsi（将是辅助处理程序的第二个参数），则放置错误代码：
 
 ```assembly
 movq	%rsp, %rdi
@@ -461,47 +461,43 @@ movq	%rsp, %rdi
 .endif
 ```
 
-The last step before a secondary handler of an exception will be called is cleanup of new `IST` stack fram:
-
+调用异常的辅助处理程序之前的最后一步是清理新的`IST`堆栈帧：
 ```assembly
 .if \shift_ist != -1
 	subq	$EXCEPTION_STKSZ, CPU_TSS_IST(\shift_ist)
 .endif
 ```
 
-You may remember that we passed the `shift_ist` as argument of the `idtentry` macro. Here we check its value and if its not equal to `-1`, we get pointer to a stack from `Interrupt Stack Table` by `shift_ist` index and setup it.
 
-In the end of this second way we just call secondary exception handler as we did it before:
+您可能还记得我们将`shift_ist`作为`iddentry`宏的参数传递了。 在这里，我们检查其值，如果其值不等于-1，则通过`shift_ist` 索引从`中断堆栈表`中获取指向堆栈的指针并进行设置。
 
+在第二种方法的结尾，我们只是像以前一样调用辅助异常处理程序：
 ```assembly
 call	\do_sym
 ```
 
-The last method is similar to previous both, but an exception occured with `paranoid=0` and we may use fast method determination of where we are from.
-
-Exit from an exception handler
+最后一种方法与前面两种方法都相似，但是`paranoid = 0`发生了例外，我们可以使用快速方法确定我们的来源。
+从异常处理程序退出
 --------------------------------------------------------------------------------
 
-After secondary handler will finish its works, we will return to the `idtentry` macro and the next step will be jump to the `error_exit`:
 
+
+在辅助处理程序完成工作之后，我们将返回到`idtentry`宏，下一步将跳转到`error_exit`：
 ```assembly
 jmp	error_exit
 ```
 
-routine. The `error_exit` function defined in the same [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly source code file and the main goal of this function is to know where we are from (from userspace or kernelspace) and execute `SWPAGS` depends on this. Restore registers to previous state and execute `iret` instruction to transfer control to an interrupted task.
+在相同的[arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) 汇编源代码中定义的`error_exit`函数 文件，此功能的主要目标是从用户空间或内核空间知道我们的位置，并根据此位置执行`SWPAGS`。 将寄存器恢复到先前的状态，并执行`iret`指令将控制权转移到中断的任务。
 
 That's all.
 
-Conclusion
+总结完毕
 --------------------------------------------------------------------------------
 
-It is the end of the third part about interrupts and interrupt handling in the Linux kernel. We saw the initialization of the [Interrupt descriptor table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table) in the previous part with the `#DB` and `#BP` gates and started to dive into preparation before control will be transferred to an exception handler and implementation of some interrupt handlers in this part. In the next part we will continue to dive into this theme and will go next by the `setup_arch` function and will try to understand interrupts handling related stuff.
-
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
-
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
-
-Links
+第三部分到此结束，有关Linux内核中的中断和中断处理。 在上一部分中，我们看到了使用`#DB`和`#BP`对[中断描述符表](https://en.wikipedia.org/wiki/Interrupt_descriptor_table) 的初始化，并开始进行控制之前的准备工作 将被转移到异常处理程序和这部分中某些中断处理程序的实现。 在下一部分中，我们将继续深入探讨该主题，然后通过`setup_arch`函数进行下一步，并尝试了解处理相关内容的中断。
+如果您有任何疑问或建议，请在[twitter](https://twitter.com/0xAX) 上给我写评论或ping我。
+**请注意，英语不是我的母语，对于由此带来的不便，我深表歉意。如果发现任何错误，请将PR发送给[linux-insides]（https://github.com/0xAX/linux-insides）。**
+以下链接
 --------------------------------------------------------------------------------
 
 * [Debug registers](http://en.wikipedia.org/wiki/X86_debug_register)
