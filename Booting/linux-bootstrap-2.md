@@ -276,7 +276,7 @@ void __attribute__((section(".inittext"))) putchar(int ch)
 
 `__attribute__((section(".inittext")))` 说明这段代码将被放入 `.inittext` 代码段。关于 `.inittext` 代码段的定义你可以在 [setup.ld](http://lxr.free-electrons.com/source/arch/x86/boot/setup.ld?v=3.18#L19)中找到。
 
-如果需要输出的字符是 `\n` ，那么 `putchar` 函数将调用自己首先输出一个字符 `\r`。接下来，就调用 `bios_putchar` 函数将字符输出到显示器（使用bios int10中断）：
+如果需要输出的字符是 `\n` ，那么 `putchar` 函数将调用自己首先输出一个字符 `\r`。接下来，就调用 `bios_putchar` 函数将字符输出到显示器（使用bios INT 10H中断）：
 
 ```C
 static void __attribute__((section(".inittext"))) bios_putchar(int ch)
