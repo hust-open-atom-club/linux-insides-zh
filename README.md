@@ -4,7 +4,7 @@
 
 一系列关于 Linux 内核和其内在机理的帖子。
 
-**目的很简单** - 分享我对 Linux 内核内在机理的一点知识，帮助对 Linux 内核内在机理感兴趣的人，和其他低级话题。
+**目的很简单** - 分享我对 Linux 内核机理的一些浅见，帮助读者理解 Linux 内核机理和其他底层内容。
 
 **问题/建议**: 若有相关问题，请提交 issue。英文原文问题，找上游 repo - [linux-insides](https://github.com/0xAX/linux-insides) 提交 issue；翻译问题，在下游 repo - [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 中提交 issue。
 
