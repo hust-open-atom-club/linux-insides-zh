@@ -182,7 +182,7 @@ current->stack_canary = canary;
 this_cpu_write(irq_stack_union.stack_canary, canary); // read below about this_cpu_write
 ```
 
-关于IRQ的章节我们这里也不会详细刨析, 关于这部分介绍看这里[IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29).如果canary被设置, 关闭本地中断注册bootstrap CPU以及CPU maps. 我们关闭本地中断 (interrupts for current CPU) 使用 `local_irq_disable` 函数，展开后原型为 `arch_local_irq_disable` 函数[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h):
+关于IRQ的章节我们这里也不会详细剖析, 关于这部分介绍看这里[IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29).如果canary被设置, 关闭本地中断注册bootstrap CPU以及CPU maps. 我们关闭本地中断 (interrupts for current CPU) 使用 `local_irq_disable` 函数，展开后原型为 `arch_local_irq_disable` 函数[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h):
 
 ```C
 static inline notrace void arch_local_irq_enable(void)
@@ -374,7 +374,7 @@ memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)
 保留可用内存初始化initrd
 ---------------------------------------------------------------------------------
 
-之后我们保留替换内核的text和data段用来初始化[initrd](http://en.wikipedia.org/wiki/Initrd),我们暂时不去了解initrd的详细信息，你仅仅只需要知道根文件系统就是通过这方式来进行初始化这就是`early_reserve_initrd` 函数的工作，此函数获取RAM DISK的基地址以及大小以及大小加偏移。
+之后我们保留替换内核的text和data段用来初始化[initrd](http://en.wikipedia.org/wiki/Initrd),我们暂时不去了解initrd的详细信息，你仅仅只需要知道根文件系统就是通过这种方式来进行初始化，这就是`early_reserve_initrd` 函数的工作，此函数获取RAM DISK的基地址、RAM DISK的大小以及RAM DISK的结束地址。
 
 ```C
 u64 ramdisk_image = get_ramdisk_image();
@@ -382,7 +382,7 @@ u64 ramdisk_size  = get_ramdisk_size();
 u64 ramdisk_end   = PAGE_ALIGN(ramdisk_image + ramdisk_size);
 ```
 
-如果你阅读过这些章节[Linux Kernel Booting Process](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)，你就知道所有的这些啊参数都来自于`boot_params`，时刻谨记`boot_params`在boot期间已经被赋值，内核启动头包含了一下几个字段用来描述RAM DISK：
+如果你阅读过这些章节[Linux Kernel Booting Process](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)，你就知道所有的这些参数都来自于`boot_params`，时刻谨记`boot_params`在boot期间已经被赋值，内核启动头包含了一下几个字段用来描述RAM DISK：
 ```
 Field name:	ramdisk_image
 Type:		write (obligatory)
