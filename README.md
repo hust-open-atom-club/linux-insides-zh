@@ -75,7 +75,7 @@
 |├ [6.1](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-1.md)|[@keltoy](https://github.com/keltoy)|已完成|
 |├ [6.2](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-2.md)|[@keltoy](https://github.com/keltoy)|已完成|
 |├ [6.3](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-3.md)|[@huxq](https://github.com/huxq)|已完成|
-|├ [6.4](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-4.md)|[@nannxnann](https://github.com/nannxnann)|正在进行|
+|├ [6.4](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-4.md)|[@nannxnann](https://github.com/nannxnann)|更新至[c4b17d17](https://github.com/0xAX/linux-insides/commit/c4b17d17a085608e8de6e310797d8e81927aed8d)|
 |├ [6.5](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-5.md)||未开始|
 |└ [6.6](https://github.com/MintCN/linux-insides-zh/blob/master/SyncPrim/linux-sync-6.md)||未开始|
 | 7. [Memory management](https://github.com/MintCN/linux-insides-zh/tree/master/MM)||未开始|
