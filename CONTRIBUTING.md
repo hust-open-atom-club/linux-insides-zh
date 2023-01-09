@@ -5,7 +5,7 @@
 
 1. 点击 `fork` 按钮：
 
-    ![fork](http://oi58.tinypic.com/jj2trm.jpg)
+    ![fork](./Assets/fork_button.png)
 
 2. 通过如下命令从你的 Github 帐号 `clone` 库： 
 
