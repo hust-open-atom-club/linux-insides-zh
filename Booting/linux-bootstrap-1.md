@@ -254,7 +254,7 @@ X+08000  +------------------------+
 
 经过上面的一系列操作，我们终于进入到内核了。不过从技术上说，内核还没有被运行起来，因为首先我们需要正确设置内核，启动内存管理，进程管理等等。内核设置代码的运行起点是 [arch/x86/boot/header.S](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18) 中定义的 [_start](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18#L293) 函数。 在 `_start` 函数开始之前，还有很多的代码，那这些代码是做什么的呢？
 
-实际上 `_start` 开始之前的代码是 kenerl 自带的 bootloader。在很久以前，是可以使用这个 bootloader 来启动 Linux 的。不过在新的 Linux 中，这个 bootloader 代码已经不再启动 Linux 内核，而只是输出一个错误信息。 如果你运行下面的命令，直接使用 Linux 内核来启动，你会看到下图所示的错误：
+实际上 `_start` 开始之前的代码是 kernel 自带的 bootloader。在很久以前，是可以使用这个 bootloader 来启动 Linux 的。不过在新的 Linux 中，这个 bootloader 代码已经不再启动 Linux 内核，而只是输出一个错误信息。 如果你运行下面的命令，直接使用 Linux 内核来启动，你会看到下图所示的错误：
 
 ```
 qemu-system-x86_64 vmlinuz-3.18-generic
