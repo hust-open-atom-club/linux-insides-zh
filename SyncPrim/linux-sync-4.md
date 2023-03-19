@@ -1,7 +1,7 @@
 内核同步原语. 第四部分.
 ================================================================================
 
-Introduction
+引言
 --------------------------------------------------------------------------------
 
 这是本章的第四部分 [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/SyncPrim/index.html) ，本章描述了内核中的同步原语，且在之前的部分我们介绍完了 [自旋锁](https://en.wikipedia.org/wiki/Spinlock) 和 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) 两种不同的同步原语。我们将在这个章节持续学习 [同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)，并考虑另一简称 [互斥锁 (mutex)](https://en.wikipedia.org/wiki/Mutual_exclusion) 的同步原语，全名 `MUTual EXclusion`。
@@ -24,7 +24,7 @@ struct semaphore {
 };
 ```
 
-此结构体包含 [锁](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) 的状态和一由等待者所构成的列表。根据 `count` 字段的值，`semaphore` 可以向希望访问该资源的多个进程提供对该资源的访问。[互斥锁](https://en.wikipedia.org/wiki/Mutual_exclusion) 的概念与 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) 相似，却有着一些差异。`信号量` 和 `互斥锁` 同步原语的主要差异在于 `互斥锁` 具有更严格的语义。不像 `信号量`，单一时间一 `互斥锁` 只能由一个 [进程](https://en.wikipedia.org/wiki/Process_%28computing%29) 持有，并且只有该 `互斥锁` 的 `持有者` 能够对其进行释放或解锁的动作。另外的差异是 `锁` 的 [API](https://en.wikipedia.org/wiki/Application_programming_interface) 实现，`信号量` 同步原语强置重新调度 (rescheduling) 在等待列表中的进程。`互斥锁 API` 的实现则允许避免这种状况，进而减少这种昂贵的 [上下文切换](https://en.wikipedia.org/wiki/Context_switch) 操作。
+此结构体包含 [锁](https://en.wikipedia.org/wiki/Lock_%28computer_science%29) 的状态和一由等待者所构成的列表。根据 `count` 字段的值，`semaphore` 可以向希望访问该资源的多个进程提供对该资源的访问。[互斥锁](https://en.wikipedia.org/wiki/Mutual_exclusion) 的概念与 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) 相似，却有着一些差异。`信号量` 和 `互斥锁` 同步原语的主要差异在于 `互斥锁` 具有更严格的语义。不像 `信号量`，单一时间一 `互斥锁` 只能由一个 [进程](https://en.wikipedia.org/wiki/Process_%28computing%29) 持有，并且只有该 `互斥锁` 的 `持有者` 能够对其进行释放或解锁的动作。另外的差异是 `锁` 的 [API](https://en.wikipedia.org/wiki/Application_programming_interface) 实现，`信号量` 同步原语强置重新调度 (重新调度) 在等待列表中的进程。`互斥锁 API` 的实现则允许避免这种状况，进而减少这种昂贵的 [上下文切换](https://en.wikipedia.org/wiki/Context_switch) 操作。
 
 `互斥锁` 同步原语由如下结构呈现在Linux内核中：
 
@@ -56,13 +56,13 @@ struct mutex {
 
 我们已探究完 `互斥锁` 的结构，现在，我们可以开始思考此同步原语是如何在Linux内核中运作的。你可能会猜，一个想获取锁的进程，在允许的情况下，就直接对 `mutex->count` 字段做递减的操作来试图获取锁。而如果进程希望释放一个锁，则递增该字段的值即可。大致上没错，但也正如你可能猜到的那样，在Linux内核中这可能不会那么简单。
 
-事实上，当某进程在试图获取 `互斥锁` 时，有三种可能的路径：
+事实上，当某进程试图获取 `互斥锁` 时，三条可能路径的选择策略要根据当前 mutex 的状态而定。
 
 * `fastpath`;
 * `midpath`;
 * `slowpath`.
 
-会采取哪种路径，将根据当前 `mutex` 的状态而定。第一条路径或 `fastpath` 是最快的，正如你从名称中可以领会到的那样。这种情况下的所有事情都很简单。因 `互斥锁` 还没被任何人获取，其 `mutex` 结构中的`count`字段可以直接被进行递减操作。在释放该 `互斥锁` 的情况下，算法是类似的，进程对该 `互斥锁` 结构中的 `count` 字段进行递增的操作即可。当然，所有的这些操作都必须是 [原子](https://en.wikipedia.org/wiki/Linearizability) 的。
+第一条路径或 `fastpath` 是最快的，正如你从名称中可以领会到的那样。这种情况下的所有事情都很简单。因 `互斥锁` 还没被任何人获取，其 `mutex` 结构中的`count`字段可以直接被进行递减操作。在释放该 `互斥锁` 的情况下，算法是类似的，进程对该 `互斥锁` 结构中的 `count` 字段进行递增的操作即可。当然，所有的这些操作都必须是 [原子](https://en.wikipedia.org/wiki/Linearizability) 的。
 
 是的，这看起来很简单。但如果一个进程想要获取一个已经被其他进程持有的 `互斥锁` 时，会发生什么事？在这种情况下，控制流程将被转由第二条路径决定 - `midpath`。`midpath` 或 `乐观自旋` 会在锁的持有者仍在运行时，对我们已经熟悉的 [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) 进行 [循环](https://en.wikipedia.org/wiki/Spinlock) 操作。这条路径只有在没有其他更高优先级的进程准备运行时执行。这条路径被称作 `乐观` 是因为等待的进程不会被睡眠或是调度。这可以避免掉昂贵的 [上下文切换](https://en.wikipedia.org/wiki/Context_switch).
 
@@ -95,7 +95,7 @@ struct semaphore_waiter {
 互斥锁 API
 --------------------------------------------------------------------------------
 
-OK，在前面的章节我们已经了解什么是 `互斥锁` 原语，而且看过了Linux内核中用来呈现 `互斥锁` 的 `互斥锁` 结构。现在是时后开始研究用来操弄互斥锁的 [API](https://en.wikipedia.org/wiki/Application_programming_interface) 了。详细的 `互斥锁` API 被记录在 [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) 头文件。一如既往，在考虑如何获取和释放一 `互斥锁` 之前，我们需要知道如何初始化它。
+至此，在前面的章节我们已经了解什么是 `互斥锁` 原语，而且看过了Linux内核中用来呈现 `互斥锁` 的 `互斥锁` 结构。现在是时后开始研究用来操弄互斥锁的 [API](https://en.wikipedia.org/wiki/Application_programming_interface) 了。详细的 `互斥锁` API 被记录在 [include/linux/mutex.h](https://github.com/torvalds/linux/blob/master/include/linux/mutex.h) 头文件。一如既往，在考虑如何获取和释放一 `互斥锁` 之前，我们需要知道如何初始化它。
 
 初始化 `互斥锁` 有两种方法，第一种是静态初始化。为此，Linux内核提供以下宏：
 
@@ -227,7 +227,7 @@ static inline void mutex_set_owner(struct mutex *lock)
 }
 ```
 
-另外一种情况，让我们研究某进程因为锁已被其它进程持有，而无法顺利获得的情况，我们已经知道在这种情境下 `__mutex_lock_slowpath` 函数会被调用，让我们开始研究这个函数。此函数被定义在 [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) 源码文件，并且这个函数由 `container_of` 宏开头，意图通过 `__mutex_fastpath_lock` 给的互斥锁状态变量来获得互斥锁本身：
+另外一种情况，让我们研究一进程因为锁已被其它进程持有，而无法顺利获得的情况，我们已经知道在这种情境下 `__mutex_lock_slowpath` 函数会被调用，让我们开始研究这个函数。此函数被定义在 [kernel/locking/mutex.c](https://github.com/torvalds/linux/blob/master/kernel/locking/mutex.c) 源码文件，并且这个函数由 `container_of` 宏开头，意图通过 `__mutex_fastpath_lock` 给的互斥锁状态变量来获得互斥锁本身：
 
 ```C
 __visible void __sched
@@ -280,7 +280,7 @@ while (true) {
 }
 ```
 
-并试图获取该锁。首先我们尝试获取该锁的持有者资讯，如果持有者存在 (在进程已释放互斥锁的情况下可能不存在)，我们就在持有者释放锁前于 `mutex_spin_on_owner` 函数中等待。如果在等待锁持有者的过程中遭遇了高优先级任務，我们就离开循环进入睡眠。在另外一种情况下，该锁被进程释放，那我们就试图通过 `mutex_try_to_acquired` 来获取该锁。如果这个操作顺利完成，我们就为该互斥锁设定新的持有者，将我们自身从`MCS` 等待队列中移除，并从 `mutex_optimistic_spin` 函数中离开。至此锁就被某进程获取完成，我们接着开启 [抢占](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 并从 `__mutex_lock_common` 函数中离开：
+并试图获取该锁。首先我们尝试获取该锁的持有者资讯，如果持有者存在 (在进程已释放互斥锁的情况下可能不存在)，我们就在持有者释放锁前于 `mutex_spin_on_owner` 函数中等待。如果在等待锁持有者的过程中遭遇了高优先级任務，我们就离开循环进入睡眠。在另外一种情况下，该锁被进程释放，那我们就试图通过 `mutex_try_to_acquired` 来获取该锁。如果这个操作顺利完成，我们就为该互斥锁设定新的持有者，将我们自身从`MCS` 等待队列中移除，并从 `mutex_optimistic_spin` 函数中离开。至此锁就被一进程获取完成，我们接着开启 [抢占](https://en.wikipedia.org/wiki/Preemption_%28computing%29) 并从 `__mutex_lock_common` 函数中离开：
 
 ```C
 if (mutex_optimistic_spin(lock, ww_ctx, use_ww_ctx)) {
