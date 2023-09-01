@@ -452,7 +452,7 @@ BSS 段用来存储那些没有被初始化的静态变量。对于这个段使�
 到目前为止，我们完成了堆栈和 BSS 的设置，现在我们可以正式跳入 `main()` 函数来执行 C 代码了：
 
 ```assembly
-	calll main
+	call main
 ```
 
 `main()` 函数定义在 [arch/x86/boot/main.c](http://lxr.free-electrons.com/source/arch/x86/boot/main.c?v=3.18)，我们将在下一章详细介绍这个函数做了什么事情。
