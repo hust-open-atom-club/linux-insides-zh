@@ -44,6 +44,8 @@
 
 [@narcijie](https://github.com/narcijie)
 
+[@biopuppet](https://github.com/biopuppet)
+
 [@Albertchamberlain](https://github.com/Albertchamberlain)
 
 [@nannxnann](https://github.com/nannxnann)
