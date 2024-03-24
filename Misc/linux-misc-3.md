@@ -491,22 +491,22 @@ $ ld -M @linker.ld
 
 ```assembly
 .data
-	msg	.ascii "hello, world!",`\n`
+        msg:    .ascii  "hello, world!\n"
 
 .text
 
-	global	_start
-  
-_start:
-	mov    $1,%rax
-	mov    $1,%rdi
-	mov    $msg,%rsi
-	mov    $14,%rdx
-	syscall
+.global _start
 
-	mov    $60,%rax
-	mov    $0,%rdi
-	syscall
+_start:
+        mov    $1,%rax
+        mov    $1,%rdi
+        mov    $msg,%rsi
+        mov    $14,%rdx
+        syscall
+
+        mov    $60,%rax
+        mov    $0,%rdi
+        syscall
 ```
 
 我们可以用以下命令编译并链接：
