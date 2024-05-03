@@ -4,7 +4,7 @@
 简介
 --------------------------------------------------------------------------------
 
-在 Linux 内核启动过程中的[第五部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)，我们学到了内核在启动的最早阶段都做了哪些工作。接下来，在我们明白内核如何运行第一个 init 进程之前，内核初始化其他部分，比如加载 `initrd` ，初始化 lockdep ，以及许多许多其他的工作。
+在 Linux 内核启动过程中的[第五部分](/Booting/linux-bootstrap-5.md)，我们学到了内核在启动的最早阶段都做了哪些工作。接下来，在我们明白内核如何运行第一个 init 进程之前，内核初始化其他部分，比如加载 `initrd` ，初始化 lockdep ，以及许多许多其他的工作。
 
 是的，那将有很多不同的事，但是还有更多更多更多关于**内存**的工作。
 
@@ -258,4 +258,4 @@ readelf -s vmlinux | grep ffffffff81000000
 * [MMU](http://en.wikipedia.org/wiki/Memory_management_unit)
 * [ELF64](https://github.com/0xAX/linux-insides/blob/master/Theory/ELF.md)
 * [Documentation/x86/x86_64/mm.txt](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt)
-* [Last part - Kernel booting process](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)
+* [Last part - Kernel booting process](/Booting/linux-bootstrap-5.md)

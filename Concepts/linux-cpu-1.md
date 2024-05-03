@@ -91,7 +91,7 @@ early_param("percpu_alloc", percpu_alloc_setup);
 enum pcpu_fc pcpu_chosen_fc __initdata = PCPU_FC_AUTO;
 ```
 
-如果内核命令行中没有设置 `percpu_alloc` 参数，就会使用 `embed` 分配器，将第一个 per-cpu 块嵌入进带 [memblock](http://0xax.gitbooks.io/linux-insides/content/MM/linux-mm-1.html) 的 bootmem。最后一个分配器和第一个块 `page` 分配器一样，只是将第一个块使用 `PAGE_SIZE` 页进行了映射。
+如果内核命令行中没有设置 `percpu_alloc` 参数，就会使用 `embed` 分配器，将第一个 per-cpu 块嵌入进带 [memblock](/MM/linux-mm-1.md) 的 bootmem。最后一个分配器和第一个块 `page` 分配器一样，只是将第一个块使用 `PAGE_SIZE` 页进行了映射。
 
 如我上面所写，首先我们在 `setup_per_cpu_areas` 中对第一个块分配器检查，检查到第一个块分配器不是 page 分配器：
 

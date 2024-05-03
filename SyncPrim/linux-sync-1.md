@@ -3,7 +3,7 @@ Linux 内核中的同步原语. 第一部分.
 
 Introduction
 --------------------------------------------------------------------------------
-这一部分为 [linux-insides](https://xinqiu.gitbooks.io/linux-insides-cn/content/) 这本书开启了新的章节。定时器和时间管理相关的概念在上一个[章节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html)已经描述过了。现在是时候继续了。就像你可能从这一部分的标题所了解的那样，本章节将会描述 Linux 内核中的[同步](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)原语。
+这一部分为 [linux-insides](/SUMMARY.md) 这本书开启了新的章节。定时器和时间管理相关的概念在上一个[章节](/Timers/)已经描述过了。现在是时候继续了。就像你可能从这一部分的标题所了解的那样，本章节将会描述 Linux 内核中的[同步](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)原语。
 
 像往常一样，在考虑一些同步相关的事情之前，我们会尝试去概括地了解什么是`同步原语`。事实上，同步原语是一种软件机制，提供了两个或者多个[并行](https://en.wikipedia.org/wiki/Parallel_computing)进程或者线程在不同时刻执行一段相同的代码段的能力。例如下面的代码片段：
 
@@ -20,7 +20,7 @@ clocksource_select();
 ...
 mutex_unlock(&clocksource_mutex);
 ```
-出自 [kernel/time/clocksource.c](https://github.com/torvalds/linux/master/kernel/time/clocksource.c) 源文件。这段代码来自于 `__clocksource_register_scale` 函数，此函数添加给定的 [clocksource](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html) 到时钟源列表中。这个函数在注册时钟源列表中生成两个不同的操作。例如 `clocksource_enqueue` 函数就是添加给定时钟源到注册时钟源列表——`clocksource_list` 中。注意这几行代码被两个函数所包围：`mutex_lock` 和 `mutex_unlock`，这两个函数都带有一个参数——在本例中为 `clocksource_mutex`。
+出自 [kernel/time/clocksource.c](https://github.com/torvalds/linux/master/kernel/time/clocksource.c) 源文件。这段代码来自于 `__clocksource_register_scale` 函数，此函数添加给定的 [clocksource](/Timers/linux-timers-2.md) 到时钟源列表中。这个函数在注册时钟源列表中生成两个不同的操作。例如 `clocksource_enqueue` 函数就是添加给定时钟源到注册时钟源列表——`clocksource_list` 中。注意这几行代码被两个函数所包围：`mutex_lock` 和 `mutex_unlock`，这两个函数都带有一个参数——在本例中为 `clocksource_mutex`。
 
 这些函数展示了基于[互斥锁 (mutex)](https://en.wikipedia.org/wiki/Mutual_exclusion) 同步原语的加锁和解锁。当 `mutex_lock` 被执行，允许我们阻止两个或两个以上线程执行这段代码，而 `mute_unlock` 还没有被互斥锁的处理拥有者锁执行。换句话说，就是阻止在 `clocksource_list`上的并行操作。为什么在这里需要使用`互斥锁`？ 如果两个并行处理尝试去注册一个时钟源会怎样。正如我们已经知道的那样，其中具有最大的等级（其具有最高的频率在系统中注册的时钟源）的列表中选择一个时钟源后，`clocksource_enqueue` 函数立即将一个给定的时钟源到 `clocksource_list` 列表：
 
@@ -39,7 +39,7 @@ static void clocksource_enqueue(struct clocksource *cs)
 
 如果两个并行处理尝试同时去执行这个函数，那么这两个处理可能会找到相同的 `入口 (entry)` 可能发生[竞态条件 (race condition)](https://en.wikipedia.org/wiki/Race_condition) 或者换句话说，第二个执行 `list_add` 的处理程序，将会重写第一个线程写入的时钟源。
 
-除了这个简答的例子，同步原语在 Linux 内核无处不在。如果再翻阅之前的[章节] (https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) 或者其他章节或者如果大概看看 Linux 内核源码，就会发现许多地方都使用同步原语。我们不考虑 `mutex` 在 Linux 内核是如何实现的。事实上，Linux 内核提供了一系列不同的同步原语：
+除了这个简答的例子，同步原语在 Linux 内核无处不在。如果再翻阅之前的[章节] (/Timers/) 或者其他章节或者如果大概看看 Linux 内核源码，就会发现许多地方都使用同步原语。我们不考虑 `mutex` 在 Linux 内核是如何实现的。事实上，Linux 内核提供了一系列不同的同步原语：
 
 * `mutex`;
 * `semaphores`;
@@ -236,7 +236,7 @@ static inline void __raw_spin_lock(raw_spinlock_t *lock)
         LOCK_CONTENDED(lock, do_raw_spin_trylock, do_raw_spin_lock);
 }
 ```
-就像你们可能了解的那样， 首先我们禁用了[抢占](https://en.wikipedia.org/wiki/Preemption_%28computing%29)，通过 [include/linux/preempt.h](https://github.com/torvalds/linux/blob/master/include/linux/preempt.h) (在 Linux 内核初始化进程章节的第九[部分](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-9.html)会了解到更多关于抢占)中的 `preempt_disable` 调用实现禁用。当我们将要解开给定的`自旋锁`，抢占将会再次启用：
+就像你们可能了解的那样， 首先我们禁用了[抢占](https://en.wikipedia.org/wiki/Preemption_%28computing%29)，通过 [include/linux/preempt.h](https://github.com/torvalds/linux/blob/master/include/linux/preempt.h) (在 Linux 内核初始化进程章节的第九[部分](/Initialization/linux-initialization-9.md)会了解到更多关于抢占)中的 `preempt_disable` 调用实现禁用。当我们将要解开给定的`自旋锁`，抢占将会再次启用：
 
 ```C
 static inline void __raw_spin_unlock(raw_spinlock_t *lock)
@@ -409,7 +409,7 @@ head |   7   | - - - |   7   | tail
 
 * [Concurrent computing](https://en.wikipedia.org/wiki/Concurrent_computing)
 * [Synchronization](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)
-* [Clocksource framework](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html)
+* [Clocksource framework](/Timers/linux-timers-2.md)
 * [Mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
 * [Race condition](https://en.wikipedia.org/wiki/Race_condition)
 * [Atomic operations](https://en.wikipedia.org/wiki/Linearizability)
@@ -422,4 +422,4 @@ head |   7   | - - - |   7   | tail
 * [xadd instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [NOP](https://en.wikipedia.org/wiki/NOP)
 * [Memory barriers](https://www.kernel.org/doc/Documentation/memory-barriers.txt)
-* [Previous chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html)
+* [Previous chapter](/Timers/)

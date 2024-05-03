@@ -4,7 +4,7 @@ Linux 内核系统调用 第三节
 vsyscalls 和 vDSO
 --------------------------------------------------------------------------------
 
-这是讲解 Linux 内核中系统调用[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html)的第三部分，[前一节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html)讨论了用户空间应用程序发起的系统调用的准备工作及系统调用的处理过程。在这一节将讨论两个与系统调用十分相似的概念，这两个概念是`vsyscall` 和 `vdso`。
+这是讲解 Linux 内核中系统调用[章节](/SysCall/)的第三部分，[前一节](/SysCall/linux-syscall-2.md)讨论了用户空间应用程序发起的系统调用的准备工作及系统调用的处理过程。在这一节将讨论两个与系统调用十分相似的概念，这两个概念是`vsyscall` 和 `vdso`。
 
 我们已经了解什么是`系统调用`。这是 Linux 内核一种特殊的运行机制，使得用户空间的应用程序可以请求，像写入文件和打开套接字等特权级下的任务。正如你所了解的，在 Linux 内核中发起一个系统调用是特别昂贵的操作，因为处理器需要中断当前正在执行的任务，切换内核模式的上下文，在系统调用处理完毕后跳转至用户空间。以下的两种机制  - `vsyscall` 和d `vdso` 被设计用来加速系统调用的处理，在这一节我们将了解两种机制的工作原理。
 
@@ -24,7 +24,7 @@ ffffffffff600000 - ffffffffffdfffff (=8 MB) vsyscalls
 ffffffffff600000-ffffffffff601000 r-xp 00000000 00:00 0                  [vsyscall]
 ```
 
-因此, 这些系统调用将在用户空间下执行，这意味着将不发生 [上下文切换](https://en.wikipedia.org/wiki/Context_switch)。 `vsyscall` 内存页的映射在 [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) 源代码中定义的 `map_vsyscall` 函数中实现。这一函数在 Linux 内核初始化时被 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码中定义的函数`setup_arch` (我们在[第五章](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html) Linux 内核的初始化中讨论过该函数)。
+因此, 这些系统调用将在用户空间下执行，这意味着将不发生 [上下文切换](https://en.wikipedia.org/wiki/Context_switch)。 `vsyscall` 内存页的映射在 [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) 源代码中定义的 `map_vsyscall` 函数中实现。这一函数在 Linux 内核初始化时被 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码中定义的函数`setup_arch` (我们在[第五章](/Initialization/linux-initialization-5.md) Linux 内核的初始化中讨论过该函数)。
 
 注意 `map_vsyscall` 函数的实现依赖于内核配置选项 `CONFIG_X86_VSYSCALL_EMULATION` :
 
@@ -49,7 +49,7 @@ void __init map_vsyscall(void)
 }
 ```
 
-在 `map_vsyscall` 函数的开始，通过宏 `__pa_symbol` 获取了 `vsyscall` 内存页的物理地址(我们已在[第四章](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html) of the Linux kernel initialization process)讨论了该宏的实现）。`__vsyscall_page` 在  [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) 汇编源代码文件中定义， 具有如下的 [虚拟地址](https://en.wikipedia.org/wiki/Virtual_address_space):
+在 `map_vsyscall` 函数的开始，通过宏 `__pa_symbol` 获取了 `vsyscall` 内存页的物理地址(我们已在[第四章](/Initialization/linux-initialization-4.md) of the Linux kernel initialization process)讨论了该宏的实现）。`__vsyscall_page` 在  [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) 汇编源代码文件中定义， 具有如下的 [虚拟地址](https://en.wikipedia.org/wiki/Virtual_address_space):
 
 ```
 ffffffff81881000 D __vsyscall_page
@@ -80,7 +80,7 @@ __vsyscall_page:
 	ret
 ```
 
-回到 `map_vsyscall` 函数及 `__vsyscall_page` 的实现，在得到 `__vsyscall_page` 的物理地址之后，使用 `__set_fixmap` 为  `vsyscall` 内存页 检查设置 [fix-mapped](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)地址的变量`vsyscall_mode`:
+回到 `map_vsyscall` 函数及 `__vsyscall_page` 的实现，在得到 `__vsyscall_page` 的物理地址之后，使用 `__set_fixmap` 为  `vsyscall` 内存页 检查设置 [fix-mapped](/MM/linux-mm-2.md)地址的变量`vsyscall_mode`:
 
 ```C
 if (vsyscall_mode != NONE)
@@ -140,9 +140,9 @@ static int __init vsyscall_setup(char *str)
 early_param("vsyscall", vsyscall_setup);
 ```
 
-关于 `early_param` 宏的更多信息可以在[第六章](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-6.html) Linux 内核初始化中找到。
+关于 `early_param` 宏的更多信息可以在[第六章](/Initialization/linux-initialization-6.md) Linux 内核初始化中找到。
 
-在函数 `vsyscall_map` 的最后仅通过 [BUILD_BUG_ON](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html) 宏检查  `vsyscall` 内存页的虚拟地址是否等于变量 `VSYSCALL_ADDR` :
+在函数 `vsyscall_map` 的最后仅通过 [BUILD_BUG_ON](/Initialization/linux-initialization-1.md) 宏检查  `vsyscall` 内存页的虚拟地址是否等于变量 `VSYSCALL_ADDR` :
 
 ```C
 BUILD_BUG_ON((unsigned long)__fix_to_virt(VSYSCALL_PAGE) !=
@@ -252,7 +252,7 @@ Here we can see that [uname](https://en.wikipedia.org/wiki/Uname) util was linke
 * `libc.so.6`;
 * `ld-linux-x86-64.so.2`.
 
-The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](https://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linux-misc-3.html)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
+The first provides `vDSO` functionality, the second is `C` [standard library](https://en.wikipedia.org/wiki/C_standard_library) and the third is the program interpreter (more about this you can read in the part that describes [linkers](/Misc/linux-misc-3.md)). So, the `vDSO` solves limitations of the `vsyscall`. Implementation of the `vDSO` is similar to `vsyscall`.
 
 Initialization of the `vDSO` occurs in the `init_vdso` function that defined in the [arch/x86/entry/vdso/vma.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vma.c) source code file. This function starts from the initialization of the `vDSO` images for 32-bits and 64-bits depends on the `CONFIG_X86_X32_ABI` kernel configuration option:
 
@@ -370,11 +370,11 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the third part about the system calls concept in the Linux kernel. In the previous [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html) we discussed the implementation of the preparation from the Linux kernel side, before a system call will be handled and implementation of the `exit` process from a system call handler. In this part we continued to dive into the stuff which is related to the system call concept and learned two new concepts that are very similar to the system call - the `vsyscall` and the `vDSO`.
+This is the end of the third part about the system calls concept in the Linux kernel. In the previous [part](/SysCall/linux-syscall-2.md) we discussed the implementation of the preparation from the Linux kernel side, before a system call will be handled and implementation of the `exit` process from a system call handler. In this part we continued to dive into the stuff which is related to the system call concept and learned two new concepts that are very similar to the system call - the `vsyscall` and the `vDSO`.
 
 After all of these three parts, we know almost all things that are related to system calls, we know what system call is and why user applications need them.  We also know what occurs when a user application calls a system call and how the kernel handles system calls.
 
-The next part will be the last part in this [chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/index.html) and we will see what occurs when a user runs the program.
+The next part will be the last part in this [chapter](/SysCall/) and we will see what occurs when a user runs the program.
 
 If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
 
@@ -390,14 +390,14 @@ Links
 * [virtual address](https://en.wikipedia.org/wiki/Virtual_address_space)
 * [Segmentation](https://en.wikipedia.org/wiki/Memory_segmentation)
 * [enum](https://en.wikipedia.org/wiki/Enumerated_type)
-* [fix-mapped addresses](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-2.html)
+* [fix-mapped addresses](MM/linux-mm-2.md)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)
-* [BUILD_BUG_ON](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)
+* [BUILD_BUG_ON](/Initialization/linux-initialization-1.md)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
 * [Page fault](https://en.wikipedia.org/wiki/Page_fault)
 * [segementation fault](https://en.wikipedia.org/wiki/Segmentation_fault)
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [stack pointer](https://en.wikipedia.org/wiki/Stack_register)
 * [uname](https://en.wikipedia.org/wiki/Uname)
-* [Linkers](https://xinqiu.gitbooks.io/linux-insides-cn/content/Misc/linux-misc-3.html)
-* [Previous part](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-2.html)
+* [Linkers](/Misc/linux-misc-3.md)
+* [Previous part](/SysCall/linux-syscall-2.md)

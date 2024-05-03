@@ -214,7 +214,7 @@ static initcall_t *initcall_levels[] __initdata = {
 }
 ```
 
-如果你对这些不熟，可以在本书的某些[部分](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)了解更多关于[链接器](https://en.wikipedia.org/wiki/Linker_%28computing%29)的信息。
+如果你对这些不熟，可以在本书的某些[部分](/Misc/linux-misc-3.md)了解更多关于[链接器](https://en.wikipedia.org/wiki/Linker_%28computing%29)的信息。
 
 正如我们刚看到的，`do_initcall_level` 函数有一个参数 - `initcall` 的级别，做了以下两件事：首先这个函数拷贝了 `initcall_command_line`，这是通常内核包含了各个模块参数的[命令行](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)的副本，并用 [kernel/params.c](https://github.com/torvalds/linux/blob/master/kernel/params.c)源码文件的 `parse_args` 函数解析它，然后调用各个级别的 `do_on_initcall` 函数：
 
@@ -387,9 +387,9 @@ rootfs_initcall(populate_rootfs);
 * [symbols concatenation](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html)
 * [GCC](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
 * [Link time optimization](https://gcc.gnu.org/wiki/LinkTimeOptimization)
-* [Introduction to linkers](https://0xax.gitbooks.io/linux-insides/content/Misc/linkers.html)
+* [Introduction to linkers](/Misc/linux-misc-3.md)
 * [Linux kernel command line](https://www.kernel.org/doc/Documentation/kernel-parameters.txt)
 * [Process identifier](https://en.wikipedia.org/wiki/Process_identifier)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [rootfs](https://en.wikipedia.org/wiki/Initramfs)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [previous part](/Misc/linux-misc-2.md)
