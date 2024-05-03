@@ -10,7 +10,7 @@ CPU masks
 * [lib/cpumask.c](https://github.com/torvalds/linux/blob/master/lib/cpumask.c)
 * [kernel/cpu.c](https://github.com/torvalds/linux/blob/master/kernel/cpu.c)
 
-正如 [include/linux/cpumask.h](https://github.com/torvalds/linux/blob/master/include/linux/cpumask.h) 注释：Cpumasks 提供了代表系统中 CPU 集合的位图，一位放置一个 CPU 序号。我们已经在 [Kernel entry point](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html) 部分，函数 `boot_cpu_init` 中看到了一点 cpumask。这个函数将第一个启动的 cpu 上线、激活等等……
+正如 [include/linux/cpumask.h](https://github.com/torvalds/linux/blob/master/include/linux/cpumask.h) 注释：Cpumasks 提供了代表系统中 CPU 集合的位图，一位放置一个 CPU 序号。我们已经在 [Kernel entry point](/Initialization/linux-initialization-4.md) 部分，函数 `boot_cpu_init` 中看到了一点 cpumask。这个函数将第一个启动的 cpu 上线、激活等等……
 
 ```C
 set_cpu_online(cpu, true);
