@@ -4,9 +4,9 @@ Linux内核中的时钟和时间管理 第6部分
 x86_64有关的时钟资源
 --------------------------------------------------------------------------------
 
-这是[本章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html)的第六部分，讲述Linux内核中的时钟和时间管理的相关内容。上一节中，我们了解了clockevents框架，现在继续深入研究Linux内核中的时间管理相关内容，本节将讲述x86架构中时钟源的实现（更多关于时钟源的概念可以参考在本章的第二节）
+这是[本章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html)的第六部分，将描述Linux内核中的时钟和时间管理的相关内容。上一节中，我们了解了clockevents框架，现在继续深入研究Linux内核中的时间管理相关内容，本节将讲述x86架构中时钟源的实现（更多关于时钟源的概念可以参考本章第二节）。
 
-首先，需要知道在x86架构上可以使用哪些时钟源？很容易从[sysfs](https://en.wikipedia.org/wiki/Sysfs)中，也就是文件`/sys/devices/system/clocksource/clocksource0/available_clocksource`中获得。文件夹`/sys/devices/system/clocksource/clocksourceN`内有两个特殊文件保存：
+首先，我们需要知道x86架构上可以使用哪些时钟源。这个问题很容易从[sysfs](https://en.wikipedia.org/wiki/Sysfs)或文件`/sys/devices/system/clocksource/clocksource0/available_clocksource`中获得答案。文件夹`/sys/devices/system/clocksource/clocksourceN`内有两个特殊文件保存：
 
 * `available_clocksource` - 提供系统中可用的时钟资源信息。
 * `current_clocksource`   - 提供系统中当前使用的时钟资源。
@@ -30,7 +30,7 @@ tsc hpet acpi_pm
 $ cat /sys/devices/system/clocksource/clocksource0/current_clocksource 
 tsc
 ```
-作者的系统中是[Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)。本章第二节介绍了Linux内核中`clocksource`的内部框架，系统中最好的时钟源是具有最佳（最高）等级的时钟源，或者说是具有最高频率的时钟源。
+作者的系统中是[Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)。由[本章第二节内容](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html)可知，系统中最好的时钟源是具有最佳（最高）等级的时钟源，或者说是具有最高频率的时钟源。
 
 [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)电源管理时钟的频率是3.579545MHz。而[High Precision Event Timer(高精度事件定时器)](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)的频率至少是10MHz，而[Time Stamp Counter(时间戳计数器)](https://en.wikipedia.org/wiki/Time_Stamp_Counter)的频率取决于处理器。例如在较早的处理器上，`TSC`用来计算处理器内部的时钟周期，就是说当处理器的频率比生变化时，其频率也会发生变化。这种现象在较新的处理器上有所改善。新的处理器有一个不变的时间戳计数器，无论处理器在什么状态下都会以恒定的速率递增。我们可以在`/proc/cpuinfo`的输出中获得它的频率。例如：
 
@@ -42,7 +42,7 @@ model name	: Intel(R) Core(TM) i7-4790K CPU @ 4.00GHz
 ```
 而尽管英特尔的开发者手册说，`TSC`的频率虽然是恒定的，但不一定是处理器的最大频率或者品牌名称中中给出的频率。总之，可以发现，TSC远超`ACPI PM`计时器以及`HPET`的频率，而且具有最佳速度或最高频率的时钟源是系统中当前正在使用的时钟。
 
-注意到，除了这三个时钟源之外，在`/sys/devices/system/clocksource/clocksource0/available_clocksource`的输出中没有看到另外两个熟悉的时钟源，`jiffy`和`refined_jiffies`。看不到它们，因为这个文件只映射高分辨率的时钟源，也就是带有[CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h#L113)标志的时钟源。
+注意到，除了这三个时钟源之外，在`/sys/devices/system/clocksource/clocksource0/available_clocksource`的输出中没有看到另外两个熟悉的时钟源，`jiffy`和`refined_jiffies`。之所以看不到它们，是因为这个文件只映射高分辨率的时钟源，也就是带有[CLOCK_SOURCE_VALID_FOR_HRES](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h#L113)标志的时钟源。
 
 正如上面所述，本节将会涵盖所有这三个时钟源，将按照它们初始化的顺序来逐一分析。
 
@@ -156,7 +156,7 @@ cfg = hpet_readl(HPET_CFG);
 hpet_boot_cfg = kmalloc((last + 2) * sizeof(*hpet_boot_cfg), GFP_KERNEL);
 ```
 
-在为 `HPET`的配置寄存器分配空间后，主计时钟开始运行，并可以通过配置寄存器的`HPET_CFG_ENABLE`位，为每一个时钟设置定时器中断。前提是，所有的时钟都通过配置寄存器中的`HPET_CFG_ENABLE`位所启用。最后，只是通过调用`hpet_clocksource_register`函数来注册新的时钟源。
+在为 `HPET`的配置寄存器分配空间后，主计时钟开始运行，并可以通过配置寄存器的`HPET_CFG_ENABLE`位，为每一个时钟设置定时器中断。前提是，所有的时钟都通过配置寄存器中的`HPET_CFG_ENABLE`位所启用。最后，我们仅通过调用`hpet_clocksource_register`函数来注册新的时钟源。
 
 ```C
 if (hpet_clocksource_register())
