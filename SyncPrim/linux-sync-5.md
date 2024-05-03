@@ -430,4 +430,4 @@ Links
 * [Inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/asm.html)
 * [XADD instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
-* [Previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html)
+* [Previous part](/SyncPrim/linux-sync-4.md)
