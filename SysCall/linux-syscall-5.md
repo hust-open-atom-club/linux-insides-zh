@@ -59,7 +59,7 @@ SYSCALL_DEFINE3(open, const char __user *, filename, int, flags, umode_t, mode)
 }
 ```
 
-如果你阅读过[上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-4.html)，你应该知道系统调用通过 `SYSCALL_DEFINE` 宏定义实现。因此，`open` 系统调用也不例外。
+如果你阅读过[上一节](/SysCall/linux-syscall-4.md)，你应该知道系统调用通过 `SYSCALL_DEFINE` 宏定义实现。因此，`open` 系统调用也不例外。
 
 `open` 系统调用位于 [fs/open.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/open.c) 源文件中，粗看非常简短
 
@@ -406,4 +406,4 @@ Linux 内核中关于不同系统调用的实现的第五部分已经完成了�
 * [inode](https://en.wikipedia.org/wiki/Inode)
 * [RCU](https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt)
 * [read](http://man7.org/linux/man-pages/man2/read.2.html)
-* [previous part](https://0xax.gitbooks.io/linux-insides/content/SysCall/syscall-4.html)
+* [previous part](/SysCall/linux-syscall-4.md)

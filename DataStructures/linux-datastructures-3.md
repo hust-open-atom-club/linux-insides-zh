@@ -13,7 +13,7 @@ Linux 内核中的位数组和位操作
 
 * [arch/x86/include/asm/bitops.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/bitops.h)
 
-头文件。正如我上面所写的，`位图`在 Linux 内核中被广泛地使用。例如，`位数组`常常用于保存一组在线/离线处理器，以便系统支持[热插拔](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)的 CPU（你可以在 [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html) 部分阅读更多相关知识 ），一个位数组（bit array）可以在 Linux 内核初始化等期间保存一组已分配的[中断处理](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)。
+头文件。正如我上面所写的，`位图`在 Linux 内核中被广泛地使用。例如，`位数组`常常用于保存一组在线/离线处理器，以便系统支持[热插拔](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)的 CPU（你可以在 [cpumasks](/Concepts/linux-cpu-2.md) 部分阅读更多相关知识 ），一个位数组（bit array）可以在 Linux 内核初始化等期间保存一组已分配的[中断处理](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)。
 
 因此，本部分的主要目的是了解位数组（bit array）是如何在 Linux 内核中实现的。让我们现在开始吧。
 
@@ -369,7 +369,7 @@ static inline void bitmap_fill(unsigned long *dst, unsigned int nbits)
 * [linked data structures](https://en.wikipedia.org/wiki/Linked_data_structure)
 * [tree data structures](https://en.wikipedia.org/wiki/Tree_%28data_structure%29) 
 * [hot-plug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)
-* [cpumasks](https://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
+* [cpumasks](/Concepts/linux-cpu-2.md)
 * [IRQs](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [atomic operations](https://en.wikipedia.org/wiki/Linearizability)

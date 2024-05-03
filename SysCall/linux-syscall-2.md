@@ -4,7 +4,7 @@ Linux 系统内核调用 第二节
 Linux 内核如何处理系统调用
 --------------------------------------------------------------------------------
 
-前一[小节](http://0xax.gitbooks.io/linux-insides/content/SysCall/linux-syscall-1.html) 作为本章节的第一部分描述了 Linux 内核[system call](https://en.wikipedia.org/wiki/System_call) 概念。
+前一[小节](/SysCall/linux-syscall-1.md) 作为本章节的第一部分描述了 Linux 内核[system call](https://en.wikipedia.org/wiki/System_call) 概念。
 前一节中提到通常系统调用处于内核处于操作系统层面。 前一节内容从用户空间的角度介绍，并且 [write](http://man7.org/linux/man-pages/man2/write.2.html)系统调用实现的一部分内容没有讨论。 在这一小节继续关注系统调用，在深入 Linux 内核之前，从一些理论开始。
 
 程序中一个用户程序并不直接使用系统调用。 我们并未这样写 `Hello World`程序代码：
@@ -114,7 +114,7 @@ asmlinkage const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
 
 之后所有指向 “non-implemented” 系统调用元素的内容为 `sys_ni_syscall` 函数的地址，该函数仅返回 `-ENOSYS`。 其他元素指向 `sys_syscall_name` 函数。
 
-至此，我们完成了系统调用表的填充并且 Linux 内核了解每个系统调用处理器的位置。 但是 Linux 内核在处理用户空间程序的系统调用时并未立即调用 `sys_syscall_name` 函数。 记住关于中断及中断处理的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)。 当 Linux 内核获得处理中断的控制权，在调用中断处理程序前，必须做一些准备如保存用户空间寄存器、切换至新的堆栈及其他很多工作。 系统调用处理也是相同的情形。 第一件事是处理系统调用的准备，但是在 Linux 内核开始这些准备之前，系统调用的入口必须完成初始化，同时只有 Linux 内核知道如何执行这些准备。 在下一章节我们将关注 Linux 内核中关于系统调用入口的初始化过程。
+至此，我们完成了系统调用表的填充并且 Linux 内核了解每个系统调用处理器的位置。 但是 Linux 内核在处理用户空间程序的系统调用时并未立即调用 `sys_syscall_name` 函数。 记住关于中断及中断处理的[章节](/Interrupts/)。 当 Linux 内核获得处理中断的控制权，在调用中断处理程序前，必须做一些准备如保存用户空间寄存器、切换至新的堆栈及其他很多工作。 系统调用处理也是相同的情形。 第一件事是处理系统调用的准备，但是在 Linux 内核开始这些准备之前，系统调用的入口必须完成初始化，同时只有 Linux 内核知道如何执行这些准备。 在下一章节我们将关注 Linux 内核中关于系统调用入口的初始化过程。
 
 系统调用入口初始化
 --------------------------------------------------------------------------------
@@ -125,7 +125,7 @@ asmlinkage const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
 SYSCALL 引起操作系统系统调用处理器处于特权级 0，其通过加载 IA32_LSTAR MSR 至 RIP 完成。
 ```
 
-这就是说我们需要将系统调用入口放置到 `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register)。 这一操作在 Linux 内核初始过程时完成 若你已阅读关于 Linux 内核中断及中断处理章节的[第四节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-4.html)，Linux 内核调用在初始化过程中调用 `trap_init` 函数。 该函数在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码文件中定义，执行 `non-early` 异常处理（如除法错误，[协处理器](https://en.wikipedia.org/wiki/Coprocessor) 错误等 ）的初始化。 除了  `non-early` 异常处理的初始化外，函数调用  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/blob/arch/x86/kernel/cpu/common.c) 中 `cpu_init` 函数，调用相同源码文件中的 `syscall_init` 完成 `per-cpu` 状态初始化。
+这就是说我们需要将系统调用入口放置到 `IA32_LSTAR` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register)。 这一操作在 Linux 内核初始过程时完成 若你已阅读关于 Linux 内核中断及中断处理章节的[第四节](/Interrupts/linux-interrupts-4.md)，Linux 内核调用在初始化过程中调用 `trap_init` 函数。 该函数在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 源代码文件中定义，执行 `non-early` 异常处理（如除法错误，[协处理器](https://en.wikipedia.org/wiki/Coprocessor) 错误等 ）的初始化。 除了  `non-early` 异常处理的初始化外，函数调用  [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/master/blob/arch/x86/kernel/cpu/common.c) 中 `cpu_init` 函数，调用相同源码文件中的 `syscall_init` 完成 `per-cpu` 状态初始化。
 
 该函数执行系统调用入口的初始化。 查看函数的实现，函数没有参数且首先填充两个特殊模块寄存器：
 
@@ -180,7 +180,7 @@ wrmsrl_safe(MSR_IA32_SYSENTER_ESP, 0ULL);
 wrmsrl_safe(MSR_IA32_SYSENTER_EIP, 0ULL);
 ```
 
-可以从描述 Linux 内核启动过程的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-2.html)阅读更多关于 `Global Descriptor Table` 的内容。
+可以从描述 Linux 内核启动过程的[章节](/Booting/linux-bootstrap-2.md)阅读更多关于 `Global Descriptor Table` 的内容。
 
 在 `syscall_init` 函数的尾段，通过写入 `MSR_SYSCALL_MASK` 特殊寄存器的标志位，将[标志寄存器](https://en.wikipedia.org/wiki/FLAGS_register)中的标志位屏蔽：
 
@@ -209,7 +209,7 @@ SWAPGS_UNSAFE_STACK
 #define SWAPGS_UNSAFE_STACK	swapgs
 ```
 
-此宏将交换 GS 段选择符及 `MSR_KERNEL_GS_BASE ` 特殊模式寄存器中的值。 换句话说，将其入内核堆栈。 之后使老的堆栈指针指向 `rsp_scratch` [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 变量，并设置堆栈指针指向当前处理器的栈顶：
+此宏将交换 GS 段选择符及 `MSR_KERNEL_GS_BASE ` 特殊模式寄存器中的值。 换句话说，将其入内核堆栈。 之后使老的堆栈指针指向 `rsp_scratch` [per-cpu](/Concepts/linux-cpu-1.md) 变量，并设置堆栈指针指向当前处理器的栈顶：
 
 ```assembly
 movq	%rsp, PER_CPU_VAR(rsp_scratch)
@@ -373,7 +373,7 @@ USERGS_SYSRET64
 结论
 --------------------------------------------------------------------------------
 
-这是 Linux 内核相关概念的第二节。 在[前一节](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-1.html)我们从用户应用程序的角度讨论了这些概念的原理。 在这一节继续深入系统调用概念的相关内容，讨论了系统调用发生时 Linux 内核执行的内容。
+这是 Linux 内核相关概念的第二节。 在[前一节](/SysCall/linux-syscall-1.md)我们从用户应用程序的角度讨论了这些概念的原理。 在这一节继续深入系统调用概念的相关内容，讨论了系统调用发生时 Linux 内核执行的内容。
 
 若存在疑问及建议，在 twitter @[0xAX](https://twitter.com/0xAX)，通过 [email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/MintCN/linux-insides-zh/issues/new)。
 
@@ -397,8 +397,8 @@ Links
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
-* [per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
+* [per-cpu](/Concepts/linux-cpu-1.md)
 * [general purpose registers](https://en.wikipedia.org/wiki/Processor_register)
 * [ABI](https://en.wikipedia.org/wiki/Application_binary_interface)
 * [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf)
-* [previous chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/SysCall/linux-syscall-1.html)
+* [previous chapter](/SysCall/linux-syscall-1.md)
