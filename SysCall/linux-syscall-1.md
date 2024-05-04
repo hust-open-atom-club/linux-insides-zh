@@ -4,7 +4,7 @@ Linux 内核系统调用 第一节
 简介
 --------------------------------------------------------------------------------
 
-这次提交为 [linux内核解密](/SUMMARY.md) 添加一个新的章节，从标题就可以知道, 这一章节将介绍Linux 内核中 [System Call](https://en.wikipedia.org/wiki/System_call) 的概念。章节内容的选择并非偶然。在前一[章节](/Interrupts/)我们了解了中断及中断处理。系统调用的概念与中断非常相似，这是因为软件中断是执行系统调用最常见的方式。接下来我们将从不同的角度来审视系统调用相关概念。例如，从用户空间发起系统调用时会发生什么，Linux内核中一组系统调用处理器的实现，[VDSO](https://en.wikipedia.org/wiki/VDSO) 和 [vsyscall](https://lwn.net/Articles/446528/) 的概念以及其他信息。
+这次提交为 [linux内核解密](/README.md) 添加一个新的章节，从标题就可以知道, 这一章节将介绍Linux 内核中 [System Call](https://en.wikipedia.org/wiki/System_call) 的概念。章节内容的选择并非偶然。在前一[章节](/Interrupts/)我们了解了中断及中断处理。系统调用的概念与中断非常相似，这是因为软件中断是执行系统调用最常见的方式。接下来我们将从不同的角度来审视系统调用相关概念。例如，从用户空间发起系统调用时会发生什么，Linux内核中一组系统调用处理器的实现，[VDSO](https://en.wikipedia.org/wiki/VDSO) 和 [vsyscall](https://lwn.net/Articles/446528/) 的概念以及其他信息。
 
 在了解 Linux 内核系统调用执行过程之前，让我们先来了解一些系统调用的相关原理。
 

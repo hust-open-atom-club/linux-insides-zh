@@ -1,7 +1,7 @@
 介绍
 ---------------
 
-在写 [linux-insides](/SUMMARY.md) 一书的过程中，我收到了很多邮件询问关于[链接器](https://zh.wikipedia.org/wiki/%E9%93%BE%E6%8E%A5%E5%99%A8)和链接器脚本的问题。所以我决定写这篇文章来介绍链接器和目标文件的链接方面的知识。
+在写 [linux-insides](/) 一书的过程中，我收到了很多邮件询问关于[链接器](https://zh.wikipedia.org/wiki/%E9%93%BE%E6%8E%A5%E5%99%A8)和链接器脚本的问题。所以我决定写这篇文章来介绍链接器和目标文件的链接方面的知识。
 
 如果我们打开维基百科的 `链接器` 页，我们将会看到如下定义：
 
@@ -567,7 +567,7 @@ Disassembly of section .data:
   ...
 ```
 
-除了我们已经看到的命令，另外还有一些。首先是 `ASSERT(exp, message)` ，保证给定的表达式不为零。如果为零，那么链接器会退出同时返回错误码，打印错误信息。如果你已经阅读了 [linux-insides](/Booting/README.md) 的 Linux 内核启动流程，你或许知道 Linux 内核的设置头的偏移为 `0x1f1`。在 Linux 内核的链接器脚本中，我们可以看到下面的校验：
+除了我们已经看到的命令，另外还有一些。首先是 `ASSERT(exp, message)` ，保证给定的表达式不为零。如果为零，那么链接器会退出同时返回错误码，打印错误信息。如果你已经阅读了 [linux-insides](/Booting/) 的 Linux 内核启动流程，你或许知道 Linux 内核的设置头的偏移为 `0x1f1`。在 Linux 内核的链接器脚本中，我们可以看到下面的校验：
 
 ```
 . = ASSERT(hdr == 0x1f1, "The setup header has the wrong offset!");
@@ -627,7 +627,7 @@ SECTIONS
 相关链接
 -----------------
 
-* [Book about Linux kernel insides](/SUMMARY.md)
+* [Book about Linux kernel insides](/README.md)
 * [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29)
 * [object files](https://en.wikipedia.org/wiki/Object_file)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)
