@@ -419,7 +419,7 @@ struct mpf_intel {
 
 正如我们在文档中看到的那样 - 系统 BIOS的主要功能之一就是创建MP浮点型指针结构和MP配置表。而且操作系统必须可以访问关于多处理器配置的有关信息， `mpf_intel` 中存储了多处理器配置表的物理地址(看结构体的第二个变量),然后，`smp_scan_config` 函数在指定的内存区域中循环查找 `MP floating pointer structure` 。这个函数还会检查当前字节是否指向 `SMP` 签名，然后检查签名的校验和，并且检查循环中的 `mpf->specification` 的值是1还是4(这个值只能是1或者是4):   
 
-```C7
+```C
 while (length > 0) {
 if ((*bp == SMP_MAGIC_IDENT) &&
     (mpf->length == 1) &&
