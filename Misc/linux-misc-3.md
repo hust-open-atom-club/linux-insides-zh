@@ -627,7 +627,7 @@ SECTIONS
 相关链接
 -----------------
 
-* [Book about Linux kernel insides](/README.md)
+* [Book about Linux kernel insides](/)
 * [linker](https://en.wikipedia.org/wiki/Linker_%28computing%29)
 * [object files](https://en.wikipedia.org/wiki/Object_file)
 * [glibc](https://en.wikipedia.org/wiki/GNU_C_Library)

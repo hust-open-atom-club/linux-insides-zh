@@ -10,7 +10,7 @@ We know from the previous [part](/SyncPrim/sync-5.md) that [readers-writer lock]
 
 The `seqlock` synchronization primitive can help solve this problem.
 
-As in all previous parts of this [book](/README.md), we will try to consider this synchronization primitive from the theoretical side and only than we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) provided by the Linux kernel to manipulate with `seqlocks`.
+As in all previous parts of this [book](/), we will try to consider this synchronization primitive from the theoretical side and only than we will consider [API](https://en.wikipedia.org/wiki/Application_programming_interface) provided by the Linux kernel to manipulate with `seqlocks`.
 
 So, let's start.
 

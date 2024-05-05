@@ -11,17 +11,13 @@
 如有相关问题或建议，请不吝指教，提交 issues 或者 PRs。对于 `linux-insides-zh` 翻译项目，请通过以下方法进行贡献：
 
 - 英文翻译，目前只提供简体中文的译文；
-- 更新未被翻译的英文原本，其实就是将上游英文的更新纳入到当前项目中；
+- 同步未被翻译的英文原本，其实就是将上游英文同步到本项目中；
 - 更新已经翻译的中文译文，其实就是查看上游英文的更新，检查是否需要对中文译文进行更新；
 - 校对当前已经翻译过的中文译文，包括修改错别字，润色等工作；
 
-目前本项目的翻译进度，请查看 [TRANSLATION_STATUS.md](TRANSLATION_STATUS.md)。
+目前本项目的**翻译进度**与**翻译认领规则**，请查看 [TRANSLATION_STATUS.md](TRANSLATION_STATUS.md)。
 
-在开始翻译之前，请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [TRANSLATION_NOTES.md](TRANSLATION_NOTES.md)。关于翻译约定，大家有任何问题或建议也请提交 issue 讨论。
-
-## 原作者
-
-[@0xAX](https://twitter.com/0xAX)
+在开始翻译之前，请阅读 [CONTRIBUTING.md](CONTRIBUTING.md) 与 [TRANSLATION_NOTES.md](TRANSLATION_NOTES.md)。关于翻译约定的任何问题或建议，同样请提交 issue 讨论。
 
 ## 中文维护者
 
@@ -33,6 +29,10 @@
 
 详见 [CONTRIBUTORS.md](CONTRIBUTORS.md)
 
-## LICENSE
+## 原文作者
 
-Licensed [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+[@0xAX](https://twitter.com/0xAX)
+
+## 许可证
+
+本项目使用 [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/) 许可证。
