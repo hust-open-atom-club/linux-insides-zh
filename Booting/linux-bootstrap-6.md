@@ -398,7 +398,7 @@ if (IS_ENABLED(CONFIG_X86_64))
 
 如果你有什么问题或建议，写个评论或在 [twitter](https://twitter.com/0xAX) 找我。
 
-**如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 。**
+**如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/hust-open-atom-club/linux-insides-zh) 。**
 
 Links
 --------------------------------------------------------------------------------

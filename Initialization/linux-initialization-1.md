@@ -611,7 +611,7 @@ write_cr3(__pa_nodebug(early_level4_pgt));
 
 第一部分关于Linux内核的初始化过程到这里就结束了。
 
-如果你有任何问题或建议，请在twitter上联系我 [0xAX](https://twitter.com/0xAX)，或者通过[邮件](anotherworldofworld@gmail.com)与我沟通，还可以新开[issue](https://github.com/MintCN/linux-insides-zh/issues/new)。
+如果你有任何问题或建议，请在twitter上联系我 [0xAX](https://twitter.com/0xAX)，或者通过[邮件](anotherworldofworld@gmail.com)与我沟通，还可以新开[issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
 
 下一部分我们会看到初期中断处理程序的初始化过程、内核空间的内存映射等。
 

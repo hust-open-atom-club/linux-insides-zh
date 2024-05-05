@@ -375,9 +375,9 @@ USERGS_SYSRET64
 
 这是 Linux 内核相关概念的第二节。 在[前一节](/SysCall/linux-syscall-1.md)我们从用户应用程序的角度讨论了这些概念的原理。 在这一节继续深入系统调用概念的相关内容，讨论了系统调用发生时 Linux 内核执行的内容。
 
-若存在疑问及建议，在 twitter @[0xAX](https://twitter.com/0xAX)，通过 [email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/MintCN/linux-insides-zh/issues/new)。
+若存在疑问及建议，在 twitter @[0xAX](https://twitter.com/0xAX)，通过 [email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
 
-**由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/MintCN/linux-insides-zh)。**
+**由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh)。**
 
 Links
 --------------------------------------------------------------------------------

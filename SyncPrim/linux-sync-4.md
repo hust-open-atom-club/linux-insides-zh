@@ -410,7 +410,7 @@ if (!list_empty(&lock->wait_list)) {
 
 至此我们结束了Linux内核 [同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) 章节的第四部分。在这部分我们见到了新的同步原语 - `互斥锁`。就理论上来说，此同步原语与 [信号量](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) 非常相似。事实上，`互斥锁` 代表着二进制信号量。但它的实现与Linux内核中 `信号量` 实现并不同。在下一部分中，我们将继续深入研究Linux内核中的同步原语。
 
-如果你有问题或者建议，请在twitter [0xAX](https://twitter.com/0xAX)上联系我，通过 [email](mailto:anotherworldofworld@gmail.com) 联系我，或者创建一个[issue](https://github.com/MintCN/linux-insides-zh/issues/new)。
+如果你有问题或者建议，请在twitter [0xAX](https://twitter.com/0xAX)上联系我，通过 [email](mailto:anotherworldofworld@gmail.com) 联系我，或者创建一个[issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 

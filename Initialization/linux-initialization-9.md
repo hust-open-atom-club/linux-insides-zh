@@ -409,7 +409,7 @@ It is the end of the ninth part about the linux kernel [initialization process](
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).**
 
 Links
 --------------------------------------------------------------------------------
