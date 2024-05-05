@@ -4,7 +4,7 @@ Kernel initialization. Part 8.
 Scheduler initialization
 ================================================================================
 
-This is the eighth [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html) of the Linux kernel initialization process and we stopped on the `setup_nr_cpu_ids` function in the [previous](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md) part. The main point of the current part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) is the `setup_per_cpu_areas` function. This function setups areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function. This function does some preparations for the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing):
+This is the eighth [part](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html) of the Linux kernel initialization process and we stopped on the `setup_nr_cpu_ids` function in the [previous](https://github.com/hust-open-atom-club/linux-insides-zh/blob/master/Initialization/linux-initialization-7.md) part. The main point of the current part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) is the `setup_per_cpu_areas` function. This function setups areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function. This function does some preparations for the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing):
 
 ```C
 static inline void smp_prepare_boot_cpu(void)
@@ -456,7 +456,7 @@ It is the end of the eighth part about the linux kernel initialization process. 
 
 If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
 
-**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
+**Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).**
 
 Links
 --------------------------------------------------------------------------------

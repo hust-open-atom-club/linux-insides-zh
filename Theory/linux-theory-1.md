@@ -207,7 +207,7 @@ ffffffffffe00000 - ffffffffffffffff (=2 MB) unused hole
 #define __START_KERNEL_map      _AC(0xffffffff80000000, UL)
 ```
 
-通常内核的 `.text` 段开始于 `CONFIG_PHYSICAL_START` 偏移。我们已经在 [ELF64](https://github.com/MintCN/linux-insides-zh/blob/master/Theory/ELF.md) 相关帖子中看见。
+通常内核的 `.text` 段开始于 `CONFIG_PHYSICAL_START` 偏移。我们已经在 [ELF64](https://github.com/hust-open-atom-club/linux-insides-zh/blob/master/Theory/ELF.md) 相关帖子中看见。
 
 ```
 readelf -s vmlinux | grep ffffffff81000000

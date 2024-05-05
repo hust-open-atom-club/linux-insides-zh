@@ -5,7 +5,7 @@
 --------------------------------------------------------------------------------
 
 
-这是 Linux 内核初始化过程的第三部分。在[上一个部分](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md) 中我们接触到了初期中断和异常处理，而在这个部分中我们要继续看一看 Linux 内核的初始化过程。在之后的章节我们将会关注“内核入口点”—— [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 文件中的`start_kernel` 函数。没错，从技术上说这并不是内核的入口点，只是不依赖于特定架构的通用内核代码的开始。不过，在我们调用 `start_kernel` 之前，有些准备必须要做。下面我们就来看一看。
+这是 Linux 内核初始化过程的第三部分。在[上一个部分](https://github.com/hust-open-atom-club/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md) 中我们接触到了初期中断和异常处理，而在这个部分中我们要继续看一看 Linux 内核的初始化过程。在之后的章节我们将会关注“内核入口点”—— [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 文件中的`start_kernel` 函数。没错，从技术上说这并不是内核的入口点，只是不依赖于特定架构的通用内核代码的开始。不过，在我们调用 `start_kernel` 之前，有些准备必须要做。下面我们就来看一看。
 
 boot_params again
 --------------------------------------------------------------------------------
@@ -417,11 +417,11 @@ start_kernel()
 
 本书的第三部分到这里就结束了。在下一部分中，我们将会见到内核入口点处的初始化工作 —— 位于 `start_kernel` 函数中。这些工作是在启动第一个进程 `init` 之前首先要完成的工作。
 
-如果你有任何问题或建议，请在twitter上联系我 [0xAX](https://twitter.com/0xAX)，或者通过[邮件](anotherworldofworld@gmail.com)与我沟通，还可以新开[issue](https://github.com/MintCN/linux-insides-zh/issues/new)。
+如果你有任何问题或建议，请在twitter上联系我 [0xAX](https://twitter.com/0xAX)，或者通过[邮件](anotherworldofworld@gmail.com)与我沟通，还可以新开[issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
 
 相关链接
 --------------------------------------------------------------------------------
 
 * [BIOS data area](http://stanislavs.org/helppc/bios_data_area.html)
 * [What is in the extended BIOS data area on a PC?](http://www.kryslix.com/nsfaq/Q.6.html)
-* [Previous part](https://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md)
+* [Previous part](https://github.com/hust-open-atom-club/linux-insides-zh/blob/master/Initialization/linux-initialization-2.md)

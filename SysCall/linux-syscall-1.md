@@ -379,9 +379,9 @@ fdput_pos(f);
   
 第一部分介绍了Linux内核中的系统调用概念。到目前为止，我们已经介绍了系统调用的理论，在下一部分中，我们将继续深入这个主题，讨论与系统调用相关的Linux内核代码。  
 
-若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
+若存在疑问及建议, 在twitter @[0xAX](https://twitter.com/0xAX), 通过[email](anotherworldofworld@gmail.com) 或者创建 [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new).
 
-**由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/MintCN/linux-insides-zh).**
+**由于英语是我的第一语言由此造成的不便深感抱歉。若发现错误请提交 PR 至 [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).**
 
 链接
 --------------------------------------------------------------------------------

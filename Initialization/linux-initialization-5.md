@@ -543,7 +543,7 @@ void x86_configure_nx(void)
 
 如果你有任何问题或者建议，你可以留言，也可以直接发送消息给我[twitter](https://twitter.com/0xAX)。
 
-**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，清提交一个 PR 到 [linux-insides](https://github.com/MintCN/linux-insides-zh)。**
+**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，清提交一个 PR 到 [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh)。**
 
 链接
 --------------------------------------------------------------------------------
@@ -558,4 +558,4 @@ void x86_configure_nx(void)
 * [CFI directives](https://sourceware.org/binutils/docs/as/CFI-directives.html)
 * [PDF. dwarf4 specification](http://dwarfstd.org/doc/DWARF4.pdf)
 * [Call stack](http://en.wikipedia.org/wiki/Call_stack)
-* [内核初始化. Part 4.](http://github.com/MintCN/linux-insides-zh/blob/master/Initialization/linux-initialization-4.md)
+* [内核初始化. Part 4.](http://github.com/hust-open-atom-club/linux-insides-zh/blob/master/Initialization/linux-initialization-4.md)

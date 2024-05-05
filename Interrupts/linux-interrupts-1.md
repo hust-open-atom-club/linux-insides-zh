@@ -478,7 +478,7 @@ asmlinkage void double_fault(void);
 
 如果你有任何问题或建议，请给我发评论或者给我发 [Twitter](https://twitter.com/0xAX)。
 
-**请注意英语并不是我的母语，我为任何表达不清楚的地方感到抱歉。如果你发现任何错误请发 PR 到 [linux-insides](https://github.com/MintCN/linux-insides-zh)。(译者注：翻译问题请发 PR 到 [linux-insides-cn](https://www.gitbook.com/book/xinqiu/linux-insides-cn))**
+**请注意英语并不是我的母语，我为任何表达不清楚的地方感到抱歉。如果你发现任何错误请发 PR 到 [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh)。(译者注：翻译问题请发 PR 到 [linux-insides-cn](https://www.gitbook.com/book/xinqiu/linux-insides-cn))**
 
 
 链接

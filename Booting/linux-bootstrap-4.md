@@ -579,7 +579,7 @@ ENTRY(startup_64)
 
 下一节我们将会看到内核解压缩流程和其他更多。
 
-**如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/MintCN/linux-insides-zh) 。**
+**如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/hust-open-atom-club/linux-insides-zh) 。**
 
 相关链接
 --------------------------------------------------------------------------------

@@ -506,7 +506,7 @@ for (; pmd < last_pmd; pmd++, vaddr += PMD_SIZE) {
 }
 ```
 
-在这之后，我们使用 `memblock_set_current_limit` (你可以在[linux 内存管理 第二章节](https://github.com/MintCN/linux-insides-zh/blob/master/MM/linux-mm-2.md) 阅读关于 `memblock` 的更多内容) 函数来为 `memblock` 分配内存设置一个界限，这个界限可以是 `ISA_END_ADDRESS` 或者 `0x100000` ，然后调用 `memblock_x86_fill` 函数根据 `e820` 来填充 `memblock` 相关信息。你可以在内核初始化的时候看到这个函数运行的结果: 
+在这之后，我们使用 `memblock_set_current_limit` (你可以在[linux 内存管理 第二章节](https://github.com/hust-open-atom-club/linux-insides-zh/blob/master/MM/linux-mm-2.md) 阅读关于 `memblock` 的更多内容) 函数来为 `memblock` 分配内存设置一个界限，这个界限可以是 `ISA_END_ADDRESS` 或者 `0x100000` ，然后调用 `memblock_x86_fill` 函数根据 `e820` 来填充 `memblock` 相关信息。你可以在内核初始化的时候看到这个函数运行的结果: 
 
 ```
 MEMBLOCK configuration:
@@ -532,7 +532,7 @@ MEMBLOCK configuration:
 
 如果你有任何的疑问或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)。  
 
-**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides](https://github.com/MintCN/linux-insides-zh).** 
+**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).** 
 
 链接
 --------------------------------------------------------------------------------

@@ -387,9 +387,9 @@ Conclusion
 
 This is the end of the fifth part of the [chapter](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html) that describes timers and timer management related stuff in the Linux kernel. In the previous part got acquainted with the `timers` concept. In this part we continued to learn time management related stuff in the Linux kernel and saw a little about yet another framework - `clockevents`.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/MintCN/linux-insides-zh/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/MintCN/linux-insides-zh).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).**
 
 Links
 -------------------------------------------------------------------------------
