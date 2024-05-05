@@ -243,7 +243,7 @@ void __init map_vsyscall(void)
 
 In the beginning of the `map_vsyscall` we can see definition of two variables. The first is extern variable `__vsyscall_page`. As a extern variable, it defined somewhere in other source code file. Actually we can see definition of the `__vsyscall_page` in the [arch/x86/kernel/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vsyscall_emu_64.S). The `__vsyscall_page` symbol points to the aligned calls of the `vsyscalls` as `gettimeofday`, etc.:
 
-```assembly
+```x86asm
 	.globl __vsyscall_page
 	.balign PAGE_SIZE, 0xcc
 	.type __vsyscall_page, @object

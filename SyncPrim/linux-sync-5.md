@@ -251,7 +251,7 @@ As for other synchronization primitives which we saw in this chapter, usually `l
 
 or `0xffffffff00000001` to the `count` of the given `reader/writer semaphore` and returns previous value of it. After this we check the active mask in the `rw_semaphore->count`. If it was zero before, this means that there were no-one writer before, so we acquired a lock. In other way we call the `call_rwsem_down_write_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/master/arch/x86/lib/rwsem.S) assembly file. The the `call_rwsem_down_write_failed` function just calls the `rwsem_down_write_failed` function from the [kernel/locking/rwsem-xadd.c](https://github.com/torvalds/linux/blob/master/locking/rwsem-xadd.c) source code file anticipatorily save general purpose registers:
 
-```assembly
+```x86asm
 ENTRY(call_rwsem_down_write_failed)
 	FRAME_BEGIN
 	save_common_regs

@@ -6,7 +6,7 @@
 
 固定映射地址是一组特殊的编译时确定的地址，它们与物理地址不一定具有减 `__START_KERNEL_map` 的线性映射关系。每一个固定映射的地址都会映射到一个内存页，内核会像指针一样使用它们，但是绝不会修改它们的地址。这是这种地址的主要特点。就像注释所说的那样，“在编译期就获得一个常量地址，只有在引导阶段才会被设定上物理地址。”你在本书的[前面部分](/Initialization/linux-initialization-1.md)可以看到，我们已经设定了 `level2_fixmap_pgt` ：
 
-```assembly
+```x86asm
 NEXT_PAGE(level2_fixmap_pgt)
 	.fill	506,8,0
 	.quad	level1_fixmap_pgt - __START_KERNEL_map + _PAGE_TABLE

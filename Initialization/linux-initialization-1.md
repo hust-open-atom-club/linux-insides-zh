@@ -10,7 +10,7 @@
 
 在[上一章](/Booting/)的[最后一节](/Booting/linux-bootstrap-5.md)中，我们跟踪到了 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 文件中的 [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 指令：
 
-```assembly
+```x86asm
 jmp	*%rax
 ```
 
@@ -22,7 +22,7 @@ jmp	*%rax
 
 OK，在调用了 `decompress_kernel` 函数后，`rax` 寄存器中保存了解压缩后的内核镜像的地址，并且跳转了过去。解压缩后的内核镜像的入口点定义在 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S)，这个文件的开头几行如下：
 
-```assembly
+```x86asm
 	__HEAD
 	.code64
 	.globl startup_64
@@ -70,7 +70,7 @@ startup_64:
 
 现在我们知道了 `startup_64` 过程的默认物理地址与虚拟地址，但是真正的地址必须要通过下面的代码计算得到：
 
-```assembly
+```x86asm
 	leaq	_text(%rip), %rbp
 	subq	$_text - __START_KERNEL_map, %rbp
 ```
@@ -85,7 +85,7 @@ rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 
 在得到了 `startup_64` 的地址后，我们需要检查这个地址是否已经正确对齐。下面的代码将进行这项工作：
 
-```assembly
+```x86asm
 	testl	$~PMD_PAGE_MASK, %ebp
 	jnz	bad_address
 ```
@@ -103,7 +103,7 @@ rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 
 在此之后，我们通过检查高 `18` 位来防止这个地址过大：
 
-```assembly
+```x86asm
 	leaq	_text(%rip), %rax
 	shrq	$MAX_PHYSMEM_BITS, %rax
 	jnz	bad_address
@@ -123,7 +123,7 @@ OK，至此我们完成了一些初步的检查，可以继续进行后续的工
 
 在开始设置 Identity 分页之前，我们需要首先修正下面的地址：
 
-```assembly
+```x86asm
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (510*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (511*8)(%rip)
@@ -132,7 +132,7 @@ OK，至此我们完成了一些初步的检查，可以继续进行后续的工
 
 如果 `startup_64` 的值不为默认的 `0x1000000` 的话， 则包括 `early_level4_pgt`、`level3_kernel_pgt` 在内的很多地址都会不正确。`rbp`寄存器中包含的是相对地址，因此我们把它与 `early_level4_pgt`、`level3_kernel_pgt` 以及  `level2_fixmap_pgt` 中特定的项相加。首先我们来看一下它们的定义：
 
-```assembly
+```x86asm
 NEXT_PAGE(early_level4_pgt)
 	.fill	511,8,0
 	.quad	level3_kernel_pgt - __START_KERNEL_map + _PAGE_TABLE
@@ -175,7 +175,7 @@ NEXT_PAGE(level1_fixmap_pgt)
 
 现在，在看过了这些符号的定义之后，让我们回到本节开始时介绍的那几行代码。`rbp` 寄存器包含了实际地址与 `startup_64` 地址之差，其中 `startup_64` 的地址是在内核[链接](https://en.wikipedia.org/wiki/Linker_%28computing%29)时获得的。因此我们只需要把它与各个页表项的基地址相加，就能够得到正确的地址了。在这里这些操作如下：
 
-```assembly
+```x86asm
 	addq	%rbp, early_level4_pgt + (L4_START_KERNEL*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (510*8)(%rip)
 	addq	%rbp, level3_kernel_pgt + (511*8)(%rip)
@@ -201,14 +201,14 @@ Identity Map Paging
 
 现在我们可以进入到对初期页表进行 Identity 映射的初始化过程了。在 Identity 映射分页中，虚拟地址会被映射到地址相同的物理地址上，即 `1 : 1`。下面我们来看一下细节。首先我们找到 `_text` 与 `_early_level4_pgt` 的 RIP 相对地址，并把他们放入 `rdi` 与 `rbx` 寄存器中。
 
-```assembly
+```x86asm
 	leaq	_text(%rip), %rdi
 	leaq	early_level4_pgt(%rip), %rbx
 ```
 
 在此之后我们使用 `rax` 保存 `_text` 的地址。同时，在全局页目录表中有一条记录中存放的是 `_text` 的地址。为了得到这条索引，我们把 `_text` 的地址右移 `PGDIR_SHIFT` 位。
 
-```assembly
+```x86asm
 	movq	%rdi, %rax
 	shrq	$PGDIR_SHIFT, %rax
 
@@ -230,7 +230,7 @@ Identity Map Paging
 
 然后我们给 `rdx` 寄存器加上 `4096`（即 `early_level4_pgt` 的大小），并把 `rdi` 寄存器的值（即 `_text` 的物理地址）赋值给 `rax` 寄存器。之后我们把上层页目录中的两个项写入 `level3_kernel_pgt`：
 
-```assembly
+```x86asm
 	addq	$4096, %rdx
 	movq	%rdi, %rax
 	shrq	$PUD_SHIFT, %rax
@@ -243,7 +243,7 @@ Identity Map Paging
 
 下一步我们把中层页目录表项的地址写入 `level2_kernel_pgt`，然后修正内核的 text 和 data 的虚拟地址：
 
-```assembly
+```x86asm
 	leaq	level2_kernel_pgt(%rip), %rdi
 	leaq	4096(%rdi), %r8
 1:	testq	$1, 0(%rdi)
@@ -258,7 +258,7 @@ Identity Map Paging
 
 接下来我们使用 `rbp` （即 `_text` 的物理地址）来修正 `phys_base` 物理地址。将 `early_level4_pgt` 的物理地址与 `rbp` 相加，然后跳转至标签 `1`：
 
-```assembly
+```x86asm
 	addq	%rbp, phys_base(%rip)
 	movq	$(early_level4_pgt - __START_KERNEL_map), %rax
 	jmp 1f
@@ -271,7 +271,7 @@ Identity Map Paging
 
 此后我们就跳转至标签`1`来开启 `PAE` 和 `PGE` （Paging Global Extension），并且将`phys_base`的物理地址（见上）放入 `rax` 就寄存器，同时将其放入 `cr3` 寄存器：
 
-```assembly
+```x86asm
 1:
 	movl	$(X86_CR4_PAE | X86_CR4_PGE), %ecx
 	movq	%rcx, %cr4
@@ -283,7 +283,7 @@ Identity Map Paging
 接下来我们检查CPU是否支持 [NX](http://en.wikipedia.org/wiki/NX_bit) 位：
 
 
-```assembly
+```x86asm
 	movl	$0x80000001, %eax
 	cpuid
 	movl	%edx,%edi
@@ -294,7 +294,7 @@ Identity Map Paging
 现在我们把 `MSR_EFER` （即 `0xc0000080`）放入 `ecx`，然后执行 `rdmsr` 指令来读取CPU中的Model Specific Register (MSR)。
 
 
-```assembly
+```x86asm
 	movl	$MSR_EFER, %ecx
 	rdmsr
 ```
@@ -319,7 +319,7 @@ Identity Map Paging
 
 在这里我们不会介绍每一个位的含义，没有涉及到的位和其他的 MSR 将会在专门的部分介绍。在我们将 `EFER` 读入 `edx:eax` 之后，通过 `btsl` 来将 `_EFER_SCE` （即第0位）置1，设置 `SCE` 位将会启用 `SYSCALL` 以及 `SYSRET` 指令。下一步我们检查 `edi`（即 `cpuid` 的结果（见上）） 中的第20位。如果第 `20` 位（即 `NX` 位）置位，我们就只把 `EFER_SCE`写入MSR。
 
-```assembly
+```x86asm
 	btsl	$_EFER_SCE, %eax
 	btl	    $20,%edi
 	jnc     1f
@@ -339,7 +339,7 @@ Identity Map Paging
 * `X86_CR0_AM` - 当AM位置位、EFLGS中的AC位置位、特权等级为3时，进行对齐检查;
 * `X86_CR0_PG` - 启用分页.
 
-```assembly
+```x86asm
 #define CR0_STATE	(X86_CR0_PE | X86_CR0_MP | X86_CR0_ET | \
 			 X86_CR0_NE | X86_CR0_WP | X86_CR0_AM | \
 			 X86_CR0_PG)
@@ -349,7 +349,7 @@ movq	%rax, %cr0
 
 为了从汇编执行[C语言](https://en.wikipedia.org/wiki/C_%28programming_language%29)代码，我们需要建立一个栈。首先将[栈指针](https://en.wikipedia.org/wiki/Stack_register) 指向一个内存中合适的区域，然后重置[FLAGS寄存器](https://en.wikipedia.org/wiki/FLAGS_register)
 
-```assembly
+```x86asm
 movq stack_start(%rip), %rsp
 pushq $0
 popfq
@@ -357,7 +357,7 @@ popfq
 
 在这里最有意思的地方在于 `stack_start`。它也定义在[当前的源文件](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S)中：
 
-```assembly
+```x86asm
 GLOBAL(stack_start)
 .quad  init_thread_union+THREAD_SIZE-8
 ```
@@ -428,13 +428,13 @@ union thread_union init_thread_union __init_task_data =
 
 在初期启动栈设置好之后，使用 `lgdt` 指令来更新[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)：
 
-```assembly
+```x86asm
 lgdt	early_gdt_descr(%rip)
 ```
 
 其中 `early_gdt_descr` 定义如下：
 
-```assembly
+```x86asm
 early_gdt_descr:
 	.word	GDT_ENTRIES*8-1
 early_gdt_descr_base:
@@ -495,7 +495,7 @@ per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `pe
 
 在加载好了新的全局描述附表之后，跟之前一样我们重新加载一下各个段：
 
-```assembly
+```x86asm
 	xorl %eax,%eax
 	movl %eax,%ds
 	movl %eax,%ss
@@ -506,7 +506,7 @@ per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `pe
 
 在所有这些步骤都结束后，我们需要设置一下 `gs` 寄存器，令它指向一个特殊的栈 `irqstack`，用于处理[中断](https://en.wikipedia.org/wiki/Interrupt)：
 
-```assembly
+```x86asm
 	movl	$MSR_GS_BASE,%ecx
 	movl	initial_gs(%rip),%eax
 	movl	initial_gs+4(%rip),%edx
@@ -523,7 +523,7 @@ per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `pe
 
 接下来我们把实模式中的 bootparam 结构的地址放入 `rdi` (要记得 `rsi` 从一开始就保存了这个结构体的指针)，然后跳转到C语言代码：
 
-```assembly
+```x86asm
 	movq	initial_code(%rip),%rax
 	pushq	$0
 	pushq	$__KERNEL_CS
@@ -533,7 +533,7 @@ per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `pe
 
 这里我们把 `initial_code` 放入 `rax` 中，并且向栈里分别压入一个无用的地址、`__KERNEL_CS` 和 `initial_code` 的地址。随后的 `lreq` 指令表示从栈上弹出返回地址并跳转。`initial_code` 同样定义在这个文件里：
 
-```assembly
+```x86asm
 	.balign	8
 	GLOBAL(initial_code)
 	.quad	x86_64_start_kernel

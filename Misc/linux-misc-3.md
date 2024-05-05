@@ -289,7 +289,7 @@ main.c:(.text+0x26): undefined reference to `printf'
 
 `_start` 符号被定义在 `glibc` 源文件的汇编文件 [sysdeps/x86_64/start.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/start.S;h=0d27a38e9c02835ce17d1c9287aa01be222e72eb;hb=HEAD) 中。我们可以在那里找到如下汇编代码： 
 
-```assembly
+```x86asm
 mov $__libc_csu_fini, %R8_LP
 mov $__libc_csu_init, %RCX_LP
 ...
@@ -445,7 +445,7 @@ LDFLAGS_vmlinux = --defsym _kernel_bss_size=$(KBSS_SZ)
 
 正如我们所知，其在输出文件中用 `.bss` 段的大小定义了 `_kernel_bss_size` 符号。这个符号将会作为第一个 [汇编文件](https://github.com/torvalds/linux/blob/master/arch/arm/boot/compressed/head.S) 在内核解压阶段被执行：
 
-```assembly
+```x86asm
 ldr r5, =_kernel_bss_size
 ```
 
@@ -489,7 +489,7 @@ $ ld -M @linker.ld
 
 用链接器控制语言编写的命令通常被放在一个被称作链接器脚本的文件中。我们可以通过命令行选项 `-T` 将其传递给 `ld` 。一个链接器脚本的主要命令是 `SECTIONS` 指令。每个链接器脚本必须包含这个指令，并且其决定了输出文件的 `映射` 。特殊变量 `.` 包含了当前输出的位置。让我们写一个简单的汇编程序，然后看看如何使用链接器脚本来控制程序的链接。我们将会使用一个 hello world 程序作为样例。
 
-```assembly
+```x86asm
 .data
         msg:    .ascii  "hello, world!\n"
 

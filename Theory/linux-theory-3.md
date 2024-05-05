@@ -49,7 +49,7 @@ Introduction to extended inline assembly
 
 So, let's start. As I already mentioned above, the `basic` assembly statement consists of the `asm` or `__asm__` keyword and set of assembly instructions. This form is in no way different from "normal" assembly. The most interesting part is inline assembler with operands, or `extended` assembler. An extended assembly statement looks more complicated and consists of more than two parts:
 
-```assembly
+```x86asm
 __asm__ [volatile] [goto] (AssemblerTemplate
                            [ : OutputOperands ]
                            [ : InputOperands  ]
@@ -112,19 +112,19 @@ a + b = 15
 
 Ok, great. It works. Now let's look at this example in detail. Here we see a simple `C` program which calculates the sum of two variables placing the result into the `sum` variable and in the end we print the result. This example consists of three parts. The first is the assembly statement with the [add](http://x86.renejeschke.de/html/file_module_x86_id_5.html) instruction. It adds the value of the source operand together with the value of the destination operand and stores the result in the destination operand. In our case:
 
-```assembly
+```x86asm
 addq %1, %2
 ```
 
 will be expanded to the:
 
-```assembly
+```x86asm
 addq a, b
 ```
 
 Variables and expressions which are listed in the `OutputOperands` and `InputOperands` may be matched in the `AssemblerTemplate`. An input/output operand is designated as `%N` where the `N` is the number of operand from left to right beginning from `zero`. The second part of the our assembly statement is located after the first `:` symbol and contains the definition of the output value:
 
-```assembly
+```x86asm
 "=r" (sum)
 ```
 
@@ -136,7 +136,7 @@ Notice that the `sum` is marked with two special symbols: `=r`. This is the firs
 
 Now let's go back to the `r` qualifier. As I mentioned above, a qualifier denotes the placement of an operand. The `r` symbol means a value will be stored in one of the [general purpose register](https://en.wikipedia.org/wiki/Processor_register). The last part of our assembly statement:
 
-```assembly
+```x86asm
 "r" (a), "0" (b)
 ```
 
@@ -251,7 +251,7 @@ The result is `a[0] - b = 9999999995` here, but why? We incremented `a[0]` and s
 
 If we have a look at the assembler output for this example:
 
-```assembly
+```x86asm
 00000000004004f6 <main>:
   4004b4:       48 b8 00 e4 0b 54 02    movabs $0x2540be400,%rax
   4004be:       48 89 04 24             mov    %rax,(%rsp)
@@ -285,7 +285,7 @@ a[0] - b = 9999999996
 
 Now the result is correct. If we look at the assembly output again:
 
-```assembly
+```x86asm
 00000000004004f6 <main>:
   400404:       48 b8 00 e4 0b 54 02    movabs $0x2540be400,%rax
   40040b:       00 00 00 
@@ -301,7 +301,7 @@ Now the result is correct. If we look at the assembly output again:
 
 we will see one difference here which is in the last two lines:
 
-```assembly
+```x86asm
   400428:       48 8b 04 24             mov    (%rsp),%rax
   400431:       48 8d 70 fb             lea    -0x5(%rax),%rsi
 ```
@@ -417,7 +417,7 @@ void main(void)
 
 will use a memory operand:
 
-```assembly
+```x86asm
 main:
         movq a(%rip),b(%rip)
         ret
@@ -451,7 +451,7 @@ int main(void)
 
 Now we see that value of the `a` variable will be stored in the `%rax` register:
 
-```assembly
+```x86asm
 0000000000400400 <main>:
   4004aa:       48 8b 05 6f 0b 20 00    mov    0x200b6f(%rip),%rax        # 601020 <a>
 ```

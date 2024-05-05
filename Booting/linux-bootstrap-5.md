@@ -11,7 +11,7 @@
 
 我们停在了跳转到`64位`入口点——`startup_64`的跳转之前，它在源文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) 里面。在之前的部分，我们已经在`startup_32`里面看到了到`startup_64`的跳转：
 
-```assembly
+```x86asm
 	pushl	$__KERNEL_CS
 	leal	startup_64(%ebp), %eax
 	...
@@ -26,7 +26,7 @@
 
 由于我们加载了新的`全局描述符表`并且在其他模式有CPU的模式转换（在我们这里是`64位`模式），我们可以在`startup_64`的开头看到数据段的建立：
 
-```assembly
+```x86asm
 	.code64
 	.org 0x200
 ENTRY(startup_64)
@@ -42,7 +42,7 @@ ENTRY(startup_64)
 
 下一步是计算内核编译时的位置和它被加载的位置的差：
 
-```assembly
+```x86asm
 #ifdef CONFIG_RELOCATABLE
 	leaq	startup_32(%rip), %rbp
 	movl	BP_kernel_alignment(%rsi), %eax
@@ -64,7 +64,7 @@ ENTRY(startup_64)
 
 下一步，我们可以看到栈指针的设置和标志寄存器的重置：
 
-```assembly
+```x86asm
 	leaq	boot_stack_end(%rbx), %rsp
 
 	pushq	$0
@@ -73,7 +73,7 @@ ENTRY(startup_64)
 
 如上所述，`rbx`寄存器包含了内核解压代码的起始地址，我们把这个地址的`boot_stack_entry`偏移地址相加放到表示栈顶指针的`rsp`寄存器。在这一步之后，栈就是正确的。你可以在汇编源码文件 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) 的末尾找到`boot_stack_end`的定义：
 
-```assembly
+```x86asm
 	.bss
 	.balign 4
 boot_heap:
@@ -87,7 +87,7 @@ boot_stack_end:
 
 由于我们设置了栈，在我们计算了解压了的内核的重定位地址后，我们可以复制压缩了的内核到以上地址。在查看细节之前，我们先看这段汇编代码：
 
-```assembly
+```x86asm
 	pushq	%rsi
 	leaq	(_bss-8)(%rip), %rsi
 	leaq	(_bss-8)(%rbx), %rdi
@@ -123,7 +123,7 @@ boot_stack_end:
 
 注意`.head.text`节包含了`startup_32`. 你可以从之前的部分回忆起它：
 
-```assembly
+```x86asm
 	__HEAD
 	.code32
 ENTRY(startup_32)
@@ -134,7 +134,7 @@ ENTRY(startup_32)
 
 `.text`节包含解压代码：
 
-```assembly
+```x86asm
 	.text
 relocated:
 ...
@@ -152,7 +152,7 @@ relocated:
 
 现在我们有`.text`节的重定位后的地址，我们可以跳到那里：
 
-```assembly
+```x86asm
 	leaq	relocated(%rbx), %rax
 	jmp	*%rax
 ```
@@ -162,7 +162,7 @@ relocated:
 
 在上一段我们看到了`.text`节从`relocated`标签开始。它做的第一件事是清空`.bss`节：
 
-```assembly
+```x86asm
 	xorl	%eax, %eax
 	leaq    _bss(%rip), %rdi
 	leaq    _ebss(%rip), %rcx
@@ -175,7 +175,7 @@ relocated:
 
 最后，我们可以调用`extract_kernel`函数：
 
-```assembly
+```x86asm
 	pushq	%rsi
 	movq	%rsi, %rdi
 	leaq	boot_heap(%rip), %rsi
@@ -212,13 +212,13 @@ free_mem_end_ptr = heap + BOOT_HEAP_SIZE;
 
 在这里 `heap` 是我们在 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S) 得到的 `extract_kernel` 函数的第二个参数：
 
-```assembly
+```x86asm
 leaq	boot_heap(%rip), %rsi
 ```
 
 如上所述，`boot_heap`定义为：
 
-```assembly
+```x86asm
 boot_heap:
 	.fill BOOT_HEAP_SIZE, 1, 0
 ```
@@ -362,7 +362,7 @@ if (ehdr.e_ident[EI_MAG0] != ELFMAG0 ||
 
 内核的地址在`rax`寄存器，我们跳到那里：
 
-```assembly
+```x86asm
 jmp	*%rax
 ```
 

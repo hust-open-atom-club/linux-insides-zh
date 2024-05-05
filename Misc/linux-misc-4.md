@@ -246,13 +246,13 @@ Disassembly of section .text:
 
 `_start` 始于对 `ebp` 寄存器的清零，正如 [ABI]((https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf)) 所建议的。 
 
-```assembly
+```x86asm
 xorl %ebp, %ebp
 ```
 
 之后，将终止函数的地址放到 `r9` 寄存器中：
 
-```assembly
+```x86asm
 mov %RDX_LP, %R9_LP
 ```
 
@@ -313,14 +313,14 @@ It takes address of the `main` function of a program, `argc` and `argv`. `init` 
 
 这之后，我们将 `argv` 数组的地址赋值给 `rdx` 寄存器中。
 
-```assembly
+```x86asm
 popq %rsi
 mov %RSP_LP, %RDX_LP
 ```
 
 从这一时刻开始，我们已经有了 `argc` 和 `argv`。我们仍要将构造函数和析构函数的指针放到合适的寄存器，以及传递指向栈的指针。下面汇编代码的前三行按照 [ABI](https://software.intel.com/sites/default/files/article/402129/mpx-linux64-abi.pdf) 中的建议设置栈为 `16` 字节对齐，并将 `rax` 压栈：
 
-```assembly
+```x86asm
 and  $~15, %RSP_LP
 pushq %rax
 
@@ -408,7 +408,7 @@ Disassembly of section .fini:
 
 正如上面所写的， `/lib64/crti.o` 目标文件包含 `.init` 和 `.fini` 段的定义，但是我们可以看见这个函数的桩。让我们看一下 [sysdeps/x86_64/crti.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crti.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD) 文件中的源码：
 
-```assembly
+```x86asm
 	.section .init,"ax",@progbits
 	.p2align 2
 	.globl _init
@@ -440,7 +440,7 @@ where the `PREINIT_FUNCTION` is the `__gmon_start__` which does setup for profil
 
 其中，`PREINIT_FUNCTION` 是设置简况的 `__gmon_start__`。你可能发现，在 [sysdeps/x86_64/crti.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crti.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD)中，我们没有 `return` 指令。事实上，这就是我们获得 `segmentation fault` 的原因。`_init` 和 `_fini` 的序言被放在 [sysdeps/x86_64/crtn.S](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/x86_64/crtn.S;h=e9d86ed08ab134a540e3dae5f97a9afb82cdb993;hb=HEAD) 汇编文件中：
 
-```assembly
+```x86asm
 .section .init,"ax",@progbits
 addq $8, %rsp
 ret

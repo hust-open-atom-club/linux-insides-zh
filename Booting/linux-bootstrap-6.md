@@ -79,7 +79,7 @@ leaq	input_data(%rip), %rdx
 
 `input_data`由 [mkpiggy](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/mkpiggy.c) 程序生成。如果你亲手编译过Linux内核源码，你会找到这个程序生成的文件，它应该位于 `linux/arch/x86/boot/compressed/piggy.S`. 在我这里，这个文件是这样的：
 
-```assembly
+```x86asm
 .section ".rodata..compressed","a",@progbits
 .globl z_input_len
 z_input_len = 6988196

@@ -71,7 +71,7 @@ PhysicalAddress = Segment * 16 + Offset
 
 得到的 `0xfffffff0` 是 4GB - 16 字节。 这个地方是 [复位向量(Reset vector)](http://en.wikipedia.org/wiki/Reset_vector) 。 这是CPU在重置后期望执行的第一条指令的内存地址。它包含一个 [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) 指令，这个指令通常指向BIOS入口点。举个例子，如果访问 [coreboot](http://www.coreboot.org/) 源代码，将看到：
 
-```assembly
+```x86asm
 	.section ".reset", "ax", %progbits
 	.code16
 .globl	_start
@@ -100,7 +100,7 @@ SECTIONS {
 
 现在BIOS已经开始工作了。在初始化和检查硬件之后，需要寻找到一个可引导设备。可引导设备列表存储在在 BIOS 配置中, BIOS 将根据其中配置的顺序，尝试从不同的设备上寻找引导程序。对于硬盘，BIOS  将尝试寻找引导扇区。如果在硬盘上存在一个MBR分区，那么引导扇区储存在第一个扇区(512字节)的头446字节，引导扇区的最后必须是 `0x55` 和 `0xaa` ，这2个字节称为魔术字节（Magic Bytes)，如果 BIOS 看到这2个字节，就知道这个设备是一个可引导设备。举个例子：
 
-```assembly
+```x86asm
 ;
 ; Note: this example is written in Intel Assembly syntax
 ;
@@ -195,7 +195,7 @@ PhysicalAddress = Segment * 16 + Offset
 
 就像 kernel boot protocol 所描述的，引导程序必须填充 kernel setup header （位于 kernel setup code 偏移 `0x01f1` 处）  的必要字段。kernel setup header的定义开始于 [arch/x86/boot/header.S](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18)：
 
-```assembly
+```x86asm
 	.globl hdr
 hdr:
 	setup_sects: .byte 0
@@ -264,7 +264,7 @@ qemu-system-x86_64 vmlinuz-3.18-generic
 
 为了能够作为 bootloader 来使用, `header.S` 开始处定义了 [MZ] [MZ](https://en.wikipedia.org/wiki/DOS_MZ_executable) 魔术数字, 并且定义了  [PE](https://en.wikipedia.org/wiki/Portable_Executable) 头，在 PE 头中定义了输出的字符串：
 
-```assembly
+```x86asm
 #ifdef CONFIG_EFI_STUB
 # "MZ", MS-DOS header
 .byte 0x4d
@@ -299,7 +299,7 @@ _start:
 .bsdata : { *(.bsdata) }
 ```
 
-```assembly
+```x86asm
 	.globl _start
 _start:
 	.byte 0xeb
@@ -338,7 +338,7 @@ cs = 0x1020
 
 首先，内核保证将 `ds` 和 `es` 段寄存器指向相同地址，随后，使用 `cld` 指令来清理方向标志位：
 
-```assembly
+```x86asm
 	movw	%ds, %ax
 	movw	%ax, %es
 	cld
@@ -346,7 +346,7 @@ cs = 0x1020
 
 就像我在上面一节中所写的， 为了能够跳转到 `_start` 标号出执行代码，grub2 将 `cs` 段寄存器的值设置成了 `0x1020`，这个值和其他段寄存器都是不一样的，因此下面的代码就是将 `cs` 段寄存器的值和其他段寄存器一致：
 
-```assembly
+```x86asm
 	pushw	%ds
 	pushw	$6f
 	lretw
@@ -359,7 +359,7 @@ cs = 0x1020
 
 绝大部分的 setup 代码都是为 C 语言运行环境做准备。在设置了 `ds` 和 `es` 寄存器之后，接下来 [step](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18#L467) 的代码将检查 `ss` 寄存器的内容，如果寄存器的内容不对，那么将进行更正：
 
-```assembly
+```x86asm
 	movw	%ss, %dx
 	cmpw	%ax, %dx
 	movw	%sp, %dx
@@ -424,7 +424,7 @@ BSS段设置
 
 在我们正式执行 C 代码之前，我们还有2件事情需要完成。1）设置正确的 [BSS](https://en.wikipedia.org/wiki/.bss)段 ；2）检查 `magic` 签名。接下来的代码，首先检查 `magic` 签名 [setup_sig](http://lxr.free-electrons.com/source/arch/x86/boot/setup.ld?v=3.18#L39)，如果签名不对，直接跳转到 `setup_bad` 部分执行代码：
 
-```assembly
+```x86asm
 cmpl	$0x5a5aaa55, setup_sig
 jne	setup_bad
 ```
@@ -433,7 +433,7 @@ jne	setup_bad
 
 BSS 段用来存储那些没有被初始化的静态变量。对于这个段使用的内存， Linux 首先使用下面的代码将其全部清零：
 
-```assembly
+```x86asm
 	movw	$__bss_start, %di
 	movw	$_end+3, %cx
 	xorl	%eax, %eax
@@ -451,7 +451,7 @@ BSS 段用来存储那些没有被初始化的静态变量。对于这个段使�
 
 到目前为止，我们完成了堆栈和 BSS 的设置，现在我们可以正式跳入 `main()` 函数来执行 C 代码了：
 
-```assembly
+```x86asm
 	call main
 ```
 

@@ -328,7 +328,7 @@ int main() {
 
 and will look on the assembly output of our example we will see following assembly code:
 
-```assembly
+```x86asm
 pushq	%rbp
 movq	%rsp, %rbp
 
@@ -339,7 +339,7 @@ call	constant_test_bit
 
 for the `constant_test_bit`, and:
 
-```assembly
+```x86asm
 pushq	%rbp
 movq	%rsp, %rbp
 

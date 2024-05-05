@@ -63,7 +63,7 @@ ffffffff81881000 D __vsyscall_page
 
 或:
 
-```assembly
+```x86asm
 __vsyscall_page:
 	mov $__NR_gettimeofday, %rax
 	syscall
@@ -151,7 +151,7 @@ BUILD_BUG_ON((unsigned long)__fix_to_virt(VSYSCALL_PAGE) !=
 
  就这样`vsyscall` 内存页设置完毕。上述的结果如下： 若设置 `vsyscall=native` 内核命令行参数，虚拟内存调用将以 [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) 文件中本地 `系统调用` 指令的方式执行。  [glibc](https://en.wikipedia.org/wiki/GNU_C_Library) 知道虚拟系统调用处理器的地址。注意虚拟系统调用的地址以 `1024` (或 `0x400`) 比特对齐。
 
-```assembly
+```x86asm
 __vsyscall_page:
 	mov $__NR_gettimeofday, %rax
 	syscall

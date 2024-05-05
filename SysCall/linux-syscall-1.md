@@ -16,7 +16,7 @@ Linux 内核系统调用 第一节
 Linux 内核提供一系列的函数，但这些函数与CPU架构相关。 例如：[x86_64](https://en.wikipedia.org/wiki/X86-64) 提供 [322](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl) 个系统调用，[x86](https://en.wikipedia.org/wiki/X86) 提供 [358](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_32.tbl) 个不同的系统调用。
 系统调用仅仅是一些函数。 我们看一个使用汇编语言编写的简单 `Hello world` 示例:
 
-```assembly
+```x86asm
 .data
 
 msg:

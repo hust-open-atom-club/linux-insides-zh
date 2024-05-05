@@ -60,13 +60,13 @@ enum {
 
 When the `early_trap_pf_init` will be called, the `set_intr_gate` will be expanded to the call of the `_set_gate` which will fill the `IDT` with the handler for the page fault. Now let's look on the implementation of the `page_fault` handler. The `page_fault` handler defined in the [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) assembly source code file as all exceptions handlers. Let's look on it:
 
-```assembly
+```x86asm
 trace_idtentry page_fault do_page_fault has_error_code=1
 ```
 
 We saw in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html) how `#DB` and `#BP` handlers defined. They were defined with the `idtentry` macro, but here we can see `trace_idtentry`. This macro defined in the same source code file and depends on the `CONFIG_TRACING` kernel configuration option:
 
-```assembly
+```x86asm
 #ifdef CONFIG_TRACING
 .macro trace_idtentry sym do_sym has_error_code:req
 idtentry trace(\sym) trace(\do_sym) has_error_code=\has_error_code

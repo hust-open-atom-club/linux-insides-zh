@@ -74,7 +74,7 @@ asmlinkage void debug(void);
 和其他处理函数一样，`#DB` 处理函数的实现可以在 [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64.S) 文件中找到。
 都是由 `idtentry` 汇编宏定义的：
 
-```assembly
+```x86asm
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 ```
 
@@ -92,7 +92,7 @@ idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 就像 [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/entry_64) 中解释：`CFI` 宏是用来产生更好的回溯的 `dwarf2` 的解开信息。
 它们不会改变任何代码。因此我们可以忽略它们。
 
-```assembly
+```x86asm
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
 ENTRY(\sym)
 	/* Sanity check */
@@ -127,7 +127,7 @@ ENTRY(\sym)
 
 `idtentry` 实现中的另外两个宏分别是
 
-```assembly
+```x86asm
 	ASM_CLAC
 	PARAVIRT_ADJUST_EXCEPTION_FRAME
 ```
@@ -136,7 +136,7 @@ ENTRY(\sym)
 第二个 `PARAVIRT_EXCEPTION_FRAME` 宏是用来处理 `Xen` 类型异常（这章只讲解内核初始化，不会考虑虚拟化的内容）。
 下一段代码会检查中断是否有错误码。如果没有则会把 `$-1`(在 `x86_64` 架构下值为 `0xffffffffffffffff`)压入栈：
 
-```assembly
+```x86asm
 	.ifeq \has_error_code
 	pushq_cfi $-1
 	.endif
@@ -144,7 +144,7 @@ ENTRY(\sym)
 
 为了保证对于所有中断的栈的一致性，我们会把它处理为 `dummy` 错误码。下一步我们从栈指针中减去 `$ORIG_RAX-R15`：
 
-```assembly
+```x86asm
 	subq $ORIG_RAX-R15, %rsp
 ```
 
@@ -152,7 +152,7 @@ ENTRY(\sym)
 我们在中断处理过程中需要把所有的寄存器信息存储在栈中，所有通用寄存器会占用这个 120 字节。
 为通用寄存器设置完栈之后，下一步是检查从用户空间产生的中断：
 
-```assembly
+```x86asm
 testl $3, CS(%rsp)
 jnz 1f
 ```
@@ -161,7 +161,7 @@ jnz 1f
 数字越小代表权限越高。因此当中断来自内核空间，我们会调用 `save_paranoid`，如果不来自内核空间，我们会跳转到标签 `1` 处处理。
 在 `save_paranoid` 函数中，我们会把所有的通用寄存器存储到栈中，如果需要的话会用户态 `gs` 切换到内核态 `gs`：
 
-```assembly
+```x86asm
 movl $1,%ebx
 	movl $MSR_GS_BASE,%ecx
 	rdmsr

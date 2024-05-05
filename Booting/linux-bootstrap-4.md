@@ -10,7 +10,7 @@
 
 在[前一章节](linux-bootstrap-3.md)，我们停在了跳转到位于 [arch/x86/boot/pmjump.S](http://lxr.free-electrons.com/source/arch/x86/boot/pmjump.S?v=3.18) 的 32 位入口点这一步：
 
-```assembly
+```x86asm
 jmpl	*%eax
 ```
 
@@ -53,7 +53,7 @@ gs             0x18	24
 
 我们可以在汇编源码 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 中找到 32 位入口点的定义。
 
-```assembly
+```x86asm
 	__HEAD
 	.code32
 ENTRY(startup_32)
@@ -99,7 +99,7 @@ endif
 
 正如上面阐述的，我们先从 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 这个汇编文件开始。首先我们看到了在 `startup_32` 之前的特殊段属性定义：
 
-```assembly
+```x86asm
     __HEAD
 	.code32
 ENTRY(startup_32)
@@ -186,14 +186,14 @@ Disassembly of section .head.text:
 
  `objdump` 工具告诉我们 `startup_32` 的地址是 `0` 。但实际上并不是。我们当前的目标是获知我们实际上在哪里。在[长模式](https://zh.wikipedia.org/wiki/%E9%95%BF%E6%A8%A1%E5%BC%8F)下，这非常简单，因为其支持 `rip` 相对寻址，但是我们当前处于[保护模式](https://zh.wikipedia.org/wiki/%E4%BF%9D%E8%AD%B7%E6%A8%A1%E5%BC%8F)下。我们将会使用一个常用的方法来确定 `startup_32` 的地址。我们需要定义一个标签并且跳转到它，然后把栈顶抛出到一个寄存器中：
 
-```assembly
+```x86asm
 call label
 label: pop %reg
 ```
 
 在这之后，那个寄存器将会包含标签的地址，让我们看看在 Linux 内核中类似的寻找 `startup_32` 地址的代码：
 
-```assembly
+```x86asm
 	leal	(BP_scratch+4)(%esi), %esp
 	call	1f
 1:  popl	%ebp
@@ -266,7 +266,7 @@ ebp            0x100000	0x100000
 
 如果不知道 `startup_32` 标签的地址，我们就无法建立栈。我们可以把栈看作是一个数组，并且栈指针寄存器 `esp` 必须指向数组的底部。当然我们可以在自己的代码里定义一个数组，但是我们需要知道其真实地址来正确配置栈指针。让我们看一下代码：
 
-```assembly
+```x86asm
 	movl	$boot_stack_end, %eax
 	addl	%ebp, %eax
 	movl	%eax, %esp
@@ -274,7 +274,7 @@ ebp            0x100000	0x100000
 
  `boots_stack_end` 标签被定义在同一个汇编文件 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 中，位于 [.bss](https://en.wikipedia.org/wiki/.bss) 段：
 
-```assembly
+```x86asm
 	.bss
 	.balign 4
 boot_heap:
@@ -288,7 +288,7 @@ boot_stack_end:
 
 在外面建立了栈之后，下一步是 CPU 的确认。既然我们将要切换到 `长模式` ，我们需要检查 CPU 是否支持 `长模式` 和 `SSE`。我们将会在跳转到 `verify_cpu` 函数之后执行：
 
-```assembly
+```x86asm
 	call	verify_cpu
 	testl	%eax, %eax
 	jnz	no_longmode
@@ -298,7 +298,7 @@ boot_stack_end:
 
 如果 `eax` 的值不是 0 ，我们就跳转到 `no_longmode` 标签，用 `hlt` 指令停止 CPU ，期间不会发生硬件中断：
 
-```assembly
+```x86asm
 no_longmode:
 1:
 	hlt
@@ -335,7 +335,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 
 当我们使用位置无关代码时，一段代码的地址是由一个控制地址加上程序计数器计算得到的。我们可以从任意一个地址加载使用这种方式寻址的代码。这就是为什么我们需要获得 `startup_32` 的实际地址。现在让我们回到 Linux 内核代码。我们目前的目标是计算出内核解压的地址。这个地址的计算取决于内核配置项 `CONFIG_RELOCATABLE` 。让我们看代码：
 
-```assembly
+```x86asm
 #ifdef CONFIG_RELOCATABLE
 	movl	%ebp, %ebx
 	movl	BP_kernel_alignment(%esi), %eax
@@ -368,7 +368,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 
 在我们得到了重定位内核镜像的基地址之后，我们需要做切换到64位模式之前的最后准备。首先，我们需要更新[全局描述符表](https://en.wikipedia.org/wiki/Global_Descriptor_Table)：
 
-```assembly
+```x86asm
 	leal	gdt(%ebp), %eax
 	movl	%eax, gdt+2(%ebp)
 	lgdt	gdt(%ebp)
@@ -376,7 +376,7 @@ KBUILD_CFLAGS += -fno-strict-aliasing -fPIC
 
 在这里我们把 `ebp` 寄存器加上 `gdt` 的偏移存到 `eax` 寄存器。接下来我们把这个地址放到 `ebp` 加上 `gdt+2` 偏移的位置上，并且用 `lgdt` 指令载入 `全局描述符表` 。为了理解这个神奇的 `gdt` 偏移量，我们需要关注 `全局描述符表` 的定义。我们可以在同一个[源文件](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18)中找到其定义：
 
-```assembly
+```x86asm
 	.data
 gdt:
 	.word	gdt_end - gdt
@@ -399,7 +399,7 @@ gdt_end:
 
 在我们载入 `全局描述符表` 之后，我们必须启用 [PAE](http://en.wikipedia.org/wiki/Physical_Address_Extension) 模式。方法是将 `cr4` 寄存器的值传入 `eax` ，将第5位置1，然后再写回 `cr4` 。
 
-```assembly
+```x86asm
 	movl	%cr4, %eax
 	orl	$X86_CR4_PAE, %eax
 	movl	%eax, %cr4
@@ -450,7 +450,7 @@ Linux 内核使用 `4级` 页表，通常我们会建立6个页表：
 
 让我们看看其实现方式。首先我们在内存中为页表清理一块缓存。每个表都是 `4096` 字节，所以我们需要 `24` KB 的空间：
 
-```assembly
+```x86asm
 	leal	pgtable(%ebx), %edi
 	xorl	%eax, %eax
 	movl	$((4096*6)/4), %ecx
@@ -461,7 +461,7 @@ Linux 内核使用 `4级` 页表，通常我们会建立6个页表：
 
  `pgtable` 定义在 [arch/x86/boot/compressed/head_64.S](http://lxr.free-electrons.com/source/arch/x86/boot/compressed/head_64.S?v=3.18) 的最后：
 
-```assembly
+```x86asm
 	.section ".pgtable","a",@nobits
 	.balign 4096
 pgtable:
@@ -472,7 +472,7 @@ pgtable:
 
 在我们为 `pgtable` 分配了空间之后，我们可以开始构建顶级页表 - `PML4` ：
 
-```assembly
+```x86asm
 	leal	pgtable + 0(%ebx), %edi
 	leal	0x1007 (%edi), %eax
 	movl	%eax, 0(%edi)
@@ -482,7 +482,7 @@ pgtable:
 
 在接下来的一步，我们将会在 `页目录指针（PDP）` 表（3级页表）建立 4 个带有 `PRESENT+RW+USE` 标记的 `Page Directory （2级页表）` 项：
 
-```assembly
+```x86asm
 	leal	pgtable + 0x1000(%ebx), %edi
 	leal	0x1007(%edi), %eax
 	movl	$4, %ecx
@@ -495,7 +495,7 @@ pgtable:
 
 我们把 3 级页目录指针表的基地址（从 `pgtable` 表偏移 `4096` 或者 `0x1000` ）放到 `edi` ，把第一个 2 级页目录指针表的首项的地址放到 `eax` 寄存器。把 `4` 赋值给 `ecx` 寄存器，其将会作为接下来循环的计数器，然后将第一个页目录指针项写到 `edi` 指向的地址。之后， `edi` 将会包含带有标记 `0x7` 的第一个页目录指针项的地址。接下来我们就计算后面的几个页目录指针项的地址，每个占 8 字节，把地址赋值给 `eax` ，然后回到循环开头将其写入 `edi` 所在地址。建立页表结构的最后一步就是建立 `2048` 个 `2MB` 页的页表项。
 
-```assembly
+```x86asm
 	leal	pgtable + 0x2000(%ebx), %edi
 	movl	$0x00000183, %eax
 	movl	$2048, %ecx
@@ -515,7 +515,7 @@ pgtable:
 
 一个 `4G` 页表。我们刚刚完成我们的初期页表结构，其映射了 `4G` 大小的内存，现在我们可以把高级页表 `PML4` 的地址放到 `cr3` 寄存器中了：
 
-```assembly
+```x86asm
 	leal	pgtable(%ebx), %eax
 	movl	%eax, %cr3
 ```
@@ -527,7 +527,7 @@ pgtable:
 
 首先我们需要设置 [MSR](http://en.wikipedia.org/wiki/Model-specific_register) 中的 `EFER.LME` 标记为 `0xC0000080` ：
 
-```assembly
+```x86asm
 	movl	$MSR_EFER, %ecx
 	rdmsr
 	btsl	$_EFER_LME, %eax
@@ -538,21 +538,21 @@ pgtable:
 
 下一步我们将内核段代码地址入栈（我们在 GDT 中定义了），然后将 `startup_64` 的地址导入 `eax` 。
 
-```assembly
+```x86asm
 	pushl	$__KERNEL_CS
 	leal	startup_64(%ebp), %eax
 ```
 
 在这之后我们把这个地址入栈然后通过设置 `cr0` 寄存器中的 `PG` 和 `PE` 启用分页：
 
-```assembly
+```x86asm
 	movl	$(X86_CR0_PG | X86_CR0_PE), %eax
 	movl	%eax, %cr0
 ```
 
 然后执行：
 
-```assembly
+```x86asm
 lret
 ```
 
@@ -560,7 +560,7 @@ lret
 
 这些步骤之后我们最后来到了64位模式：
 
-```assembly
+```x86asm
 	.code64
 	.org 0x200
 ENTRY(startup_64)

@@ -46,7 +46,7 @@ PhysicalAddress = Segment * 16 + Offset
 
 `全局描述符表`这个内存数据结构在内存中的位置并不是固定的，它的地址保存在一个特殊寄存器 `GDTR` 中。在后面的章节中，我们将在Linux内核代码中看到全局描述符表的地址是如何被保存到 `GDTR` 中的。具体的汇编代码看起来是这样的：
 
-```assembly
+```x86asm
 lgdt gdt
 ```
 
@@ -191,7 +191,7 @@ lgdt gdt
 
 这里需要注意的是拷贝 `hdr` 数据结构的 `memcpy` 函数不是C语言中的函数，而是定义在 [copy.S](http://lxr.free-electrons.com/source/arch/x86/boot/copy.S?v=3.18)。让我们来具体分析一下这段代码：
 
-```assembly
+```x86asm
 GLOBAL(memcpy)
 	pushw	%si          ;push si to stack
 	pushw	%di          ;push di to stack
@@ -213,7 +213,7 @@ ENDPROC(memcpy)
 
 你可以在 [arch/x86/include/asm/linkage.h](http://lxr.free-electrons.com/source/arch/x86/include/asm/linkage.h?v=3.18)中找到 `GLOBAL` 宏定义。这个宏给代码段分配了一个名字标签，并且让这个名字全局可用。 
 
-```assembly
+```x86asm
 #define GLOBAL(name)	\
 	.globl name;	\
 	name:
@@ -221,7 +221,7 @@ ENDPROC(memcpy)
 
 你可以在[include/linux/linkage.h](http://lxr.free-electrons.com/source/include/linux/linkage.h?v=3.18)中找到 `ENDPROC` 宏的定义。 这个宏通过 `END(name)` 代码标识了汇编函数的结束，同时将函数名输出，从而静态分析工具可以找到这个函数。
 
-```assembly
+```x86asm
 #define ENDPROC(name) \
 	.type name, @function ASM_NL \
 	END(name)
@@ -305,7 +305,7 @@ static void __attribute__((section(".inittext"))) bios_putchar(int ch)
 
 下面让我们来看看[memset](http://lxr.free-electrons.com/source/arch/x86/boot/copy.S?v=3.18#L36)函数的实现 :
 
-```assembly
+```x86asm
 GLOBAL(memset)
     pushw   %di
     movw    %ax, %di
@@ -387,7 +387,7 @@ if (cpu_level < req_level) {
 
 该方法首先调用 `initregs` 方法初始化 `biosregs` 数据结构，然后向该数据结构填入 `0xe820` 编程接口所要求的参数：
 
-```assembly
+```x86asm
     initregs(&ireg);
     ireg.ax  = 0xe820;
     ireg.cx  = sizeof buf;

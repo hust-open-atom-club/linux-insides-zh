@@ -29,7 +29,7 @@ set_intr_gate_ist(X86_TRAP_NMI, &nmi, NMI_STACK);
 
 in the `trap_init` function which defined in the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) source code file. In the previous [parts](http://0xax.gitbooks.io/linux-insides/content/interrupts/index.html) we saw that entry points of the all interrupt handlers are defined with the:
 
-```assembly
+```x86asm
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
 ENTRY(\sym)
 ...
@@ -41,7 +41,7 @@ END(\sym)
 
 macro from the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly source code file. But the handler of the `Non-Maskable` interrupts is not defined with this macro. It has own entry point:
 
-```assembly
+```x86asm
 ENTRY(nmi)
 ...
 ...
@@ -51,19 +51,19 @@ END(nmi)
 
 in the same [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly file. Lets dive into it and will try to understand how `Non-Maskable` interrupt handler works. The `nmi` handlers starts from the call of the:
 
-```assembly
+```x86asm
 PARAVIRT_ADJUST_EXCEPTION_FRAME
 ```
 
 macro but we will not dive into details about it in this part, because this macro related to the [Paravirtualization](https://en.wikipedia.org/wiki/Paravirtualization) stuff which we will see in another chapter. After this save the content of the `rdx` register on the stack:
 
-```assembly
+```x86asm
 pushq	%rdx
 ```
 
 And allocated check that `cs` was not the kernel segment when an non-maskable interrupt occurs:
 
-```assembly
+```x86asm
 cmpl	$__KERNEL_CS, 16(%rsp)
 jne	first_nmi
 ```
@@ -77,7 +77,7 @@ The `__KERNEL_CS` macro defined in the [arch/x86/include/asm/segment.h](https://
 
 more about `GDT` you can read in the second [part](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-2.html) of the Linux kernel booting process chapter. If `cs` is not kernel segment, it means that it is not nested `NMI` and we jump on the `first_nmi` label. Let's consider this case. First of all we put address of the current stack pointer to the `rdx` and pushes `1` to the stack in the `first_nmi` label:
 
-```assembly
+```x86asm
 first_nmi:
 	movq	(%rsp), %rdx
 	pushq	$1
@@ -111,7 +111,7 @@ and also an error code if an exception has it. So, after all of these manipulati
 
 In the next step we allocate yet another `40` bytes on the stack:
 
-```assembly
+```x86asm
 subq	$(5*8), %rsp
 ```
 
@@ -125,7 +125,7 @@ pushq	11*8(%rsp)
 
 with the [.rept](http://tigcc.ticalc.org/doc/gnuasm.html#SEC116) assembly directive. We need in the copy of the original stack frame. Generally we need in two copies of the interrupt stack. First is `copied` interrupts stack: `saved` stack frame and `copied` stack frame. Now we pushes original stack frame to the `saved` stack frame which locates after the just allocated `40` bytes (`copied` stack frame). This stack frame is used to fixup the `copied` stack frame that a nested NMI may change. The second - `copied` stack frame modified by any nested `NMIs` to let the first `NMI` know that we triggered a second `NMI` and we should repeat the first `NMI` handler. Ok, we have made first copy of the original stack frame, now time to make second copy:
 
-```assembly
+```x86asm
 addq	$(10*8), %rsp
 
 .rept 5
@@ -164,14 +164,14 @@ After all of these manipulations our stack frame will be like this:
 
 After this we push dummy error code on the stack as we did it already in the previous exception handlers and allocate space for the general purpose registers on the stack:
 
-```assembly
+```x86asm
 pushq	$-1
 ALLOC_PT_GPREGS_ON_STACK
 ```
 
 We already saw implementation of the `ALLOC_PT_GREGS_ON_STACK` macro in the third part of the interrupts [chapter](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-3.html). This macro defined in the [arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) and yet another allocates `120` bytes on stack for the general purpose registers, from the `rdi` to the `r15`:
 
-```assembly
+```x86asm
 .macro ALLOC_PT_GPREGS_ON_STACK addskip=0
 addq	$-(15*8+\addskip), %rsp
 .endm
@@ -179,13 +179,13 @@ addq	$-(15*8+\addskip), %rsp
 
 After space allocation for the general registers we can see call of the `paranoid_entry`:
 
-```assembly
+```x86asm
 call	paranoid_entry
 ```
 
 We can remember from the previous parts this label. It pushes general purpose registers on the stack, reads `MSR_GS_BASE` [Model Specific register](https://en.wikipedia.org/wiki/Model-specific_register) and checks its value. If the value of the `MSR_GS_BASE` is negative, we came from the kernel mode and just return from the `paranoid_entry`, in other way it means that we came from the usermode and need to execute `swapgs` instruction which will change user `gs` with the kernel `gs`:
 
-```assembly
+```x86asm
 ENTRY(paranoid_entry)
 	cld
 	SAVE_C_REGS 8
@@ -209,7 +209,7 @@ movq	%cr2, %r12
 
 Now time to call actual `NMI` handler. We push the address of the `pt_regs` to the `rdi`, error code to the `rsi` and call the `do_nmi` handler:
 
-```assembly
+```x86asm
 movq	%rsp, %rdi
 movq	$-1, %rsi
 call	do_nmi
@@ -217,7 +217,7 @@ call	do_nmi
 
 We will back to the `do_nmi` little later in this part, but now let's look what occurs after the `do_nmi` will finish its execution. After the `do_nmi` handler will be finished we check the `cr2` register, because we can got page fault during `do_nmi` performed and if we got it we restore original `cr2`, in other way we jump on the label `1`. After this we test content of the `ebx` register (remember it must contain `0` if we have used `swapgs` instruction and `1` if we didn't use it) and execute `SWAPGS_UNSAFE_STACK` if it contains `1` or jump to the `nmi_restore` label. The `SWAPGS_UNSAFE_STACK` macro just expands to the `swapgs` instruction. In the `nmi_restore` label we restore general purpose registers, clear allocated space on the stack for this registers, clear our temporary variable and exit from the interrupt handler with the `INTERRUPT_RETURN` macro:
 
-```assembly
+```x86asm
 	movq	%cr2, %rcx
 	cmpq	%rcx, %r12
 	je	1f
@@ -241,14 +241,14 @@ where `INTERRUPT_RETURN` is defined in the [arch/x86/include/irqflags.h](https:/
 
 Now let's consider case when another `NMI` interrupt occurred when previous `NMI` interrupt didn't finish its execution. You can remember from the beginning of this part that we've made a check that we came from userspace and jump on the `first_nmi` in this case:
 
-```assembly
+```x86asm
 cmpl	$__KERNEL_CS, 16(%rsp)
 jne	first_nmi
 ```
 
 Note that in this case it is first `NMI` every time, because if the first `NMI` catched page fault, breakpoint or another exception it will be executed in the kernel mode. If we didn't come from userspace, first of all we test our temporary variable:
 
-```assembly
+```x86asm
 cmpl	$1, -8(%rsp)
 je	nested_nmi
 ```

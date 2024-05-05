@@ -308,7 +308,7 @@ union irq_stack_union {
 
 * `gs_base` - 总是指向 `irqstack` 联合底部的 `gs` 寄存器。在 `x86_64` 中， per-cpu（更多关于 `per-cpu` 变量的信息可以阅读特定的[章节](/Concepts/linux-cpu-1.md)） 和 stack canary 共享 `gs` 寄存器。所有的 per-cpu 标志初始值为零，并且 `gs` 指向 per-cpu 区域的开始。你已经知道[段内存模式](http://en.wikipedia.org/wiki/Memory_segmentation)已经废除很长时间了，但是我们可以使用[特殊模块寄存器（Model specific registers）](http://en.wikipedia.org/wiki/Model-specific_register)给这两个段寄存器 - `fs` 和 `gs` 设置基址，并且这些寄存器仍然可以被用作地址寄存器。如果你记得 Linux 内核初始程序的第一[部分](/Initialization/linux-initialization-1.md)，你会记起我们设置了 `gs` 寄存器：
 
-```assembly
+```x86asm
 	movl	$MSR_GS_BASE,%ecx
 	movl	initial_gs(%rip),%eax
 	movl	initial_gs+4(%rip),%edx
@@ -317,7 +317,7 @@ union irq_stack_union {
 
 `initial_gs` 指向 `irq_stack_union`:
 
-```assembly
+```x86asm
 GLOBAL(initial_gs)
 .quad	INIT_PER_CPU_VAR(irq_stack_union)
 ```
@@ -390,7 +390,7 @@ void load_percpu_segment(int cpu)
 
 正如我们所知的一样，`gs` 寄存器指向中断栈的栈底：
 
-```assembly
+```x86asm
 	movl	$MSR_GS_BASE,%ecx
 	movl	initial_gs(%rip),%eax
 	movl	initial_gs+4(%rip),%edx
@@ -434,7 +434,7 @@ static const __initconst struct idt_data def_idts[] = {
 
 [arch/x86/kernel/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S)中
 
-```assembly
+```x86asm
 idtentry double_fault			do_double_fault			has_error_code=1 paranoid=2 read_cr2=1
 ...
 ...

@@ -6,7 +6,7 @@ Implementation of exception handlers
 
 This is the fifth part about an interrupts and exceptions handling in the Linux kernel and in the previous [part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-4.html) we stopped on the setting of interrupt gates to the [Interrupt descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table). We did it in the `trap_init` function from the [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/tree/master/arch/x86/kernel/traps.c) source code file. We saw only setting of these interrupt gates in the previous part and in the current part we will see implementation of the exception handlers for these gates. The preparation before an exception handler will be executed is in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly file and occurs in the [idtentry](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S#L820) macro that defines exceptions entry points:
 
-```assembly
+```x86asm
 idtentry divide_error			        do_divide_error			       has_error_code=0
 idtentry overflow			            do_overflow			           has_error_code=0
 idtentry invalid_op			            do_invalid_op			       has_error_code=0
@@ -23,7 +23,7 @@ idtentry simd_coprocessor_error		    do_simd_coprocessor_error	   has_error_code
 
 The `idtentry` macro does following preparation before an actual exception handler (`do_divide_error` for the `divide_error`, `do_overflow` for the `overflow` and etc.) will get control. In another words the `idtentry` macro allocates place for the registers ([pt_regs](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/ptrace.h#L43) structure) on the stack, pushes dummy error code for the stack consistency if an interrupt/exception has no error code, checks the segment selector in the `cs` segment register and switches depends on the previous state(userspace or kernelspace). After all of these preparations it makes a call of an actual interrupt/exception handler:
 
-```assembly
+```x86asm
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
 ENTRY(\sym)
 	...
@@ -39,7 +39,7 @@ END(\sym)
 
 After an exception handler will finish its work, the `idtentry` macro restores stack and general purpose registers of an interrupted task and executes [iret](http://x86.renejeschke.de/html/file_module_x86_id_145.html) instruction:
 
-```assembly
+```x86asm
 ENTRY(paranoid_exit)
 	...
 	...
@@ -53,7 +53,7 @@ END(paranoid_exit)
 
 where `INTERRUPT_RETURN` is:
 
-```assembly
+```x86asm
 #define INTERRUPT_RETURN	jmp native_iret
 ...
 ENTRY(native_iret)

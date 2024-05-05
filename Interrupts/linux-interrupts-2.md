@@ -49,7 +49,7 @@ protected_mode_jump(boot_params.hdr.code32_start,
 
 定义在文件 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S)中的函数`protected_mode_jump`通过一种[8086](http://en.wikipedia.org/wiki/Intel_8086)的调用 [约定](http://en.wikipedia.org/wiki/X86_calling_conventions#List_of_x86_calling_conventions)，通过 `ax`和 `dx`两个寄存器来获取参数:
 
-```assembly
+```x86asm
 GLOBAL(protected_mode_jump)
         ...
         ...
@@ -65,7 +65,7 @@ ENDPROC(protected_mode_jump)
 
 其中 `in_pm32`包含了对32-bit入口的跳转语句:
 
-```assembly
+```x86asm
 GLOBAL(in_pm32)
         ...
         ...
@@ -102,7 +102,7 @@ endif
 
 现在我们从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S)跳入了 `startup_32`函数，在这个函数中没有与中断处理相关的内容。`startup_32`函数包含了进入 [long mode](http://en.wikipedia.org/wiki/Long_mode)之前必须的准备工作，并直接进入了 `long mode`。 `long mode`的入口位于 `startup_64`函数中，在这个函数中完成了 [内核解压](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)的准备工作。内核解压的代码位于 [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c)中的 `decompress_kernel`函数中。内核解压完成以后，程序跳入 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)中的 `startup_64`函数。在这个函数中，我们开始构建 `identity-mapped pages`，并在之后检查 [NX](http://en.wikipedia.org/wiki/NX_bit)位，配置 `Extended Feature Enable Register`(见链接)，使用 `lgdt`指令更新早期的`Global Descriptor Table`，在此之后我们还需要使用如下代码来设置 `gs`寄存器:
 
-```assembly
+```x86asm
 movl    $MSR_GS_BASE,%ecx
 movl    initial_gs(%rip),%eax
 movl    initial_gs+4(%rip),%edx
@@ -117,7 +117,7 @@ wrmsr
 
 由此可见，`MSR_GS_BASE`定义了 `model specific register`的编号。由于 `cs`, `ds`, `es`,和 `ss`在64-bit模式中不再使用，这些寄存器中的值将会被忽略，但我们可以通过 `fs`和 `gs`寄存器来访问内存空间。`model specific register`提供了一种后门 `back door`来访问这些段寄存器，也让我们可以通过段寄存器 `fs`和 `gs`来访问64-bit的基地址。看起来这部分代码映射在 `GS.base`域中。再看到 `initial_gs`函数的定义:
 
-```assembly
+```x86asm
 GLOBAL(initial_gs)
         .quad   INIT_PER_CPU_VAR(irq_stack_union)
 ```
@@ -176,7 +176,7 @@ ffffffff819ed000 A init_per_cpu__irq_stack_union
 
 现在我们终于知道了 `initial_gs`是什么，回到之前的代码中:
 
-```assembly
+```x86asm
 movl    $MSR_GS_BASE,%ecx
 movl    initial_gs(%rip),%eax
 movl    initial_gs+4(%rip),%edx
@@ -215,7 +215,7 @@ extern const char early_idt_handler_array[NUM_EXCEPTION_VECTORS][EARLY_IDT_HANDL
 
 因此，数组 `early_idt_handler_array` 存放着中断服务程序入口，其中每个入口占据9个字节。`early_idt_handlers` 定义在文件[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)中。`early_idt_handler_array` 也定义在这个文件中:
 
-```assembly
+```x86asm
 ENTRY(early_idt_handler_array)
 ...
 ...

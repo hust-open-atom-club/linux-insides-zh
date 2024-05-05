@@ -314,7 +314,7 @@ int first_system_vector = FIRST_SYSTEM_VECTOR; // 0xef
 
 并且设置中断门，`i` 是向量号，`irq_entries_start + 8 * (i - FIRST_EXTERNAL_VECTOR)` 是起始地址。仅有一处尚不明了 - `irq_entries_start`。这个符号定义在 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) 汇编文件中，并提供了 `irq` 入口。一起来看：
 
-```assembly
+```x86asm
 	.align 8
 ENTRY(irq_entries_start)
     vector=FIRST_EXTERNAL_VECTOR
@@ -336,7 +336,7 @@ END(irq_entries_start)
 
 次。在 `.rept` 指令主体中，我们把入口程序地址压入栈中(注意，我们使用负数表示中断向量号，因为正数留作标识[系统调用](https://en.wikipedia.org/wiki/System_call)之用)，将 `vector` 变量加 1，并跳转到 `common_interrupt` 标签。在 `common_interrupt` 中，我们调整了栈中向量号，执行 `interrupt` 指令，参数是 `do_IRQ`：
 
-```assembly
+```x86asm
 common_interrupt:
 	addq	$-0x80, (%rsp)
 	interrupt do_IRQ
@@ -411,7 +411,7 @@ return 1;
 
 好了，中断处理程序执行完毕，我们必须从中断中返回。在 `do_IRQ` 函数将工作处理完毕后，我们将回到 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) 汇编代码的 `ret_from_intr` 标签处。首先，我们通过 `DISABLE_INTERRUPTS` 宏禁止中断，这个宏被扩展成 `cli` 指令，将 [per-cpu](/Concepts/linux-cpu-1.md) 的 `irq_count` 变量值减 1。记住，当我们处于中断上下文的时候，这个变量的值是 `1`：
 
-```assembly
+```x86asm
 DISABLE_INTERRUPTS(CLBR_NONE)
 TRACE_IRQS_OFF
 decl	PER_CPU_VAR(irq_count)
@@ -419,7 +419,7 @@ decl	PER_CPU_VAR(irq_count)
 
 最后一步，我们检查之前的上下文(用户空间或者内核空间)，正确地恢复它，然后通过指令退出中断：
 
-```assembly
+```x86asm
 INTERRUPT_RETURN
 ```
 
@@ -431,7 +431,7 @@ INTERRUPT_RETURN
 
 而
 
-```assembly
+```x86asm
 ENTRY(native_iret)
 
 .global native_irq_return_iret

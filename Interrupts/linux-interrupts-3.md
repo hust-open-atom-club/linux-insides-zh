@@ -123,13 +123,13 @@ asmlinkage void int3(void);
 So, both handlers are defined in the [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) assembly source code file with the `idtentry` macro:
 
 因此，这两个处理程序都在[arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/entry_64.S) 汇编源代码文件中定义`idtentry`宏：
-```assembly
+```x86asm
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 ```
 
 and
 
-```assembly
+```x86asm
 idtentry int3 do_int3 has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 ```
 
@@ -147,7 +147,7 @@ idtentry int3 do_int3 has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 
 `idtentry`宏的定义如下：
 
-```assembly
+```x86asm
 .macro idtentry sym do_sym has_error_code:req paranoid=0 shift_ist=-1
 ENTRY(\sym)
 ...
@@ -172,13 +172,13 @@ Before we will consider internals of the `idtentry` macro, we should to know sta
 ```
 
 现在我们可以开始考虑`idtmacro`的实现了。 `#DB`和`BP`异常处理程序都定义为：
-```assembly
+```x86asm
 idtentry debug do_debug has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 idtentry int3 do_int3 has_error_code=0 paranoid=1 shift_ist=DEBUG_STACK
 ```
 
 如果我们看一下这些定义，我们可能知道编译器将生成两个带有`debug`和`int3`名称的例程，并且这两个异常处理程序在经过一些准备后将调用`do_debug`和`do_int3`辅助处理程序。 第三个参数定义了错误代码的存在，并且我们可以看到我们的两个异常都没有它们。 如上图所示，如果有异常，处理器会将错误代码压入堆栈。 在我们的例子中，`debug`和`int3`异常没有错误代码。 这可能会带来一些困难，因为对于提供错误代码的异常和未提供错误代码的异常，堆栈的外观会有所不同。 这就是为什么`idtentry`宏的实现始于在异常未提供的情况下将伪造的错误代码放入堆栈的原因：
-```assembly
+```x86asm
 .ifeq \has_error_code
     pushq	$-1
 .endif
@@ -208,7 +208,7 @@ jnz userspace
 
 
 换句话说，例如，`NMI`可能发生在[swapgs](http://www.felixcloutier.com/x86/SWAPGS.html) 指令的关键部分内。 这样，我们应该检查`MSR_GS_BASE` [模型专用寄存器](https://en.wikipedia.org/wiki/Model-specific_register) 的值，该值存储指向每个cpu区域开始的指针。 因此，要检查我们是否来自用户空间，我们应该检查`MSR_GS_BASE`模型特定寄存器的值，如果它是负数，则来自内核空间，否则来自用户空间：
-```assembly
+```x86asm
 movl $MSR_GS_BASE,%ecx
 rdmsr
 testl %edx,%edx
@@ -218,13 +218,13 @@ js 1f
 在前两行代码中，我们将模型专用寄存器`MSR_GS_BASE`的值读入edx:eax对。 我们不能从用户空间为gs设置负值。 但是从另一面我们知道，物理内存的直接映射是从虚拟地址`0xffff880000000000`开始的。 这样，`MSR_GS_BASE`将包含从`0xffff880000000000`到`0xffffc7ffffffffff`的地址。 执行完`rdmsr`指令后，`％edx`寄存器中的最小可能值为-`0xffff8800`，即无符号4个字节的`-30720`。 这就是指向`每个CPU`区域开始的内核空间`gs`包含负值的原因。
 将伪错误代码压入堆栈后，我们应该使用以下命令为通用寄存器分配空间：
 
-```assembly
+```x86asm
 ALLOC_PT_GPREGS_ON_STACK
 ```
 
 在[arch / x86 / entry / calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) 头文件中定义的宏。 该宏仅在堆栈上分配15 * 8字节空间以保留通用寄存器：
 
-```assembly
+```x86asm
 .macro ALLOC_PT_GPREGS_ON_STACK addskip=0
     addq	$-(15*8+\addskip), %rsp
 .endm
@@ -264,7 +264,7 @@ ALLOC_PT_GPREGS_ON_STACK
 在为通用寄存器分配空间之后，我们进行一些检查以了解异常是否来自用户空间，如果是，则应移回中断的进程堆栈或保留在异常堆栈上：
 
 
-```assembly
+```x86asm
 .if \paranoid
     .if \paranoid == 1
 	    testb	$3, CS(%rsp)
@@ -287,12 +287,12 @@ ALLOC_PT_GPREGS_ON_STACK
 首先，让我们考虑一个异常具有像我们的`debug`和`int3`异常这样的`paranoid = 1`的情况。 在这种情况下，如果来自用户空间，否则我们将从CS段寄存器中检查选择器，并跳转到`1f`标签上，否则将以其他方式调用`paranoid_entry`。
 Let's consider first case when we came from userspace to an exception handler. As described above we should jump at `1` label. The `1` label starts from the call of the
 
-```assembly
+```x86asm
 call	error_entry
 ```
 
 该例程将所有通用寄存器保存在堆栈中先前分配的区域中:
-```assembly
+```x86asm
 SAVE_C_REGS 8
 SAVE_EXTRA_REGS 8
 ```
@@ -301,7 +301,7 @@ SAVE_EXTRA_REGS 8
 
 
 这两个宏都在[arch/x86/entry/calling.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/calling.h) 头文件中定义并移动 通用寄存器的值到堆栈中的某个位置，例如：
-```assembly
+```x86asm
 .macro SAVE_EXTRA_REGS offset=0
 	movq %r15, 0*8+\offset(%rsp)
 	movq %r14, 1*8+\offset(%rsp)
@@ -342,7 +342,7 @@ SAVE_EXTRA_REGS 8
 ```
 
 在内核将通用寄存器保存在堆栈中之后，应该使用以下命令再次检查来自用户空间：
-```assembly
+```x86asm
 testb	$3, CS+8(%rsp)
 jz	.Lerror_kernelspace
 ```
@@ -350,7 +350,7 @@ jz	.Lerror_kernelspace
 因为如果报告文档中描述的`％RIP`被截断，我们可能有潜在的错误。 无论如何，在两种情况下，都将执行[SWAPGS](http://www.felixcloutier.com/x86/SWAPGS.html) 指令，并且将交换` MSR_KERNEL_GS_BASE`和` MSR_GS_BASE`中的值。 从这一刻开始，`％gs`寄存器将指向内核结构的基址。 因此，调用了`SWAPGS`指令，这是`error_entry`路由的要点。
 
 现在我们可以回到`idtentry`宏。 调用`error_entry`之后，我们可能会看到以下汇编代码：
-```assembly
+```x86asm
 movq	%rsp, %rdi
 call	sync_regs
 ```
@@ -374,7 +374,7 @@ asmlinkage __visible notrace struct pt_regs *sync_regs(struct pt_regs *eregs)
 
 正如来自用户空间一样，这意味着异常处理程序将在实际流程上下文中运行。 从`sync_regs`获取堆栈指针后，我们切换堆栈：
 
-```assembly
+```x86asm
 movq	%rax, %rsp
 ```
 
@@ -382,7 +382,7 @@ movq	%rax, %rsp
 
 1.传递指向`pt_regs`结构的指针，该结构包含保留的通用寄存器到`％rdi`寄存器：
 
-```assembly
+```x86asm
 movq	%rsp, %rdi
 ```
 
@@ -405,7 +405,7 @@ movq	%rsp, %rdi
 另外，如果异常不提供错误代码，可能会看到我们将上面的`％esi`寄存器清零了。
 
 最后，我们只调用辅助异常处理程序：
-```assembly
+```x86asm
 call	\do_sym
 ```
 
@@ -432,7 +432,7 @@ dotraplinkage void notrace do_int3(struct pt_regs *regs, long error_code);
 
 在这种情况下，内核空间中发生了异常，并且为该异常使用`paranoid = 1`定义了`idtentry`宏。 `paranoid`的值意味着我们应该使用在本部分开头看到的更慢的方式来检查我们是否真的来自内核空间。 `paranoid_entry`路由使我们知道这一点：
 
-```assembly
+```x86asm
 ENTRY(paranoid_entry)
 	cld
 	SAVE_C_REGS 8
@@ -450,7 +450,7 @@ END(paranoid_entry)
 
 如您所见，此功能代表了我们之前介绍的功能。 我们使用第二（慢）方法来获取有关被中断任务的先前状态的信息。 当我们检查并在来自用户空间的情况下执行`SWAPGS`时，我们应该做与之前相同的操作：我们需要将指针指向一个结构，该结构将通用寄存器保存到`％rdi`（ 将是辅助处理程序的第一个参数），如果异常将其提供给％rsi（将是辅助处理程序的第二个参数），则放置错误代码：
 
-```assembly
+```x86asm
 movq	%rsp, %rdi
 
 .if \has_error_code
@@ -462,7 +462,7 @@ movq	%rsp, %rdi
 ```
 
 调用异常的辅助处理程序之前的最后一步是清理新的`IST`堆栈帧：
-```assembly
+```x86asm
 .if \shift_ist != -1
 	subq	$EXCEPTION_STKSZ, CPU_TSS_IST(\shift_ist)
 .endif
@@ -472,7 +472,7 @@ movq	%rsp, %rdi
 您可能还记得我们将`shift_ist`作为`iddentry`宏的参数传递了。 在这里，我们检查其值，如果其值不等于-1，则通过`shift_ist` 索引从`中断堆栈表`中获取指向堆栈的指针并进行设置。
 
 在第二种方法的结尾，我们只是像以前一样调用辅助异常处理程序：
-```assembly
+```x86asm
 call	\do_sym
 ```
 
@@ -483,7 +483,7 @@ call	\do_sym
 
 
 在辅助处理程序完成工作之后，我们将返回到`idtentry`宏，下一步将跳转到`error_exit`：
-```assembly
+```x86asm
 jmp	error_exit
 ```
 

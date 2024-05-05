@@ -35,14 +35,14 @@
 
 我们已经在 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 中看见了这些位被设置了：
 
-```assembly
+```x86asm
 movl	$(X86_CR0_PG | X86_CR0_PE), %eax
 movl	%eax, %cr0
 ```
 
 and
 
-```assembly
+```x86asm
 movl	$MSR_EFER, %ecx
 rdmsr
 btsl	$_EFER_LME, %eax
@@ -54,7 +54,7 @@ wrmsr
 
 分页将线性地址分为固定尺寸的页。页会被映射进入物理地址空间或外部存储设备。这个固定尺寸在 `x86_64` 内核中是 `4096` 字节。为了将线性地址转换位物理地址，需要使用到一些特殊的数据结构。每个结构都是 `4096` 字节并包含 `512` 项（这只为 `PAE` 和 `IA32_EFER.LME` 模式）。分页结构是层次级的， Linux 内核在 `x86_64` 框架中使用4层的分层机制。CPU使用一部分线性地址去确定另一个分页结构中的项，这个分页结构可能在最低层，物理内存区域（页框），在这个区域的物理地址（页偏移）。最高层的分页结构的地址存储在 `cr3` 寄存器中。我们已经从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 这个文件中已经看到了。
 
-```assembly
+```x86asm
 leal	pgtable(%ebx), %eax
 movl	%eax, %cr3
 ```

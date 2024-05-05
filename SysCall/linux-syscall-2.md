@@ -165,7 +165,7 @@ wrmsrl(MSR_CSTAR, ignore_sysret);
 
 其在 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S) 汇编文件中定义，仅返回 `-ENOSYS` 错误代码:
 
-```assembly
+```x86asm
 ENTRY(ignore_sysret)
 	mov	$-ENOSYS, %eax
 	sysret
@@ -199,7 +199,7 @@ wrmsrl(MSR_SYSCALL_MASK,
 
  `entry_SYSCALL_64` 在 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S)  汇编文件中定义，从下面的宏开始:
 
-```assembly
+```x86asm
 SWAPGS_UNSAFE_STACK
 ```
 
@@ -211,21 +211,21 @@ SWAPGS_UNSAFE_STACK
 
 此宏将交换 GS 段选择符及 `MSR_KERNEL_GS_BASE ` 特殊模式寄存器中的值。 换句话说，将其入内核堆栈。 之后使老的堆栈指针指向 `rsp_scratch` [per-cpu](/Concepts/linux-cpu-1.md) 变量，并设置堆栈指针指向当前处理器的栈顶：
 
-```assembly
+```x86asm
 movq	%rsp, PER_CPU_VAR(rsp_scratch)
 movq	PER_CPU_VAR(cpu_current_top_of_stack), %rsp
 ```
 
 下一步中将堆栈段及老的堆栈指针入栈：
 
-```assembly
+```x86asm
 pushq	$__USER_DS
 pushq	PER_CPU_VAR(rsp_scratch)
 ```
 
 这之后使能中断，因为入口中断被关闭，保存通用目的[寄存器](https://en.wikipedia.org/wiki/Processor_register) (除 `bp`，`bx` 及 `r12` 至 `r15`)、标志位、“non-implemented” 系统调用相关的 `-ENOSYS` 及代码段寄存器至堆栈:
 
-```assembly
+```x86asm
 ENABLE_INTERRUPTS(CLBR_NONE)
 
 pushq	%r11
@@ -260,7 +260,7 @@ sub	$(6*8), %rsp
 
 下一步检查当前 `thread_info` 中的 `_TIF_WORK_SYSCALL_ENTRY`：
 
-```assembly
+```x86asm
 testl	$_TIF_WORK_SYSCALL_ENTRY, ASM_THREAD_INFO(TI_flags, %rsp, SIZEOF_PTREGS)
 jnz	tracesys
 ```
@@ -294,7 +294,7 @@ jnz	tracesys
 
 因此我们可以检查 `__SYSCALL_MASK`，若 `CONFIG_X86_X32_ABI` 未启用，我们会将 `rax` 寄存器的值与系统调用最大数量(`__NR_syscall_max`) 进行比较，而若 `CNOFIG_X86_X32_ABI` 有启用，我们会对 `eax` 寄存器与 `X32_SYSCALL_BIT` 进行掩码操作并接着做同样的比较：
 
-```assembly
+```x86asm
 #if __SYSCALL_MASK == ~0
 	cmpq	$__NR_syscall_max, %rax
 #else
@@ -305,13 +305,13 @@ jnz	tracesys
 
 至此检查最后一道比较指令的结果，`ja` 指令在 `CF` 和 `ZF` 标志为 0 时执行:
 
-```assembly
+```x86asm
 ja	1f
 ```
 
 若其正确调用系统调用，第四个参数将从 `r10` 移动至 `rcx`，保持 [x86_64 C ABI](http://www.x86-64.org/documentation/abi.pdf) 开启，同时以系统调用的处理程序的地址为参数执行 `call` 指令：
 
-```assembly
+```x86asm
 movq	%r10, %rcx
 call	*sys_call_table(, %rax, 8)
 ```
@@ -325,7 +325,7 @@ call	*sys_call_table(, %rax, 8)
 
 在系统调用处理完成任务后，将退回 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/entry_64.S)，正好在系统调用之后:
 
-```assembly
+```x86asm
 call	*sys_call_table(, %rax, 8)
 ```
 
@@ -337,13 +337,13 @@ movq	%rax, RAX(%rsp)
 
 之后调用在 [arch/x86/include/asm/irqflags.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/irqflags.h) 中定义的宏 `LOCKDEP_SYS_EXIT` :
 
-```assembly
+```x86asm
 LOCKDEP_SYS_EXIT
 ```
 
 宏的实现与 `CONFIG_DEBUG_LOCK_ALLOC` 内核配置选项相关，该配置允许在退出系统调用时调试锁。 再次强调，在该章节不关注，将在单独的章节讨论相关内容。 在 `entry_SYSCALL_64` 函数的最后，恢复除 `rxc` 和 `r11` 外所有通用寄存器，因为 `rcx` 寄存器为调用系统调用的应用程序的返回地址，`r11` 寄存器为老的 [flags register](https://en.wikipedia.org/wiki/FLAGS_register)。 在恢复所有通用寄存器之后，将在 `rcx` 中装入返回地址，`r11` 寄存器装入标志，`rsp` 装入老的堆栈指针:
 
-```assembly
+```x86asm
 RESTORE_C_REGS_EXCEPT_RCX_R11
 
 movq	RIP(%rsp), %rcx

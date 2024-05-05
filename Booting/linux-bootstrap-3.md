@@ -315,7 +315,7 @@ static void realmode_switch_hook(void)
 
 `realmode_switch` 指向了一个16 位实模式代码地址（远跳转指针），这个16位代码将禁止 NMI 中断。所以在上述代码中，如果 `realmode_swtch` hook 存在，代码是用了 `lcallw` 指令进行远函数调用。在我的环境中，因为不存在这个 hook ，所以代码是直接进入 `else` 部分进行了 NMI 的禁止：
 
-```assembly
+```x86asm
 asm volatile("cli");
 outb(0x80, 0x70);	/* Disable NMI */
 io_delay();
@@ -369,7 +369,7 @@ static int a20_test(int loops)
 
 如果 `enabled_a20` 函数调用失败，显示一个错误消息并且调用 `die` 函数结束操作系统运行。`die` 函数定义在 [arch/x86/boot/header.S](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18):
 
-```assembly
+```x86asm
 die:
 	hlt
 	jmp	die
@@ -534,7 +534,7 @@ protected_mode_jump(boot_params.hdr.code32_start, (u32)&boot_params + (ds() << 4
 
 代码首先在 `boot_params` 地址放入 `esi` 寄存器，然后将 `cs` 寄存器内容放入 `bx` 寄存器，接着执行 `bx << 4 + 标号为2的代码的地址`，这样一来 `bx` 寄存器就包含了标号为2的代码的地址。接下来代码将把数据段索引放入 `cx` 寄存器，将  TSS 段索引放入 `di` 寄存器：
 
-```assembly
+```x86asm
 movw	$__BOOT_DS, %cx
 movw	$__BOOT_TSS, %di
 ```
@@ -543,7 +543,7 @@ movw	$__BOOT_TSS, %di
 
 接下来，我们通过设置 `CR0` 寄存器相应的位使 CPU 进入保护模式：
 
-```assembly
+```x86asm
 movl	%cr0, %edx
 orb	$X86_CR0_PE, %dl
 movl	%edx, %cr0
@@ -551,7 +551,7 @@ movl	%edx, %cr0
 
 在进入保护模式之后，通过一个长跳转进入 32 位代码：
 
-```assembly
+```x86asm
 	.byte	0x66, 0xea
 2:	.long	in_pm32
 	.word	__BOOT_CS ;(GDT_ENTRY_BOOT_CS*8) = 16，段描述符表索引
@@ -565,14 +565,14 @@ movl	%edx, %cr0
 
 在执行了这个跳转命令之后，我们就在保护模式下执行代码了：
 
-```assembly
+```x86asm
 .code32
 .section ".text32","ax"
 ```
 
 保护模式代码的第一步就是重置所有的段寄存器（除了 `CS` 寄存器）:
 
-```assembly
+```x86asm
 GLOBAL(in_pm32)
 movl	%ecx, %ds
 movl	%ecx, %es
@@ -583,7 +583,7 @@ movl	%ecx, %ss
 
 还记得我们在实模式代码中将 `$__BOOT_DS` （数据段描述符索引）放入了 `cx` 寄存器，所以上面的代码设置所有段寄存器（除了 `CS` 寄存器）指向数据段。接下来代码将所有的通用寄存器清 0 ：
 
-```assembly
+```x86asm
 xorl	%ecx, %ecx
 xorl	%edx, %edx
 xorl	%ebx, %ebx

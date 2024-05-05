@@ -257,7 +257,7 @@ asm volatile("lidt %0"::"m" (*dtr));
 
 在上面的代码中，我们用 `early_idt_handler_array` 的地址来填充了 `IDT` ，这个 `early_idt_handler_array` 定义在 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S)：
 
-```assembly
+```x86asm
 	.globl early_idt_handler_array
 early_idt_handlers:
 	i = 0
@@ -306,14 +306,14 @@ ffffffff81fe5014:       6a 02                   pushq  $0x2
 
 下面我们来看一下 `early_idt_handler_common` 的实现。它也定义在 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S#L343) 文件中。首先它会检查当前中断是否为 [不可屏蔽中断(NMI)](http://en.wikipedia.org/wiki/Non-maskable_interrupt)，如果是则简单地忽略它们：
 
-```assembly
+```x86asm
 	cmpl $2,(%rsp)
 	je .Lis_nmi
 ```
 
 其中 `is_nmi` 为:
 
-```assembly
+```x86asm
 is_nmi:
 	addq $16,%rsp
 	INTERRUPT_RETURN
@@ -323,7 +323,7 @@ is_nmi:
 
 如果当前中断不是 `NMI` ，则首先检查 `early_recursion_flag` 以避免在 `early_idt_handler_common` 程序中递归地产生中断。如果一切都没问题，就先在栈上保存通用寄存器，为了防止中断返回时寄存器的内容错乱：
 
-```assembly
+```x86asm
 	pushq %rax
 	pushq %rcx
 	pushq %rdx
@@ -337,14 +337,14 @@ is_nmi:
 
 然后我们检查栈上的段选择子：
 
-```assembly
+```x86asm
 	cmpl $__KERNEL_CS,96(%rsp)
 	jne 11f
 ```
 
 段选择子必须为内核代码段，如果不是则跳转到标签 `11` ，输出 `PANIC` 信息并打印栈的内容。然后我们来检查向量号，如果是 `#PF` 即 [缺页中断（Page Fault）](https://en.wikipedia.org/wiki/Page_fault)，那么就把 `cr2` 寄存器中的值赋值给 `rdi` ，然后调用 `early_make_pgtable` （详见后文）：
 
-```assembly
+```x86asm
 	cmpl $14,72(%rsp)
 	jnz 10f
 	GET_CR2_INTO(%rdi)
@@ -354,7 +354,7 @@ is_nmi:
 ```
 
 如果向量号不是 `#PF` ，那么就恢复通用寄存器：
-```assembly
+```x86asm
 	popq %r11
 	popq %r10
 	popq %r9

@@ -85,7 +85,7 @@ extern char __initdata boot_command_line[];
 
 `init_level4_pgt` 同样定义在 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S):
 
-```assembly
+```x86asm
 NEXT_PAGE(init_level4_pgt)
 	.quad   level3_ident_pgt - __START_KERNEL_map + _KERNPG_TABLE
 	.org    init_level4_pgt + L4_PAGE_OFFSET*8, 0
@@ -96,7 +96,7 @@ NEXT_PAGE(init_level4_pgt)
 
 这段代码为内核的代码段、数据段和 bss 段映射了前 2.5G 个字节。`clear_page` 函数定义在 [arch/x86/lib/clear_page_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/lib/clear_page_64.S)：
 
-```assembly
+```x86asm
 ENTRY(clear_page)
 	CFI_STARTPROC
 	xorl %eax,%eax
