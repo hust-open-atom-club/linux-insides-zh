@@ -3,7 +3,7 @@ Linux 内核中的同步原语. 第一部分.
 
 Introduction
 --------------------------------------------------------------------------------
-这一部分为 [linux-insides](/README.md) 这本书开启了新的章节。定时器和时间管理相关的概念在上一个[章节](/Timers/)已经描述过了。现在是时候继续了。就像你可能从这一部分的标题所了解的那样，本章节将会描述 Linux 内核中的[同步](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)原语。
+这一部分为 [linux-insides](/) 这本书开启了新的章节。定时器和时间管理相关的概念在上一个[章节](/Timers/)已经描述过了。现在是时候继续了。就像你可能从这一部分的标题所了解的那样，本章节将会描述 Linux 内核中的[同步](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)原语。
 
 像往常一样，在考虑一些同步相关的事情之前，我们会尝试去概括地了解什么是`同步原语`。事实上，同步原语是一种软件机制，提供了两个或者多个[并行](https://en.wikipedia.org/wiki/Parallel_computing)进程或者线程在不同时刻执行一段相同的代码段的能力。例如下面的代码片段：
 

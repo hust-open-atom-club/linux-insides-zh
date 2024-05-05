@@ -66,7 +66,7 @@ $ sudo cat /proc/ioports
 
 在进入Linux内核常规期的[内存管理](https://en.wikipedia.org/wiki/Memory_management)之前，我们要看一些特殊的内存机制，例如[调试](https://en.wikipedia.org/wiki/Debugging)，检查[内存泄漏](https://en.wikipedia.org/wiki/Memory_leak)，内存控制等等。学习这些内容有助于我们理解Linux内核的内存管理。
 
-从本节的标题中，你可能已经看出来，我们会从[kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt)开始了解内存机制。和前面的[章节](/README.md)一样，我们首先从理论上学习什么是 `kmemcheck` ，然后再来看Linux内核中是怎么实现这一机制的。
+从本节的标题中，你可能已经看出来，我们会从[kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt)开始了解内存机制。和前面的[章节](/)一样，我们首先从理论上学习什么是 `kmemcheck` ，然后再来看Linux内核中是怎么实现这一机制的。
 
 让我们开始吧。Linux内核中的 `kmemcheck` 到底是什么呢？从该机制的名称上你可能已经猜到， `kmemcheck` 是检查内存的。你猜的很对。`kmemcheck` 的主要目的就是用来检查是否有内核代码访问 `未初始化的内存` 。让我们看一个简单的 [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) 程序：
 
