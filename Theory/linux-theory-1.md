@@ -93,7 +93,7 @@ movl	%eax, %cr3
 
 按照图示，我们可以这样想象它：
 
-![四层分页](http://oi58.tinypic.com/207mb0x.jpg)
+![四层分页](images/4_level_paging.png)
 
 每一个对线性地址的访问不是一个管态访问就是用户态访问。这个访问是被 `CPL (Current Privilege Level)` 所决定。如果 `CPL < 3` ，那么它是管态访问级，否则，它就是用户态访问级。比如，最高级页表项包含访问位和如下的结构：
 
