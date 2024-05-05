@@ -178,7 +178,7 @@ and initializes handler for the `CPU` [hotplug](https://www.kernel.org/doc/Docum
 
 After this we can see the kernel command line in the initialization output:
 
-![kernel command line](http://oi58.tinypic.com/2m7vz10.jpg)
+![kernel command line](images/kernel_command_line.png)
 
 And a couple of functions such as `parse_early_param` and `parse_args` which handles linux kernel command line. You may remember that we already saw the call of the `parse_early_param` function in the sixth [part](/Initialization/linux-initialization-6.md) of the kernel initialization chapter, so why we call it again? Answer is simple: we call this function in the architecture-specific code (`x86_64` in our case), but not all architecture calls this function. And we need to call the second function `parse_args` to parse and handle non-early command line arguments.
 

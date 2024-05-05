@@ -329,7 +329,7 @@ archscripts: scripts_basic
 
 我们可以看到 `archscripts` 是依赖于根 [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) 里的 `scripts_basic` 。首先我们可以看出 `scripts_basic` 是按照 [scripts/basic](https://github.com/torvalds/linux/blob/master/scripts/basic/Makefile) 的 Makefile 执行 make 的：
  
-```Maklefile
+```Makefile
 scripts_basic:
 	$(Q)$(MAKE) $(build)=scripts/basic
 ```

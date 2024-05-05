@@ -94,7 +94,7 @@ noexec		[X86]
 
 我们可以在启动的时候看到:
 
-![NX](http://oi62.tinypic.com/swwxhy.jpg)
+![NX](images/NX.png)
 
 之后我们可以看到下面函数的调用:   
 
@@ -419,7 +419,7 @@ struct mpf_intel {
 
 正如我们在文档中看到的那样 - 系统 BIOS的主要功能之一就是创建MP浮点型指针结构和MP配置表。而且操作系统必须可以访问关于多处理器配置的有关信息， `mpf_intel` 中存储了多处理器配置表的物理地址(看结构体的第二个变量),然后，`smp_scan_config` 函数在指定的内存区域中循环查找 `MP floating pointer structure` 。这个函数还会检查当前字节是否指向 `SMP` 签名，然后检查签名的校验和，并且检查循环中的 `mpf->specification` 的值是1还是4(这个值只能是1或者是4):   
 
-```C7
+```C
 while (length > 0) {
 if ((*bp == SMP_MAGIC_IDENT) &&
     (mpf->length == 1) &&
@@ -471,7 +471,7 @@ void  __init early_alloc_pgt_buf(void)
 
 我们也可以使用 `readelf` 工具来找到它:    
 
-![brk area](http://oi61.tinypic.com/71lkeu.jpg) 
+![brk area](images/brk_area.png) 
 
 之后我们用 `_pa` 宏得到了新的 `brk` 区段的物理地址，我们计算页表缓冲区的基地址和结束地址。因为我们之前已经创建好了页面缓冲区，所以现在我们使用 `reserve_brk` 函数为 `brk` 区段保留内存块:   
 

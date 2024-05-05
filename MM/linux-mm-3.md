@@ -125,7 +125,7 @@ Kernel hacking
   -> Memory Debugging
 ```
 
-![kernel configuration menu](http://oi63.tinypic.com/2pzbog7.jpg)
+![kernel configuration menu](images/kernel_configuration_menu1.png)
 
 `kmemcheck` 机制还提供了一些内核配置参数，我们可以在下一个段落中看到所有的可选参数。最后一个需要注意的是，`kmemcheck` 仅在 [x86_64](https://en.wikipedia.org/wiki/X86-64) 体系中实现了。为了确信这一点，我们可以查看 `x86` 的内核配置文件 [arch/x86/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/Kconfig)：
 
@@ -165,7 +165,7 @@ struct my_struct *my_struct = kmalloc(sizeof(struct my_struct), GFP_KERNEL);
 
 前面两个值得含义很明确，但是最后一个需要解释。这个选项会使 `kmemcheck` 进入一种特殊的模式：在第一次检测到未初始化内存的使用之后，就会关闭 `kmemcheck` 。实际上该模式是内核的默认选项：
 
-![kernel configuration menu](http://oi66.tinypic.com/y2eeh.jpg)
+![kernel configuration menu](images/kernel_configuration_menu2.png)
 
 从Linux初始化过程章节的第七节 [part](/Initialization/linux-initialization-7.md) 中，我们知道在内核初始化过程中，会在  `do_initcall_level` ,  `do_early_param` 等函数中解析内核 command line。前面也提到过  `kmemcheck` 子系统由两部分组成，第一部分启动比较早。在源码  [mm/kmemcheck.c](https://github.com/torvalds/linux/blob/master/mm/kmemcheck.c) 中有一个函数 `param_kmemcheck` ，该函数在command line解析时就会用到: 
 
