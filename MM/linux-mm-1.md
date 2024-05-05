@@ -392,7 +392,7 @@ memblock_dbg("memblock_reserve: [%#016llx-%#016llx] flags %#02lx %pF\n",
 
 然后你将看到类似下图的画面：
 
-![Memblock](http://oi57.tinypic.com/1zoj589.jpg)
+![Memblock](images/memblock.png)
 
 内存块技术也支持 [debugfs](http://en.wikipedia.org/wiki/Debugfs) 。如果你不是在 `X86` 架构下运行内核，你可以访问：
 
