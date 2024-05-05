@@ -94,7 +94,7 @@ noexec		[X86]
 
 我们可以在启动的时候看到:
 
-![NX](http://oi62.tinypic.com/swwxhy.jpg)
+![NX](images/NX.png)
 
 之后我们可以看到下面函数的调用:   
 
@@ -471,7 +471,7 @@ void  __init early_alloc_pgt_buf(void)
 
 我们也可以使用 `readelf` 工具来找到它:    
 
-![brk area](http://oi61.tinypic.com/71lkeu.jpg) 
+![brk area](images/brk_area.png) 
 
 之后我们用 `_pa` 宏得到了新的 `brk` 区段的物理地址，我们计算页表缓冲区的基地址和结束地址。因为我们之前已经创建好了页面缓冲区，所以现在我们使用 `reserve_brk` 函数为 `brk` 区段保留内存块:   
 
