@@ -25,9 +25,9 @@
 
 ## 中文维护者
 
-[@xinqiu](https://github.com/xinqiu)
-
 [@mudongliang](https://github.com/mudongliang)
+
+[@xinqiu](https://github.com/xinqiu)
 
 ## 中文贡献者
 
