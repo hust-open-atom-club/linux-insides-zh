@@ -4,9 +4,9 @@ Synchronization primitives in the Linux kernel. Part 5.
 Introduction
 --------------------------------------------------------------------------------
 
-This is the fifth part of the [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html) which describes synchronization primitives in the Linux kernel and in the previous parts we finished to consider different types [spinlocks](https://en.wikipedia.org/wiki/Spinlock), [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) and [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) synchronization primitives. We will continue to learn [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) in this part and start to consider special type of synchronization primitives - [readers–writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock).
+This is the fifth part of the [chapter](/SyncPrim/) which describes synchronization primitives in the Linux kernel and in the previous parts we finished to consider different types [spinlocks](https://en.wikipedia.org/wiki/Spinlock), [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) and [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) synchronization primitives. We will continue to learn [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) in this part and start to consider special type of synchronization primitives - [readers–writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock).
 
-The first synchronization primitive of this type will be already familiar for us - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). As in all previous parts of this [book](https://0xax.gitbooks.io/linux-insides/content), before we will consider implementation of the `reader/writer semaphores` in the Linux kernel, we will start from the theoretical side and will try to understand what is the difference between `reader/writer semaphores` and `normal semaphores`.
+The first synchronization primitive of this type will be already familiar for us - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). As in all previous parts of this [book](/), before we will consider implementation of the `reader/writer semaphores` in the Linux kernel, we will start from the theoretical side and will try to understand what is the difference between `reader/writer semaphores` and `normal semaphores`.
 
 So, let's start.
 
@@ -15,7 +15,7 @@ Reader/Writer semaphore
 
 Actually there are two types of operations may be performed on the data. We may read data and make changes in data. Two fundamental operations - `read` and `write`. Usually (but not always), `read` operation is performed more often than `write` operation. In this case, it would be logical to we may lock data in such way, that some processes may read locked data in one time, on condition that no one will not change the data. The [readers/writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) allows us to get this lock.
 
-When a process which wants to write something into data, all other `writer` and `reader` processes will be blocked until the process which acquired a lock, will not release it. When a process reads data, other processes which want to read the same data too, will not be locked and will be able to do this. As you may guess, implementation of the `reader/writer semaphore` is based on the implementation of the `normal semaphore`. We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the third [part]((https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html) of this chapter. From the theoretical side everything looks pretty simple. Let's look how `reader/writer semaphore` is represented in the Linux kernel.
+When a process which wants to write something into data, all other `writer` and `reader` processes will be blocked until the process which acquired a lock, will not release it. When a process reads data, other processes which want to read the same data too, will not be locked and will be able to do this. As you may guess, implementation of the `reader/writer semaphore` is based on the implementation of the `normal semaphore`. We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the third [part](/SyncPrim/linux-sync-3.md) of this chapter. From the theoretical side everything looks pretty simple. Let's look how `reader/writer semaphore` is represented in the Linux kernel.
 
 The `semaphore` is represented by the:
 
@@ -422,12 +422,12 @@ Links
 * [Semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)
 * [Mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
 * [x86_64 architecture](https://en.wikipedia.org/wiki/X86-64)
-* [Doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html)
+* [Doubly linked list](/DataStructures/linux-datastructures-1.md)
 * [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Linux kernel lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [Atomic operations](https://en.wikipedia.org/wiki/Linearizability)
-* [Inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/asm.html)
+* [Inline assembly](/Theory/linux-theory-3.md)
 * [XADD instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [Previous part](/SyncPrim/linux-sync-4.md)
