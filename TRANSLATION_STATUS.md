@@ -51,7 +51,7 @@
 |├ [5.3](Timers/linux-timers-3.md)||未开始|
 |├ [5.4](Timers/linux-timers-4.md)||未开始|
 |├ [5.5](Timers/linux-timers-5.md)||未开始|
-|├ [5.6](Timers/linux-timers-6.md)||未开始|
+|├ [5.6](Timers/linux-timers-6.md)|[@ysun](https://github.com/ysun)|更新至[fa1cf540e899](https://github.com/0xAX/linux-insides/commit/fa1cf540e899d6f0c3af95e08026a7251521785b)|
 |└ [5.7](Timers/linux-timers-7.md)||未开始|
 | 6. [Synchronization primitives](SyncPrim)||正在进行|
 |├ [6.0](SyncPrim/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[6f85b63e](https://github.com/0xAX/linux-insides/commit/6f85b63e347b636e08e965e9dc22c177e972afe2)|
