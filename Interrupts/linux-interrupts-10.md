@@ -2,7 +2,7 @@
 =====================
 终结篇
 -------------------------
-本文是 Linux 内核[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html)的第十节。在[上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-9.html)，我们了解了延后中断及其相关概念，如 `softirq`，`tasklet`，`workqueue`。本节我们继续深入这个主题，现在是见识真正的硬件驱动的时候了。
+本文是 Linux 内核[中断和中断处理](/Interrupts/)的第十节。在[上一节](/Interrupts/linux-interrupts-9.md)，我们了解了延后中断及其相关概念，如 `softirq`，`tasklet`，`workqueue`。本节我们继续深入这个主题，现在是见识真正的硬件驱动的时候了。
 
 以 [StringARM** SA-100/21285 评估板](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf)串行驱动为例，我们来观察驱动程序如何请求一个 [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 线，一个中断被触发时会发生什么之类的。驱动程序代码位于 [drivers/tty/serial/21285.c](https://github.com/torvalds/linux/blob/master/drivers/tty/serial/21285.c) 源文件。好啦，源码在手，说走就走！
 
@@ -257,7 +257,7 @@ if (!action)
     return -ENOMEM;
 ```
 
-欲知 `kzalloc` 详情，请查阅专门介绍 Linux 内核[内存管理](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)的章节。为 `irqaction` 分配空间后，我们即对这个结构体进行初始化，设置它的中断处理程序，中断标志，设备名称等等：
+欲知 `kzalloc` 详情，请查阅专门介绍 Linux 内核[内存管理](/MM/)的章节。为 `irqaction` 分配空间后，我们即对这个结构体进行初始化，设置它的中断处理程序，中断标志，设备名称等等：
 
 ```C
 action->handler = handler;
@@ -297,7 +297,7 @@ if (new->thread_fn && !nested) {
 准备处理中断
 ------------------------------
 
-通过上文，我们观察了为给定的中断描述符请求中断号，为给定的中断注册 `irqaction` 结构体的过程。我们已经知道，当一个中断事件发生时，中断控制器向处理器通知该事件，处理器尝试为这个中断找到一个合适的中断门。如果你已阅读本章[第八节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-8.html)，你应该还记得 `native_init_IRQ` 函数。这个函数会初始化本地 [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)。这个函数的如下部分是我们现在最感兴趣的地方：
+通过上文，我们观察了为给定的中断描述符请求中断号，为给定的中断注册 `irqaction` 结构体的过程。我们已经知道，当一个中断事件发生时，中断控制器向处理器通知该事件，处理器尝试为这个中断找到一个合适的中断门。如果你已阅读本章[第八节](/Interrupts/linux-interrupts-8.md)，你应该还记得 `native_init_IRQ` 函数。这个函数会初始化本地 [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)。这个函数的如下部分是我们现在最感兴趣的地方：
 
 ```C
 for_each_clear_bit_from(i, used_vectors, first_system_vector) {
@@ -342,7 +342,7 @@ common_interrupt:
 	interrupt do_IRQ
 ```
 
-`interrupt` 宏定义在同一个源文件中。它把[通用](https://en.wikipedia.org/wiki/Processor_register)寄存器的值保存在栈中。如果需要，它还会通过 `SWAPGS` 汇编指令在内核中改变用户空间 `gs` 寄存器。它会增加 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 的 `irq_count` 变量，来表明我们处于中断状态，然后调用 `do_IRQ` 函数。该函数定义于 [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) 源文件中，作用是处理我们的设备中断。让我们一起考察这个函数。`do_IRQ` 函数接受一个参数 - `pt_regs` 结构体，它存放着用户空间寄存器的值：
+`interrupt` 宏定义在同一个源文件中。它把[通用](https://en.wikipedia.org/wiki/Processor_register)寄存器的值保存在栈中。如果需要，它还会通过 `SWAPGS` 汇编指令在内核中改变用户空间 `gs` 寄存器。它会增加 [per-cpu](/Concepts/linux-cpu-1.md) 的 `irq_count` 变量，来表明我们处于中断状态，然后调用 `do_IRQ` 函数。该函数定义于 [arch/x86/kernel/irq.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/irq.c) 源文件中，作用是处理我们的设备中断。让我们一起考察这个函数。`do_IRQ` 函数接受一个参数 - `pt_regs` 结构体，它存放着用户空间寄存器的值：
 
 ```C
 __visible unsigned int __irq_entry do_IRQ(struct pt_regs *regs)
@@ -409,7 +409,7 @@ return 1;
 退出中断
 ---------------------
 
-好了，中断处理程序执行完毕，我们必须从中断中返回。在 `do_IRQ` 函数将工作处理完毕后，我们将回到 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) 汇编代码的 `ret_from_intr` 标签处。首先，我们通过 `DISABLE_INTERRUPTS` 宏禁止中断，这个宏被扩展成 `cli` 指令，将 [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 的 `irq_count` 变量值减 1。记住，当我们处于中断上下文的时候，这个变量的值是 `1`：
+好了，中断处理程序执行完毕，我们必须从中断中返回。在 `do_IRQ` 函数将工作处理完毕后，我们将回到 [arch/x86/entry/entry_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry_entry_64.S) 汇编代码的 `ret_from_intr` 标签处。首先，我们通过 `DISABLE_INTERRUPTS` 宏禁止中断，这个宏被扩展成 `cli` 指令，将 [per-cpu](/Concepts/linux-cpu-1.md) 的 `irq_count` 变量值减 1。记住，当我们处于中断上下文的时候，这个变量的值是 `1`：
 
 ```assembly
 DISABLE_INTERRUPTS(CLBR_NONE)
@@ -444,12 +444,11 @@ native_irq_return_iret:
 总结
 --------------------------
 
-这里是[中断和中断处理](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/index.html) 章节的第十节的结尾。如你在本节开头读到的那样，这是本章的最后一节。本章开篇阐述了中断理论，我们于是明白了什么是中断，中断的类型，然后也了解了异常以及对这种类型中断的处理，延后中断。最后在本节，我们考察了硬件中断和对这些中断的处理。当然，本节甚至本章都未能覆盖到 Linux 内核中断和中断处理的所有方面。这样并不现实，至少对我而言如此。这是一项浩大工程，不知你作何感想，对我来说，它确实浩大。这个主题远远超出本章讲述的内容，我不确定地球上能否找到一本书可以涵盖这个主题。我们漏掉了关于中断和中断处理的很多内容，但我相信，深入研究中断和中断处理相关的内核源码是个不错的点子。
+这里是[中断和中断处理](/Interrupts/) 章节的第十节的结尾。如你在本节开头读到的那样，这是本章的最后一节。本章开篇阐述了中断理论，我们于是明白了什么是中断，中断的类型，然后也了解了异常以及对这种类型中断的处理，延后中断。最后在本节，我们考察了硬件中断和对这些中断的处理。当然，本节甚至本章都未能覆盖到 Linux 内核中断和中断处理的所有方面。这样并不现实，至少对我而言如此。这是一项浩大工程，不知你作何感想，对我来说，它确实浩大。这个主题远远超出本章讲述的内容，我不确定地球上能否找到一本书可以涵盖这个主题。我们漏掉了关于中断和中断处理的很多内容，但我相信，深入研究中断和中断处理相关的内核源码是个不错的点子。
 
 如果有任何疑问或者建议，撰写评论或者在 [twitter](https://twitter.com/0xAX) 上联系我。
 
-
-**请注意，英语并非我的母语。任何不便之处，我深感抱歉。如果发现任何错误，请在 [linux-insides](https://github.com/0xAX/linux-insides) 向我发送 PR。(译者注：翻译问题请发送 PR 到 [linux-insides-cn](https://www.gitbook.com/book/xinqiu/linux-insides-cn))**
+**请注意，英语并非我的母语。任何不便之处，我深感抱歉。如果发现任何错误，请在 [linux-insides](https://github.com/0xAX/linux-insides) 向我发送 PR。(译者注：翻译问题请发送 PR 到 [linux-insides-zh](https://github.com/hust-open-atom-club/linux-insides-zh))**
 
 链接
 ---------------------------------
@@ -460,16 +459,16 @@ native_irq_return_iret:
 * [initcall](http://kernelnewbies.org/Documents/InitcallMechanism)
 * [uart](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter) 
 * [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) 
-* [内存管理](https://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)
+* [内存管理](/MM/)
 * [i2c](https://en.wikipedia.org/wiki/I%C2%B2C)
 * [APIC](https://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
 * [GNU 汇编器](https://en.wikipedia.org/wiki/GNU_Assembler)
 * [处理器寄存器](https://en.wikipedia.org/wiki/Processor_register)
-* [per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)
+* [per-cpu](/Concepts/linux-cpu-1.md)
 * [pid](https://en.wikipedia.org/wiki/Process_identifier)
 * [设备树](https://en.wikipedia.org/wiki/Device_tree)
 * [系统调用](https://en.wikipedia.org/wiki/System_call)
-* [上一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Interrupts/linux-interrupts-9.html)
+* [上一节](/Interrupts/linux-interrupts-9.md)
 
 
 

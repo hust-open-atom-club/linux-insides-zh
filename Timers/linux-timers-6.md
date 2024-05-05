@@ -4,7 +4,7 @@ Linux内核中的时钟和时间管理 第6部分
 x86_64有关的时钟资源
 --------------------------------------------------------------------------------
 
-这是[本章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/index.html)的第六部分，将描述Linux内核中的时钟和时间管理的相关内容。上一节中，我们了解了clockevents框架，现在继续深入研究Linux内核中的时间管理相关内容，本节将讲述x86架构中时钟源的实现（更多关于时钟源的概念可以参考本章第二节）。
+这是[本章](/Timers/)的第六部分，将描述Linux内核中的时钟和时间管理的相关内容。上一节中，我们了解了clockevents框架，现在继续深入研究Linux内核中的时间管理相关内容，本节将讲述x86架构中时钟源的实现（更多关于时钟源的概念可以参考本章第二节）。
 
 首先，我们需要知道x86架构上可以使用哪些时钟源。这个问题很容易从[sysfs](https://en.wikipedia.org/wiki/Sysfs)或文件`/sys/devices/system/clocksource/clocksource0/available_clocksource`中获得答案。文件夹`/sys/devices/system/clocksource/clocksourceN`内有两个特殊文件保存：
 
@@ -30,7 +30,7 @@ tsc hpet acpi_pm
 $ cat /sys/devices/system/clocksource/clocksource0/current_clocksource 
 tsc
 ```
-作者的系统中是[Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)。由[本章第二节内容](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-2.html)可知，系统中最好的时钟源是具有最佳（最高）等级的时钟源，或者说是具有最高频率的时钟源。
+作者的系统中是[Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)。由[本章第二节内容](/Timers/linux-timers-2.md)可知，系统中最好的时钟源是具有最佳（最高）等级的时钟源，或者说是具有最高频率的时钟源。
 
 [ACPI](https://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)电源管理时钟的频率是3.579545MHz。而[High Precision Event Timer(高精度事件定时器)](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)的频率至少是10MHz，而[Time Stamp Counter(时间戳计数器)](https://en.wikipedia.org/wiki/Time_Stamp_Counter)的频率取决于处理器。例如在较早的处理器上，`TSC`用来计算处理器内部的时钟周期，就是说当处理器的频率比生变化时，其频率也会发生变化。这种现象在较新的处理器上有所改善。新的处理器有一个不变的时间戳计数器，无论处理器在什么状态下都会以恒定的速率递增。我们可以在`/proc/cpuinfo`的输出中获得它的频率。例如：
 
@@ -368,8 +368,8 @@ static struct clocksource clocksource_tsc = {
 Conclusion
 --------------------------------------------------------------------------------
 
-这是[本章](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html)的第六节，描述了Linux内核中的时钟和时钟管理。上一节中，熟悉了`clockevents`框架。这一节中，继续学习了Linux内核中时钟管理，并且看到了在[x86](https://en.wikipedia.org/wiki/X86)架构中使用的三种不同的时钟源。下一节将是[本章](https://0xax.gitbooks.io/linux-insides/content/Timers/index.html)的最后一节，将看到一些与用户空间有关的事情，即一些与时间有关的[系统调用](https://en.wikipedia.org/wiki/System_call)如何在Linux内核中实现。
-如果有问题或建议，请随时在twitter[0xAX](https://twitter.com/0xAX)上与我联系，给我发[email](https://0xax.gitbooks.io/linux-insides/content/Timers/anotherworldofworld@gmail.com)或直接创建[issue](https://github.com/0xAX/linux-insides/issues/new)。
+这是[本章](/Timers/)的第六节，描述了Linux内核中的时钟和时钟管理。上一节中，熟悉了`clockevents`框架。这一节中，继续学习了Linux内核中时钟管理，并且看到了在[x86](https://en.wikipedia.org/wiki/X86)架构中使用的三种不同的时钟源。下一节将是[本章](/Timers/)的最后一节，将看到一些与用户空间有关的事情，即一些与时间有关的[系统调用](https://en.wikipedia.org/wiki/System_call)如何在Linux内核中实现。
+如果有问题或建议，请随时在twitter[0xAX](https://twitter.com/0xAX)上与我联系，给我发[email](anotherworldofworld@gmail.com)或直接创建[issue](https://github.com/0xAX/linux-insides/issues/new)。
 **请注意，英语不是我的第一语言，我真的很抱歉给你带来的不便。如果你发现任何错误，请给我发送PR到[linux-insides](https://github.com/0xAX/linux-insides)**。
 
 链接
@@ -388,4 +388,4 @@ Conclusion
 * [IRQ0](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29#Master_PIC)
 * [i8259](https://en.wikipedia.org/wiki/Intel_8259)
 * [initcall](http://www.compsoc.man.ac.uk/~moz/kernelnewbies/documents/initcall/kernel.html)
-* [previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Timers/linux-timers-5.html)
+* [previous part](/Timers/linux-timers-5.md)
