@@ -10,11 +10,11 @@ Linux 内核开发
 
 在我开始学习 Linux 内核的九个半月之后，我写了这部分内容，并且发布了本书的[第一部分](/Booting/linux-bootstrap-1.md)。到现在为止，本书共包括了四个部分，而这并不是终点。我之所以写这一系列关于 Linux 内核的文章其实更多的是为了我自己。你也知道，Linux 内核的代码量极其巨大，另外还非常容易忘记这一块或那一块内核代码做了什么，或者忘记某些东西是怎么实现的。出乎意料的是 [linux-insides](https://github.com/0xAX/linux-insides) 很快就火了，并且在九个月后积攒了 `9096` 个星星：
 
-![github](http://s2.postimg.org/jjb3s4frt/stars.png)
+![github](images/github.png)
 
 看起来人们对 Linux 内核的内在机制非常的感兴趣。除此之外，在我写 `linux-insides` 的这段时间里，我收到了很多人发来的问题，这些问题大都是关于如何开始向 Linux 内核贡献代码。通常来说，人们是很有兴趣为开源项目做贡献的，Linux 内核也不例外：
 
-![google-linux](http://s4.postimg.org/yg9z5zx0d/google_linux.png)
+![google-linux](images/google_linux.png)
 
 这么看起来大家对 Linux 内核的开发流程非常感兴趣。我认为如果这么一本关于 Linux 内核的书却不包括一部分来讲讲如何参与 Linux 内核开发的话，那就非常奇怪了。这就是我决定写这篇文章的原因。在本文中，你不会看到为什么你应该对贡献 Linux 内核感兴趣，但是如果你想参与 Linux 内核开发的话，那这部分就是为你而作。
 
@@ -102,7 +102,7 @@ $ cat /proc/config.gz | gunzip > ~/dev/linux/.config
 
 如果你对发行版维护者提供的标准内核配置文件并不满意，你也可以手动配置 Linux 内核，有两种方式可以做到这一点。Linux 内核的根 [Makefile](https://github.com/torvalds/linux/blob/master/Makefile) 文件提供了一系列可配置的目标选项。例如 `menuconfig` 为内核配置提供了一个菜单界面：
 
-![menuconfig](http://s21.postimg.org/zcz48p7yf/menucnonfig.png)
+![menuconfig](images/menuconfig.png)
 
  `defconfig` 参数会为当前的架构生成默认的内核配置文件，例如 [x86_64 defconfig](https://github.com/torvalds/linux/blob/master/arch/x86/configs/x86_64_defconfig)。你可以将 `ARCH` 命令行参数传递给 `make`，以此来为给定架构创建 `defconfig` 配置文件：
 
@@ -112,7 +112,7 @@ $ make ARCH=arm64 defconfig
 
 `allnoconfig`、 `allyesconfig` 以及 `allmodconfig` 参数也允许你生成新的配置文件，其效果分别为尽可能多的选项都关闭、尽可能多的选项都启用或尽可能多的选项都作为模块启用。`nconfig` 命令行参数提供了基于 `ncurses` 的菜单程序来配置 Linux 内核：
 
-![nconfig](http://s29.postimg.org/hpghikp4n/nconfig.png)
+![nconfig](images/nconfig.png)
 
 `randconfig` 参数甚至可以随机地生成 Linux 内核配置文件。我不会讨论如何去配置 Linux 内核或启用哪个选项，因为没有必要这么做：首先，我不知道你的硬件配置；其次，如果我知道了你的硬件配置，那么剩下的问题就是搞清楚如何使用程序生成内核配置，而这些程序的使用都是非常容易的。
 
@@ -224,7 +224,7 @@ $ make -j4
 
 `busybox` 是一个可执行文件 - `/bin/busybox`，它包括了一系列类似于 [coreutils](https://en.wikipedia.org/wiki/GNU_Core_Utilities) 的标准工具。在 `busysbox` 菜单界面上我们需要启用 `Build BusyBox as a static binary (no shared libs)` 选项：
 
-![busysbox menu](http://s18.postimg.org/sj92uoweh/busybox.png)
+![busysbox menu](images/busybox_menu.png)
 
 我们可以按照下方的路径找到这个菜单项：
 
@@ -273,7 +273,7 @@ $ find . -print0 | cpio --null -ov --format=newc | gzip -9 > ~/dev/initrd_x86_64
 $ qemu-system-x86_64 -snapshot -m 8GB -serial stdio -kernel ~/dev/linux/arch/x86_64/boot/bzImage -initrd ~/dev/initrd_x86_64.gz -append "root=/dev/sda1 ignore_loglevel"
 ```
 
-![qemu](http://s22.postimg.org/b8ttyigup/qemu.png)
+![qemu](images/qemu.png)
 
 从现在起，我们就可以在虚拟机内运行 Linux 内核了，这意味着我们可以开始对内核进行修改和测试了。
 
@@ -330,7 +330,7 @@ Device Drivers
 ----> Digi EPCA PCI products
 ```
 
-![dgap menu](http://s4.postimg.org/d3pozpge5/digi.png)
+![dgap menu](images/dgap_menu.png)
 
 现在是时候提交修改了，我使用下面的命令组合来完成这件事：
 
@@ -424,7 +424,7 @@ CHECK: spaces preferred around that '|' (ctx:VxV)
 
 在 `git diff` 命令的帮助下，你也会看到一些有问题的地方：
 
-![git diff](http://oi60.tinypic.com/2u91rgn.jpg)
+![git diff](images/git_diff.png)
 
 * [Linus 不接受 github pull requests](https://github.com/torvalds/linux/pull/17#issuecomment-5654674)
 
