@@ -208,7 +208,7 @@ int cpu = smp_processor_id();
 #define raw_smp_processor_id() (this_cpu_read(cpu_number))
 ```
 
-`this_cpu_read` 函数与其它很多函数一样如(`this_cpu_write`, `this_cpu_add` 等等...) 被定义在[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 此部分函数主要为对 `this_cpu` 进行操作. 这些操作提供不同的对每cpu[per-cpu](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 变量相关访问方式. 譬如让我们来看看这个函数 `this_cpu_read`:
+`this_cpu_read` 函数与其它很多函数一样如(`this_cpu_write`, `this_cpu_add` 等等...) 被定义在[include/linux/percpu-defs.h](https://github.com/torvalds/linux/blob/master/include/linux/percpu-defs.h) 此部分函数主要为对 `this_cpu` 进行操作. 这些操作提供不同的对每cpu[per-cpu](/Concepts/linux-cpu-1.md) 变量相关访问方式. 譬如让我们来看看这个函数 `this_cpu_read`:
 
 ```
 __pcpu_size_call_return(this_cpu_read_, pcp)
@@ -311,7 +311,7 @@ static inline int __check_is_bitmap(const unsigned long *bitmap)
 
 原来此函数始终返回1，事实上我们需要这样的函数才达到我们的目的： 它在编译时给定一个`bitmap`，换句话将就是检查`bitmap`的类型是否是`unsigned long *`,因此我们仅仅通过`to_cpumask`宏指令将类型为`unsigned long`的数组转化为`struct cpumask *`。现在我们可以调用`cpumask_set_cpu` 函数，这个函数仅仅是一个 `set_bit`给CPU掩码的功能函数。所有的这些`set_cpu_*`函数的原理都是一样的。
 
-如果你还不确定`set_cpu_*`这些函数的操作并且不能理解 `cpumask`的概念，不要担心。你可以通过读取这些章节[cpumask](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).来继续了解和学习这些函数的原理。
+如果你还不确定`set_cpu_*`这些函数的操作并且不能理解 `cpumask`的概念，不要担心。你可以通过读取这些章节[cpumask](/Concepts/linux-cpu-2.md) or [documentation](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt).来继续了解和学习这些函数的原理。
 
 现在我们已经激活第一个CPU，我们继续接着start_kernel函数往下走，下面的函数是`page_address_init`,但是此函数不执行任何操作，因为只有当所有内存不能直接映射的时候才会执行。
 
@@ -349,7 +349,7 @@ Linux version 4.0.0-rc6+ (alex@localhost) (gcc version 4.9.1 (Ubuntu 4.9.1-16ubu
 memblock_reserve(__pa_symbol(_text), (unsigned long)__bss_stop - (unsigned long)_text);
 ```
 
-你可以阅读关于`memblock`的相关内容在[Linux kernel memory management Part 1.](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/linux-mm-1.html)，你应该还记得`memblock_reserve`函数的两个参数：
+你可以阅读关于`memblock`的相关内容在[Linux kernel memory management Part 1.](/MM/linux-mm-1.md)，你应该还记得`memblock_reserve`函数的两个参数：
 
 * base physical address of a memory block;
 * size of a memory block.
@@ -382,7 +382,7 @@ u64 ramdisk_size  = get_ramdisk_size();
 u64 ramdisk_end   = PAGE_ALIGN(ramdisk_image + ramdisk_size);
 ```
 
-如果你阅读过这些章节[Linux Kernel Booting Process](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)，你就知道所有的这些参数都来自于`boot_params`，时刻谨记`boot_params`在boot期间已经被赋值，内核启动头包含了一下几个字段用来描述RAM DISK：
+如果你阅读过这些章节[Linux Kernel Booting Process](/Booting/)，你就知道所有的这些参数都来自于`boot_params`，时刻谨记`boot_params`在boot期间已经被赋值，内核启动头包含了一下几个字段用来描述RAM DISK：
 ```
 Field name:	ramdisk_image
 Type:		write (obligatory)
@@ -434,7 +434,7 @@ memblock_reserve(ramdisk_image, ramdisk_end - ramdisk_image);
 
 如果你有任何的问题或者建议，你可以留言，也可以直接发消息给我[twitter](https://twitter.com/0xAX)。
 
-**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).**
+**很抱歉，英语并不是我的母语，非常抱歉给您阅读带来不便，如果你发现文中描述有任何问题，请提交一个 PR 到 [linux-insides-zh](https://github.com/hust-open-atom-club/linux-insides-zh).**
 
 链接
 --------------------------------------------------------------------------------
@@ -447,4 +447,4 @@ memblock_reserve(ramdisk_image, ramdisk_end - ramdisk_image);
 * [stack buffer overflow](http://en.wikipedia.org/wiki/Stack_buffer_overflow)
 * [IRQs](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [initrd](http://en.wikipedia.org/wiki/Initrd)
-* [Previous part](https://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-3.html)
+* [Previous part](/Initialization/linux-initialization-3.md)
