@@ -4,7 +4,7 @@
 仍旧是与系统架构有关的初始化
 ===========================================================  
 
-在之前的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html)我们从 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c)了解了特定于系统架构的初始化事务(在我们的例子中是 `x86_64` 架构)，并且通过 `x86_configure_nx` 函数根据对[NX bit](http://en.wikipedia.org/wiki/NX_bit)的支持配置了 `_PAGE_NX` 标志位。正如我之前写的, `setup_arch` 函数和 `start_kernel` 都非常复杂，所以在这个和下个章节我们将继续学习关于系统架构初始化进程的内容。`x86_configure_nx` 函数的下面是 `parse_early_param` 函数。这个函数定义在 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中并且你可以从它的名字中了解到，这个函数解析内核命令行并且基于给定的参数创建不同的服务 (所有的内核命令行参数你都可以在 [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt) 找到)。 你可能记得在最前面的 [章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-2.html) 我们是怎样创建 `earlyprintk`地。在前面我们用 [arch/x86/boot/cmdline.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cmdline.c) 里面的 `cmdline_find_option` 和 `__cmdline_find_option`, `__cmdline_find_option_bool` 函数的帮助下寻找内核参数及其值。我们在通用内核部分不依赖于特定的系统架构，在这里我们使用另一种方法。 如果你正在阅读linux内核源代码，你可能注意到这样的调用：
+在之前的[章节](/Initialization/linux-initialization-5.md)我们从 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c)了解了特定于系统架构的初始化事务(在我们的例子中是 `x86_64` 架构)，并且通过 `x86_configure_nx` 函数根据对[NX bit](http://en.wikipedia.org/wiki/NX_bit)的支持配置了 `_PAGE_NX` 标志位。正如我之前写的, `setup_arch` 函数和 `start_kernel` 都非常复杂，所以在这个和下个章节我们将继续学习关于系统架构初始化进程的内容。`x86_configure_nx` 函数的下面是 `parse_early_param` 函数。这个函数定义在 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c) 中并且你可以从它的名字中了解到，这个函数解析内核命令行并且基于给定的参数创建不同的服务 (所有的内核命令行参数你都可以在 [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt) 找到)。 你可能记得在最前面的 [章节](/Booting/linux-bootstrap-2.md) 我们是怎样创建 `earlyprintk`地。在前面我们用 [arch/x86/boot/cmdline.c](https://github.com/torvalds/linux/blob/master/arch/x86/boot/cmdline.c) 里面的 `cmdline_find_option` 和 `__cmdline_find_option`, `__cmdline_find_option_bool` 函数的帮助下寻找内核参数及其值。我们在通用内核部分不依赖于特定的系统架构，在这里我们使用另一种方法。 如果你正在阅读linux内核源代码，你可能注意到这样的调用：
 
 ```C
 early_param("gbpages", parse_direct_gbpages_on);
@@ -102,7 +102,7 @@ noexec		[X86]
 	memblock_x86_reserve_range_setup_data();
 ```
 
-这个函数的定义也在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 中，然后这个函数为 `setup_data` 重新映射内存并保留内存块(你可以阅读之前的 [章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html) 了解关于 `setup_data` 的更多内容，你也可以在 [Linux kernel memory management](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html) 中阅读到关于 `ioremap` and `memblock` 的更多内容)。 
+这个函数的定义也在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/setup.c) 中，然后这个函数为 `setup_data` 重新映射内存并保留内存块(你可以阅读之前的 [章节](/Initialization/linux-initialization-5.md) 了解关于 `setup_data` 的更多内容，你也可以在 [Linux kernel memory management](/MM/) 中阅读到关于 `ioremap` and `memblock` 的更多内容)。 
 
 接下来我们来看看下面的条件语句:    
 
@@ -134,7 +134,7 @@ int __init acpi_mps_check(void)
 ```
 
 `acpi_mps_check` 函数检查内置的 `MPS` 又称 [多重处理器规范]((http://en.wikipedia.org/wiki/MultiProcessor_Specification)) 表。如果设置了 ` CONFIG_X86_LOCAL_APIC` 但未设置 `CONFIG_x86_MPPAARSE` ，而且传递给内核的命令行选项中有 `acpi=off`、`acpi=noirq` 或者 `pci=noacpi` 参数，那么`acpi_mps_check` 函数就会输出警告信息。如果 `acpi_mps_check` 返回了1，这就表示我们禁用了本地 [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) 
-,而且 `setup_clear_cpu_cap` 宏清除了当前CPU中的 `X86_FEATURE_APIC` 位。（你可以阅读 [CPU masks](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-2.html) 了解关于CPU mask的更多内容)。
+,而且 `setup_clear_cpu_cap` 宏清除了当前CPU中的 `X86_FEATURE_APIC` 位。（你可以阅读 [CPU masks](/Concepts/linux-cpu-2.md) 了解关于CPU mask的更多内容)。
 
 早期的PCI转储
 --------------------------------------------------------------------------------  
@@ -200,7 +200,7 @@ for (bus = 0; bus < 256; bus++) {
 --------------------------------------------------------------------------------   
 
 
-在 `early_dump_pci_devices` 函数后面，有一些与可用内存和[e820](http://en.wikipedia.org/wiki/E820)相关的函数，其中 [e820](http://en.wikipedia.org/wiki/E820) 的相关信息我们在 [内核安装的第一步](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-2.html) 章节中整理过。   
+在 `early_dump_pci_devices` 函数后面，有一些与可用内存和[e820](http://en.wikipedia.org/wiki/E820)相关的函数，其中 [e820](http://en.wikipedia.org/wiki/E820) 的相关信息我们在 [内核安装的第一步](/Booting/linux-bootstrap-2.md) 章节中整理过。   
 ```C
 	/* update the e820_saved too */
 	e820_reserve_setup_data();
@@ -541,15 +541,14 @@ MEMBLOCK configuration:
 * [NX bit](http://en.wikipedia.org/wiki/NX_bit)
 * [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/kernel-parameters.txt)
 * [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller)
-* [CPU masks](http://0xax.gitbooks.io/linux-insides/content/Concepts/cpumask.html)
-* [Linux kernel memory management](http://xinqiu.gitbooks.io/linux-insides-cn/content/MM/index.html)
+* [CPU masks](/Concepts/linux-cpu-2.md)
+* [Linux kernel memory management](/MM/index.md)
 * [PCI](http://en.wikipedia.org/wiki/Conventional_PCI)
 * [e820](http://en.wikipedia.org/wiki/E820)
-* [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS)
 * [System Management BIOS](http://en.wikipedia.org/wiki/System_Management_BIOS)
 * [EFI](http://en.wikipedia.org/wiki/Unified_Extensible_Firmware_Interface)
 * [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
 * [MultiProcessor Specification](http://www.intel.com/design/pentium/datashts/24201606.pdf)
 * [BSS](http://en.wikipedia.org/wiki/.bss)
 * [SMBIOS specification](http://www.dmtf.org/sites/default/files/standards/documents/DSP0134v2.5Final.pdf)
-* [前一个章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-5.html)
+* [前一个章节](/Initialization/linux-initialization-5.md)

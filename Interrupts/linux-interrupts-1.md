@@ -4,7 +4,7 @@
 Introduction
 --------------------------------------------------------------------------------
 
-这是 [linux 内核揭秘](http://xinqiu.gitbooks.io/linux-insides-cn/content/) 这本书最新章节的第一部分。我们已经在这本书前面的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html)中走过了漫长的道路。从内核初始化的[第一步](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)开始，结束于第一个 `init` 程序的[启动](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-10.html)。我们见证了一系列与各种内核子系统相关的初始化步骤，但是我们并没有深入这些子系统。在这一章中，我们将会试着去了解这些内核子系统是如何工作和实现的。就像你在这章标题中看到的，第一个子系统是[中断（interrupts）](http://en.wikipedia.org/wiki/Interrupt)。
+这是 [linux 内核揭秘](/) 这本书最新章节的第一部分。我们已经在这本书前面的[章节](/Initialization/)中走过了漫长的道路。从内核初始化的[第一步](/Initialization/linux-initialization-1.md)开始，结束于第一个 `init` 程序的[启动](/Initialization/linux-initialization-10.md)。我们见证了一系列与各种内核子系统相关的初始化步骤，但是我们并没有深入这些子系统。在这一章中，我们将会试着去了解这些内核子系统是如何工作和实现的。就像你在这章标题中看到的，第一个子系统是[中断（interrupts）](http://en.wikipedia.org/wiki/Interrupt)。
 
 什么是中断？
 --------------------------------------------------------------------------------
@@ -37,7 +37,7 @@ Introduction
 BUG_ON((unsigned)n > 0xFF);
 ```
 
-你可以在 Linux 内核源码中关于中断设置的地方找到这个定义(例如：`set_intr_gate`, `void set_system_intr_gate` 在 [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)中)。从 `0` 到 `31` 的 32 个中断标识码被处理器保留，用作处理架构定义的异常和中断。你可以在 Linux 内核初始化程序的第二部分 - [早期中断和异常处理](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-2.html)中找到这个表和关于这些中断标识码的描述。从 `32` 到 `255` 的中断标识码设计为用户定义中断并且不被系统保留。这些中断通常分配给外部 I/O 设备，使这些设备可以发送中断给处理器。
+你可以在 Linux 内核源码中关于中断设置的地方找到这个定义(例如：`set_intr_gate`, `void set_system_intr_gate` 在 [arch/x86/include/asm/desc.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/desc.h)中)。从 `0` 到 `31` 的 32 个中断标识码被处理器保留，用作处理架构定义的异常和中断。你可以在 Linux 内核初始化程序的第二部分 - [早期中断和异常处理](/Initialization/linux-initialization-2.md)中找到这个表和关于这些中断标识码的描述。从 `32` 到 `255` 的中断标识码设计为用户定义中断并且不被系统保留。这些中断通常分配给外部 I/O 设备，使这些设备可以发送中断给处理器。
 
 现在，我们来讨论中断的类型。笼统地来讲，我们可以把中断分为两个主要类型：
 
@@ -58,7 +58,7 @@ BUG_ON((unsigned)n > 0xFF);
 
 最后的 `终止` 是一个从不报告引起异常的精确指令的异常，并且不允许被中断的程序继续执行。
 
-我们已经从前面的[部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-3.html)知道，中断可以分为 `可屏蔽的（maskable）` 和 `不可屏蔽的（non-maskable）`。可屏蔽的中断可以被阻塞，使用 `x86_64` 的指令 - `sti` 和 `cli`。我们可以在 Linux 内核代码中找到他们：
+我们已经从前面的[部分](/Booting/linux-bootstrap-3.md)知道，中断可以分为 `可屏蔽的（maskable）` 和 `不可屏蔽的（non-maskable）`。可屏蔽的中断可以被阻塞，使用 `x86_64` 的指令 - `sti` 和 `cli`。我们可以在 Linux 内核代码中找到他们：
 
 ```C
 static inline void native_irq_disable(void)
@@ -135,13 +135,13 @@ static inline void native_irq_enable(void)
 +--------------+-------------------------------------------------+
 ```
 
-现在我们了解了一些关于各种类型的中断和异常的内容，是时候转到更实用的部分了。我们从 `中断描述符表（IDT）` 开始。就如之前所提到的，`IDT` 保存了中断和异常处理程序的入口指针。`IDT` 是一个类似于 `全局描述符表（Global Descriptor Table）`的结构，我们在[内核启动程序](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-2.html)的第二部分已经介绍过。但是他们确实有一些不同，`IDT` 的表项被称为 `门（gates）`，而不是 `描述符（descriptors）`。它可以包含下面的一种：
+现在我们了解了一些关于各种类型的中断和异常的内容，是时候转到更实用的部分了。我们从 `中断描述符表（IDT）` 开始。就如之前所提到的，`IDT` 保存了中断和异常处理程序的入口指针。`IDT` 是一个类似于 `全局描述符表（Global Descriptor Table）`的结构，我们在[内核启动程序](/Booting/linux-bootstrap-2.md)的第二部分已经介绍过。但是他们确实有一些不同，`IDT` 的表项被称为 `门（gates）`，而不是 `描述符（descriptors）`。它可以包含下面的一种：
 
 * 中断门（Interrupt gates）
 * 任务门（Task gates）
 * 陷阱门（Trap gates）
 
-在 `x86` 架构中，只有 [long mode](http://en.wikipedia.org/wiki/Long_mode) 中断门和陷阱门可以在 `x86_64` 中引用。就像 `全局描述符表`，`中断描述符表` 在 `x86` 上是一个 8 字节数组门，而在 `x86_64` 上是一个 16 字节数组门。让我们回忆在[内核启动程序](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-2.html)的第二部分，`全局描述符表` 必须包含 `NULL` 描述符作为它的第一个元素。与 `全局描述符表` 不一样的是，`中断描述符表` 的第一个元素可以是一个门。它并不是强制要求的。比如，你可能还记得我们只是在早期的章节中过渡到[保护模式](http://en.wikipedia.org/wiki/Protected_mode)时用 `NULL` 门加载过中断描述符表：
+在 `x86` 架构中，只有 [long mode](http://en.wikipedia.org/wiki/Long_mode) 中断门和陷阱门可以在 `x86_64` 中引用。就像 `全局描述符表`，`中断描述符表` 在 `x86` 上是一个 8 字节数组门，而在 `x86_64` 上是一个 16 字节数组门。让我们回忆在[内核启动程序](/Booting/linux-bootstrap-2.md)的第二部分，`全局描述符表` 必须包含 `NULL` 描述符作为它的第一个元素。与 `全局描述符表` 不一样的是，`中断描述符表` 的第一个元素可以是一个门。它并不是强制要求的。比如，你可能还记得我们只是在早期的章节中过渡到[保护模式](http://en.wikipedia.org/wiki/Protected_mode)时用 `NULL` 门加载过中断描述符表：
 
 ```C
 /*
@@ -284,7 +284,7 @@ struct gate_struct64 {
 #endif
 ```
 
-`KASan` 是一个运行时内存[调试器](http://lwn.net/Articles/618180/)。所以，如果 `CONFIG_KASAN` 被禁用，`THREAD_SIZE` 是 `16384` ；如果内核配置选项打开，`THREAD_SIZE` 的值是 `32768`。这块栈空间保存着有用的数据，只要线程是活动状态或者僵尸状态。但是当线程在用户空间的时候，这个内核栈是空的，除非 `thread_info` 结构（关于这个结构的详细信息在 Linux 内核初始程序的第四[部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-4.html)）在这个栈空间的底部。活动的或者僵尸线程并不是在他们栈中的唯一的线程，与每一个 CPU 关联的特殊栈也存在于这个空间。当内核在这个 CPU 上执行代码的时候，这些栈处于活动状态；当在这个 CPU 上执行用户空间代码时，这些栈不包含任何有用的信息。每一个 CPU 也有一个特殊的 per-cpu 栈。首先是给外部中断使用的 `中断栈（interrupt stack）`。它的大小定义如下： 
+`KASan` 是一个运行时内存[调试器](http://lwn.net/Articles/618180/)。所以，如果 `CONFIG_KASAN` 被禁用，`THREAD_SIZE` 是 `16384` ；如果内核配置选项打开，`THREAD_SIZE` 的值是 `32768`。这块栈空间保存着有用的数据，只要线程是活动状态或者僵尸状态。但是当线程在用户空间的时候，这个内核栈是空的，除非 `thread_info` 结构（关于这个结构的详细信息在 Linux 内核初始程序的第四[部分](/Initialization/linux-initialization-4.md)）在这个栈空间的底部。活动的或者僵尸线程并不是在他们栈中的唯一的线程，与每一个 CPU 关联的特殊栈也存在于这个空间。当内核在这个 CPU 上执行代码的时候，这些栈处于活动状态；当在这个 CPU 上执行用户空间代码时，这些栈不包含任何有用的信息。每一个 CPU 也有一个特殊的 per-cpu 栈。首先是给外部中断使用的 `中断栈（interrupt stack）`。它的大小定义如下： 
 
 ```C
 #define IRQ_STACK_ORDER (2 + KASAN_STACK_ORDER)
@@ -306,7 +306,7 @@ union irq_stack_union {
 
 第一个 `irq_stack` 域是一个 16KB 的数组。然后你可以看到 `irq_stack_union` 联合包含了一个结构体，这个结构体有两个域：
 
-* `gs_base` - 总是指向 `irqstack` 联合底部的 `gs` 寄存器。在 `x86_64` 中， per-cpu（更多关于 `per-cpu` 变量的信息可以阅读特定的[章节](http://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html)） 和 stack canary 共享 `gs` 寄存器。所有的 per-cpu 标志初始值为零，并且 `gs` 指向 per-cpu 区域的开始。你已经知道[段内存模式](http://en.wikipedia.org/wiki/Memory_segmentation)已经废除很长时间了，但是我们可以使用[特殊模块寄存器（Model specific registers）](http://en.wikipedia.org/wiki/Model-specific_register)给这两个段寄存器 - `fs` 和 `gs` 设置基址，并且这些寄存器仍然可以被用作地址寄存器。如果你记得 Linux 内核初始程序的第一[部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)，你会记起我们设置了 `gs` 寄存器：
+* `gs_base` - 总是指向 `irqstack` 联合底部的 `gs` 寄存器。在 `x86_64` 中， per-cpu（更多关于 `per-cpu` 变量的信息可以阅读特定的[章节](/Concepts/linux-cpu-1.md)） 和 stack canary 共享 `gs` 寄存器。所有的 per-cpu 标志初始值为零，并且 `gs` 指向 per-cpu 区域的开始。你已经知道[段内存模式](http://en.wikipedia.org/wiki/Memory_segmentation)已经废除很长时间了，但是我们可以使用[特殊模块寄存器（Model specific registers）](http://en.wikipedia.org/wiki/Model-specific_register)给这两个段寄存器 - `fs` 和 `gs` 设置基址，并且这些寄存器仍然可以被用作地址寄存器。如果你记得 Linux 内核初始程序的第一[部分](/Initialization/linux-initialization-1.md)，你会记起我们设置了 `gs` 寄存器：
 
 ```assembly
 	movl	$MSR_GS_BASE,%ecx
@@ -478,7 +478,7 @@ asmlinkage void double_fault(void);
 
 如果你有任何问题或建议，请给我发评论或者给我发 [Twitter](https://twitter.com/0xAX)。
 
-**请注意英语并不是我的母语，我为任何表达不清楚的地方感到抱歉。如果你发现任何错误请发 PR 到 [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh)。(译者注：翻译问题请发 PR 到 [linux-insides-cn](https://www.gitbook.com/book/xinqiu/linux-insides-cn))**
+**请注意英语并不是我的母语，我为任何表达不清楚的地方感到抱歉。如果你发现任何错误请发 PR 到 [linux-insides](https://github.com/0xAX/linux-insides)。(译者注：翻译问题请发 PR 到 [linux-insides-zh](https://github.com/hust-open-atom-club/linux-insides-zh))**
 
 
 链接
@@ -493,4 +493,4 @@ asmlinkage void double_fault(void);
 * [segmented memory model](http://en.wikipedia.org/wiki/Memory_segmentation)
 * [Model specific registers](http://en.wikipedia.org/wiki/Model-specific_register)
 * [Stack canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries)
-* [Previous chapter](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/index.html)
+* [Previous chapter](/Initialization/)

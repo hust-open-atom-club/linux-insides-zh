@@ -4,11 +4,11 @@
 踏入内核代码的第一步（TODO: Need proofreading）
 --------------------------------------------------------------------------------
 
-[上一章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)是[引导过程](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)的最后一部分。从现在开始，我们将深入探究 Linux 内核的初始化过程。在解压缩完 Linux 内核镜像、并把它妥善地放入内存后，内核就开始工作了。我们在第一章中介绍了 Linux 内核引导程序，它的任务就是为执行内核代码做准备。而在本章中，我们将探究内核代码，看一看内核的初始化过程——即在启动 [PID](https://en.wikipedia.org/wiki/Process_identifier) 为 `1` 的 `init` 进程前，内核所做的大量工作。
+[上一章](/Booting/linux-bootstrap-5.md)是[引导过程](/Booting/)的最后一部分。从现在开始，我们将深入探究 Linux 内核的初始化过程。在解压缩完 Linux 内核镜像、并把它妥善地放入内存后，内核就开始工作了。我们在第一章中介绍了 Linux 内核引导程序，它的任务就是为执行内核代码做准备。而在本章中，我们将探究内核代码，看一看内核的初始化过程——即在启动 [PID](https://en.wikipedia.org/wiki/Process_identifier) 为 `1` 的 `init` 进程前，内核所做的大量工作。
 
 本章的内容很多，介绍了在内核启动前的所有准备工作。[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/head_64.S) 文件中定义了内核入口点，我们会从这里开始，逐步地深入下去。在 `start_kernel` 函数（定义在 [init/main.c](https://github.com/torvalds/linux/blob/master/init/main.c#L489)） 执行之前，我们会看到很多的初期的初始化过程，例如初期页表初始化、切换到一个新的内核空间描述符等等。
 
-在[上一章](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/index.html)的[最后一节](https://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)中，我们跟踪到了 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 文件中的 [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 指令：
+在[上一章](/Booting/)的[最后一节](/Booting/linux-bootstrap-5.md)中，我们跟踪到了 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 文件中的 [jmp](https://github.com/torvalds/linux/blob/master/arch/x86/boot/compressed/head_64.S) 指令：
 
 ```assembly
 jmp	*%rax
@@ -90,7 +90,7 @@ rbp = 0x1000000 - (0xffffffff81000000 - 0xffffffff80000000)
 	jnz	bad_address
 ```
 
-在这里我们将 `rbp` 寄存器的低32位与 `PMD_PAGE_MASK` 进行比较。`PMD_PAGE_MASK` 代表中层页目录（`Page middle directory`）屏蔽位（相关信息请阅读 [paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html) 一节），它的定义如下：
+在这里我们将 `rbp` 寄存器的低32位与 `PMD_PAGE_MASK` 进行比较。`PMD_PAGE_MASK` 代表中层页目录（`Page middle directory`）屏蔽位（相关信息请阅读 [paging](/Theory/linux-theory-1.md) 一节），它的定义如下：
 
 ```C
 #define PMD_PAGE_MASK           (~(PMD_PAGE_SIZE-1))
@@ -162,7 +162,7 @@ NEXT_PAGE(level1_fixmap_pgt)
                          _PAGE_ACCESSED | _PAGE_DIRTY)
 ```
 
-更多信息请阅读 [分页](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html) 部分.
+更多信息请阅读 [分页](/Theory/linux-theory-1.md) 部分.
 
 `level3_kernel_pgt` 中保存的两项用来映射内核空间，在它的前 `510`（即 `L3_START_KERNEL`）项均为 `0`。这里的 `L3_START_KERNEL` 保存的是在上层页目录（Page Upper Directory）中包含`__START_KERNEL_map` 地址的那一条索引，它等于 `510`。后面一项 `level2_kernel_pgt - __START_KERNEL_map + _KERNPG_TABLE` 中的 `level2_kernel_pgt` 比较容易理解，它是一条页表项，包含了指向中层页目录的指针，它用来映射内核空间，并且具有如下的访问权限：
 
@@ -491,7 +491,7 @@ INIT_PER_CPU(gdt_page);
 
 `INIT_PER_CPU` 扩展后也将得到 `init_per_cpu__gdt_page` 并将它的值设置为相对于 `__per_cpu_load` 的偏移量。这样，我们就得到了新GDT的正确的基地址。
 
-per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `per-CPU` 变量时，每个CPU都会拥有一份它自己的拷贝，在这里我们创建的是 `gdt_page` per-CPU变量。这种类型的变量有很多有点，比如由于每个CPU都只访问自己的变量而不需要锁等。因此在多处理器的情况下，每一个处理器核心都将拥有一份自己的 `GDT` 表，其中的每一项都代表了一块内存，这块内存可以由在这个核心上运行的线程访问。这里 [Concepts/per-cpu](https://xinqiu.gitbooks.io/linux-insides-cn/content/Concepts/linux-cpu-1.html) 有关于 `per-CPU` 变量的更详细的介绍。
+per-CPU变量是2.6内核中的特性。顾名思义，当我们创建一个 `per-CPU` 变量时，每个CPU都会拥有一份它自己的拷贝，在这里我们创建的是 `gdt_page` per-CPU变量。这种类型的变量有很多有点，比如由于每个CPU都只访问自己的变量而不需要锁等。因此在多处理器的情况下，每一个处理器核心都将拥有一份自己的 `GDT` 表，其中的每一项都代表了一块内存，这块内存可以由在这个核心上运行的线程访问。这里 [Concepts/per-cpu](/Concepts/linux-cpu-1.md) 有关于 `per-CPU` 变量的更详细的介绍。
 
 在加载好了新的全局描述附表之后，跟之前一样我们重新加载一下各个段：
 
@@ -620,7 +620,7 @@ write_cr3(__pa_nodebug(early_level4_pgt));
 --------------------------------------------------------------------------------
 
 * [Model Specific Register](http://en.wikipedia.org/wiki/Model-specific_register)
-* [Paging](http://xinqiu.gitbooks.io/linux-insides-cn/content/Theory/linux-theory-1.html)
-* [Previous part - Kernel decompression](http://xinqiu.gitbooks.io/linux-insides-cn/content/Booting/linux-bootstrap-5.html)
+* [Paging](/Theory/linux-theory-1.md)
+* [Previous part - Kernel decompression](/Booting/linux-bootstrap-5.md)
 * [NX](http://en.wikipedia.org/wiki/NX_bit)
 * [ASLR](http://en.wikipedia.org/wiki/Address_space_layout_randomization)

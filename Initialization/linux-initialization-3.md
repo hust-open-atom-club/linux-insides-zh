@@ -77,7 +77,7 @@ extern char __initdata boot_command_line[];
 初始化内存页
 --------------------------------------------------------------------------------
 
-至此，我们已经拷贝了 `boot_params` 结构体，接下来将对初期页表进行一些设置以便在初始化内核的过程中使用。我们之前已经对初始化了初期页表，以便支持换页，这在之前的[部分](http://xinqiu.gitbooks.io/linux-insides-cn/content/Initialization/linux-initialization-1.html)中已经讨论过。现在则通过调用 `reset_early_page_tables` 函数将初期页表中大部分项清零（在之前的部分也有介绍），只保留内核高地址的映射。然后我们调用：
+至此，我们已经拷贝了 `boot_params` 结构体，接下来将对初期页表进行一些设置以便在初始化内核的过程中使用。我们之前已经对初始化了初期页表，以便支持换页，这在之前的[部分](/Initialization/linux-initialization-1.md)中已经讨论过。现在则通过调用 `reset_early_page_tables` 函数将初期页表中大部分项清零（在之前的部分也有介绍），只保留内核高地址的映射。然后我们调用：
 
 ```C
 	clear_page(init_level4_pgt);
