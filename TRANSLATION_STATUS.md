@@ -40,7 +40,7 @@
 |├ [4.0](SysCall/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[194d0c83e327](https://github.com/0xAX/linux-insides/commit/194d0c83e3273c6167830c29d9ba13ec57bfbcb6)|
 |├ [4.1](SysCall/linux-syscall-1.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.2](SysCall/linux-syscall-2.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
-|├ [4.3](SysCall/linux-syscall-3.md)||未开始|
+|├ [4.3](SysCall/linux-syscall-3.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.4](SysCall/linux-syscall-4.md)||未开始|
 |├ [4.5](SysCall/linux-syscall-5.md)|[@asanzjx](https://github.com/asanzjx)|已完成|
 |└ [4.6](SysCall/linux-syscall-6.md)||未开始|
