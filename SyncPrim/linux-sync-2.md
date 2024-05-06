@@ -460,7 +460,7 @@ smp_cond_acquire(!((val = atomic_read(&lock->val)) & _Q_LOCKED_PENDING_MASK));
 
 这是 Linux 内核[同步原语](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29)章节第二部分的结尾。在上一个[部分](/SyncPrim/linux-sync-1.md)我们已经见到了第一个同步原语`自旋锁`通过 Linux 内核 实现的`排队自旋锁（ticket spinlock）`。在这个部分我们了解了另一个`自旋锁`机制的实现 - `队列自旋锁`。下一个部分我们继续深入 Linux 内核同步原语。
 
-如果您有疑问或者建议，请在twitter [0xAX](https://twitter.com/0xAX) 上联系我，通过 [email](anotherworldofworld@gmail.com) 联系我，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new).
+如果您有疑问或者建议，请在twitter [0xAX](https://twitter.com/0xAX) 上联系我，通过 [email](mailto:anotherworldofworld@gmail.com) 联系我，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 **友情提示：英语不是我的母语，对于译文给您带来了的不便我感到非常抱歉。如果您发现任何错误请给我发送PR到 [linux-insides](https://github.com/0xAX/linux-insides)。**
 

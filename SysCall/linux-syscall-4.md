@@ -4,7 +4,7 @@ System calls in the Linux kernel. Part 4.
 How does the Linux kernel run a program
 --------------------------------------------------------------------------------
 
-This is the fourth part of the [chapter](/SysCall/) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](/SysCall/linux-syscall-3.md) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
+This is the fourth part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/syscall) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-3) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
 
 * `vsyscall`;
 * `vDSO`;
@@ -16,7 +16,7 @@ This part will be last part in this chapter and as you can understand from the p
 how do we launch our programs?
 --------------------------------------------------------------------------------
 
-There are many different ways to launch an application from an user perspective. For example we can run a program from the [shell](https://en.wikipedia.org/wiki/Unix_shell) or double-click on the application icon. It does not matter. The Linux kernel handles application launch regardless how we do launch this application.
+There are many different ways to launch an application from a user perspective. For example we can run a program from the [shell](https://en.wikipedia.org/wiki/Unix_shell) or double-click on the application icon. It does not matter. The Linux kernel handles application launch regardless how we do launch this application.
 
 In this part we will consider the way when we just launch an application from the shell. As you know, the standard way to launch an application from shell is the following: We just launch a [terminal emulator](https://en.wikipedia.org/wiki/Terminal_emulator) application and just write the name of the program and pass or not arguments to our program, for example:
 
@@ -24,7 +24,7 @@ In this part we will consider the way when we just launch an application from th
 
 Let's consider what does occur when we launch an application from the shell, what does shell do when we write program name, what does Linux kernel do etc. But before we will start to consider these interesting things, I want to warn that this book is about the Linux kernel. That's why we will see Linux kernel insides related stuff mostly in this part. We will not consider in details what does shell do, we will not consider complex cases, for example subshells etc.
 
-My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29), so I will consider how do bash shell launches a program. So let's start. The `bash` shell as well as any program that written with [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) programming language starts from the [main](https://en.wikipedia.org/wiki/Entry_point) function. If you will look on the source code of the `bash` shell, you will find the `main` function in the [shell.c](https://github.com/bminor/bash/blob/master/shell.c#L357) source code file. This function makes many different things before the main thread loop of the `bash` started to work. For example this function:
+My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29), so I will consider how do bash shell launches a program. So let's start. The `bash` shell as well as any program that written with [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) programming language starts from the [main](https://en.wikipedia.org/wiki/Entry_point) function. If you will look on the source code of the `bash` shell, you will find the `main` function in the [shell.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/shell.c#L357) source code file. This function makes many different things before the main thread loop of the `bash` started to work. For example this function:
 
 * checks and tries to open `/dev/tty`;
 * check that shell running in debug mode;
@@ -33,7 +33,7 @@ My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29
 * loads `.bashrc`, `.profile` and other configuration files;
 * and many many more.
 
-After all of these operations we can see the call of the `reader_loop` function. This function defined in the [eval.c](https://github.com/bminor/bash/blob/master/eval.c#L67) source code file and represents main thread loop or in other words it reads and executes commands. As the `reader_loop` function made all checks and read the given program name and arguments, it calls the `execute_command` function from the [execute_cmd.c](https://github.com/bminor/bash/blob/master/execute_cmd.c#L378) source code file. The `execute_command` function through the chain of the functions calls:
+After all of these operations we can see the call of the `reader_loop` function. This function defined in the [eval.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/eval.c#L67) source code file and represents main thread loop or in other words it reads and executes commands. As the `reader_loop` function made all checks and read the given program name and arguments, it calls the `execute_command` function from the [execute_cmd.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/execute_cmd.c#L378) source code file. The `execute_command` function through the chain of the functions calls:
 
 ```
 execute_command
@@ -52,7 +52,7 @@ execve (command, args, env);
 The `execve` system call has the following signature:
 
 ```
-int execve(const char *filename, char *const argv [], char *const envp[]);   
+int execve(const char *filename, char *const argv [], char *const envp[]);
 ```
 
 and executes a program by the given filename, with the given arguments and [environment variables](https://en.wikipedia.org/wiki/Environment_variable). This system call is the first in our case and only, for example:
@@ -68,12 +68,12 @@ $ strace uname
 execve("/bin/uname", ["uname"], [/* 62 vars */]) = 0
 ```
 
-So, an user application (`bash` in our case) calls the system call and as we already know the next step is Linux kernel.
+So, a user application (`bash` in our case) calls the system call and as we already know the next step is Linux kernel.
 
 execve system call
 --------------------------------------------------------------------------------
 
-We saw preparation before a system call called by an user application and after a system call handler finished its work in the second [part](/SysCall/linux-syscall-2.md) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and as we already know it takes three arguments:
+We saw preparation before a system call called by a user application and after a system call handler finished its work in the second [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-2) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c) source code file and as we already know it takes three arguments:
 
 ```
 SYSCALL_DEFINE3(execve,
@@ -98,9 +98,9 @@ struct user_arg_ptr envp = { .ptr.native = __envp };
 return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
 ```
 
-The `do_execveat_common` function does main work - it executes a new program. This function takes similar set of arguments, but as you can see it takes five arguments instead of three. The first argument is the file descriptor that represent directory with our application, in our case the `AT_FDCWD` means that the given pathname is interpreted relative to the current working directory of the calling process. The fifth argument is flags. In our case we passed `0` to the `do_execveat_common`. We will check in a next step, so will see it latter.
+The `do_execveat_common` function does main work - it executes a new program. This function takes similar set of arguments, but as you can see it takes five arguments instead of three. The first argument is the file descriptor that represent directory with our application, in our case the `AT_FDCWD` means that the given pathname is interpreted relative to the current working directory of the calling process. The fifth argument is flags. In our case we passed `0` to the `do_execveat_common`. We will check in a next step, so will see it later.
 
-First of all the `do_execveat_common` function checks the `filename` pointer and returns if it is `NULL`. After this we check flags of the current process that limit of running processes is not exceed:
+First of all the `do_execveat_common` function checks the `filename` pointer and returns if it is `NULL`. After this we check flags of the current process that limit of running processes is not exceeded:
 
 ```C
 if (IS_ERR(filename))
@@ -115,7 +115,7 @@ if ((current->flags & PF_NPROC_EXCEEDED) &&
 current->flags &= ~PF_NPROC_EXCEEDED;
 ```
 
-If these two checks were successful we unset `PF_NPROC_EXCEEDED` flag in the flags of the current process to prevent fail of the `execve`. You can see that in the next step we call the `unshare_files` function that defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/master/kernel/fork.c) and unshares the files of the current task and check the result of this function:
+If these two checks were successful we unset `PF_NPROC_EXCEEDED` flag in the flags of the current process to prevent fail of the `execve`. You can see that in the next step we call the `unshare_files` function that defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c) and unshares the files of the current task and check the result of this function:
 
 ```C
 retval = unshare_files(&displaced);
@@ -123,7 +123,7 @@ if (retval)
 	goto out_ret;
 ```
 
-We need to call this function to eliminate potential leak of the execve'd binary's [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). In the next step we start preparation of the `bprm` that represented by the `struct linux_binprm` structure (defined in the [include/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/linux/binfmts.h) header file). The `linux_binprm` structure is used to hold the arguments that are used when loading binaries. For example it contains `vma` field which has `vm_area_struct` type and represents single memory area over a contiguous interval in a given address space where our application will be loaded, `mm` field which is memory descriptor of the binary, pointer to the top of memory and many other different fields.
+We need to call this function to eliminate potential leak of the execve'd binary's [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). In the next step we start preparation of the `bprm` that represented by the `struct linux_binprm` structure (defined in the [include/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/include/linux/binfmts.h) header file). The `linux_binprm` structure is used to hold the arguments that are used when loading binaries. For example it contains `vma` field which has `vm_area_struct` type and represents single memory area over a contiguous interval in a given address space where our application will be loaded, `mm` field which is memory descriptor of the binary, pointer to the top of memory and many other different fields.
 
 First of all we allocate memory for this structure with the `kzalloc` function and check the result of the allocation:
 
@@ -146,7 +146,7 @@ current->in_execve = 1;
 
 Initialization of the `binprm` credentials in other words is initialization of the `cred` structure that stored inside of the `linux_binprm` structure. The `cred` structure contains the security context of a task for example [real uid](https://en.wikipedia.org/wiki/User_identifier#Real_user_ID) of the task, real [guid](https://en.wikipedia.org/wiki/Globally_unique_identifier) of the task, `uid` and `guid` for the [virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system) operations etc. In the next step as we executed preparation of the `bprm` credentials we check that now we can safely execute a program with the call of the `check_unsafe_exec` function and set the current process to the `in_execve` state.
 
-After all of these operations we call the `do_open_execat` function that checks the flags that we passed to the `do_execveat_common` function (remember that we have `0` in the `flags`) and searches and opens executable file on disk, checks that our we will load a binary file from `noexec` mount points (we need to avoid execute a binary from filesystems that do not contain executable binaries like [proc](https://en.wikipedia.org/wiki/Procfs) or [sysfs](https://en.wikipedia.org/wiki/Sysfs)), intializes `file` structure and returns pointer on this structure. Next we can see the call the `sched_exec` after this:
+After all of these operations we call the `do_open_execat` function that checks the flags that we passed to the `do_execveat_common` function (remember that we have `0` in the `flags`) and searches and opens executable file on disk, checks that our we will load a binary file from `noexec` mount points (we need to avoid execute a binary from filesystems that do not contain executable binaries like [proc](https://en.wikipedia.org/wiki/Procfs) or [sysfs](https://en.wikipedia.org/wiki/Sysfs)), initializes `file` structure and returns pointer on this structure. Next we can see the call the `sched_exec` after this:
 
 ```C
 file = do_open_execat(fd, filename, flags);
@@ -161,7 +161,7 @@ The `sched_exec` function is used to determine the least loaded processor that c
 
 After this we need to check [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) of the give executable binary. We try to check does the name of the our binary file starts from the `/` symbol or does the path of the given executable binary is interpreted relative to the current working directory of the calling process or in other words file descriptor is `AT_FDCWD` (read above about this).
 
-If one of these checks is successfull we set the binary parameter filename:
+If one of these checks is successful we set the binary parameter filename:
 
 ```C
 bprm->file = file;
@@ -191,7 +191,7 @@ Otherwise if the filename is empty we set the binary parameter filename to the `
 bprm->interp = bprm->filename;
 ```
 
-Note that we set not only the `bprm->filename` but also `bprm->interp` that will contain name of the program interpreter. For now we just write the same name there, but later it will be updated with the real name of the program interpreter depends on binary format of a program. You can read above that we already prepared `cred` for the `linux_binprm`. The next step is initalization of other fields of the `linux_binprm`.  First of all we call the `bprm_mm_init` function and pass the `bprm` to it:
+Note that we set not only the `bprm->filename` but also `bprm->interp` that will contain name of the program interpreter. For now we just write the same name there, but later it will be updated with the real name of the program interpreter depends on binary format of a program. You can read above that we already prepared `cred` for the `linux_binprm`. The next step is initialization of other fields of the `linux_binprm`.  First of all we call the `bprm_mm_init` function and pass the `bprm` to it:
 
 ```C
 retval = bprm_mm_init(bprm);
@@ -199,9 +199,9 @@ if (retval)
 	goto out_unmark;
 ```
 
-The `bprm_mm_init` defined in the same source code file and as we can understand from the function's name, it makes initialization of the memory descriptor or in other words the `bprm_mm_init` function initializes `mm_struct` structure. This structure defined in the [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/master/include/mm_types.h) header file and represents address space of a process. We will not consider implementation of the `bprm_mm_init` function because we do not know many important stuff related to the Linux kernel memory manager, but we just need to know that this function initializes `mm_struct` and populate it with a temporary stack `vm_area_struct`.
+The `bprm_mm_init` defined in the same source code file and as we can understand from the function's name, it makes initialization of the memory descriptor or in other words the `bprm_mm_init` function initializes `mm_struct` structure. This structure defined in the [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/master/include/linux/mm_types.h) header file and represents address space of a process. We will not consider implementation of the `bprm_mm_init` function because we do not know many important stuff related to the Linux kernel memory manager, but we just need to know that this function initializes `mm_struct` and populate it with a temporary stack `vm_area_struct`.
 
-After this we calculate the count of the command line arguments which are were passed to the our executable binary, the count of the environment variables and set it to the `bprm->argc` and `bprm->envc` respectively:
+After this we calculate the count of the command line arguments which were passed to our executable binary, the count of the environment variables and set it to the `bprm->argc` and `bprm->envc` respectively:
 
 ```C
 bprm->argc = count(argv, MAX_ARG_STRINGS);
@@ -213,7 +213,7 @@ if ((retval = bprm->envc) < 0)
 	goto out;
 ```
 
-As you can see we do this operations with the help of the `count` function that defined in the [same](https://github.com/torvalds/linux/blob/master/fs/exec.c) source code file and calculates the count of strings in the `argv` array. The `MAX_ARG_STRINGS` macro defined in the [include/uapi/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/include/uapi/linux/binfmts.h) header file and as we can understand from the macro's name, it represents maximum number of strings that were passed to the `execve` system call. The value of the `MAX_ARG_STRINGS`:
+As you can see we do this operations with the help of the `count` function that defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c) source code file and calculates the count of strings in the `argv` array. The `MAX_ARG_STRINGS` macro defined in the [include/uapi/linux/binfmts.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/binfmts.h) header file and as we can understand from the macro's name, it represents maximum number of strings that were passed to the `execve` system call. The value of the `MAX_ARG_STRINGS`:
 
 ```C
 #define MAX_ARG_STRINGS 0x7FFFFFFF
@@ -227,7 +227,7 @@ if (retval < 0)
 	goto out;
 ```
 
-fills the `linux_binprm` structure with the `uid` from [inode](https://en.wikipedia.org/wiki/Inode) and read `128` bytes from the binary executable file. We read only first `128` from the executable file because we need to check a type of our executable. We will read the rest of the executable file in the later step. After the preparation of the `linux_bprm` structure we copy the filename of the executable binary file, command line arguments and enviroment variables to the `linux_bprm` with the call of the `copy_strings_kernel` function:
+fills the `linux_binprm` structure with the `uid` from [inode](https://en.wikipedia.org/wiki/Inode) and read `128` bytes from the binary executable file. We read only first `128` from the executable file because we need to check a type of our executable. We will read the rest of the executable file in the later step. After the preparation of the `linux_bprm` structure we copy the filename of the executable binary file, command line arguments and environment variables to the `linux_bprm` with the call of the `copy_strings_kernel` function:
 
 ```C
 retval = copy_strings_kernel(1, &bprm->filename, bprm);
@@ -249,7 +249,7 @@ And set the pointer to the top of new program's stack that we set in the `bprm_m
 bprm->exec = bprm->p;
 ```
 
-The top of the stack will contain the program filename and we store this fileneme tothe `exec` field of the `linux_bprm` structure.
+The top of the stack will contain the program filename and we store this filename to the `exec` field of the `linux_bprm` structure.
 
 Now we have filled `linux_bprm` structure, we call the `exec_binprm` function:
 
@@ -274,17 +274,17 @@ and call the:
 search_binary_handler(bprm);
 ```
 
-function. This function goes through the list of handlers that contains different binary formats. Currently the Linux kernel supports following binary formats:
+function. This function goes through the list of handlers that contains different binary formats. Currently the Linux kernel supports the following binary formats:
 
 * `binfmt_script` - support for interpreted scripts that are starts from the [#!](https://en.wikipedia.org/wiki/Shebang_%28Unix%29) line;
-* `binfmt_misc` - support differnt binary formats, according to runtime configuration of the Linux kernel;
+* `binfmt_misc` - support different binary formats, according to runtime configuration of the Linux kernel;
 * `binfmt_elf` - support [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format;
 * `binfmt_aout` - support [a.out](https://en.wikipedia.org/wiki/A.out) format;
 * `binfmt_flat` - support for [flat](https://en.wikipedia.org/wiki/Binary_file#Structure) format;
 * `binfmt_elf_fdpic` - Support for [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF) binaries;
 * `binfmt_em86` - support for Intel [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) binaries running on [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha) machines.
 
-So, the search-binary_handler tries to call the `load_binary` function and pass `linux_binprm` to it. If the binary handler supports the given executable file format, it starts to prepare the executable binary for execution:
+So, the `search_binary_handler` tries to call the `load_binary` function and pass `linux_binprm` to it. If the binary handler supports the given executable file format, it starts to prepare the executable binary for execution:
 
 ```C
 int search_binary_handler(struct linux_binprm *bprm)
@@ -299,8 +299,8 @@ int search_binary_handler(struct linux_binprm *bprm)
 			return retval;
 		}
 	}
-	
-	return retval;	
+
+	return retval;
 ```
 
 Where the `load_binary` for example for the [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) checks the magic number (each `elf` binary file contains magic number in the header) in the `linux_bprm` buffer (remember that we read first `128` bytes from the executable binary file): and exit if it is not `elf` binary:
@@ -334,7 +334,7 @@ if (!elf_phdata)
 	goto out;
 ```
 
-that describes [segments](https://en.wikipedia.org/wiki/Memory_segmentation). Read the `program interpreter` and libraries that linked with the our executable binary file from disk and load it to memory. The `program interpreter` specified in the `.interp` section of the executable file and as you can read in the part that describes [Linkers](/Misc/linux-misc-3.md) it is - `/lib64/ld-linux-x86-64.so.2` for the `x86_64`. It setups the stack and map `elf` binary into the correct location in memory. It maps the [bss](https://en.wikipedia.org/wiki/.bss) and the [brk](http://man7.org/linux/man-pages/man2/sbrk.2.html) sections and does many many other different things to prepare executable file to execute.
+that describes [segments](https://en.wikipedia.org/wiki/Memory_segmentation). Read the `program interpreter` and libraries that linked with the our executable binary file from disk and load it to memory. The `program interpreter` specified in the `.interp` section of the executable file and as you can read in the part that describes [Linkers](https://0xax.gitbook.io/linux-insides/summary/misc/linux-misc-3) it is - `/lib64/ld-linux-x86-64.so.2` for the `x86_64`. It setups the stack and map `elf` binary into the correct location in memory. It maps the [bss](https://en.wikipedia.org/wiki/.bss) and the [brk](http://man7.org/linux/man-pages/man2/sbrk.2.html) sections and does many many other different things to prepare executable file to execute.
 
 In the end of the execution of the `load_elf_binary` we call the `start_thread` function and pass three arguments to it:
 
@@ -385,20 +385,20 @@ start_thread_common(struct pt_regs *regs, unsigned long new_ip,
 }
 ```
 
-The `start_thread_common` function fills `fs` segment register with zero and `es` and `ds` with the value of the data segment register. After this we set new values to the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter), `cs` segments etc. In the end of the `start_thread_common` function we can see the `force_iret` macro that force a system call return via `iret` instruction. Ok, we prepared new thread to run in userspace and now we can return from the `exec_binprm` and now we are in the `do_execveat_common` again. After the `exec_binprm` will finish its execution we release memory for structures that was allocated before and return.
+The `start_thread_common` function fills `fs` segment register with zero and `es` and `ds` with the value of the data segment register. After this we set new values to the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter), `cs` segments etc. In the end of the `start_thread_common` function we can see the `force_iret` macro that forces a system call return via `iret` instruction. Ok, we prepared new thread to run in userspace and now we can return from the `exec_binprm` and now we are in the `do_execveat_common` again. After the `exec_binprm` will finish its execution we release memory for structures that was allocated before and return.
 
-After we returned from the `execve` system call handler, execution of our program will be started. We can do it, because all context related information already configured for this purpose. As we saw the `execve` system call does not return control to a process, but code, data and other segments of the caller process are just overwritten of the program segments. The exit from our application will be implemented through the `exit` system call.
+After we returned from the `execve` system call handler, execution of our program will be started. We can do it, because all context related information is already configured for this purpose. As we saw the `execve` system call does not return control to a process, but code, data and other segments of the caller process are just overwritten of the program segments. The exit from our application will be implemented through the `exit` system call.
 
-That's all. From this point our programm will be executed.
+That's all. From this point our program will be executed.
 
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the fourth and last part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from an user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run an user program.
+This is the end of the fourth part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from a user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run a user program.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 Links
 --------------------------------------------------------------------------------
@@ -406,7 +406,7 @@ Links
 * [System call](https://en.wikipedia.org/wiki/System_call)
 * [shell](https://en.wikipedia.org/wiki/Unix_shell)
 * [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29)
-* [entry point](https://en.wikipedia.org/wiki/Entry_point) 
+* [entry point](https://en.wikipedia.org/wiki/Entry_point)
 * [C](https://en.wikipedia.org/wiki/C_%28programming_language%29)
 * [environment variables](https://en.wikipedia.org/wiki/Environment_variable)
 * [file descriptor](https://en.wikipedia.org/wiki/File_descriptor)
@@ -420,11 +420,11 @@ Links
 * [#!](https://en.wikipedia.org/wiki/Shebang_%28Unix%29)
 * [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format)
 * [a.out](https://en.wikipedia.org/wiki/A.out)
-* [flat](https://en.wikipedia.org/wiki/Binary_file#Structure) 
+* [flat](https://en.wikipedia.org/wiki/Binary_file#Structure)
 * [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha)
 * [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF)
 * [segments](https://en.wikipedia.org/wiki/Memory_segmentation)
-* [Linkers](/Misc/linux-misc-3.md)
+* [Linkers](https://0xax.gitbook.io/linux-insides/summary/misc/linux-misc-3)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
-* [Previous part](/SysCall/linux-syscall-3.md)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-3)

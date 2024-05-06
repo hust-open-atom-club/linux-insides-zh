@@ -369,7 +369,7 @@ Conclusion
 --------------------------------------------------------------------------------
 
 这是[本章](/Timers/)的第六节，描述了Linux内核中的时钟和时钟管理。上一节中，熟悉了`clockevents`框架。这一节中，继续学习了Linux内核中时钟管理，并且看到了在[x86](https://en.wikipedia.org/wiki/X86)架构中使用的三种不同的时钟源。下一节将是[本章](/Timers/)的最后一节，将看到一些与用户空间有关的事情，即一些与时间有关的[系统调用](https://en.wikipedia.org/wiki/System_call)如何在Linux内核中实现。
-如果有问题或建议，请随时在twitter[0xAX](https://twitter.com/0xAX)上与我联系，给我发[email](anotherworldofworld@gmail.com)或直接创建[issue](https://github.com/0xAX/linux-insides/issues/new)。
+如果有问题或建议，请随时在twitter[0xAX](https://twitter.com/0xAX)上与我联系，给我发[email](mailto:anotherworldofworld@gmail.com)或直接创建[issue](https://github.com/0xAX/linux-insides/issues/new)。
 **请注意，英语不是我的第一语言，我真的很抱歉给你带来的不便。如果你发现任何错误，请给我发送PR到[linux-insides](https://github.com/0xAX/linux-insides)**。
 
 链接

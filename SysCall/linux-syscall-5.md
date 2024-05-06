@@ -383,7 +383,7 @@ if (unlikely(filp == ERR_PTR(-ESTALE)))
 总结
 --------------------------------------------------------------------------------
 
-Linux 内核中关于不同系统调用的实现的第五部分已经完成了。如果你有任何问题, 可通过 twitter 或邮箱与我联系，[@0xAX](https://twitter.com/0xAX)/[email](anotherworldofworld@gmail.com), 或者提交一个 [issue](https://github.com/0xAX/linux-internals/issues/new). 在接下来的部分, 我们将继续深究 Linux 内核中的系统调用并且看看 [read](http://man7.org/linux/man-pages/man2/read.2.html) 系统调用的实现。
+Linux 内核中关于不同系统调用的实现的第五部分已经完成了。如果你有任何问题, 可通过 twitter 或邮箱与我联系，[@0xAX](https://twitter.com/0xAX)/[email](mailto:anotherworldofworld@gmail.com), 或者提交一个 [issue](https://github.com/0xAX/linux-internals/issues/new). 在接下来的部分, 我们将继续深究 Linux 内核中的系统调用并且看看 [read](http://man7.org/linux/man-pages/man2/read.2.html) 系统调用的实现。
 
 **请谅解英语不是我的母语，对于任何不恰当的表述我深感抱歉。如果你发现任何错误，请在 [linux-insides](https://github.com/0xAX/linux-internals) 给我发 PR  。**
 

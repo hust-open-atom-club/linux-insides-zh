@@ -4,22 +4,22 @@ Timers and time management in the Linux kernel. Part 7.
 Time related system calls in the Linux kernel
 --------------------------------------------------------------------------------
 
-This is the seventh and last part [chapter](/Timers/) which describes timers and time management related stuff in the Linux kernel. In the previous [part](/Timers/linux-timers-6.md) we saw some [x86_64](https://en.wikipedia.org/wiki/X86-64) like [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) and [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). Internal time management is interesting part of the Linux kernel, but of course not only the kernel needs in the `time` concept. Our programs need to know time too. In this part, we will consider implementation of some time management related [system calls](https://en.wikipedia.org/wiki/System_call). These system calls are:
+This is the seventh and last part [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/), which describes timers and time management related stuff in the Linux kernel. In the previous [part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-6), we discussed timers in the context of [x86_64](https://en.wikipedia.org/wiki/X86-64): [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) and [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter). Internal time management is an interesting part of the Linux kernel, but of course not only the kernel needs the `time` concept. Our programs also need to know time. In this part, we will consider implementation of some time management related [system calls](https://en.wikipedia.org/wiki/System_call). These system calls are:
 
 * `clock_gettime`;
 * `gettimeofday`;
 * `nanosleep`.
 
-We will start from simple userspace [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) program and see all way from the call of the [standard library](https://en.wikipedia.org/wiki/Standard_library) function to the implementation of certain system call. As each [architecture](https://github.com/torvalds/linux/tree/master/arch) provides its own implementation of certain system call, we will consider only [x86_64](https://en.wikipedia.org/wiki/X86-64) specific implementations of system calls, as this book is related to this architecture.
+We will start from a simple userspace [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) program and see all way from the call of the [standard library](https://en.wikipedia.org/wiki/Standard_library) function to the implementation of certain system calls. As each [architecture](https://github.com/torvalds/linux/tree/master/arch) provides its own implementation of certain system calls, we will consider only [x86_64](https://en.wikipedia.org/wiki/X86-64) specific implementations of system calls, as this book is related to this architecture.
 
-Additionally we will not consider concept of system calls in this part, but only implementations of these three system calls in the Linux kernel. If you are interested in what is it a `system call`, there is special [chapter](/SysCall/) about this.
+Additionally, we will not consider the concept of system calls in this part, but only implementations of these three system calls in the Linux kernel. If you are interested in what is a `system call`, there is a special [chapter](https://0xax.gitbook.io/linux-insides/summary/syscall) about this.
 
-So, let's from the `gettimeofday` system call.
+So, let's start from the `gettimeofday` system call.
 
 Implementation of the `gettimeofday` system call
 --------------------------------------------------------------------------------
 
-As we can understand from the name of the `gettimeofday`, this function returns current time. First of all, let's look on the following simple example:
+As we can understand from the name `gettimeofday`, this function returns the current time. First of all, let's look at the following simple example:
 
 ```C
 #include <time.h>
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
 }
 ```
 
-As you can see, here we call the `gettimeofday` function which takes two parameters: pointer to the `timeval` structure which represents an elapsed tim:
+As you can see, here we call the `gettimeofday` function, which takes two parameters. The first parameter is a pointer to the `timeval` structure, which represents an elapsed time:
 
 ```C
 struct timeval {
@@ -49,7 +49,7 @@ struct timeval {
 };
 ```
 
-The second parameter of the `gettimeofday` function is pointer to the `timezone` structure which represents a timezone. In our example, we pass address of the `timeval time` to the `gettimeofday` function, the Linux kernel fills the given `timeval` structure and returns it back to us. Additionally, we format the time with the `strftime` function to get something more human readable than elapsed microseconds. Let's see on result:
+The second parameter of the `gettimeofday` function is a pointer to the `timezone` structure which represents a timezone. In our example, we pass address of the `timeval time` to the `gettimeofday` function, the Linux kernel fills the given `timeval` structure and returns it back to us. Additionally, we format the time with the `strftime` function to get something more human readable than elapsed microseconds. Let's see the result:
 
 ```C
 ~$ gcc date.c -o date
@@ -57,16 +57,16 @@ The second parameter of the `gettimeofday` function is pointer to the `timezone`
 Current date/time: 03-26-2016/16:42:02
 ```
 
-As you already may know, an userspace application does not call a system call directly from the kernel space. Before the actual system call entry will be called, we call a function from the standard library. In my case it is [glibc](https://en.wikipedia.org/wiki/GNU_C_Library), so I will consider this case. The implementation of the `gettimeofday` function is located in the [sysdeps/unix/sysv/linux/x86/gettimeofday.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86/gettimeofday.c;h=36f7c26ffb0e818709d032c605fec8c4bd22a14e;hb=HEAD) source code file. As you already may know, the `gettimeofday` is not usual system call. It is located in the special area which is called `vDSO` (you can read more about it in the [part](/SysCall/linux-syscall-3.md) which describes this concept).
+As you may already know, a userspace application does not call a system call directly from the kernel space. Before the actual system call entry will be called, we call a function from the standard library. In my case it is [glibc](https://en.wikipedia.org/wiki/GNU_C_Library), so I will consider this case. The implementation of the `gettimeofday` function is located in the [sysdeps/unix/sysv/linux/x86/gettimeofday.c](https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/unix/sysv/linux/x86/gettimeofday.c;h=36f7c26ffb0e818709d032c605fec8c4bd22a14e;hb=HEAD) source code file. As you already may know, the `gettimeofday` is not a usual system call. It is located in the special area which is called `vDSO` (you can read more about it in the [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-3), which describes this concept).
 
-The `glibc` implementation of the `gettimeofday` tries to resolve the given symbol, in our case this symbol is `__vdso_gettimeofday` by the call of the `_dl_vdso_vsym` internal function. If the symbol will not be resolved, it returns `NULL` and we fallback to the call of the usual system call:
+The `glibc` implementation of `gettimeofday` tries to resolve the given symbol; in our case this symbol is `__vdso_gettimeofday` by the call of the `_dl_vdso_vsym` internal function. If the symbol cannot be resolved, it returns `NULL` and we fallback to the call of the usual system call:
 
 ```C
 return (_dl_vdso_vsym ("__vdso_gettimeofday", &linux26)
   ?: (void*) (&__gettimeofday_syscall));
 ```
 
-The `gettimeofday` entry is located in the [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vclock_gettime.c) source code file. As we can see the `gettimeofday` is weak alias of the `__vdso_gettimeofday`:
+The `gettimeofday` entry is located in the [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vclock_gettime.c) source code file. As we can see the `gettimeofday` is a weak alias of the `__vdso_gettimeofday`:
 
 ```C
 int gettimeofday(struct timeval *, struct timezone *)
@@ -105,7 +105,7 @@ notrace static long vdso_fallback_gtod(struct timeval *tv, struct timezone *tz)
 }
 ```
 
-The `do_realtime` function gets the time data from the `vsyscall_gtod_data` structure which is defined in the [arch/x86/include/asm/vgtod.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/vgtod.h#L16) header file and contains mapping of the `timespec` structure and a couple of fields which are related to the current clock source in the system. This function fills the given `timeval` structure with values from the `vsyscall_gtod_data` which contains a time related data which is updated via timer interrupt.
+The `do_realtime` function gets the time data from the `vsyscall_gtod_data` structure which is defined in the [arch/x86/include/asm/vgtod.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/vgtod.h#L16) header file and contains mapping of the `timespec` structure and a couple of fields which are related to the current clock source in the system. This function fills the given `timeval` structure with values from the `vsyscall_gtod_data` which contains a time related data which is updated via timer interrupt.
 
 First of all we try to access the `gtod` or `global time of day` the `vsyscall_gtod_data` structure via the call of the `gtod_read_begin` and will continue to do it until it will be successful:
 
@@ -191,7 +191,7 @@ The `clock_id` maybe one of the following:
 * `CLOCK_PROCESS_CPUTIME_ID` - per-process time consumed by all threads in the process;
 * `CLOCK_THREAD_CPUTIME_ID` - thread-specific clock.
 
-The `clock_gettime` is not usual syscall too, but as the `gettimeofday`, this system call is placed in the `vDSO` area. Entry of this system call is located in the same source code file - [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vdso/vclock_gettime.c)) as for `gettimeofday`.
+The `clock_gettime` is not usual syscall too, but as the `gettimeofday`, this system call is placed in the `vDSO` area. Entry of this system call is located in the same source code file - [arch/x86/entry/vdso/vclock_gettime.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/vdso/vclock_gettime.c)) as for `gettimeofday`.
 
 The Implementation of the `clock_gettime` depends on the clock id. If we have passed the `CLOCK_REALTIME` clock id, the `do_realtime` function will be called:
 
@@ -308,7 +308,7 @@ To call system call, we need put the `req` to the `rdi` register, and the `rem` 
   INTERNAL_SYSCALL_NCS (__NR_##name, err, nr, ##args)
 ```
 
-which takes the name of the system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL` macro just expands to the call of the `INTERNAL_SYSCALL_NCS` macro, which prepares arguments of system call (puts them into the processor registers in correct order), executes `syscall` instruction and returns the result:
+which takes the name of the system call, storage for possible error during execution of system call, number of the system call (all `x86_64` system calls you can find in the [system calls table](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl)) and arguments of certain system call. The `INTERNAL_SYSCALL` macro just expands to the call of the `INTERNAL_SYSCALL_NCS` macro, which prepares arguments of system call (puts them into the processor registers in correct order), executes `syscall` instruction and returns the result:
 
 ```C
 # define INTERNAL_SYSCALL_NCS(name, err, nr, args...)      \
@@ -338,7 +338,7 @@ The `LOAD_ARGS_##nr` macro calls the `LOAD_ARGS_N` macro where the `N` is number
 ...
 ```
 
-After the `syscall` instruction will be executed, the [context switch](https://en.wikipedia.org/wiki/Context_switch) will occur and the kernel will transfer execution to the system call handler. The system call handler for the `nanosleep` system call is located in the [kernel/time/hrtimer.c](https://github.com/torvalds/linux/blob/master/kernel/time/hrtimer.c) source code file and defined with the `SYSCALL_DEFINE2` macro helper:
+After the `syscall` instruction will be executed, the [context switch](https://en.wikipedia.org/wiki/Context_switch) will occur and the kernel will transfer execution to the system call handler. The system call handler for the `nanosleep` system call is located in the [kernel/time/hrtimer.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/hrtimer.c) source code file and defined with the `SYSCALL_DEFINE2` macro helper:
 
 ```C
 SYSCALL_DEFINE2(nanosleep, struct timespec __user *, rqtp,
@@ -356,7 +356,7 @@ SYSCALL_DEFINE2(nanosleep, struct timespec __user *, rqtp,
 }
 ```
 
-More about the `SYSCALL_DEFINE2` macro you may read in the [chapter](/SysCall/) about system calls. If we look at the implementation of the `nanosleep` system call, first of all we will see that it starts from the call of the `copy_from_user` function. This function copies the given data from the userspace to kernelspace. In our case we copy timeout value to sleep to the kernelspace `timespec` structure and check that the given `timespec` is valid by the call of the `timesc_valid` function:
+More about the `SYSCALL_DEFINE2` macro you may read in the [chapter](https://0xax.gitbook.io/linux-insides/summary/syscall) about system calls. If we look at the implementation of the `nanosleep` system call, first of all we will see that it starts from the call of the `copy_from_user` function. This function copies the given data from the userspace to kernelspace. In our case we copy timeout value to sleep to the kernelspace `timespec` structure and check that the given `timespec` is valid by the call of the `timesc_valid` function:
 
 ```C
 static inline bool timespec_valid(const struct timespec *ts)
@@ -369,7 +369,7 @@ static inline bool timespec_valid(const struct timespec *ts)
 }
 ```
 
-which just checks that the given `timespec` does not represent date before `1970` and nanoseconds does not overflow `1` second. The `nanosleep` function ends with the call of the `hrtimer_nanosleep` function from the same source code file. The `hrtimer_nanosleep` function creates a [timer](/Timers/linux-timers-4.md) and calls the `do_nanosleep` function. The `do_nanosleep` does main job for us. This function provides loop:
+which just checks that the given `timespec` does not represent date before `1970` and nanoseconds does not overflow `1` second. The `nanosleep` function ends with the call of the `hrtimer_nanosleep` function from the same source code file. The `hrtimer_nanosleep` function creates a [timer](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-4) and calls the `do_nanosleep` function. The `do_nanosleep` does main job for us. This function provides loop:
 
 ```C
 do {
@@ -392,11 +392,11 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the seventh part of the [chapter](/Timers/) that describes timers and timer management related stuff in the Linux kernel. In the previous part we saw [x86_64](https://en.wikipedia.org/wiki/X86-64) specific clock sources. As I wrote in the beginning, this part is the last part of this chapter. We saw important time management related concepts like `clocksource` and `clockevents` frameworks, `jiffies` counter and etc., in this chpater. Of course this does not cover all of the time management in the Linux kernel. Many parts of this mostly related to the scheduling which we will see in other chapter. 
+This is the end of the seventh part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/timers/) that describes timers and timer management related stuff in the Linux kernel. In the previous part we saw [x86_64](https://en.wikipedia.org/wiki/X86-64) specific clock sources. As I wrote in the beginning, this part is the last part of this chapter. We saw important time management related concepts like `clocksource` and `clockevents` frameworks, `jiffies` counter and etc., in this chpater. Of course this does not cover all of the time management in the Linux kernel. Many parts of this mostly related to the scheduling which we will see in other chapter. 
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/hust-open-atom-club/linux-insides-zh).**
+**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
 
 Links
@@ -412,10 +412,10 @@ Links
 * [register](https://en.wikipedia.org/wiki/Processor_register)
 * [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf)
 * [context switch](https://en.wikipedia.org/wiki/Context_switch)
-* [Introduction to timers in the Linux kernel](/Timers/linux-timers-4.md)
+* [Introduction to timers in the Linux kernel](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-4)
 * [uptime](https://en.wikipedia.org/wiki/Uptime#Using_uptime)
-* [system calls table for x86_64](https://github.com/torvalds/linux/blob/master/arch/x86/entry/syscalls/syscall_64.tbl)
+* [system calls table for x86_64](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/entry/syscalls/syscall_64.tbl)
 * [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
 * [Time Stamp Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [previous part](/Timers/linux-timers-6.md)
+* [previous part](https://0xax.gitbook.io/linux-insides/summary/timers/linux-timers-6)
