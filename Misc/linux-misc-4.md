@@ -119,7 +119,7 @@ $ ./sum
 x + y + z = 6
 ```
 
-好的，直到现在所有事情看起来听挺好。你可能已经知道一个特殊的[系统调用](https://zh.wikipedia.org/wiki/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8)家族 - [exec*](http://man7.org/linux/man-pages/man3/execl.3.html) 系统调用。正如我们从帮助手册中读到的：
+好的，直到现在所有事情看起来听挺好。你可能已经知道一个特殊的[系统调用](https://zh.wikipedia.org/wiki/%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8)家族 - [exec*](https://man7.org/linux/man-pages/man3/execl.3.html) 系统调用。正如我们从帮助手册中读到的：
 
 > The exec() family of functions replaces the current process image with a new process image.
 
@@ -368,7 +368,7 @@ $ readelf -e test | grep fini
   [15] .fini             PROGBITS         0000000000400504  00000504
 ```
 
-这两个将被替换为二进制镜像的开始和结尾，包含分别被称为构造函数和析构函数的例程。这些例程的要点是在程序的真正代码执行之前，做一些初始化/终结，像全局变量如 [errno](http://man7.org/linux/man-pages/man3/errno.3.html) ，为系统例程分配和释放内存等等。
+这两个将被替换为二进制镜像的开始和结尾，包含分别被称为构造函数和析构函数的例程。这些例程的要点是在程序的真正代码执行之前，做一些初始化/终结，像全局变量如 [errno](https://man7.org/linux/man-pages/man3/errno.3.html) ，为系统例程分配和释放内存等等。
 
 你可能可以从这些函数的名字推测，这两个会在 `main` 函数之前和之后被调用。`.init` 和 `.fini` 段的定义在 `/lib64/crti.o` 中。如果我们添加这个目标文件：
 

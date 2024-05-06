@@ -150,7 +150,7 @@ if (kmemcheck_active(regs))
 	prefetchw(&mm->mmap_sem);
 ```
 
-After this we can see the call of the `prefetchw` which executes instruction with the same [name](http://www.felixcloutier.com/x86/PREFETCHW.html) which fetches [X86_FEATURE_3DNOW](https://en.wikipedia.org/?title=3DNow!) to get exclusive [cache line](https://en.wikipedia.org/wiki/CPU_cache). The main purpose of prefetching is to hide the latency of a memory access. In the next step we check that we got page fault not in the kernel space with the following condition:
+After this we can see the call of the `prefetchw` which executes instruction with the same [name](https://www.felixcloutier.com/x86/PREFETCHW.html) which fetches [X86_FEATURE_3DNOW](https://en.wikipedia.org/?title=3DNow!) to get exclusive [cache line](https://en.wikipedia.org/wiki/CPU_cache). The main purpose of prefetching is to hide the latency of a memory access. In the next step we check that we got page fault not in the kernel space with the following condition:
 
 ```C
 if (unlikely(fault_in_kernel_space(address))) {
@@ -444,7 +444,7 @@ Links
 * [RCU](https://en.wikipedia.org/wiki/Read-copy-update)
 * [this_cpu_* operations](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/this_cpu_ops.txt)
 * [kmemcheck](https://www.kernel.org/doc/Documentation/kmemcheck.txt)
-* [prefetchw](http://www.felixcloutier.com/x86/PREFETCHW.html)
+* [prefetchw](https://www.felixcloutier.com/x86/PREFETCHW.html)
 * [3DNow](https://en.wikipedia.org/?title=3DNow!)
 * [CPU caches](https://en.wikipedia.org/wiki/CPU_cache)
 * [VFS](https://en.wikipedia.org/wiki/Virtual_file_system)

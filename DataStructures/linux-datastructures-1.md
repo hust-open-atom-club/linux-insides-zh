@@ -14,7 +14,7 @@ struct list_head {
 };
 ```
 
-你可能注意到这和你以前见过的双向链表的实现方法是不同的。举个例子来说，在 [glib](http://www.gnu.org/software/libc/)  库里是这样实现的：
+你可能注意到这和你以前见过的双向链表的实现方法是不同的。举个例子来说，在 [glib](https://www.gnu.org/software/libc/)  库里是这样实现的：
 
 ```C
 struct GList {

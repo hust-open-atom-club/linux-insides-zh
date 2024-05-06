@@ -34,7 +34,7 @@ module_exit(serial21285_exit);
         void cleanup_module(void) __attribute__((alias(#exitfn)));
 ```
 
-并被 [initcall](http://kernelnewbies.org/Documents/InitcallMechanism) 函数调用：
+并被 [initcall](https://kernelnewbies.org/Documents/InitcallMechanism) 函数调用：
 
 * `early_initcall`
 * `pure_initcall`
@@ -456,7 +456,7 @@ native_irq_return_iret:
 * [StrongARM** SA-110/21285 评估板](http://netwinder.osuosl.org/pub/netwinder/docs/intel/datashts/27813501.pdf)
 * [IRQ](https://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [模块](https://en.wikipedia.org/wiki/Loadable_kernel_module)
-* [initcall](http://kernelnewbies.org/Documents/InitcallMechanism)
+* [initcall](https://kernelnewbies.org/Documents/InitcallMechanism)
 * [uart](https://en.wikipedia.org/wiki/Universal_asynchronous_receiver/transmitter) 
 * [ISA](https://en.wikipedia.org/wiki/Industry_Standard_Architecture) 
 * [内存管理](/MM/)

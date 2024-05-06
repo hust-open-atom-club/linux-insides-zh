@@ -443,7 +443,7 @@ if (next)
 	prefetchw(next);
 ```
 
-如果新节点被添加，我们从通过使用 [PREFETCHW](http://www.felixcloutier.com/x86/PREFETCHW.html) 指令指出下一个队列实体的内存中预先去除缓存线（cache line）。以优化为目的我们现在预先载入这个指针。我们只是改变了队列的头而这意味着有将要到来的 `MCS` 进行解锁操作并且下一个实体会被创建。
+如果新节点被添加，我们从通过使用 [PREFETCHW](https://www.felixcloutier.com/x86/PREFETCHW.html) 指令指出下一个队列实体的内存中预先去除缓存线（cache line）。以优化为目的我们现在预先载入这个指针。我们只是改变了队列的头而这意味着有将要到来的 `MCS` 进行解锁操作并且下一个实体会被创建。
 
 是的，从这个时刻我们在`队列`的头部。但是在我们有能力获取锁之前，我们需要至少等待两个事件：当前锁的拥有者释放锁和第二个线程处于`待定`位也获取锁：
 
@@ -478,6 +478,6 @@ smp_cond_acquire(!((val = atomic_read(&lock->val)) & _Q_LOCKED_PENDING_MASK));
 * [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
 * [NOP instruction](https://en.wikipedia.org/wiki/NOP)
-* [PREFETCHW instruction](http://www.felixcloutier.com/x86/PREFETCHW.html)
+* [PREFETCHW instruction](https://www.felixcloutier.com/x86/PREFETCHW.html)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [Previous part](/SyncPrim/linux-sync-1.md)

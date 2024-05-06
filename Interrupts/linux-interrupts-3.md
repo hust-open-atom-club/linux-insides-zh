@@ -214,7 +214,7 @@ But unfortunately this method does not give a 100% guarantee. As described in th
 > stack but before we executed SWAPGS, then the only safe way to check
 > for GS is the slower method: the RDMSR.
 
-In other words for example `NMI` could happen inside the critical section of a [swapgs](http://www.felixcloutier.com/x86/SWAPGS.html) instruction. In this way we should check value of the `MSR_GS_BASE` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register) which stores pointer to the start of per-cpu area. So to check if we did come from userspace or not, we should to check value of the `MSR_GS_BASE` model specific register and if it is negative we came from kernel space, in other way we came from userspace:
+In other words for example `NMI` could happen inside the critical section of a [swapgs](https://www.felixcloutier.com/x86/SWAPGS.html) instruction. In this way we should check value of the `MSR_GS_BASE` [model specific register](https://en.wikipedia.org/wiki/Model-specific_register) which stores pointer to the start of per-cpu area. So to check if we did come from userspace or not, we should to check value of the `MSR_GS_BASE` model specific register and if it is negative we came from kernel space, in other way we came from userspace:
 
 ```assembly
 movl $MSR_GS_BASE,%ecx
@@ -351,7 +351,7 @@ testb	$3, CS+8(%rsp)
 jz	.Lerror_kernelspace
 ```
 
-because we may have potentially fault if as described in documentation truncated `%RIP` was reported. Anyway, in both cases the [SWAPGS](http://www.felixcloutier.com/x86/SWAPGS.html) instruction will be executed and values from `MSR_KERNEL_GS_BASE` and `MSR_GS_BASE` will be swapped. From this moment the `%gs` register will point to the base address of kernel structures. So, the `SWAPGS` instruction is called and it was main point of the `error_entry` routing.
+because we may have potentially fault if as described in documentation truncated `%RIP` was reported. Anyway, in both cases the [SWAPGS](https://www.felixcloutier.com/x86/SWAPGS.html) instruction will be executed and values from `MSR_KERNEL_GS_BASE` and `MSR_GS_BASE` will be swapped. From this moment the `%gs` register will point to the base address of kernel structures. So, the `SWAPGS` instruction is called and it was main point of the `error_entry` routing.
 
 Now we can back to the `idtentry` macro. We may see following assembler code after the call of `error_entry`:
 
@@ -515,7 +515,7 @@ Links
 * [CFI directives](https://sourceware.org/binutils/docs/as/CFI-directives.html)
 * [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29)
 * [system call](http://en.wikipedia.org/wiki/System_call)
-* [swapgs](http://www.felixcloutier.com/x86/SWAPGS.html)
+* [swapgs](https://www.felixcloutier.com/x86/SWAPGS.html)
 * [SIGTRAP](https://en.wikipedia.org/wiki/Unix_signal#SIGTRAP)
 * [Per-CPU variables](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)
 * [kgdb](https://en.wikipedia.org/wiki/KGDB)

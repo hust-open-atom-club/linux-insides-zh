@@ -340,7 +340,7 @@ static inline void bitmap_zero(unsigned long *dst, unsigned int nbits)
 	(__builtin_constant_p(nbits) && (nbits) <= BITS_PER_LONG)
 ```
 
-正如我们可以看到的，它检查 `nbits` 是否为编译期已知常量，并且其值不超过 `BITS_PER_LONG` 或 `64`。如果位数目没有超过一个 `long` 变量的位数，我们可以仅仅设置为 0。在其他情况，我们需要计算有多少个需要填充位数组的 `long` 变量并且使用 [memset](http://man7.org/linux/man-pages/man3/memset.3.html) 进行填充。
+正如我们可以看到的，它检查 `nbits` 是否为编译期已知常量，并且其值不超过 `BITS_PER_LONG` 或 `64`。如果位数目没有超过一个 `long` 变量的位数，我们可以仅仅设置为 0。在其他情况，我们需要计算有多少个需要填充位数组的 `long` 变量并且使用 [memset](https://man7.org/linux/man-pages/man3/memset.3.html) 进行填充。
 
 `bitmap_fill` 函数的实现和 `biramp_zero` 函数很相似，除了我们需要在给定的位数组中填写 `0xff` 或 `0b11111111`：
 
@@ -356,7 +356,7 @@ static inline void bitmap_fill(unsigned long *dst, unsigned int nbits)
 }
 ```
 
-除了 `bitmap_fill` 和 `bitmap_zero`，[include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 头文件也提供了和 `bitmap_zero` 很相似的 `bitmap_copy`，只是仅仅使用 [memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html) 而不是  [memset](http://man7.org/linux/man-pages/man3/memset.3.html) 这点差异而已。它也提供了位数组的按位操作，像 `bitmap_and`, `bitmap_or`, `bitamp_xor`等等。我们不会探讨这些函数的实现了，因为如果你理解了本部分的所有内容，这些函数的实现是很容易理解的。无论如何，如果你对这些函数是如何实现的感兴趣，你可以打开并研究 [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 头文件。
+除了 `bitmap_fill` 和 `bitmap_zero`，[include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 头文件也提供了和 `bitmap_zero` 很相似的 `bitmap_copy`，只是仅仅使用 [memcpy](https://man7.org/linux/man-pages/man3/memcpy.3.html) 而不是  [memset](https://man7.org/linux/man-pages/man3/memset.3.html) 这点差异而已。它也提供了位数组的按位操作，像 `bitmap_and`, `bitmap_or`, `bitamp_xor`等等。我们不会探讨这些函数的实现了，因为如果你理解了本部分的所有内容，这些函数的实现是很容易理解的。无论如何，如果你对这些函数是如何实现的感兴趣，你可以打开并研究 [include/linux/bitmap.h](https://github.com/torvalds/linux/blob/master/include/linux/bitmap.h) 头文件。
 
 本部分到此为止。
 
@@ -381,8 +381,8 @@ static inline void bitmap_fill(unsigned long *dst, unsigned int nbits)
 * [bt instruction](http://x86.renejeschke.de/html/file_module_x86_id_22.html)
 * [sbb instruction](http://x86.renejeschke.de/html/file_module_x86_id_286.html)
 * [btc instruction](http://x86.renejeschke.de/html/file_module_x86_id_23.html)
-* [man memcpy](http://man7.org/linux/man-pages/man3/memcpy.3.html) 
-* [man memset](http://man7.org/linux/man-pages/man3/memset.3.html)
+* [man memcpy](https://man7.org/linux/man-pages/man3/memcpy.3.html) 
+* [man memset](https://man7.org/linux/man-pages/man3/memset.3.html)
 * [CF](https://en.wikipedia.org/wiki/FLAGS_register)
 * [inline assembler](https://en.wikipedia.org/wiki/Inline_assembler)
 * [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)

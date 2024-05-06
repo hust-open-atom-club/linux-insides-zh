@@ -97,7 +97,7 @@ void arch_task_cache_init(void)
 }
 ```
 
-The `arch_task_cache_init` does initialization of the architecture-specific caches. In our case it is `x86_64`, so as we can see, the `arch_task_cache_init` allocates cache for the `task_xstate` which represents [FPU](http://en.wikipedia.org/wiki/Floating-point_unit) state and sets up offsets and sizes of all extended states in [xsave](http://www.felixcloutier.com/x86/XSAVES.html) area with the call of the `setup_xstate_comp` function. After the `arch_task_cache_init` we calculate default maximum number of threads with the:
+The `arch_task_cache_init` does initialization of the architecture-specific caches. In our case it is `x86_64`, so as we can see, the `arch_task_cache_init` allocates cache for the `task_xstate` which represents [FPU](http://en.wikipedia.org/wiki/Floating-point_unit) state and sets up offsets and sizes of all extended states in [xsave](https://www.felixcloutier.com/x86/XSAVES.html) area with the call of the `setup_xstate_comp` function. After the `arch_task_cache_init` we calculate default maximum number of threads with the:
 
 ```C
 set_max_threads(MAX_THREADS);
@@ -338,7 +338,7 @@ More about it will be in the chapter about scheduler. So for this moment the `st
 wait_for_completion(&kthreadd_done);
 ```
 
-After this we set `gfp_allowed_mask` to `__GFP_BITS_MASK` which means that system is already running, set allowed [cpus/mems](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to all CPUs and [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) nodes with the `set_mems_allowed` function, allow `init` process to run on any CPU with the `set_cpus_allowed_ptr`, set pid for the `cad` or `Ctrl-Alt-Delete`, do preparation for booting of the other CPUs with the call of the `smp_prepare_cpus`, call early [initcalls](http://kernelnewbies.org/Documents/InitcallMechanism) with the `do_pre_smp_initcalls`, initialize `SMP` with the `smp_init` and initialize [lockup_detector](https://www.kernel.org/doc/Documentation/lockup-watchdogs.txt) with the call of the `lockup_detector_init` and initialize scheduler with the `sched_init_smp`.
+After this we set `gfp_allowed_mask` to `__GFP_BITS_MASK` which means that system is already running, set allowed [cpus/mems](https://www.kernel.org/doc/Documentation/cgroups/cpusets.txt) to all CPUs and [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) nodes with the `set_mems_allowed` function, allow `init` process to run on any CPU with the `set_cpus_allowed_ptr`, set pid for the `cad` or `Ctrl-Alt-Delete`, do preparation for booting of the other CPUs with the call of the `smp_prepare_cpus`, call early [initcalls](https://kernelnewbies.org/Documents/InitcallMechanism) with the `do_pre_smp_initcalls`, initialize `SMP` with the `smp_init` and initialize [lockup_detector](https://www.kernel.org/doc/Documentation/lockup-watchdogs.txt) with the call of the `lockup_detector_init` and initialize scheduler with the `sched_init_smp`.
 
 After this we can see the call of the following functions - `do_basic_setup`. Before we will call the `do_basic_setup` function, our kernel already initialized for this moment. As comment says:
 
@@ -450,7 +450,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [SLAB](http://en.wikipedia.org/wiki/Slab_allocation)
-* [xsave](http://www.felixcloutier.com/x86/XSAVES.html)
+* [xsave](https://www.felixcloutier.com/x86/XSAVES.html)
 * [FPU](http://en.wikipedia.org/wiki/Floating-point_unit)
 * [Documentation/security/credentials.txt](https://github.com/torvalds/linux/blob/master/Documentation/security/credentials.rst)
 * [Documentation/x86/x86_64/mm](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/Documentation/x86/x86_64/mm.txt)

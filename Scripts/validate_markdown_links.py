@@ -17,7 +17,7 @@ def check_live_url(url):
 
     result = False
     try:
-        ret = urlopen(url, timeout=2)
+        ret = urlopen(url, timeout=5)
         result = (ret.code == 200)
     except HTTPError as e:
         print(e, file=sys.stderr)
@@ -55,9 +55,9 @@ def main(path):
             print("markdown file name: " + url)
             continue
         if check_live_url(url):
-            print(url)
+            print(url, ": Success")
         else:
-            print(url, file=sys.stderr)
+            print(url, ": Failure")
 
 
 if __name__ == '__main__':
@@ -65,4 +65,4 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         main(sys.argv[1])
     else:
-        print("Choose one path as argument one")
+        print("Choose one path as the argument")

@@ -16,7 +16,7 @@ Linux 启动
 ------------------------
 
 * [8250 UART Programming](http://en.wikibooks.org/wiki/Serial_Programming/8250_UART_Programming#UART_Registers)
-* [Serial ports on OSDEV](http://wiki.osdev.org/Serial_Ports)
+* [Serial ports on OSDEV](https://wiki.osdev.org/Serial_Ports)
 
 VGA
 ------------------------

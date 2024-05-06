@@ -485,5 +485,5 @@ Happy Hacking!
 * [Linux kernel mail listing archive](https://lkml.org/)
 * [Linux kernel coding style guide](https://github.com/torvalds/linux/blob/master/Documentation/CodingStyle)
 * [How to Get Your Change Into the Linux Kernel](https://github.com/torvalds/linux/blob/master/Documentation/SubmittingPatches)
-* [Linux Kernel Newbies](http://kernelnewbies.org/)
+* [Linux Kernel Newbies](https://kernelnewbies.org/)
 * [plain text](https://en.wikipedia.org/wiki/Plain_text)
