@@ -4,7 +4,7 @@
 深入Linux内核中的中断和异常处理
 --------------------------------------------------------------------------------
 
-在 [上一章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)中我们学习了中断和异常处理的一些理论知识，在本章节中，我们将深入了解Linux内核源代码中关于中断与异常处理的部分。之前的章节中主要从理论方面描述了Linux中断和异常处理的相关内容，而在本章节中，我们将直接深入Linux源代码来了解相关内容。像其他章节一样，我们将从启动早期的代码开始阅读。本章将不会像 [Linux内核启动过程](http://0xax.gitbooks.io/linux-insides/content/Booting/index.html)中那样从Linux内核启动的 [最开始](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292)几行代码读起，而是从与中断与异常处理相关的最早期代码开始阅读，了解Linux内核源代码中所有与中断和异常处理相关的代码。
+在 [上一章节](/Interrupts/linux-interrupts-1.md)中我们学习了中断和异常处理的一些理论知识，在本章节中，我们将深入了解Linux内核源代码中关于中断与异常处理的部分。之前的章节中主要从理论方面描述了Linux中断和异常处理的相关内容，而在本章节中，我们将直接深入Linux源代码来了解相关内容。像其他章节一样，我们将从启动早期的代码开始阅读。本章将不会像 [Linux内核启动过程](/Booting/)中那样从Linux内核启动的 [最开始](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/header.S#L292)几行代码读起，而是从与中断与异常处理相关的最早期代码开始阅读，了解Linux内核源代码中所有与中断和异常处理相关的代码。
 
 如果你读过本书的前面部分，你可能记得Linux内核中关于 `x86_64`架构的代码中与中断相关的最早期代码出现在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c)文件中，该文件首次配置了 [中断描述符表](http://en.wikipedia.org/wiki/Interrupt_descriptor_table)(IDT)。对IDT的配置在`go_to_protected_mode`函数中完成，该函数首先调用了 `setup_idt`函数配置了IDT，然后将处理器的工作模式切换为 [保护模式](http://en.wikipedia.org/wiki/Protected_mode):
 
@@ -38,7 +38,7 @@ struct gdt_ptr {
 
 显然，在此处的 `gdt_prt`不是代表 `GDTR`寄存器而是代表 `IDTR`寄存器，因为我们将其设置到了中断描述符表中。之所以在Linux内核代码中没有`idt_ptr`结构体，是因为其与`gdt_prt`具有相同的结构而仅仅是名字不同，因此没必要定义两个重复的数据结构。可以看到，内核在此处并没有填充`Interrupt Descriptor Table`，这是因为此刻处理任何中断或异常还为时尚早，因此我们仅仅以`NULL`来填充`IDT`。
 
-在设置完 [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT)和其他一些东西以后，内核开始进入保护模式，这部分代码在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S)中实现，你可以在描述如何进入保护模式的 [章节](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-3.html)中了解到更多细节。
+在设置完 [Interrupt descriptor table](http://en.wikipedia.org/wiki/Interrupt_descriptor_table), [Global Descriptor Table](http://en.wikipedia.org/wiki/GDT)和其他一些东西以后，内核开始进入保护模式，这部分代码在 [arch/x86/boot/pmjump.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pmjump.S)中实现，你可以在描述如何进入保护模式的 [章节](/Booting/linux-bootstrap-3.md)中了解到更多细节。
 
 在最早的章节中我们已经了解到进入保护模式的代码位于 `boot_params.hdr.code32_start`，你可以在 [arch/x86/boot/pm.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/pm.c)的末尾看到内核将入口函数指针和启动参数 `boot_params`传递给了 `protected_mode_jump`函数:
 
@@ -100,7 +100,7 @@ else
 endif
 ```
 
-现在我们从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S)跳入了 `startup_32`函数，在这个函数中没有与中断处理相关的内容。`startup_32`函数包含了进入 [long mode](http://en.wikipedia.org/wiki/Long_mode)之前必须的准备工作，并直接进入了 `long mode`。 `long mode`的入口位于 `startup_64`函数中，在这个函数中完成了 [内核解压](http://0xax.gitbooks.io/linux-insides/content/Booting/linux-bootstrap-5.html)的准备工作。内核解压的代码位于 [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c)中的 `decompress_kernel`函数中。内核解压完成以后，程序跳入 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)中的 `startup_64`函数。在这个函数中，我们开始构建 `identity-mapped pages`，并在之后检查 [NX](http://en.wikipedia.org/wiki/NX_bit)位，配置 `Extended Feature Enable Register`(见链接)，使用 `lgdt`指令更新早期的`Global Descriptor Table`，在此之后我们还需要使用如下代码来设置 `gs`寄存器:
+现在我们从 [arch/x86/boot/compressed/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/head_64.S)跳入了 `startup_32`函数，在这个函数中没有与中断处理相关的内容。`startup_32`函数包含了进入 [long mode](http://en.wikipedia.org/wiki/Long_mode)之前必须的准备工作，并直接进入了 `long mode`。 `long mode`的入口位于 `startup_64`函数中，在这个函数中完成了 [内核解压](/Booting/linux-bootstrap-5.md)的准备工作。内核解压的代码位于 [arch/x86/boot/compressed/misc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/boot/compressed/misc.c)中的 `decompress_kernel`函数中。内核解压完成以后，程序跳入 [arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)中的 `startup_64`函数。在这个函数中，我们开始构建 `identity-mapped pages`，并在之后检查 [NX](http://en.wikipedia.org/wiki/NX_bit)位，配置 `Extended Feature Enable Register`(见链接)，使用 `lgdt`指令更新早期的`Global Descriptor Table`，在此之后我们还需要使用如下代码来设置 `gs`寄存器:
 
 ```assembly
 movl    $MSR_GS_BASE,%ecx
@@ -109,7 +109,7 @@ movl    initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-这段代码在之前的 [章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)中也出现过。请注意代码最后的 `wrmsr`指令，这个指令将 `edx:eax`寄存器指定的地址中的数据写入到由 `ecx`寄存器指定的 [model specific register](http://en.wikipedia.org/wiki/Model-specific_register)中。由代码可以看到，`ecx`中的值是 `$MSR_GS_BASE`，该值在 [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/msr-index.h)中定义:
+这段代码在之前的 [章节](/Interrupts/linux-interrupts-1.md)中也出现过。请注意代码最后的 `wrmsr`指令，这个指令将 `edx:eax`寄存器指定的地址中的数据写入到由 `ecx`寄存器指定的 [model specific register](http://en.wikipedia.org/wiki/Model-specific_register)中。由代码可以看到，`ecx`中的值是 `$MSR_GS_BASE`，该值在 [arch/x86/include/uapi/asm/msr-index.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/uapi/asm/msr-index.h)中定义:
 
 ```C
 #define MSR_GS_BASE             0xc0000101
@@ -183,7 +183,7 @@ movl    initial_gs+4(%rip),%edx
 wrmsr
 ```
 
-此时我们通过 `MSR_GS_BASE`指定了一个平台相关寄存器，然后将 `initial_gs`的64-bit地址放到了 `edx:eax`段寄存器中，然后执行 `wrmsr`指令，将 `init_per_cpu__irq_stack_union`的基地址放入了 `gs`寄存器，而这个地址将是中断栈的栈底地址。在此之后我们将进入 `x86_64_start_kernel`函数的C语言代码中，此函数定义在 [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c)。在这个函数中，我们将完成最后的准备工作，之后就要进入到与平台无关的通用内核代码。如果你读过前文的 [早期中断和异常处理](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html)章节，你可能记得其中之一的工作就是将中断服务程序入口地址填写到早期 `Interrupt Descriptor Table`中。
+此时我们通过 `MSR_GS_BASE`指定了一个平台相关寄存器，然后将 `initial_gs`的64-bit地址放到了 `edx:eax`段寄存器中，然后执行 `wrmsr`指令，将 `init_per_cpu__irq_stack_union`的基地址放入了 `gs`寄存器，而这个地址将是中断栈的栈底地址。在此之后我们将进入 `x86_64_start_kernel`函数的C语言代码中，此函数定义在 [arch/x86/kernel/head64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head64.c)。在这个函数中，我们将完成最后的准备工作，之后就要进入到与平台无关的通用内核代码。如果你读过前文的 [早期中断和异常处理](/Initialization/linux-initialization-2.md)章节，你可能记得其中之一的工作就是将中断服务程序入口地址填写到早期 `Interrupt Descriptor Table`中。
 
 ```C
 for (i = 0; i < NUM_EXCEPTION_VECTORS; i++)
@@ -223,12 +223,12 @@ ENTRY(early_idt_handler_array)
 ENDPROC(early_idt_handler_common)
 ```
 
-这里使用 `.rept NUM_EXCEPTION_VECTORS` 填充了 `early_idt_handler_array` ，其中也包含了 `early_make_pgtable` 的中断服务函数入口(关于该中断服务函数的实现请参考章节 [早期的中断和异常控制](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-2.html))。现在我们完成了所有`x86-64`平台相关的代码，即将进入通用内核代码中。当然，我们之后还会在 `setup_arch` 函数中重新回到平台相关代码，但这已经是 `x86_64` 平台早期代码的最后部分。
+这里使用 `.rept NUM_EXCEPTION_VECTORS` 填充了 `early_idt_handler_array` ，其中也包含了 `early_make_pgtable` 的中断服务函数入口(关于该中断服务函数的实现请参考章节 [早期的中断和异常控制](/Initialization/linux-initialization-2.md))。现在我们完成了所有`x86-64`平台相关的代码，即将进入通用内核代码中。当然，我们之后还会在 `setup_arch` 函数中重新回到平台相关代码，但这已经是 `x86_64` 平台早期代码的最后部分。
 
 为中断堆栈设置`Stack Canary`值
 -------------------------------------------------------------------------------
 
-正如之前阅读过的关于Linux内核初始化过程的[章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html)，在[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)之后的下一步进入到了[init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c)中的函数体最大的函数 `start_kernel` 中。这个函数将完成内核以[pid](https://en.wikipedia.org/wiki/Process_identifier) - `1`运行第一个`init`进程
+正如之前阅读过的关于Linux内核初始化过程的[章节](/Initialization/)，在[arch/x86/kernel/head_64.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/head_64.S)之后的下一步进入到了[init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c)中的函数体最大的函数 `start_kernel` 中。这个函数将完成内核以[pid](https://en.wikipedia.org/wiki/Process_identifier) - `1`运行第一个`init`进程
 之前的所有初始化工作。其中，与中断和异常处理相关的第一件事是调用 `boot_init_stack_canary` 函数。这个函数通过设置[canary](http://en.wikipedia.org/wiki/Stack_buffer_overflow#Stack_canaries)值来防止中断栈溢出。前面我们已经看过了 `boot_init_stack_canary` 实现的一些细节，现在我们更进一步地认识它。你可以在[arch/x86/include/asm/stackprotector.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/stackprotector.h)中找到这个函数的实现，它的实现取决于 `CONFIG_CC_STACKPROTECTOR` 这个内核配置选项。如果该选项没有置位，那该函数将是一个空函数:
 
 ```C
@@ -243,7 +243,7 @@ static inline void boot_init_stack_canary(void)
 #endif
 ```
 
-如果设置了内核配置选项 `CONFIG_CC_STACKPROTECTOR` ，那么函数`boot_init_stack_canary` 一开始将检查联合体 `irq_stack_union` 的状态，这个联合体代表了[per-cpu](http://0xax.gitbooks.io/linux-insides/content/Concepts/per-cpu.html)中断栈，其与 `stack_canary` 值中间有40个字节的 `offset` :
+如果设置了内核配置选项 `CONFIG_CC_STACKPROTECTOR` ，那么函数`boot_init_stack_canary` 一开始将检查联合体 `irq_stack_union` 的状态，这个联合体代表了[per-cpu](/Concepts/linux-cpu-1.md)中断栈，其与 `stack_canary` 值中间有40个字节的 `offset` :
 
 ```C
 #ifdef CONFIG_X86_64
@@ -251,7 +251,7 @@ static inline void boot_init_stack_canary(void)
 #endif
 ```
 
-如之前[章节](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)所描述， `irq_stack_union` 联合体的定义如下:
+如之前[章节](/Interrupts/linux-interrupts-1.md)所描述， `irq_stack_union` 联合体的定义如下:
 
 ```C
 union irq_stack_union {
@@ -264,7 +264,7 @@ union irq_stack_union {
 };
 ```
 
-以上定义位于文件[arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h)。总所周知，[C语言](http://en.wikipedia.org/wiki/C_%28programming_language%29)中的[联合体](http://en.wikipedia.org/wiki/Union_type)是一种描述多个数据结构共用一片内存的数据结构。可以看到，第一个数据域 `gs_base` 大小为40 bytes，代表了 `irq_stack` 的栈底。因此，当我们使用 `BUILD_BUG_ON` 对该表达式进行检查时结果应为成功。(关于 `BUILD_BUG_ON` 宏的详细信息可见[Linux内核初始化过程章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-1.html))。
+以上定义位于文件[arch/x86/include/asm/processor.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/processor.h)。总所周知，[C语言](http://en.wikipedia.org/wiki/C_%28programming_language%29)中的[联合体](http://en.wikipedia.org/wiki/Union_type)是一种描述多个数据结构共用一片内存的数据结构。可以看到，第一个数据域 `gs_base` 大小为40 bytes，代表了 `irq_stack` 的栈底。因此，当我们使用 `BUILD_BUG_ON` 对该表达式进行检查时结果应为成功。(关于 `BUILD_BUG_ON` 宏的详细信息可见[Linux内核初始化过程章节](/Initialization/linux-initialization-1.md))。
 
 紧接着我们使用随机数和[时戳计数器](http://en.wikipedia.org/wiki/Time_Stamp_Counter)计算新的 `canary` 值:
 
@@ -398,7 +398,7 @@ WARN_ON_ONCE(cpu_online(this_cpu) && irqs_disabled()
 内核初始化过程中的早期 `trap` 初始化
 --------------------------------------------------------------------------------
 
-在 `local_disable_irq` 之后执行的函数是 `boot_cpu_init` 和 `page_address_init`，但这两个函数与中断和异常处理无关(更多与这两个函数有关的信息请阅读内核初始化过程[章节](http://0xax.gitbooks.io/linux-insides/content/Initialization/index.html))。接下来是 `setup_arch` 函数。你可能还有印象，这个函数定义在[arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel.setup.c) 文件中，并完成了很多[架构相关的初始化工作](http://0xax.gitbooks.io/linux-insides/content/Initialization/linux-initialization-4.html)。在 `setup_arch` 函数中与中断相关的第一个函数是 `early_trap_init` 函数，该函数定义于 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) ，其用许多对程序入口填充了中断描述符表 `Interrupt Descriptor Table` :
+在 `local_disable_irq` 之后执行的函数是 `boot_cpu_init` 和 `page_address_init`，但这两个函数与中断和异常处理无关(更多与这两个函数有关的信息请阅读内核初始化过程[章节](/Initialization/))。接下来是 `setup_arch` 函数。你可能还有印象，这个函数定义在[arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel.setup.c) 文件中，并完成了很多[架构相关的初始化工作](/Initialization/linux-initialization-4.md)。在 `setup_arch` 函数中与中断相关的第一个函数是 `early_trap_init` 函数，该函数定义于 [arch/x86/kernel/traps.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/traps.c) ，其用许多对程序入口填充了中断描述符表 `Interrupt Descriptor Table` :
 
 ```C
 void __init early_trap_init(void)
@@ -428,7 +428,7 @@ static inline void set_intr_gate_ist(int n, void *addr, unsigned ist)
 }
 ```
 
-该函数首先检查了参数 `n` 即[中断向量编号](http://en.wikipedia.org/wiki/Interrupt_vector_table) 是否不大于 `0xff` 或 255。之前的 [章节] (http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html) 中提到过，中断的向量号必须处于 0 到 255 的闭区间。然后调用了 `_set_gate` 函数将中断门设置到了 `IDT` 表中:
+该函数首先检查了参数 `n` 即[中断向量编号](http://en.wikipedia.org/wiki/Interrupt_vector_table) 是否不大于 `0xff` 或 255。之前的 [章节](/Interrupts/linux-interrupts-1.md) 中提到过，中断的向量号必须处于 0 到 255 的闭区间。然后调用了 `_set_gate` 函数将中断门设置到了 `IDT` 表中:
 
 ```C
 static inline void _set_gate(int gate, unsigned type, void *addr,
@@ -540,4 +540,4 @@ set_system_intr_gate_ist(X86_TRAP_BP, &int3, DEBUG_STACK);
 * [vector number](http://en.wikipedia.org/wiki/Interrupt_vector_table)
 * [Interrupt Stack Table](https://www.kernel.org/doc/Documentation/x86/x86_64/kernel-stacks)
 * [Privilege level](http://en.wikipedia.org/wiki/Privilege_level)
-* [Previous part](http://0xax.gitbooks.io/linux-insides/content/interrupts/interrupts-1.html)
+* [Previous part](/Interrupts/linux-interrupts-1.md)
