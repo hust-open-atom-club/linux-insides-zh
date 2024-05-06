@@ -4,16 +4,16 @@ Synchronization primitives in the Linux kernel. Part 5.
 Introduction
 --------------------------------------------------------------------------------
 
-This is the fifth part of the [chapter](/SyncPrim/) which describes synchronization primitives in the Linux kernel and in the previous parts we finished to consider different types [spinlocks](https://en.wikipedia.org/wiki/Spinlock), [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) and [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) synchronization primitives. We will continue to learn [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) in this part and start to consider special type of synchronization primitives - [readers–writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock).
+This is the fifth part of the [chapter](h/SyncPrim/) which describes synchronization primitives in the Linux kernel and in the previous parts we finished to consider different types [spinlocks](https://en.wikipedia.org/wiki/Spinlock), [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) and [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) synchronization primitives. We will continue to learn [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) in this part and start to consider special type of synchronization primitives - [readers–writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock).
 
-The first synchronization primitive of this type will be already familiar for us - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). As in all previous parts of this [book](/), before we will consider implementation of the `reader/writer semaphores` in the Linux kernel, we will start from the theoretical side and will try to understand what is the difference between `reader/writer semaphores` and `normal semaphores`.
+The first synchronization primitive of this type will be already familiar for us - [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29). As in all previous parts of this [book](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md), before we will consider implementation of the `reader/writer semaphores` in the Linux kernel, we will start from the theoretical side and will try to understand what is the difference between `reader/writer semaphores` and `normal semaphores`.
 
 So, let's start.
 
 Reader/Writer semaphore
 --------------------------------------------------------------------------------
 
-Actually there are two types of operations may be performed on the data. We may read data and make changes in data. Two fundamental operations - `read` and `write`. Usually (but not always), `read` operation is performed more often than `write` operation. In this case, it would be logical to we may lock data in such way, that some processes may read locked data in one time, on condition that no one will not change the data. The [readers/writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) allows us to get this lock.
+Actually there are two types of operations may be performed on the data. We may read data and make changes in data. Two fundamental operations - `read` and `write`. Usually (but not always), `read` operation is performed more often than `write` operation. In this case, it would be logical to lock data in such way, that some processes may read locked data in one time, on condition that no one will not change the data. The [readers/writer lock](https://en.wikipedia.org/wiki/Readers%E2%80%93writer_lock) allows us to get this lock.
 
 When a process which wants to write something into data, all other `writer` and `reader` processes will be blocked until the process which acquired a lock, will not release it. When a process reads data, other processes which want to read the same data too, will not be locked and will be able to do this. As you may guess, implementation of the `reader/writer semaphore` is based on the implementation of the `normal semaphore`. We already familiar with the [semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29) synchronization primitive from the third [part](/SyncPrim/linux-sync-3.md) of this chapter. From the theoretical side everything looks pretty simple. Let's look how `reader/writer semaphore` is represented in the Linux kernel.
 
@@ -27,7 +27,7 @@ struct semaphore {
 };
 ```
 
-structure. If you will look in the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file, you will find definition of the `rw_semaphore` structure which represents `reader/writer semaphore` in the Linux kernel. Let's look at the definition of this structure:
+structure. If you will look in the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/rwsem.h) header file, you will find definition of the `rw_semaphore` structure which represents `reader/writer semaphore` in the Linux kernel. Let's look at the definition of this structure:
 
 ```C
 #ifdef CONFIG_RWSEM_GENERIC_SPINLOCK
@@ -47,7 +47,7 @@ struct rw_semaphore {
 };
 ```
 
-Before we will consider fields of the `rw_semaphore` structure, we may notice, that declaration of the `rw_semaphore` structure depends on the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration option. This option is disabled for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture by default. We can be sure in this by looking at the corresponding kernel configuration file. In our case, this configuration file is - [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/um/Kconfig):
+Before we will consider fields of the `rw_semaphore` structure, we may notice, that declaration of the `rw_semaphore` structure depends on the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration option. This option is disabled for the [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture by default. We can be sure in this by looking at the corresponding kernel configuration file. In our case, this configuration file is - [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/um/Kconfig):
 
 ```
 config RWSEM_XCHGADD_ALGORITHM
@@ -57,9 +57,9 @@ config RWSEM_GENERIC_SPINLOCK
 	def_bool !RWSEM_XCHGADD_ALGORITHM
 ```
 
-So, as this [book](https://0xax.gitbooks.io/linux-insides/content) describes only [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture related stuff, we will skip the case when the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration is enabled and consider definition of the `rw_semaphore` structure only from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file.
+So, as this [book](/) describes only [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture related stuff, we will skip the case when the `CONFIG_RWSEM_GENERIC_SPINLOCK` kernel configuration is enabled and consider definition of the `rw_semaphore` structure only from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/rwsem.h) header file.
 
-If we will take a look at the definition of the `rw_semaphore` structure, we will notice that first three fields are the same that in the `semaphore` structure. It contains `count` field which represents amount of available resources, the `wait_list` field which represents [doubly linked list](https://0xax.gitbooks.io/linux-insides/content/DataStructures/dlist.html) of processes which are waiting to acquire a lock and `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) for protection of this list. Notice that `rw_semaphore.count` field is `long` type unlike the same field in the `semaphore` structure.
+If we will take a look at the definition of the `rw_semaphore` structure, we will notice that first three fields are the same that in the `semaphore` structure. It contains `count` field which represents amount of available resources, the `wait_list` field which represents [doubly linked list](/DataStructures/linux-datastructures-1.md) of processes which are waiting to acquire a lock and `wait_lock` [spinlock](https://en.wikipedia.org/wiki/Spinlock) for protection of this list. Notice that `rw_semaphore.count` field is `long` type unlike the same field in the `semaphore` structure.
 
 The `count` field of a `rw_semaphore` structure may have following values:
 
@@ -70,7 +70,7 @@ The `count` field of a `rw_semaphore` structure may have following values:
 * `0xffffffff00000000` - represents situation when there are readers or writers are queued, but no one is active or is in the process of acquire of a lock;
 * `0xfffffffe00000001` - a writer is active or attempting to acquire a lock and waiters are in queue.
 
-So, besides the `count` field, all of these fields are similar to fields of the `semaphore` structure. Last three fields depend on the two configuration options of the Linux kernel: the `CONFIG_RWSEM_SPIN_ON_OWNER` and `CONFIG_DEBUG_LOCK_ALLOC`. The first two fields may be familiar us by declaration of the [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) structure from the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). The first `osq` field represents [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) spinner for `optimistic spinning` and the second represents process which is current owner of a lock.
+So, besides the `count` field, all of these fields are similar to fields of the `semaphore` structure. Last three fields depend on the two configuration options of the Linux kernel: the `CONFIG_RWSEM_SPIN_ON_OWNER` and `CONFIG_DEBUG_LOCK_ALLOC`. The first two fields may be familiar us by declaration of the [mutex](https://en.wikipedia.org/wiki/Mutual_exclusion) structure from the [previous part](/SyncPrim/linux-sync-4.md). The first `osq` field represents [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) spinner for `optimistic spinning` and the second represents process which is current owner of a lock.
 
 The last field of the `rw_semaphore` structure is - `dep_map` - debugging related, and as I already wrote in previous parts, we will skip debugging related stuff in this chapter.
 
@@ -79,14 +79,14 @@ That's all. Now we know a little about what is it `reader/writer lock` in genera
 Reader/Writer semaphore API
 --------------------------------------------------------------------------------
 
-So, we know a little about `reader/writer semaphores` from theoretical side, let's look on its implementation in the Linux kernel. All `reader/writer semaphores` related [API](https://en.wikipedia.org/wiki/Application_programming_interface) is located in the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file.
+So, we know a little about `reader/writer semaphores` from theoretical side, let's look on its implementation in the Linux kernel. All `reader/writer semaphores` related [API](https://en.wikipedia.org/wiki/Application_programming_interface) is located in the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/rwsem.h) header file.
 
-As always Before we will consider an [API](https://en.wikipedia.org/wiki/Application_programming_interface) of the `reader/writer semaphore` mechanism in the Linux kernel, we need to know how to initialize the `rw_semaphore` structure. As we already saw in previous parts of this [chapter](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/index.html), all [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) may be initialized in two ways:
+As always, before we consider an [API](https://en.wikipedia.org/wiki/Application_programming_interface) of the `reader/writer semaphore` mechanism in the Linux kernel, we need to know how to initialize the `rw_semaphore` structure. As we already saw in previous parts of this [chapter](/SyncPrim/), all [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) may be initialized in two ways:
 
 * `statically`;
 * `dynamically`.
 
-And `reader/writer semaphore` is not an exception. First of all, let's take a look at the first approach. We may initialize `rw_semaphore` structure with the help of the `DECLARE_RWSEM` macro in compile time. This macro is defined in the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file and looks:
+And `reader/writer semaphore` is not an exception. First of all, let's take a look at the first approach. We may initialize `rw_semaphore` structure with the help of the `DECLARE_RWSEM` macro in compile time. This macro is defined in the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/rwsem.h) header file and looks:
 
 ```C
 #define DECLARE_RWSEM(name) \
@@ -103,10 +103,10 @@ As we may see, the `DECLARE_RWSEM` macro just expands to the definition of the `
         .wait_lock = __RAW_SPIN_LOCK_UNLOCKED(name.wait_lock)  \
          __RWSEM_OPT_INIT(name)                                \
          __RWSEM_DEP_MAP_INIT(name)
-} 
+}
 ```
 
-and expands to the initialization of fields of `rw_semaphore` structure. First of all we initialize `count` field of the `rw_semaphore` structure to the `unlocked` state with `RWSEM_UNLOCKED_VALUE` macro from the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/rwsem.h) architecture specific header file:
+and expands to the initialization of fields of `rw_semaphore` structure. First of all we initialize `count` field of the `rw_semaphore` structure to the `unlocked` state with `RWSEM_UNLOCKED_VALUE` macro from the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/rwsem.h) architecture specific header file:
 
 ```C
 #define RWSEM_UNLOCKED_VALUE            0x00000000L
@@ -124,7 +124,7 @@ After this we initialize list of a lock waiters with the empty linked list and [
 
 As we may see, the `__RWSEM_OPT_INIT` macro initializes the [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) lock with `unlocked` state and initial `owner` of a lock with `NULL`. From this moment, a `rw_semaphore` structure will be initialized in a compile time and may be used for data protection.
 
-The second way to initialize a `rw_semaphore` structure is `dynamically` or use the `init_rwsem` macro from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/master/include/linux/rwsem.h) header file. This macro declares an instance of the `lock_class_key` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel and to the call of the `__init_rwsem` function with the given `reader/writer semaphore`:
+The second way to initialize a `rw_semaphore` structure is `dynamically` or use the `init_rwsem` macro from the [include/linux/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/rwsem.h) header file. This macro declares an instance of the `lock_class_key` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel and to the call of the `__init_rwsem` function with the given `reader/writer semaphore`:
 
 ```C
 #define init_rwsem(sem)                         \
@@ -135,7 +135,7 @@ do {                                                            \
 } while (0)
 ```
 
-If you will start definition of the `__init_rwsem` function, you will notice that there are couple of source code files which contain it. As you may guess, sometimes we need to initialize additional fields of the `rw_semaphore` structure, like the `osq` and `owner`. But sometimes not. All of this depends on some kernel configuration options. If we will look at the [kernel/locking/Makefile](https://github.com/torvalds/linux/blob/master/kernel/locking/Makefile) makefile, we will see following lines:
+If you will start definition of the `__init_rwsem` function, you will notice that there are couple of source code files which contain it. As you may guess, sometimes we need to initialize additional fields of the `rw_semaphore` structure, like the `osq` and `owner`. But sometimes not. All of this depends on some kernel configuration options. If we will look at the [kernel/locking/Makefile](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/Makefile) makefile, we will see following lines:
 
 ```Makefile
 obj-$(CONFIG_RWSEM_GENERIC_SPINLOCK) += rwsem-spinlock.o
@@ -149,7 +149,7 @@ config RWSEM_XCHGADD_ALGORITHM
 	def_bool 64BIT
 ```
 
-in the [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/master/arch/x86/um/Kconfig) kernel configuration file. In this case, implementation of the `__init_rwsem` function will be located in the [kernel/locking/rwsem-xadd.c](https://github.com/torvalds/linux/blob/master/locking/rwsem-xadd.c) source code file for us. Let's take a look at this function:
+in the [arch/x86/um/Kconfig](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/um/Kconfig) kernel configuration file. In this case, implementation of the `__init_rwsem` function will be located in the [kernel/locking/rwsem.c](https://github.com/torvalds/linux/blob/master/kernel/locking/rwsem.c) source code file for us. Let's take a look at this function:
 
 ```C
 void __init_rwsem(struct rw_semaphore *sem, const char *name,
@@ -180,7 +180,7 @@ So, from now we are able to initialize a `reader/writer semaphore` let's look at
 * `void up_read(struct rw_semaphore *sem)` - release a read lock;
 * `void up_write(struct rw_semaphore *sem)` - release a write lock;
 
-Let's start as always from the locking. First of all let's consider implementation of the `down_write` function which executes a try of acquiring of a lock for `write`. This function is [kernel/locking/rwsem.c](https://github.com/torvalds/linux/blob/master/kernel/locking/rwsem.c) source code file and starts from the call of the macro from the [include/linux/kernel.h](https://github.com/torvalds/linux/blob/master/include/linux/kernel.h) header file:
+Let's start as always from the locking. First of all let's consider implementation of the `down_write` function which executes a try of acquiring of a lock for `write`. This function is [kernel/locking/rwsem.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/rwsem.c) source code file and starts from the call of the macro from the [include/linux/kernel.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/kernel.h) header file:
 
 ```C
 void __sched down_write(struct rw_semaphore *sem)
@@ -193,9 +193,9 @@ void __sched down_write(struct rw_semaphore *sem)
 }
 ```
 
-We already met the `might_sleep` macro in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). In short words, Implementation of the `might_sleep` macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. As this macro is mostly for debugging purpose we will skip it and will go ahead. Additionally we will skip the next macro from the `down_read` function - `rwsem_acquire` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel, because this is topic of other part.
+We already met the `might_sleep` macro in the [previous part](/SyncPrim/linux-sync-4.md). In short, implementation of the `might_sleep` macro depends on the `CONFIG_DEBUG_ATOMIC_SLEEP` kernel configuration option and if this option is enabled, this macro just prints a stack trace if it was executed in [atomic](https://en.wikipedia.org/wiki/Linearizability) context. As this macro is mostly for debugging purpose we will skip it and will go ahead. Additionally we will skip the next macro from the `down_read` function - `rwsem_acquire` which is related to the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt) of the Linux kernel, because this is topic of other part.
 
-The only two things that remained in the `down_write` function is the call of the `LOCK_CONTENDED` macro which is defined in the [include/linux/lockdep.h](https://github.com/torvalds/linux/blob/master/include/linux/lockdep.h) header file and setting of owner of a lock with the `rwsem_set_owner` function which sets owner to currently running process:
+The only two things that remained in the `down_write` function is the call of the `LOCK_CONTENDED` macro which is defined in the [include/linux/lockdep.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/lockdep.h) header file and setting of owner of a lock with the `rwsem_set_owner` function which sets owner to currently running process:
 
 ```C
 static inline void rwsem_set_owner(struct rw_semaphore *sem)
@@ -211,7 +211,7 @@ As you already may guess, the `LOCK_CONTENDED` macro does all job for us. Let's 
         lock(_lock)
 ```
 
-As we may see it just calls the `lock` function which is third parameter of the `LOCK_CONTENDED` macro with the given `rw_semaphore`. In our case the third parameter of the `LOCK_CONTENDED` macro is the `__down_write` function which is architecture specific function and located in the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/rwsem.h) header file. Let's look at the implementation of the `__down_write` function:
+As we may see it just calls the `lock` function which is third parameter of the `LOCK_CONTENDED` macro with the given `rw_semaphore`. In our case the third parameter of the `LOCK_CONTENDED` macro is the `__down_write` function which is architecture specific function and located in the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/rwsem.h) header file. Let's look at the implementation of the `__down_write` function:
 
 ```C
 static inline void __down_write(struct rw_semaphore *sem)
@@ -240,7 +240,7 @@ static inline void __down_write_nested(struct rw_semaphore *sem, int subclass)
 }
 ```
 
-As for other synchronization primitives which we saw in this chapter, usually `lock/unlock` functions consists only from an [inline assembly](https://0xax.gitbooks.io/linux-insides/content/Theory/asm.html) statement. As we may see, in our case the same for `__down_write_nested` function. Let's try to understand what does this function do. The first line of our assembly statement is just a comment, let's skip it. The second like contains `LOCK_PREFIX` which will be expanded to the [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction as we already know. The next [xadd](http://x86.renejeschke.de/html/file_module_x86_id_327.html) instruction executes `add` and `exchange` operations. In other words, `xadd` instruction adds value of the `RWSEM_ACTIVE_WRITE_BIAS`:
+As for other synchronization primitives which we saw in this chapter, usually `lock/unlock` functions consists only from an [inline assembly](/Theory/linux-theory-3.md) statement. As we may see, in our case the same for `__down_write_nested` function. Let's try to understand what does this function do. The first line of our assembly statement is just a comment, let's skip it. The second like contains `LOCK_PREFIX` which will be expanded to the [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html) instruction as we already know. The next [xadd](http://x86.renejeschke.de/html/file_module_x86_id_327.html) instruction executes `add` and `exchange` operations. In other words, `xadd` instruction adds value of the `RWSEM_ACTIVE_WRITE_BIAS`:
 
 ```C
 #define RWSEM_ACTIVE_WRITE_BIAS         (RWSEM_WAITING_BIAS + RWSEM_ACTIVE_BIAS)
@@ -249,7 +249,7 @@ As for other synchronization primitives which we saw in this chapter, usually `l
 #define RWSEM_ACTIVE_BIAS               0x00000001L
 ```
 
-or `0xffffffff00000001` to the `count` of the given `reader/writer semaphore` and returns previous value of it. After this we check the active mask in the `rw_semaphore->count`. If it was zero before, this means that there were no-one writer before, so we acquired a lock. In other way we call the `call_rwsem_down_write_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/master/arch/x86/lib/rwsem.S) assembly file. The the `call_rwsem_down_write_failed` function just calls the `rwsem_down_write_failed` function from the [kernel/locking/rwsem-xadd.c](https://github.com/torvalds/linux/blob/master/locking/rwsem-xadd.c) source code file anticipatorily save general purpose registers:
+or `0xffffffff00000001` to the `count` of the given `reader/writer semaphore` and returns previous value of it. After this we check the active mask in the `rw_semaphore->count`. If it was zero before, this means that there were no-one writer before, so we acquired a lock. In other way we call the `call_rwsem_down_write_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/rwsem.S) assembly file. The `call_rwsem_down_write_failed` function just calls the `rwsem_down_write_failed` function from the [kernel/locking/rwsem-xadd.c](https://github.com/torvalds/linux/blob/master/kernel/locking/rwsem.c) source code file anticipatorily save general purpose registers:
 
 ```assembly
 ENTRY(call_rwsem_down_write_failed)
@@ -276,7 +276,7 @@ struct rw_semaphore __sched *rwsem_down_write_failed(struct rw_semaphore *sem)
 }
 ```
 
-with the `-RWSEM_ACTIVE_WRITE_BIAS` value. The `rwsem_atomic_update` function is defined in the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/rwsem.h) header file and implement exchange and add logic:
+with the `-RWSEM_ACTIVE_WRITE_BIAS` value. The `rwsem_atomic_update` function is defined in the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/rwsem.h) header file and implement exchange and add logic:
 
 ```C
 static inline long rwsem_atomic_update(long delta, struct rw_semaphore *sem)
@@ -292,7 +292,7 @@ if (rwsem_optimistic_spin(sem))
       return sem;
 ```
 
-We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spinning` is disabled, a process will be added to the and marked as waiting for write:
+We will skip implementation of the `rwsem_optimistic_spin` function, as it is similar on the `mutex_optimistic_spin` function which we saw in the [previous part](/SyncPrim/linux-sync-4.md). In short words we check existence other tasks ready to run that have higher priority in the `rwsem_optimistic_spin` function. If there are such tasks, the process will be added to the [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf) `waitqueue` and start to spin in the loop until a lock will be able to be acquired. If `optimistic spinning` is disabled, a process will be added to the `wait_list` and marked as waiting for write:
 
 ```C
 waiter.task = current;
@@ -325,7 +325,7 @@ while (true) {
 }
 ```
 
-I will skip explanation of this loop as we already met similar functional in the [previous part](https://0xax.gitbooks.io/linux-insides/content/SyncPrim/sync-4.html).
+I will skip explanation of this loop as we already met similar functional in the [previous part](/SyncPrim/linux-sync-4.md).
 
 That's all. From this moment, our `writer` process will acquire or not acquire a lock depends on the value of the `rw_semaphore->count` field. Now if we will look at the implementation of the `down_read` function which executes a try of acquiring of a lock. We will see similar actions which we saw in the `down_write` function. This function calls different debugging and lock validator related functions/macros:
 
@@ -356,9 +356,9 @@ static inline void __down_read(struct rw_semaphore *sem)
 }
 ```
 
-which increments value of the given `rw_semaphore->count` and call the `call_rwsem_down_read_failed` if this value is negative. In other way we jump at the label `1:` and exit. After this `read` lock will be successfully acquired. Notice that we check a sign of the `count` value as it may be negative, because as you may remember most significant [word](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29) of the `rw_semaphore->count` contains negated number of active writers.
+which increments value of the given `rw_semaphore->count` and calls the `call_rwsem_down_read_failed` if this value is negative. In other way we jump at the label `1:` and exit. After this `read` lock will be successfully acquired. Notice that we check a sign of the `count` value as it may be negative, because as you may remember most significant [word](https://en.wikipedia.org/wiki/Word_%28computer_architecture%29) of the `rw_semaphore->count` contains negated number of active writers.
 
-Let's consider case when a process wants to acquire a lock for `read` operation, but it is already locked. In this case the `call_rwsem_down_read_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/master/arch/x86/lib/rwsem.S)  assembly file will be called. If you will look at the implementation of this function, you will notice that it does the same that `call_rwsem_down_read_failed` function does. Except it calls the `rwsem_down_read_failed` function instead of `rwsem_dow_write_failed`. Now let's consider implementation of the `rwsem_down_read_failed` function. It starts from the adding a process to the `wait queue` and updating of value of the `rw_semaphore->counter`:
+Let's consider case when a process wants to acquire a lock for `read` operation, but it is already locked. In this case the `call_rwsem_down_read_failed` function from the [arch/x86/lib/rwsem.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/lib/rwsem.S)  assembly file will be called. If you will look at the implementation of this function, you will notice that it does the same that `call_rwsem_down_write_failed` function does. Except it calls the `rwsem_down_read_failed` function instead of `rwsem_down_write_failed`. Now let's consider implementation of the `rwsem_down_read_failed` function. It starts from the adding a process to the `wait queue` and updating of value of the `rw_semaphore->counter`:
 
 ```C
 long adjustment = -RWSEM_ACTIVE_READ_BIAS;
@@ -375,7 +375,7 @@ count = rwsem_atomic_update(adjustment, sem);
 
 Notice that if the `wait queue` was empty before we clear the `rw_semaphore->counter` and undo `read` bias in other way. At the next step we check that there are no active locks and we are first in the `wait queue` we need to join currently active `reader` processes. In other way we go to sleep until a lock will not be able to acquired.
 
-That's all. Now we know how `reader` and `writer` processes will behave in different cases during a lock acquisition. Now let's take a short look at `unlock` operations. The `up_read` and `up_write` functions allows us to unlock a `reader` or `writer` lock. First of all let's take a look at the implementation of the `up_write` function which is defined in the [kernel/locking/rwsem.c](https://github.com/torvalds/linux/blob/master/kernel/locking/rwsem.c) source code file:
+That's all. Now we know how `reader` and `writer` processes will behave in different cases during a lock acquisition. Now let's take a short look at `unlock` operations. The `up_read` and `up_write` functions allows us to unlock a `reader` or `writer` lock. First of all let's take a look at the implementation of the `up_write` function which is defined in the [kernel/locking/rwsem.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/locking/rwsem.c) source code file:
 
 ```C
 void up_write(struct rw_semaphore *sem)
@@ -396,7 +396,7 @@ static inline void rwsem_clear_owner(struct rw_semaphore *sem)
 }
 ```
 
-The `__up_write` function does all job of unlocking of the lock. The `_up_write` is architecture-specific function, so for our case it will be located in the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/master/arch/x86/include/asm/rwsem.h) source code file. If we will take a look at the implementation of this function, we will see that it does almost the same that `__down_write` function, but conversely. Instead of adding of the `RWSEM_ACTIVE_WRITE_BIAS` to the `count`, we subtract the same value and check the `sign` of the previous value.
+The `__up_write` function does all job of unlocking of the lock. The `_up_write` is architecture-specific function, so for our case it will be located in the [arch/x86/include/asm/rwsem.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/rwsem.h) source code file. If we will take a look at the implementation of this function, we will see that it does almost the same that `__down_write` function, but conversely. Instead of adding of the `RWSEM_ACTIVE_WRITE_BIAS` to the `count`, we subtract the same value and check the `sign` of the previous value.
 
 If the previous value of the `rw_semaphore->count` is not negative, a writer process released a lock and now it may be acquired by someone else. In other case, the `rw_semaphore->count` will contain negative values. This means that there is at least one `writer` in a wait queue. In this case the `call_rwsem_wake` function will be called. This function acts like similar functions which we already saw above. It store general purpose registers at the stack for preserving and call the `rwsem_wake` function.
 
@@ -409,7 +409,7 @@ Conclusion
 
 This is the end of the fifth part of the [synchronization primitives](https://en.wikipedia.org/wiki/Synchronization_%28computer_science%29) chapter in the Linux kernel. In this part we met with special type of `semaphore` - `readers/writer` semaphore which provides access to data for multiply process to read or for one process to writer. In the next part we will continue to dive into synchronization primitives in the Linux kernel.
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
@@ -422,7 +422,7 @@ Links
 * [Semaphore](https://en.wikipedia.org/wiki/Semaphore_%28programming%29)
 * [Mutex](https://en.wikipedia.org/wiki/Mutual_exclusion)
 * [x86_64 architecture](https://en.wikipedia.org/wiki/X86-64)
-* [Doubly linked list](/DataStructures/linux-datastructures-1.md)
+* [Doubly linked list](/Datastructures/linux-datastructures-1.md)
 * [MCS lock](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
 * [API](https://en.wikipedia.org/wiki/Application_programming_interface)
 * [Linux kernel lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
@@ -430,4 +430,4 @@ Links
 * [Inline assembly](/Theory/linux-theory-3.md)
 * [XADD instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
 * [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
-* [Previous part](/SyncPrim/linux-sync-4.md)
+* [Previous part](/Syncprim/linux-sync-4.md)
