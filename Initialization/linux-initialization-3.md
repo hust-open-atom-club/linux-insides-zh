@@ -417,7 +417,7 @@ start_kernel()
 
 本书的第三部分到这里就结束了。在下一部分中，我们将会见到内核入口点处的初始化工作 —— 位于 `start_kernel` 函数中。这些工作是在启动第一个进程 `init` 之前首先要完成的工作。
 
-如果你有任何问题或建议，请在twitter上联系我 [0xAX](https://twitter.com/0xAX)，或者通过[邮件](anotherworldofworld@gmail.com)与我沟通，还可以新开[issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
+如果你有任何问题或建议，请在twitter上联系我 [0xAX](https://twitter.com/0xAX)，或者通过[邮件](mailto:anotherworldofworld@gmail.com)与我沟通，还可以新开[issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
 
 相关链接
 --------------------------------------------------------------------------------

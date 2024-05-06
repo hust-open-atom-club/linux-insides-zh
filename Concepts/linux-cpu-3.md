@@ -374,7 +374,7 @@ rootfs_initcall(populate_rootfs);
 
 在这部分中，我们看到了 Linux 内核的一项重要机制，即在初始化期间允许调用依赖于 Linux 内核当前状态的函数。
 
-如果你有问题或建议，可随时在 twitter [0xAX](https://twitter.com/0xAX) 上联系我，给我发 [email](anotherworldofworld@gmail.com)，或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new)。
+如果你有问题或建议，可随时在 twitter [0xAX](https://twitter.com/0xAX) 上联系我，给我发 [email](mailto:anotherworldofworld@gmail.com)，或者创建 [issue](https://github.com/0xAX/linux-insides/issues/new)。
 
 **请注意英语不是我的母语，对此带来的不便，我很抱歉。如果你发现了任何错误，都可以给我发 PR 到[linux-insides](https://github.com/0xAX/linux-insides)。**.
 

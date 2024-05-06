@@ -3,7 +3,7 @@ Limits on resources in Linux
 
 Each process in the system uses certain amount of different resources like files, CPU time, memory and so on.
 
-Such resources are not infinite and each process and we should have an instrument to manage it. Sometimes it is useful to know current limits for a certain resource or to change it's value. In this post we will consider such instruments that allow us to get information about limits for a process and increase or decrease such limits.
+Such resources are not infinite and each process and we should have an instrument to manage it. Sometimes it is useful to know current limits for a certain resource or to change its value. In this post we will consider such instruments that allow us to get information about limits for a process and increase or decrease such limits.
 
 We will start from userspace view and then we will look how it is implemented in the Linux kernel.
 
@@ -175,7 +175,7 @@ if (new_rlim) {
 check that the given `soft` limit does not exceed `hard` limit and in a case when the given resource is the maximum number of a file descriptors that hard limit is not greater than `sysctl_nr_open` value. The value of the `sysctl_nr_open` can be found via [procfs](https://en.wikipedia.org/wiki/Procfs):
 
 ```
-~$ cat /proc/sys/fs/nr_open 
+~$ cat /proc/sys/fs/nr_open
 1048576
 ```
 
@@ -207,7 +207,7 @@ That's all.
 Conclusion
 --------------------------------------------------------------------------------
 
-This is the end of the second part that describes implementation of the system calls in the Linux kernel. If you have questions or suggestions, ping me on Twitter [0xAX](https://twitter.com/0xAX), drop me an [email](anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-internals/issues/new).
+This is the end of the second part that describes implementation of the system calls in the Linux kernel. If you have questions or suggestions, ping me on Twitter [0xAX](https://twitter.com/0xAX), drop me an [email](mailto:anotherworldofworld@gmail.com), or just create an [issue](https://github.com/0xAX/linux-internals/issues/new).
 
 **Please note that English is not my first language and I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-internals).**
 

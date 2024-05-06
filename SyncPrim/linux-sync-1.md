@@ -400,7 +400,7 @@ head |   7   | - - - |   7   | tail
 
 涵盖 Linux 内核中的同步原语的第一部分到此结束。在这一部分，我们遇见了第一个 Linux 内核提供的同步原语`自旋锁`。下一部分将会继续深入这个有趣的主题，而且将会了解到其他`同步`相关的知识。
 
-如果您有疑问或者建议，请在twitter [0xAX](https://twitter.com/0xAX) 上联系我，通过 [email](anotherworldofworld@gmail.com) 联系我，或者创建一个 [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
+如果您有疑问或者建议，请在twitter [0xAX](https://twitter.com/0xAX) 上联系我，通过 [email](mailto:anotherworldofworld@gmail.com) 联系我，或者创建一个 [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
 
 **友情提示：英语不是我的母语，对于译文给您带来了的不便我感到非常抱歉。如果您发现任何错误请给我发送PR到 [linux-insides](https://github.com/0xAX/linux-insides)。**
 

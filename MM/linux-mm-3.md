@@ -410,7 +410,7 @@ if (!(regs->flags & X86_EFLAGS_TF))
 结束语
 --------------------------------------------------------------------------------
 
-Linux内核[内存管理](https://en.wikipedia.org/wiki/Memory_management)第三节介绍到此为止。如果你有任何疑问或者建议，你可以直接给我[0xAX](https://twitter.com/0xAX)发消息， 发[邮件](anotherworldofworld@gmail.com)，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new) 。 在接下来的小节中，我们来看一下另一个内存调试工具 - `kmemleak` 。
+Linux内核[内存管理](https://en.wikipedia.org/wiki/Memory_management)第三节介绍到此为止。如果你有任何疑问或者建议，你可以直接给我[0xAX](https://twitter.com/0xAX)发消息， 发[邮件](mailto:anotherworldofworld@gmail.com)，或者创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new) 。 在接下来的小节中，我们来看一下另一个内存调试工具 - `kmemleak` 。
 
 **英文不是我的母语。如果你发现我的英文描述有任何问题，请提交一个PR到 [linux-insides](https://github.com/0xAX/linux-insides).**
 
