@@ -17,7 +17,7 @@
 |├ [2.1](Initialization/linux-initialization-1.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[4401750766f7](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
 |├ [2.2](Initialization/linux-initialization-2.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[4401750766f7](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
 |├ [2.3](Initialization/linux-initialization-3.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[4401750766f7](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
-|├ [2.4](Initialization/linux-initialization-4.md)|[@bjwrkj](https://github.com/bjwrkj)|已完成|
+|├ [2.4](Initialization/linux-initialization-4.md)|@bjwrkj|已完成|
 |├ [2.5](Initialization/linux-initialization-5.md)|[@NeoCui](https://github.com/NeoCui)|更新至[cf32dc6c81ab](https://github.com/0xAX/linux-insides/commit/cf32dc6c81abce567af330c480afc3d58678443d)|
 |├ [2.6](Initialization/linux-initialization-6.md)|[@kele1997](https://github.com/kele1997)|更新至[e896e56c867](https://github.com/0xAX/linux-insides/commit/e896e56c867876397ef78da58d5e2a31b2e690b6)|
 |├ [2.7](Initialization/linux-initialization-7.md)||未开始|
@@ -58,7 +58,7 @@
 |├ [6.1](SyncPrim/linux-sync-1.md)|[@keltoy](https://github.com/keltoy)|已完成|
 |├ [6.2](SyncPrim/linux-sync-2.md)|[@keltoy](https://github.com/keltoy)|已完成|
 |├ [6.3](SyncPrim/linux-sync-3.md)|[@huxq](https://github.com/huxq)|已完成|
-|├ [6.4](SyncPrim/linux-sync-4.md)|[@nannxnann](https://github.com/nannxnann)|更新至[c4b17d17a085](https://github.com/0xAX/linux-insides/commit/c4b17d17a085608e8de6e310797d8e81927aed8d)|
+|├ [6.4](SyncPrim/linux-sync-4.md)|@nannxnann|更新至[c4b17d17a085](https://github.com/0xAX/linux-insides/commit/c4b17d17a085608e8de6e310797d8e81927aed8d)|
 |├ [6.5](SyncPrim/linux-sync-5.md)||未开始|
 |└ [6.6](SyncPrim/linux-sync-6.md)||未开始|
 | 7. [Memory management](MM)||未开始|
@@ -95,7 +95,7 @@
 |└ [14.1](KernelStructures/linux-kernelstructure-1.md)|[@woodpenker](https://github.com/woodpenker)|更新至[4521637d9cb7](https://github.com/0xAX/linux-insides/commit/4521637d9cb76e5d4e4dc951758b264a68504927)|
 | 15. [Cgroups](Cgroups)||已完成|
 |├ [15.0](Cgroups/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[90f50c2ac5a1](https://github.com/0xAX/linux-insides/commit/90f50c2ac5a197da044e5091c631dd43e811ca4f)|
-|└ [15.1](Cgroups/linux-cgroups-1.md)|[@tjm-1990](https://github.com/tjm-1990)|更新至[b420e581fe3c](https://github.com/0xAX/linux-insides/commit/b420e581fe3cfee64d9c65103740d4fd98127b6f)|
+|└ [15.1](Cgroups/linux-cgroups-1.md)|@tjm-1990|更新至[b420e581fe3c](https://github.com/0xAX/linux-insides/commit/b420e581fe3cfee64d9c65103740d4fd98127b6f)|
 
 ### 翻译认领规则
 

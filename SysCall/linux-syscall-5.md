@@ -8,7 +8,7 @@
 
 你觉得怎么样，我认为这些非常有趣耶，操作系统如何工作，我们的软件如何与（系统）交互呢。你或许了解，我们的程序通过特定的机制和内核进行交互，这个机制就是[系统调用](https://en.wikipedia.org/wiki/System_call)。因此，我决定去写一些系统调用的实现及其行为，比如我们每天会用到的 `read`,`write`,`open`,`close`,`dup` 等等。
 
-我决定从 [open](http://man7.org/linux/man-pages/man2/open.2.html) 系统调用开始。如果你对 C 程序有了解，你应该知道在我们能对一个文件进行读写或执行其他操作前，我们需要使用 `open` 函数打开这个文件：
+我决定从 [open](https://man7.org/linux/man-pages/man2/open.2.html) 系统调用开始。如果你对 C 程序有了解，你应该知道在我们能对一个文件进行读写或执行其他操作前，我们需要使用 `open` 函数打开这个文件：
 
 ```C
 #include <fcntl.h>
@@ -42,7 +42,7 @@ $ sudo ls /proc/1/fd/
 1  11  13  15  19  20  22  24  26  28  3   31  33  35  37  39  40  42  44  46  48  5   51  54  57  59  60  62  65  7   9
 ```
 
-我并不打算在这篇文章中以用户空间的视角来描述更多 `open` 例程细节，会更多地从内核的角度来分析。如果你不是很熟悉 `open` 函数，你可以在 [man 手册](http://man7.org/linux/man-pages/man2/open.2.html)获取更多信息。
+我并不打算在这篇文章中以用户空间的视角来描述更多 `open` 例程细节，会更多地从内核的角度来分析。如果你不是很熟悉 `open` 函数，你可以在 [man 手册](https://man7.org/linux/man-pages/man2/open.2.html)获取更多信息。
 
 开始吧！
 
@@ -80,7 +80,7 @@ if (force_o_largefile())
 	flags |= O_LARGEFILE;
 ```
 
-这里可以看到如果 `force_o_largefile()` 返回 true，传递给 `open` 系统调用的 flags 参数会加上了 `O_LARGEFILE` 标志。`O_LARGEFILE` 是什么？阅读 `open(2)` [man 手册](http://man7.org/linux/man-pages/man2/open.2.html) 可以了解到：
+这里可以看到如果 `force_o_largefile()` 返回 true，传递给 `open` 系统调用的 flags 参数会加上了 `O_LARGEFILE` 标志。`O_LARGEFILE` 是什么？阅读 `open(2)` [man 手册](https://man7.org/linux/man-pages/man2/open.2.html) 可以了解到：
 
 > O_LARGEFILE
 >
@@ -214,9 +214,9 @@ else
 
 > if  neither O_CREAT nor O_TMPFILE is specified, then mode is ignored.
 
-在其他情况下，如果 `O_CREAT` 和 `O_TMPFILE` 标志被传递，我们可以把这个转换为一个规则文件因为 `opendir`(http://man7.org/linux/man-pages/man3/opendir.3.html) 系统调用会创建一个目录。
+在其他情况下，如果 `O_CREAT` 和 `O_TMPFILE` 标志被传递，我们可以把这个转换为一个规则文件因为 `opendir`(https://man7.org/linux/man-pages/man3/opendir.3.html) 系统调用会创建一个目录。
 
-在接下来的步骤，我们检查一个文件是否被 [fanotify](http://man7.org/linux/man-pages/man7/fanotify.7.html)打开过并且没有 `O_CLOSEXEC` 标志：
+在接下来的步骤，我们检查一个文件是否被 [fanotify](https://man7.org/linux/man-pages/man7/fanotify.7.html)打开过并且没有 `O_CLOSEXEC` 标志：
 
 ```C
 flags &= ~FMODE_NONOTIFY & ~O_CLOEXEC;
@@ -383,27 +383,27 @@ if (unlikely(filp == ERR_PTR(-ESTALE)))
 总结
 --------------------------------------------------------------------------------
 
-Linux 内核中关于不同系统调用的实现的第五部分已经完成了。如果你有任何问题, 可通过 twitter 或邮箱与我联系，[@0xAX](https://twitter.com/0xAX)/[email](mailto:anotherworldofworld@gmail.com), 或者提交一个 [issue](https://github.com/0xAX/linux-internals/issues/new). 在接下来的部分, 我们将继续深究 Linux 内核中的系统调用并且看看 [read](http://man7.org/linux/man-pages/man2/read.2.html) 系统调用的实现。
+Linux 内核中关于不同系统调用的实现的第五部分已经完成了。如果你有任何问题, 可通过 twitter 或邮箱与我联系，[@0xAX](https://twitter.com/0xAX)/[email](mailto:anotherworldofworld@gmail.com), 或者提交一个 [issue](https://github.com/0xAX/linux-insides/issues/new). 在接下来的部分, 我们将继续深究 Linux 内核中的系统调用并且看看 [read](https://man7.org/linux/man-pages/man2/read.2.html) 系统调用的实现。
 
-**请谅解英语不是我的母语，对于任何不恰当的表述我深感抱歉。如果你发现任何错误，请在 [linux-insides](https://github.com/0xAX/linux-internals) 给我发 PR  。**
+**请谅解英语不是我的母语，对于任何不恰当的表述我深感抱歉。如果你发现任何错误，请在 [linux-insides](https://github.com/0xAX/linux-insides) 给我发 PR  。**
 
 参考链接
 --------------------------------------------------------------------------------
 
 * [system call](https://en.wikipedia.org/wiki/System_call)
-* [open](http://man7.org/linux/man-pages/man2/open.2.html)
+* [open](https://man7.org/linux/man-pages/man2/open.2.html)
 * [file descriptor](https://en.wikipedia.org/wiki/File_descriptor)
 * [proc](https://en.wikipedia.org/wiki/Procfs)
 * [GNU C Library Reference Manual](https://www.gnu.org/software/libc/manual/html_mono/libc.html#File-Position-Primitive)
 * [IA-64](https://en.wikipedia.org/wiki/IA-64) 
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [opendir](http://man7.org/linux/man-pages/man3/opendir.3.html)
-* [fanotify](http://man7.org/linux/man-pages/man7/fanotify.7.html)
+* [opendir](https://man7.org/linux/man-pages/man3/opendir.3.html)
+* [fanotify](https://man7.org/linux/man-pages/man7/fanotify.7.html)
 * [fork](https://en.wikipedia.org/wiki/Fork_\(system_call\))
 * [execve](https://en.wikipedia.org/wiki/Exec_\(system_call\))
 * [symlink](https://en.wikipedia.org/wiki/Symbolic_link)
 * [audit](https://linux.die.net/man/8/auditd)
 * [inode](https://en.wikipedia.org/wiki/Inode)
 * [RCU](https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt)
-* [read](http://man7.org/linux/man-pages/man2/read.2.html)
+* [read](https://man7.org/linux/man-pages/man2/read.2.html)
 * [previous part](/SysCall/linux-syscall-4.md)

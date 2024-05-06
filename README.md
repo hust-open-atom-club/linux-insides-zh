@@ -41,4 +41,4 @@
 
 ## 许可证
 
-本项目使用 [BY-NC-SA Creative Commons](http://creativecommons.org/licenses/by-nc-sa/4.0/) 许可证。
+本项目使用 [BY-NC-SA Creative Commons](https://creativecommons.org/licenses/by-nc-sa/4.0/) 许可证。

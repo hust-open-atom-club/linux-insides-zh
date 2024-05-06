@@ -331,7 +331,7 @@ static struct notifier_block tracepoint_module_nb = {
 };
 ```
 
-When one of the `MODULE_STATE_LIVE`, `MODULE_STATE_COMING` or `MODULE_STATE_GOING` events occurred. For example the `MODULE_STATE_LIVE` the `MODULE_STATE_COMING` notifications will be sent during execution of the [init_module](http://man7.org/linux/man-pages/man2/init_module.2.html) [system call](/SysCall/linux-syscall-1.md). Or for example `MODULE_STATE_GOING` will be sent during execution of the [delete_module](http://man7.org/linux/man-pages/man2/delete_module.2.html) `system call`:
+When one of the `MODULE_STATE_LIVE`, `MODULE_STATE_COMING` or `MODULE_STATE_GOING` events occurred. For example the `MODULE_STATE_LIVE` the `MODULE_STATE_COMING` notifications will be sent during execution of the [init_module](https://man7.org/linux/man-pages/man2/init_module.2.html) [system call](/SysCall/linux-syscall-1.md). Or for example `MODULE_STATE_GOING` will be sent during execution of the [delete_module](https://man7.org/linux/man-pages/man2/delete_module.2.html) `system call`:
 
 ```C
 SYSCALL_DEFINE2(delete_module, const char __user *, name_user,
@@ -364,6 +364,6 @@ Links
 * [semaphore](/SyncPrim/linux-sync-3.md)
 * [tracepoints](https://www.kernel.org/doc/Documentation/trace/tracepoints.txt)
 * [system call](/SysCall/linux-syscall-1.md)
-* [init_module system call](http://man7.org/linux/man-pages/man2/init_module.2.html)
-* [delete_module](http://man7.org/linux/man-pages/man2/delete_module.2.html)
+* [init_module system call](https://man7.org/linux/man-pages/man2/init_module.2.html)
+* [delete_module](https://man7.org/linux/man-pages/man2/delete_module.2.html)
 * [previous part](/Concepts/linux-cpu-3.md)

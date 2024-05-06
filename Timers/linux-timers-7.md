@@ -284,7 +284,7 @@ end of sleep
 
 and the second line after five seconds.
 
-The `nanosleep` is not located in the `vDSO` area like the `gettimeofday` and the `clock_gettime` functions. So, let's look how the `real` system call which is located in the kernel space will be called by the standard library. The implementation of the `nanosleep` system call will be called with the help of the [syscall](http://www.felixcloutier.com/x86/SYSCALL.html) instruction. Before the execution of the `syscall` instruction, parameters of the system call must be put in processor [registers](https://en.wikipedia.org/wiki/Processor_register) according to order which is described in the [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf) or in other words:
+The `nanosleep` is not located in the `vDSO` area like the `gettimeofday` and the `clock_gettime` functions. So, let's look how the `real` system call which is located in the kernel space will be called by the standard library. The implementation of the `nanosleep` system call will be called with the help of the [syscall](https://www.felixcloutier.com/x86/SYSCALL.html) instruction. Before the execution of the `syscall` instruction, parameters of the system call must be put in processor [registers](https://en.wikipedia.org/wiki/Processor_register) according to order which is described in the [System V Application Binary Interface](http://www.x86-64.org/documentation/abi.pdf) or in other words:
 
 * `rdi` - first parameter;
 * `rsi` - second parameter;

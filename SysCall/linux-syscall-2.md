@@ -5,7 +5,7 @@ Linux 内核如何处理系统调用
 --------------------------------------------------------------------------------
 
 前一[小节](/SysCall/linux-syscall-1.md) 作为本章节的第一部分描述了 Linux 内核[system call](https://en.wikipedia.org/wiki/System_call) 概念。
-前一节中提到通常系统调用处于内核处于操作系统层面。 前一节内容从用户空间的角度介绍，并且 [write](http://man7.org/linux/man-pages/man2/write.2.html)系统调用实现的一部分内容没有讨论。 在这一小节继续关注系统调用，在深入 Linux 内核之前，从一些理论开始。
+前一节中提到通常系统调用处于内核处于操作系统层面。 前一节内容从用户空间的角度介绍，并且 [write](https://man7.org/linux/man-pages/man2/write.2.html)系统调用实现的一部分内容没有讨论。 在这一小节继续关注系统调用，在深入 Linux 内核之前，从一些理论开始。
 
 程序中一个用户程序并不直接使用系统调用。 我们并未这样写 `Hello World`程序代码：
 
@@ -63,7 +63,7 @@ asmlinkage const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
 typedef void (*sys_call_ptr_t)(void);
 ```
 
-其次为 `sys_call_table` 数组中元素的初始化。 从上面的代码中可知，数组中所有元素包含指向 `sys_ni_syscall` 的系统调用处理器的指针。 `sys_ni_syscall` 函数为 “not-implemented” 系统调用。 首先，`sys_call_table` 的所有元素指向 “not-implemented” 系统调用。 这是正确的初始化方法，因为我们仅仅初始化指向系统调用处理器的指针的存储位置，稍后再做处理。 `sys_ni_syscall` 的结果比较简单，仅仅返回 [-errno](http://man7.org/linux/man-pages/man3/errno.3.html) 或者 `-ENOSYS` :
+其次为 `sys_call_table` 数组中元素的初始化。 从上面的代码中可知，数组中所有元素包含指向 `sys_ni_syscall` 的系统调用处理器的指针。 `sys_ni_syscall` 函数为 “not-implemented” 系统调用。 首先，`sys_call_table` 的所有元素指向 “not-implemented” 系统调用。 这是正确的初始化方法，因为我们仅仅初始化指向系统调用处理器的指针的存储位置，稍后再做处理。 `sys_ni_syscall` 的结果比较简单，仅仅返回 [-errno](https://man7.org/linux/man-pages/man3/errno.3.html) 或者 `-ENOSYS` :
 
 ```C
 asmlinkage long sys_ni_syscall(void)
@@ -383,13 +383,13 @@ Links
 --------------------------------------------------------------------------------
 
 * [system call](https://en.wikipedia.org/wiki/System_call)
-* [write](http://man7.org/linux/man-pages/man2/write.2.html)
+* [write](https://man7.org/linux/man-pages/man2/write.2.html)
 * [C standard library](https://en.wikipedia.org/wiki/GNU_C_Library)
 * [list of cpu architectures](https://en.wikipedia.org/wiki/List_of_CPU_architectures)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [kbuild](https://www.kernel.org/doc/Documentation/kbuild/makefiles.txt)
 * [typedef](https://en.wikipedia.org/wiki/Typedef)
-* [errno](http://man7.org/linux/man-pages/man3/errno.3.html)
+* [errno](https://man7.org/linux/man-pages/man3/errno.3.html)
 * [gcc](https://en.wikipedia.org/wiki/GNU_Compiler_Collection)
 * [model specific register](https://en.wikipedia.org/wiki/Model-specific_register)
 * [intel 2b manual](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)
