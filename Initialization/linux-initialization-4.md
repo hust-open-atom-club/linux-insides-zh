@@ -57,7 +57,7 @@ lockdep_init();
 ```C
 struct task_struct init_task = INIT_TASK(init_task);
 ```
-`task_struct` 存储了进程的所有相关信息。因为它很庞大，我在这本书并不会去介绍，详细信息你可以查看调度相关数据结构定义头文件 [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h#L1278)。在此刻`task_sreuct`包含了超过`100`个字段！虽然你不会看到`task_struct`是在这本书中的解释，但是我们会经常使用它，因为它是介绍在Linux内核`进程`的基本知识。我将描述这个结构中字段的一些含义，因为我们在后面的实践中见到它们。
+`task_struct` 存储了进程的所有相关信息。因为它很庞大，我在这本书并不会去介绍，详细信息你可以查看调度相关数据结构定义头文件 [include/linux/sched.h](https://github.com/torvalds/linux/blob/master/include/linux/sched.h#L1278)。在此刻`task_struct`包含了超过`100`个字段！虽然你不会看到`task_struct`是在这本书中的解释，但是我们会经常使用它，因为它是介绍在Linux内核`进程`的基本知识。我将描述这个结构中字段的一些含义，因为我们在后面的实践中见到它们。
 
 你也可以查看`init_task`的相关定义以及宏指令`INIT_TASK`的初始化流程。这个宏指令来自于[include/linux/init_task.h](https://github.com/torvalds/linux/blob/master/include/linux/init_task.h)在此刻只是设置和初始化了第一个进程来(0号进程)的值。例如这么设置：
 * 初始化进程状态为 zero 或者 `runnable`. 一个可运行进程即为等待CPU去运行;
