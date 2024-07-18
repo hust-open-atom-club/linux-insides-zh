@@ -160,7 +160,7 @@ On this step the initialization of the `memblock` structure has been finished an
 memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0);
 ```
 
-函数。我们将内存块类型 - `memory`，内存基址和内存区域大小，节点的最大数目和标志传进去。如果 `CONFIG_NODES_SHIFT` 没有被设置，最大节点数目就是 1，否则是 `1 << CONFIG_NODES_SHIFT`。`memblock_add_range` 函数将新的内存区域加到了内存块中，它首先检查传入内存区域的大小，如果是 0 就直接返回。然后，这个函数会用 `memblock_type` 来检查 `memblock` 中的内存区域是否存在。如果不存在，我们就简单地用给定的值填充一个新的 `memory_region` 然后返回(我们已经在[对内核内存管理框架的初览](/Initialization/linux-initialization-3.md)中看到了它的实现)。如果 `memblock_type` 不为空，我们就会使用提供的 `memblock_type` 将新的内存区域加到 `memblock` 中。
+函数。我们将内存块类型 - `memory`，内存基址和内存区域大小，```MAX_NUMNODES```和标志传进去。如果 `CONFIG_NODES_SHIFT` 没有被设置，```MAX_NUMNODES```就是 1，否则是 `1 << CONFIG_NODES_SHIFT`。`memblock_add_range` 函数将新的内存区域加到了内存块中，它首先检查传入内存区域的大小，如果是 0 就直接返回。然后，这个函数会用 `memblock_type` 来检查 `memblock` 中的内存区域是否存在。如果不存在，我们就简单地用给定的值填充一个新的 `memory_region` 然后返回(我们已经在[对内核内存管理框架的初览](/Initialization/linux-initialization-3.md)中看到了它的实现)。如果 `memblock_type` 不为空，我们就会使用提供的 `memblock_type` 将新的内存区域加到 `memblock` 中。
 
 首先，我们获取了内存区域的结束点：
 
