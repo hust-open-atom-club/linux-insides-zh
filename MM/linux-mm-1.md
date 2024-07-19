@@ -27,7 +27,7 @@ struct memblock {
 };
 ```
 
-这个结构体包含五个域。第一个 `bottom_up` 域置为 `true` 时允许内存以自底向上模式进行分配。下一个域是 `current_limit`，这个域描述了内存块的尺寸限制。接下来的三个域描述了内存块的类型。内存块的类型可以是：可用的、被保留的和物理内存(如果 `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` 编译配置选项被开启)。接下来我们来看看下一个数据结构- `memblock_type` 。让我们来看看它的定义：
+这个结构体包含五个域。第一个 `bottom_up` 域置为 `true` 时允许内存以自底向上模式进行分配。下一个域是 `current_limit`，这个域描述了内存块的尺寸限制。接下来的三个域描述了内存块的类型。内存块的类型可以是：可用的、被保留的和物理内存(如果 `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` 编译配置选项被开启)。接下来我们来看看下一个数据结构 - `memblock_type` 。让我们来看看它的定义：
 
 ```C
 struct memblock_type {
