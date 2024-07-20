@@ -52,7 +52,7 @@ PhysicalAddress = Segment * 16 + Offset
 '0x10ffef'
 ```
 
-这超出 1MB 65519 字节。既然实模式下， CPU 只能访问 1MB 地址空间，`0x10ffef` 变成有 [A20](https://en.wikipedia.org/wiki/A20_line) 缺陷的 `0x00ffef`。
+这超出 1MB 65519 字节。既然实模式下， CPU 只能访问 1MB 地址空间，禁用 [A20线](https://en.wikipedia.org/wiki/A20_line) 后 `0x10ffef` 将变为 `0x00ffef`。
 
 我们了解了实模式和在实模式下的内存寻址方式，让我们来回头继续来看复位后的寄存器值。
 
@@ -69,7 +69,7 @@ PhysicalAddress = Segment * 16 + Offset
 '0xfffffff0'
 ```
 
-得到的 `0xfffffff0` 是 4GB - 16 字节。 这个地方是 [复位向量(Reset vector)](http://en.wikipedia.org/wiki/Reset_vector) 。 这是CPU在重置后期望执行的第一条指令的内存地址。它包含一个 [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) 指令，这个指令通常指向BIOS入口点。举个例子，如果访问 [coreboot](http://www.coreboot.org/) 源代码，将看到：
+得到的 `0xfffffff0` 是位于 4GB - 16 字节处的地址。 这个地方是 [复位向量(Reset vector)](http://en.wikipedia.org/wiki/Reset_vector) 。 这是CPU在重置后期望执行的第一条指令的内存地址。它包含一个 [jump](http://en.wikipedia.org/wiki/JMP_%28x86_instruction%29) 指令，这个指令通常指向BIOS入口点。举个例子，如果访问 [coreboot](http://www.coreboot.org/) 源代码，将看到：
 
 ```assembly
 	.section ".reset", "ax", %progbits
