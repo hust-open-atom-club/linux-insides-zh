@@ -27,7 +27,7 @@ struct memblock {
 };
 ```
 
-这个结构体包含五个域。第一个 `bottom_up` 域置为 `true` 时允许内存以自底向上模式进行分配。下一个域是 `current_limit`。 这个域描述了内存块的尺寸限制。接下来的三个域描述了内存块的类型。内存块的类型可以是：被保留，内存和物理内存(如果 `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` 编译配置选项被开启)。接下来我们来看看下一个数据结构- `memblock_type` 。让我们来看看它的定义：
+这个结构体包含五个域。第一个 `bottom_up` 域置为 `true` 时允许内存以自底向上模式进行分配。下一个域是 `current_limit`，这个域描述了内存块的尺寸限制。接下来的三个域描述了内存块的类型。内存块的类型可以是：可用的、被保留的和物理内存(如果 `CONFIG_HAVE_MEMBLOCK_PHYS_MAP` 编译配置选项被开启)。接下来我们来看看下一个数据结构 - `memblock_type` 。让我们来看看它的定义：
 
 ```C
 struct memblock_type {
@@ -59,7 +59,7 @@ struct memblock_region {
 #define MEMBLOCK_HOTPLUG	0x1
 ```
 
-同时，如果 `CONFIG_HAVE_MEMBLOCK_NODE_MAP` 编译配置选项被开启， `memblock_region` 结构体也提供了整数域 - [numa](http://en.wikipedia.org/wiki/Non-uniform_memory_access) 节点选择器。
+同时，如果 `CONFIG_HAVE_MEMBLOCK_NODE_MAP` 编译配置选项被开启， `memblock_region` 结构体也包含节点ID - [numa](http://en.wikipedia.org/wiki/Non-uniform_memory_access) 节点选择器。
 
 我们将以上部分想象为如下示意图：
 
@@ -154,13 +154,13 @@ On this step the initialization of the `memblock` structure has been finished an
 
 我们已经结束了 `memblock` 结构体的初始化讲解，现在我们要开始看内存块 API 和它的实现了。就像我上面说过的，所有 `memblock` 的实现都在 [mm/memblock.c](https://github.com/torvalds/linux/blob/master/mm/memblock.c) 中。为了理解 `memblock` 是怎样被实现和工作的，让我们先看看它的用法。内核中有[很多地方](http://lxr.free-electrons.com/ident?i=memblock)用到了内存块。举个例子，我们来看看 [arch/x86/kernel/e820.c](https://github.com/torvalds/linux/blob/master/arch/x86/kernel/e820.c#L1061) 中的 `memblock_x86_fill` 函数。这个函数使用了 [e820](http://en.wikipedia.org/wiki/E820) 提供的内存映射并使用 `memblock_add` 函数在 `memblock` 中添加了内核保留的内存区域。既然我们首先遇到了 `memblock_add` 函数，让我们从它开始讲解吧。
 
-这个函数获取了物理基址和内存区域的大小并把它们加到了 `memblock` 中。`memblock_add` 函数本身没有做任何特殊的事情，它只是调用了
+这个函数获取了物理基址和内存区域的大小并把它们加到了 `memblock` 中。`memblock_add` 函数本身没有做任何特殊的事情，它只是调用了函数
 
 ```C
 memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0);
 ```
 
-函数。我们将内存块类型 - `memory`，内存基址和内存区域大小，节点的最大数目和标志传进去。如果 `CONFIG_NODES_SHIFT` 没有被设置，最大节点数目就是 1，否则是 `1 << CONFIG_NODES_SHIFT`。`memblock_add_range` 函数将新的内存区域加到了内存块中，它首先检查传入内存区域的大小，如果是 0 就直接返回。然后，这个函数会用 `memblock_type` 来检查 `memblock` 中的内存区域是否存在。如果不存在，我们就简单地用给定的值填充一个新的 `memory_region` 然后返回(我们已经在[对内核内存管理框架的初览](/Initialization/linux-initialization-3.md)中看到了它的实现)。如果 `memblock_type` 不为空，我们就会使用提供的 `memblock_type` 将新的内存区域加到 `memblock` 中。
+。我们将内存块类型 - `memory`，内存基址和内存区域大小，```MAX_NUMNODES```和标志传进去。如果 `CONFIG_NODES_SHIFT` 没有被设置，```MAX_NUMNODES```就是 1，否则是 `1 << CONFIG_NODES_SHIFT`。`memblock_add_range` 函数将新的内存区域加到了内存块中，它首先检查传入内存区域的大小，如果是 0 就直接返回。然后，这个函数会用 `memblock_type` 来检查 `memblock` 中的内存区域是否存在。如果不存在，我们就简单地用给定的值填充一个新的 `memory_region` 然后返回(我们已经在[对内核内存管理框架的初览](/Initialization/linux-initialization-3.md)中看到了它的实现)。如果 `memblock_type` 不为空，我们就会使用提供的 `memblock_type` 将新的内存区域加到 `memblock` 中。
 
 首先，我们获取了内存区域的结束点：
 
