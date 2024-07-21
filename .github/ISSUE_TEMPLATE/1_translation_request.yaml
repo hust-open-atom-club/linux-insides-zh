@@ -1,0 +1,31 @@
+name: 请求翻译/Request Translation
+description: 请求翻译一篇文章/Request 
+title: 请求翻译
+labels: [request, translation]
+body:
+  - type: markdown
+    id: introduction
+    attributes:
+      value: |
+        感谢您对Linux-Insides-ZN的兴趣。请填写以下信息以帮助我们了解您的请求。
+        Thank you for your interest in Linux-Insides-ZN project. Please fill out the following information to help us understand your request.
+        
+  - type: textarea
+    id: name
+    attributes:
+      label: 翻译章节/Chapter
+      placeholder: |
+        请填写要翻译的章节号。
+        Please fill in the chapter number you want to translate. 
+    validations:
+      required: true
+      
+  - type: textarea
+    id: upstream
+    attributes:
+      label: 上游链接/Upstream URL
+      placeholder: |
+        请填写原文的链接。
+        Please fill in the link to the original article.
+    validations:
+      required: true
