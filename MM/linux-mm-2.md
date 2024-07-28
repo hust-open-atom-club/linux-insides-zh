@@ -483,7 +483,7 @@ static inline void __native_flush_tlb_single(unsigned long addr)
 }
 ```
 
-不支持时调用 `__flush_tlb` 更新 `cr3` 寄存器。在这步结束之后 `__early_set_fixmap` 函数就执行完了，我们又可以回到 `__early_ioremap` 的实现了。因为我们为给定的地址设定了固定映射区域，我们需要将 I/O 重映射的区域的基虚拟地址用 `slot` 下标保存在 `prev_map` 数组中。
+否则，调用 `__flush_tlb` 更新 `cr3` 寄存器。在这步结束之后 `__early_set_fixmap` 函数就执行完了，我们又可以回到 `__early_ioremap` 的实现了。因为我们为给定的地址设定了固定映射区域，我们需要将 I/O 重映射的区域的基虚拟地址用 `slot` 下标保存在 `prev_map` 数组中。
 
 ```C
 prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);
