@@ -4,7 +4,7 @@
 固定映射地址和输入输出重映射
 --------------------------------------------------------------------------------
 
-固定映射地址是一组特殊的编译时确定的地址，它们与物理地址不一定具有减 `__START_KERNEL_map` 的线性映射关系。每一个固定映射的地址都会映射到一个内存页，内核会像指针一样使用它们，但是绝不会修改它们的地址。这是这种地址的主要特点。就像注释所说的那样，“在编译期就获得一个常量地址，只有在引导阶段才会被设定上物理地址。”你在本书的[前面部分](/Initialization/linux-initialization-1.md)可以看到，我们已经设定了 `level2_fixmap_pgt` ：
+固定映射地址是一组特殊的编译时确定的地址，它们与物理地址不一定具有减 `__START_KERNEL_map` 的线性映射关系。每一个固定映射的地址都会映射到一个内存页，内核会像指针一样使用它们，但是绝不会修改它们的地址。这是这种地址的主要特点。就像注释所说的那样，“在编译期就获得一个常量地址，只有在引导阶段才会被设定上物理地址”。你在本书的[前面部分](/Initialization/linux-initialization-1.md)可以看到，我们已经设定了 `level2_fixmap_pgt` ：
 
 ```assembly
 NEXT_PAGE(level2_fixmap_pgt)
@@ -79,7 +79,7 @@ static inline unsigned long virt_to_fix(const unsigned long vaddr)
 
 一个 PFN 是一块页大小物理内存的下标。一个物理地址的 PFN 可以简单地定义为 (page_phys_addr >> PAGE_SHIFT)；
 
-`__virt_to_fix` 会清空给定地址的前 12 位，然后用固定映射区域的末地址(`FIXADDR_TOP`)减去它并右移 `PAGE_SHIFT` 即 12 位。让我们来解释它的工作原理。就像我已经写的那样，这个宏会使用 `x & PAGE_MASK` 来清空前 12 位。然后我们用 `FIXADDR_TOP` 减去它，就会得到 `FIXADDR_TOP` 的后 12 位。我们知道虚拟地址的前 12 位代表这个页的偏移量，当我们右移 `PAGE_SHIFT` 后就会得到 `Page frame number` ，即虚拟地址的所有位，包括最开始的 12 个偏移位。固定映射地址在[内核中多处使用](http://lxr.free-electrons.com/ident?i=fix_to_virt)。 `IDT` 描述符保存在这里，[英特尔可信赖执行技术](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID 储存在固定映射区域，以 `FIX_TBOOT_BASE` 下标开始。另外， [Xen](http://en.wikipedia.org/wiki/Xen) 引导映射等也储存在这个区域。我们已经在[内核初始化的第五部分](/Initialization/linux-initialization-5.md)看到了一部分关于固定映射地址的知识。接下来让我们看看什么是 `ioremap`，看看它是怎样实现的，与固定映射地址又有什么关系呢？
+`__virt_to_fix` 会清空给定地址的低 12 位，然后用固定映射区域的末地址(`FIXADDR_TOP`)减去它并右移 `PAGE_SHIFT` 即 12 位。让我们来解释它的工作原理。就像我已经写的那样，这个宏会使用 `x & PAGE_MASK` 来清空低 12 位。然后我们用 `FIXADDR_TOP` 减去它，就会得到 `FIXADDR_TOP` 的低 12 位。我们知道虚拟地址的低 12 位代表这个页的偏移量，当我们右移 `PAGE_SHIFT` 后就会得到 `Page frame number` ，即虚拟地址的所有位，包括最开始的 12 个偏移位。固定映射地址在[内核中多处使用](http://lxr.free-electrons.com/ident?i=fix_to_virt)。 `IDT` 描述符保存在这里，[英特尔可信赖执行技术](http://en.wikipedia.org/wiki/Trusted_Execution_Technology) UUID 储存在固定映射区域，以 `FIX_TBOOT_BASE` 下标开始。另外， [Xen](http://en.wikipedia.org/wiki/Xen) 引导映射等也储存在这个区域。我们已经在[内核初始化的第五部分](/Initialization/linux-initialization-5.md)看到了一部分关于固定映射地址的知识。接下来让我们看看什么是 `ioremap`，看看它是怎样实现的，与固定映射地址又有什么关系呢？
 
 输入输出重映射
 --------------------------------------------------------------------------------
@@ -394,13 +394,13 @@ phys_addr &= PAGE_MASK;
 size = PAGE_ALIGN(last_addr + 1) - phys_addr;
 ```
 
-在这里我们使用了 `PAGE_MASK` 用于清空除前 12 位之外的整个 `phys_addr`。`PAGE_MASK` 宏定义如下：
+在这里我们使用了 `PAGE_MASK` 用于清空除低 12 位之外的整个 `phys_addr`。`PAGE_MASK` 宏定义如下：
 
 ```C
 #define PAGE_MASK       (~(PAGE_SIZE-1))
 ```
 
-我们知道页的尺寸是 4096 个字节或用二进制表示为 `1000000000000` 。`PAGE_SIZE - 1` 就会是 `111111111111` ，但是使用 `~` 运算后我们就会得到 `000000000000` ，然后使用 `~PAGE_MASK` 又会返回 `111111111111` 。在第二行我们做了同样的事情但是只是清空了前 12 个位，然后在第三行获取了这个区域的页对齐尺寸。我们获得了对齐区域，接下来就需要获取新的 `ioremap` 区域所占用的页的数量然后计算固定映射下标：
+我们知道页的尺寸是 4096 个字节或用二进制表示为 `1000000000000` 。`PAGE_SIZE - 1` 就会是 `111111111111` ，但是使用 `~` 运算后我们就会得到 `000000000000` ，然后使用 `~PAGE_MASK` 又会返回 `111111111111` 。在第二行我们做了同样的事情但是只是清空了低 12 个位，然后在第三行获取了这个区域的页对齐尺寸。我们获得了对齐区域，接下来就需要获取新的 `ioremap` 区域所占用的页的数量然后计算固定映射下标：
 
 ```C
 nrpages = size >> PAGE_SHIFT;
@@ -483,7 +483,7 @@ static inline void __native_flush_tlb_single(unsigned long addr)
 }
 ```
 
-`__flush_tlb` 的调用知识更新了 `cr3` 寄存器。在这步结束之后 `__early_set_fixmap` 函数就执行完了，我们又可以回到 `__early_ioremap` 的实现了。因为我们为给定的地址设定了固定映射区域，我们需要将 I/O 重映射的区域的基虚拟地址用 `slot` 下标保存在 `prev_map` 数组中。
+否则，调用 `__flush_tlb` 更新 `cr3` 寄存器。在这步结束之后 `__early_set_fixmap` 函数就执行完了，我们又可以回到 `__early_ioremap` 的实现了。因为我们为给定的地址设定了固定映射区域，我们需要将 I/O 重映射的区域的基虚拟地址用 `slot` 下标保存在 `prev_map` 数组中。
 
 ```C
 prev_map[slot] = (void __iomem *)(offset + slot_virt[slot]);
