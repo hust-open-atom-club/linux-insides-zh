@@ -136,7 +136,7 @@ Be careful parts of head_64.S assume startup_32 is at address 0.
 
 好了，现在我们知道我们在哪里了，接下来就是深入 `startup_32` 函数的最佳时机。
 
-在 `startup_32` 函数的开始，我们可以看到 `cld` 指令将[标志寄存器](http://baike.baidu.com/view/1845107.htm)的 `DF` （方向标志）位清空。当方向标志被清空，所有的串操作指令像[stos](http://x86.renejeschke.de/html/file_module_x86_id_306.html)， [scas](http://x86.renejeschke.de/html/file_module_x86_id_287.html)等等将会增加索引寄存器 `esi` 或者 `edi` 的值。我们需要清空方向标志是因为接下来我们会使用汇编的串操作指令来做为页表腾出空间等工作。
+在 `startup_32` 函数的开始，我们可以看到 `cld` 指令将[标志寄存器](http://baike.baidu.com/view/1845107.htm)的 `DF` （方向标志）位清空。当方向标志被清空，所有的串操作指令像[stos](https://x86.hust.openatom.club/html/file_module_x86_id_306.html)， [scas](https://x86.hust.openatom.club/html/file_module_x86_id_287.html)等等将会增加索引寄存器 `esi` 或者 `edi` 的值。我们需要清空方向标志是因为接下来我们会使用汇编的串操作指令来做为页表腾出空间等工作。
 
 在我们清空 `DF` 标志后，下一步就是从内核加载头中的 `loadflags` 字段来检查 `KEEP_SEGMENTS` 标志。你是否还记得在本书的[最初一节](linux-bootstrap-1.md)，我们已经看到过 `loadflags` 。在那里我们检查了 `CAN_USE_HEAP` 标记以使用堆。现在我们需要检查 `KEEP_SEGMENTS` 标记。这些标记在 linux 的[引导协议](https://www.kernel.org/doc/Documentation/x86/boot.txt)文档中有描述：
 

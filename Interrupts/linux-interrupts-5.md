@@ -37,7 +37,7 @@ END(\sym)
 .endm
 ```
 
-After an exception handler will finish its work, the `idtentry` macro restores stack and general purpose registers of an interrupted task and executes [iret](http://x86.renejeschke.de/html/file_module_x86_id_145.html) instruction:
+After an exception handler will finish its work, the `idtentry` macro restores stack and general purpose registers of an interrupted task and executes [iret](https://x86.hust.openatom.club/html/file_module_x86_id_145.html) instruction:
 
 ```assembly
 ENTRY(paranoid_exit)
@@ -473,7 +473,7 @@ Links
 --------------------------------------------------------------------------------
 
 * [Interrupt descriptor Table](https://en.wikipedia.org/wiki/Interrupt_descriptor_table)
-* [iret instruction](http://x86.renejeschke.de/html/file_module_x86_id_145.html)
+* [iret instruction](https://x86.hust.openatom.club/html/file_module_x86_id_145.html)
 * [GCC macro Concatenation](https://gcc.gnu.org/onlinedocs/cpp/Concatenation.html#Concatenation)
 * [kernel panic](https://en.wikipedia.org/wiki/Kernel_panic)
 * [kernel oops](https://en.wikipedia.org/wiki/Linux_kernel_oops)
