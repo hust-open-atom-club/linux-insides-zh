@@ -356,7 +356,7 @@ out:
 #define __TICKET_LOCK_INC       1
 ```
 
-在`inc` 和 `lock->tickets` 的下一行执行 [xadd](http://x86.renejeschke.de/html/file_module_x86_id_327.html) 操作。这个操作之后 `inc`将存储给定`标签 (tickets)` 的值，然后 `tickets.tail` 将增加 `inc` 或 `1`。`尾部`值增加 `1` 意味着一个程序开始尝试持有锁。下一步做检查，检查`头部`和`尾部`是否有相同的值。如果值相等，这意味着没有程序持有锁并且我们去到了 `out` 标签。在 `arch_spin_lock` 函数的最后，我们可能了解了 `barrier` 宏表示 `屏障指令 (barrier instruction)`，该指令保证了编译器将不更改进入内存操作的顺序(更多关于内存屏障的知识可以阅读内核[文档 (documentation)](https://www.kernel.org/doc/Documentation/memory-barriers.txt))。
+在`inc` 和 `lock->tickets` 的下一行执行 [xadd](https://x86.hust.openatom.club/html/file_module_x86_id_327.html) 操作。这个操作之后 `inc`将存储给定`标签 (tickets)` 的值，然后 `tickets.tail` 将增加 `inc` 或 `1`。`尾部`值增加 `1` 意味着一个程序开始尝试持有锁。下一步做检查，检查`头部`和`尾部`是否有相同的值。如果值相等，这意味着没有程序持有锁并且我们去到了 `out` 标签。在 `arch_spin_lock` 函数的最后，我们可能了解了 `barrier` 宏表示 `屏障指令 (barrier instruction)`，该指令保证了编译器将不更改进入内存操作的顺序(更多关于内存屏障的知识可以阅读内核[文档 (documentation)](https://www.kernel.org/doc/Documentation/memory-barriers.txt))。
 
 如果前一个程序持有锁而第二个程序开始执行 `arch_spin_lock` 函数，那么 `头部`将不会`等于``尾部`，因为`尾部`比`头部`大`1`。这样，程序将循环发生。在每次循坏迭代的时候`头部`和`尾部`的值进行比较。如果值不相等，`cpu_relax` ，也就是 [NOP](https://en.wikipedia.org/wiki/NOP) 指令将会被调用：
 
@@ -419,7 +419,7 @@ head |   7   | - - - |   7   | tail
 * [Preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [Linux kernel lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [Sparse](https://en.wikipedia.org/wiki/Sparse)
-* [xadd instruction](http://x86.renejeschke.de/html/file_module_x86_id_327.html)
+* [xadd instruction](https://x86.hust.openatom.club/html/file_module_x86_id_327.html)
 * [NOP](https://en.wikipedia.org/wiki/NOP)
 * [Memory barriers](https://www.kernel.org/doc/Documentation/memory-barriers.txt)
 * [Previous chapter](/Timers/)

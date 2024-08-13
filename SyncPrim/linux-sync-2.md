@@ -268,7 +268,7 @@ static __always_inline void queued_spin_lock(struct qspinlock *lock)
 }
 ```
 
-看起来很简单，除了 `queued_spin_lock_slowpath` 函数，我们可能发现它只有一个参数。在我们的例子中这个参数代表 `队列自旋锁` 被上锁。让我们考虑`队列`锁为空，现在第一个线程想要获取锁的情况。正如我们可能了解的 `queued_spin_lock` 函数从调用 `atomic_cmpxchg_acquire` 宏开始。就像你们可能从宏的名字猜到的那样，它执行原子的 [CMPXCHG](http://x86.renejeschke.de/html/file_module_x86_id_41.html) 指令，使用第一个参数（当前给定自旋锁的状态）比较第二个参数（在我们的例子为零）的值，如果他们相等，那么第二个参数在存储位置保存 `_Q_LOCKED_VAL` 的值，该存储位置通过 `&lock->val` 指向并且返回这个存储位置的初始值。
+看起来很简单，除了 `queued_spin_lock_slowpath` 函数，我们可能发现它只有一个参数。在我们的例子中这个参数代表 `队列自旋锁` 被上锁。让我们考虑`队列`锁为空，现在第一个线程想要获取锁的情况。正如我们可能了解的 `queued_spin_lock` 函数从调用 `atomic_cmpxchg_acquire` 宏开始。就像你们可能从宏的名字猜到的那样，它执行原子的 [CMPXCHG](https://x86.hust.openatom.club/html/file_module_x86_id_41.html) 指令，使用第一个参数（当前给定自旋锁的状态）比较第二个参数（在我们的例子为零）的值，如果他们相等，那么第二个参数在存储位置保存 `_Q_LOCKED_VAL` 的值，该存储位置通过 `&lock->val` 指向并且返回这个存储位置的初始值。
 
 `atomic_cmpxchg_acquire` 宏定义在 [include/linux/atomic.h](https://github.com/torvalds/linux/blob/master/include/linux/atomic.h) 头文件中并且扩展了 `atomic_cmpxchg` 函数的调用：
 
@@ -294,7 +294,7 @@ static __always_inline int atomic_cmpxchg(atomic_t *v, int old, int new)
     __raw_cmpxchg((ptr), (old), (new), (size), LOCK_PREFIX)
 ```
 
-就像我们可能了解的那样，`cmpxchg` 宏使用几乎相同的参数集合扩展了 `__cpmxchg` 宏。新添加的参数是原子值的大小。`__cpmxchg` 宏添加了 `LOCK_PREFIX`，还扩展了 `__raw_cmpxchg` 宏中 `LOCK_PREFIX`的 [LOCK](http://x86.renejeschke.de/html/file_module_x86_id_159.html)指令。毕竟 `__raw_cmpxchg` 对我们来说做了所有的的工作：
+就像我们可能了解的那样，`cmpxchg` 宏使用几乎相同的参数集合扩展了 `__cpmxchg` 宏。新添加的参数是原子值的大小。`__cpmxchg` 宏添加了 `LOCK_PREFIX`，还扩展了 `__raw_cmpxchg` 宏中 `LOCK_PREFIX`的 [LOCK](https://x86.hust.openatom.club/html/file_module_x86_id_159.html)指令。毕竟 `__raw_cmpxchg` 对我们来说做了所有的的工作：
 
 ```C
 #define __raw_cmpxchg(ptr, old, new, size, lock) \
@@ -475,8 +475,8 @@ smp_cond_acquire(!((val = atomic_read(&lock->val)) & _Q_LOCKED_PENDING_MASK));
 * [MCS](http://www.cs.rochester.edu/~scott/papers/1991_TOCS_synch.pdf)
 * [per-cpu variables](/Concepts/linux-cpu-1.md)
 * [atomic instruction](https://en.wikipedia.org/wiki/Linearizability)
-* [CMPXCHG instruction](http://x86.renejeschke.de/html/file_module_x86_id_41.html)
-* [LOCK instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
+* [CMPXCHG instruction](https://x86.hust.openatom.club/html/file_module_x86_id_41.html)
+* [LOCK instruction](https://x86.hust.openatom.club/html/file_module_x86_id_159.html)
 * [NOP instruction](https://en.wikipedia.org/wiki/NOP)
 * [PREFETCHW instruction](https://www.felixcloutier.com/x86/PREFETCHW.html)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)

@@ -110,7 +110,7 @@ $ gcc test.c -o test
 a + b = 15
 ```
 
-Ok, great. It works. Now let's look at this example in detail. Here we see a simple `C` program which calculates the sum of two variables placing the result into the `sum` variable and in the end we print the result. This example consists of three parts. The first is the assembly statement with the [add](http://x86.renejeschke.de/html/file_module_x86_id_5.html) instruction. It adds the value of the source operand together with the value of the destination operand and stores the result in the destination operand. In our case:
+Ok, great. It works. Now let's look at this example in detail. Here we see a simple `C` program which calculates the sum of two variables placing the result into the `sum` variable and in the end we print the result. This example consists of three parts. The first is the assembly statement with the [add](https://x86.hust.openatom.club/html/file_module_x86_id_5.html) instruction. It adds the value of the source operand together with the value of the destination operand and stores the result in the destination operand. In our case:
 
 ```assembly
 addq %1, %2
@@ -469,7 +469,7 @@ Links
 * [GNU extension](https://gcc.gnu.org/onlinedocs/gcc/C-Extensions.html)
 * [Global Descriptor Table](https://en.wikipedia.org/wiki/Global_Descriptor_Table)
 * [Processor registers](https://en.wikipedia.org/wiki/Processor_register)
-* [add instruction](http://x86.renejeschke.de/html/file_module_x86_id_5.html)
+* [add instruction](https://x86.hust.openatom.club/html/file_module_x86_id_5.html)
 * [flags register](https://en.wikipedia.org/wiki/FLAGS_register)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [constraints](https://gcc.gnu.org/onlinedocs/gcc/Machine-Constraints.html#Machine-Constraints)

@@ -192,7 +192,7 @@ asm_volatile_goto(LOCK_PREFIX "   decl %0\n"
 #define asm_volatile_goto(x...) do { asm goto(x); asm (""); } while (0)
 ```
 
-第一个汇编包含 `goto` 特性，而第二个空的内联汇编是 [屏障 (barrier)](https://en.wikipedia.org/wiki/Memory_barrier)。现在回去看看我们的内联汇编。正如我们所看到的，它从被 `LOCK前缀` 的宏定义开始，该宏仅是扩展 [lock](http://x86.renejeschke.de/html/file_module_x86_id_159.html) 指令：
+第一个汇编包含 `goto` 特性，而第二个空的内联汇编是 [屏障 (barrier)](https://en.wikipedia.org/wiki/Memory_barrier)。现在回去看看我们的内联汇编。正如我们所看到的，它从被 `LOCK前缀` 的宏定义开始，该宏仅是扩展 [lock](https://x86.hust.openatom.club/html/file_module_x86_id_159.html) 指令：
 
 ```C
 #define LOCK_PREFIX LOCK_PREFIX_HERE "\n\tlock; "
@@ -430,7 +430,7 @@ if (!list_empty(&lock->wait_list)) {
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
 * [Inline assembly](/Theory/linux-theory-3.md)
 * [Memory barrier](https://en.wikipedia.org/wiki/Memory_barrier)
-* [Lock instruction](http://x86.renejeschke.de/html/file_module_x86_id_159.html)
+* [Lock instruction](https://x86.hust.openatom.club/html/file_module_x86_id_159.html)
 * [JNS instruction](http://unixwiz.net/techtips/x86-jumps.html)
 * [preemption](https://en.wikipedia.org/wiki/Preemption_%28computing%29)
 * [Unix signals](https://en.wikipedia.org/wiki/Unix_signal)
