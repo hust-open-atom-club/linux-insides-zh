@@ -1,31 +1,26 @@
-Timers and time management in the Linux kernel. Part 1.
-================================================================================
+# Linux 定时器和时间管理 第一部分
 
-Introduction
---------------------------------------------------------------------------------
+## 简介
 
-This is yet another post that opens a new chapter in the [linux-insides](https://github.com/0xAX/linux-insides/blob/master/SUMMARY.md) book. The previous [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-4) described [system call](https://en.wikipedia.org/wiki/System_call) concepts, and now it's time to start new chapter. As one might understand from the title, this chapter will be devoted to the `timers` and `time management` in the Linux kernel. The choice of topic for the current chapter is not accidental. Timers (and generally, time management) are very important and widely used in the Linux kernel. The Linux kernel uses timers for various tasks, for example different timeouts in the [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) implementation, the kernel knowing current time, scheduling asynchronous functions, next event interrupt scheduling and many many more.
+这是本书 [linux-inside](https://github.com/hust-open-atom-club/linux-insides-zh/blob/master) 的新章节。前一[部分](../SysCall/linux-syscall-4.md)描述了[系统调用](https://en.wikipedia.org/wiki/System_call)的概念，现在是时候开始新的一章了。正如标题所示，本章将专门介绍 Linux内核中的 `定时器` 和 `时间管理`。本章的主题选择并非偶然。定时器(通常还有时间管理)非常重要，广泛地应用在 Linux 内核中。Linux 内核在多种任务中使用定时器，例如 [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol) 中的不同超时实现，内核知道当前时间、调度异步函数、下一个事件中断调度等等。
 
-So, we will start to learn implementation of the different time management related stuff in this part. We will see different types of timers and how different Linux kernel subsystems use them. As always, we will start from the earliest part of the Linux kernel and go through the initialization process of the Linux kernel. We already did it in the special [chapter](https://0xax.gitbook.io/linux-insides/summary/initialization) which describes the initialization process of the Linux kernel, but as you may remember we missed some things there. And one of them is the initialization of timers.
+因此，我们将在这一部分开始学习不同的与时间管理相关内容的实现。我们将看到不同类型的定时器，以及在不同的 Linux 内核子系统如何使用它们。与往常一样，我们将从 Linux 内核最早的部分开始，完成 Linux 内核的初始化过程。我们在描述 Linux 内核初始化过程的特殊[章](../Initialization/README.md)中已经这样做了，但您可能还记得，我们在那里遗漏了一些东西。其中之一是定时器的初始化。
 
-Let's start.
+我们开始吧！
 
-Initialization of non-standard PC hardware clock
---------------------------------------------------------------------------------
+## 非标准 PC 硬件时钟初始化
 
-After the Linux kernel was decompressed (more about this you can read in the [Kernel decompression](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-5) part) the architecture non-specific code starts to work in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) source code file. After initialization of the [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt), initialization of [cgroups](https://en.wikipedia.org/wiki/Cgroups) and setting [canary](https://en.wikipedia.org/wiki/Buffer_overflow_protection) value we can see the call of the `setup_arch` function.
+在 Linux 内核解压缩之后(有关这方面的更多信息，您可以在[内核解压](../Booting/linux-bootstrap-5.md)部分中阅读)，体系结构无关的代码在 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 源代码文件中开始工作。在初始化[锁验证器](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)、初始化 [cgroups](https://en.wikipedia.org/wiki/Cgroups) 和设置 [canary](https://en.wikipedia.org/wiki/Buffer_overflow_protection) 值之后，我们可以看到对 `setup_arch` 函数的调用。
 
-As you may remember, this function (defined in the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842)) prepares/initializes architecture-specific stuff (for example it reserves a place for [bss](https://en.wikipedia.org/wiki/.bss) section, reserves a place for [initrd](https://en.wikipedia.org/wiki/Initrd), parses kernel command line, and many, many other things). Besides this, we can find some time management related functions there.
-
-The first is:
+首先是:
 
 ```C
 x86_init.timers.wallclock_init();
 ```
 
-We already saw `x86_init` structure in the chapter that describes initialization of the Linux kernel. This structure contains pointers to the default setup functions for the different platforms like [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms), [Intel CE4100](http://www.wpgholdings.com/epaper/US/newsRelease_20091215/255874.pdf), etc. The `x86_init` structure is defined in the [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c#L36), and as you can see it determines standard PC hardware by default.
+在描述 Linux 内核初始化的章节中，我们已经看到了 `x86_init` 结构体。该结构包含了指向不同平台的默认设置函数的指针，如 [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms)、[Intel CE4100](http://www.wpgholdings.com/epaper/US/newsRelease_20091215/255874.pdf) 等。`x86_init` 结构定义在 [arch/x86/kernel/x86_init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/x86_init.c#L36) 中，如你所见，它确定了标准 PC 硬件是默认选项。
 
-As we can see, the `x86_init` structure has the `x86_init_ops` type that provides a set of functions for platform specific setup like reserving standard resources, platform specific memory setup, initialization of interrupt handlers, etc. This structure looks like:
+如你所见，`x86_init` 结构的类型是 `x86_init_ops`，它为特定平台的设置提供了一组函数，如预留标准资源、平台相关的内存设置、初始化中断处理程序等。这个结构看起来像这样:
 
 ```C
 struct x86_init_ops {
@@ -40,14 +35,18 @@ struct x86_init_ops {
 };
 ```
 
-Note the `timers` field that has the `x86_init_timers` type. We can understand by its name that this field is related to time management and timers. `x86_init_timers` contains four fields which are all functions that returns pointer on [void](https://en.wikipedia.org/wiki/Void_type):
+注意 `timers` 字段的类型是 `x86_init_timers`。顾名思义，该字段与时间管理和定时器有关。`x86_init_timers` 包含四个字段，它们都是返回 [void](https://en.wikipedia.org/wiki/Void_type)（注：没有返回值）的函数指针:
 
-* `setup_percpu_clockev` - set up the per cpu clock event device for the boot cpu;
-* `tsc_pre_init` - platform function called before [TSC](https://en.wikipedia.org/wiki/Time_Stamp_Counter) init;
-* `timer_init` - initialize the platform timer;
-* `wallclock_init` - initialize the wallclock device.
+* `setup_percpu_clockkev`- 为启动 CPU 的每个 CPU 设置时钟事件设备;
+* `tsc_pre_init` - 在 [TSC](https://en.wikipedia.org/wiki/Time_Stamp_Counter) 初始化之前调用的平台函数 [^tsc_pre_init];
+* `timer_init` - 初始化平台定时器;
+* `wallclock_init` - 初始化墙上时钟设备。
 
-So, as we already know, in our case the `wallclock_init` executes initialization of the wallclock device. If we look on the `x86_init` structure, we see that `wallclock_init` points to the `x86_init_noop`:
+[^tsc_pre_init]: 译注：6.11.0-rc5 源码中没有发现 `tsc_pre_init` 字段。
+
+所以，我们已经知道，此情况下，`wallclock_init` 会执行墙上时钟设备的初始化。在 `x86_init` 结构体的定义中，我们会看到 `wallclock_init` 指向 `x86_init_noop`[^x86_init_noop]:
+
+[^x86_init_noop]: 译注：6.11.0-rc5 中 `wallclock_init` 指向了 `x86_wallclock_init`。
 
 ```C
 struct x86_init_ops x86_init __initdata = {
@@ -63,13 +62,15 @@ struct x86_init_ops x86_init __initdata = {
 }
 ```
 
-Where the `x86_init_noop` is just a function that does nothing:
+其中 `x86_init_noop` 函数什么都没做:
 
 ```C
 void __cpuinit x86_init_noop(void) { }
 ```
 
-for the standard PC hardware. Actually, the `wallclock_init` function is used in the [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) platform. Initialization of the `x86_init.timers.wallclock_init` is located in the [arch/x86/platform/intel-mid/intel-mid.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/platform/intel-mid/intel-mid.c) source code file in the `x86_intel_mid_early_setup` function:
+对于标准 PC 硬件。实际上，`wallclock_init`函数是在 [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) 平台上使用的。`x86_init.timers.wallclock_init` 的初始化在 [arch/x86/platform/intel-mid/intel-mid.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/platform/intel-mid/intel-mid.c) 源代码文件的 `x86_intel_mid_early_setup` 函数中[^x86_intel_mid_early_setup]：
+
+[^x86_intel_mid_early_setup]: 译注：其中 `wallclock_init` 的赋值语句在 6.11.0-rc5 中去掉了。
 
 ```C
 void __init x86_intel_mid_early_setup(void)
@@ -84,7 +85,9 @@ void __init x86_intel_mid_early_setup(void)
 }
 ```
 
-Implementation of the `intel_mid_rtc_init` function is in the [arch/x86/platform/intel-mid/intel_mid_vrtc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/platform/intel-mid/intel_mid_vrtc.c) source code file and looks pretty simple. First of all, this function parses [Simple Firmware Interface](https://en.wikipedia.org/wiki/Simple_Firmware_Interface) M-Real-Time-Clock table for getting such devices to the `sfi_mrtc_array` array and initialization of the `set_time` and `get_time` functions:
+`intel_mid_rtc_init` 函数的实现在 [arch/x86/platform/intel-mid/intel_mid_vrtc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/platform/intel-mid/intel_mid_vrtc.c) 源代码文件中，看起来非常简单。首先，该函数解析[简单固件接口](https://en.wikipedia.org/wiki/Simple_Firmware_Interface) [^sfi] M-Real-Time-Clock 表，将获取此类设备到 `sfi_mrtc_array` 数组并初始化 `set_time` 和 `get_time` 函数:
+
+[^sfi]: 译注：SFI 支持在 Linux 5.12 被移除
 
 ```C
 void __init intel_mid_rtc_init(void)
@@ -105,36 +108,37 @@ void __init intel_mid_rtc_init(void)
 }
 ```
 
-That's all, after this a device based on `Intel MID` will be able to get time from the hardware clock. As I already wrote, the standard PC [x86_64](https://en.wikipedia.org/wiki/X86-64) architecture does not support `x86_init_noop` and just do nothing during call of this function. We just saw initialization of the [real time clock](https://en.wikipedia.org/wiki/Real-time_clock) for the [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) architecture, now it's time to return to the general `x86_64` architecture and will look on the time management related stuff there.
+这就是全部，此后，基于 `Intel MID` 的设备将能够从硬件时钟中获取时间。如前所述，标准 PC [x86_64](https://en.wikipedia.org/wiki/X86-64) 架构不支持 `x86_init_noop`，在调用该函数期间什么都不做。我们刚刚看到了 [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms) 架构 [实时时钟](https://en.wikipedia.org/wiki/Real-time_clock) 的初始化，现在是时候回到通用 `x86_64` 架构，并看看那里的时间管理相关的东西。
 
-Acquainted with jiffies
---------------------------------------------------------------------------------
+## 熟悉 jiffies
 
-If we return to the `setup_arch` function (which is located, as you remember, in the  [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842) source code file), we see the next call of the time management related function:
+回到 `setup_arch` 函数(该函数位于 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842) 源代码文件中)，会看到下一个被调用的时间管理相关的函数:
 
 ```C
 register_refined_jiffies(CLOCK_TICK_RATE);
 ```
 
-Before we look at the implementation of this function, we must know about [jiffy](https://en.wikipedia.org/wiki/Jiffy_%28time%29). As we can read on wikipedia:
+在我们看这个函数的实现之前，我们必须了解 [jiffy](https://en.wikipedia.org/wiki/Jiffy_%28time%29)。具体参阅维基百科 [^jeffy]:
 
 ```
-Jiffy is an informal term for any unspecified short period of time
+Jiffy 是一个非正式术语，指任何未指定的一小段时间 
 ```
 
-This definition is very similar to the `jiffy` in the Linux kernel. There is global variable with the `jiffies` which holds the number of ticks that have occurred since the system booted. The Linux kernel sets this variable to zero:
+[^jeffy]: 译注：一般是进程运行时时间片的单位，我觉得可以翻译成 **须臾**
+
+该定义与 Linux 内核中的 `jiffy` 非常相似。有一个名为 `jiffies` 的全局变量，它保存了自系统启动以来发生的时钟数。Linux 内核将该变量设置为 0:
 
 ```C
 extern unsigned long volatile __jiffy_data jiffies;
 ```
 
-during initialization process. This global variable will be increased each time during timer interrupt. Besides this, near the `jiffies` variable we can see the definition of the similar variable
+初始化过程中。在定时器中断处理时，该全局变量每次都会增加。除此之外，在 `jiffies` 变量附近，我们可以看到类似变量的定义：
 
 ```C
 extern u64 jiffies_64;
 ```
 
-Actually, only one of these variables is in use in the Linux kernel, and it depends on the processor type. For the [x86_64](https://en.wikipedia.org/wiki/X86-64) it will be `u64` use and for the [x86](https://en.wikipedia.org/wiki/X86) it's `unsigned long`. We see this looking at the [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S) linker script:
+实际上，Linux 内核中只使用了其中一个变量，这取决于处理器类型。对于 [x86_64](https://en.wikipedia.org/wiki/X86-64)，它将使用 `u64`，对于 [x86](https://en.wikipedia.org/wiki/X86)，它是 `unsigned long`。我们可以在 [arch/x86/kernel/vmlinux.lds.S](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vmlinux.lds.S) 链接脚本中看到:
 
 ```
 #ifdef CONFIG_X86_32
@@ -147,8 +151,7 @@ jiffies_64 = jiffies;
 ...
 #endif
 ```
-
-In the case of `x86_32` the `jiffies` will be the lower `32` bits of the `jiffies_64` variable. Schematically, we can imagine it as follows
+在 `x86_32` 的情况下，`jiffies` 将是 `jiffies_64` 变量的较低的32位。从原理上讲，可以想象如下所示：
 
 ```
                     jiffies_64
@@ -162,19 +165,19 @@ In the case of `x86_32` the `jiffies` will be the lower `32` bits of the `jiffie
 63                     31                             0
 ```
 
-Now we know a little theory about `jiffies` and can return to our function. There is no architecture-specific implementation for our function - the `register_refined_jiffies`. This function is located in the generic kernel code - [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file. Main point of the `register_refined_jiffies` is registration of the jiffy `clocksource`. Before we look on the implementation of the `register_refined_jiffies` function, we must know what `clocksource` is. As we can read in the comments:
+现在我们了解了一些关于 `jiffies` 的理论，可以回到我们的函数了。我们的函数 `register_refined_jiffies` 没有特定体系结构的实现。该函数位于通用的内核代码 [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) 文件中。`register_refined_jiffies` 的要点是注册jiffy 的 `clocksource`。在查看 `register_refined_jiffies` 函数的实现之前，我们必须知道 `clocksource` 是什么。可以在评论中看到:
 
 ```
-The `clocksource` is hardware abstraction for a free-running counter.
+`clocksource` 是一个自由运行计数器的硬件抽象。
 ```
 
-I'm not sure about you, but that description didn't give a good understanding about the `clocksource` concept. Let's try to understand what is it, but we will not go deeper because this topic will be described in a separate part in much more detail. The main point of the `clocksource` is timekeeping abstraction or in very simple words - it provides a time value to the kernel. We already know about the `jiffies` interface that represents number of ticks that have occurred since the system booted. It is represented by a global variable in the Linux kernel and increases each timer interrupt. The Linux kernel can use `jiffies` for time measurement. So why do we need in separate context like the `clocksource`? Actually, different hardware devices provide different clock sources that are varied in their capabilities. The availability of more precise techniques for time intervals measurement is hardware-dependent.
+我不知道你是怎么想的，但是这个描述并没有很好地理解 `clocksource` 的概念。让我们试着理解它是什么，但我们不会更深入，因为这个主题将在单独的部分中更详细地描述。`clocksource` 的要点是计时抽象，或者用非常简单的话说：它为内核提供了一个时间值。我们已经知道 `jiffies` 接口表示自系统启动以来发生的时钟数。在 Linux 内核中，它由一个全局变量表示，每个时钟中断都会增加一个计数器。Linux 内核可以使用 `jiffies` 进行时间测量。那么，为什么我们需要独立的时间上下文，比如 `clocksource`？实际上，不同的硬件设备提供不同的时间源，其功能也各不相同。更精确的时间间隔测量技术的可用性依赖于更高级的硬件。
 
-For example `x86` has on-chip a 64-bit counter that is called [Time Stamp  Counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) and its frequency can be equal to processor frequency. Or for example the [High Precision Event Timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer), that consists of a `64-bit` counter of at least `10 MHz` frequency. Two different timers and they are both for `x86`. If we will add timers from other architectures, this only makes this problem more complex. The Linux kernel provides the `clocksource` concept to solve the problem.
+例如，`x86` 在芯片上有一个 64 位计数器，称为[时间戳计数器](https://en.wikipedia.org/wiki/Time_Stamp_Counter)，其频率可以与处理器频率相等。或者[高精度事件定时器](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)，它由一个至少 ` 10mhz` 频率的 `64位` 计数器组成。两个不同的定时器，它们都是针对 `x86` 的。如果从其他体系结构添加定时器，只会使问题变得更加复杂。Linux 内核提供了 `clocksource`(时钟源) 的概念来解决这个问题。
 
-The clocksource concept is represented by the `clocksource` structure in the Linux kernel. This structure is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) header file and contains a couple of fields that describe a time counter. For example, it contains - `name` field which is the name of a counter, `flags` field that describes different properties of a counter, pointers to the `suspend` and `resume` functions, and many more.
+时钟源的概念由 Linux 内核中的 `clocksource` 结构表示。该结构定义在 [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) 头文件中，其中包含了几个描述时间计数器的字段。例如，它包含 - `name` 字段是计数器的名称，`flags` 字段描述了计数器的不同属性，指向 `suspend` 和 `resume` 函数的指针等等。
 
-Let's look at the `clocksource` structure for jiffies that is defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file:
+让我们看一下 jiffies 的 `clocksource` 结构，它定义在 [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) 源代码文件中:
 
 ```C
 static struct clocksource clocksource_jiffies = {
@@ -188,15 +191,15 @@ static struct clocksource clocksource_jiffies = {
 };
 ```
 
-We can see the definition of the default name here - `jiffies`. The next is the `rating` field, which allows the best registered clock source to be chosen by the clock source management code available for the specified hardware. The `rating` may have following value:
+我们可以在这里看到默认名称的定义 - `jiffies`。接下来是 `rating` 字段，它允许指定硬件上可用的时钟源管理代码，选择最佳注册时钟源。`rating` 可能有以下值:
 
-* `1-99`    - Only available for bootup and testing purposes;
-* `100-199` - Functional for real use, but not desired.
-* `200-299` - A correct and usable clocksource.
-* `300-399` - A reasonably fast and accurate clocksource.
-* `400-499` - The ideal clocksource. A must-use where available;
+* `1-99` - 仅用于启动和测试;
+* `100-199` - 实用但不理想。
+* `200-299` - 正确且可用的时钟源。
+* `300-399` - 相当快且准确的时钟源。
+* `400-499` - 理想的时钟源，在可用的地方必须使用;
 
-For example, rating of the [time stamp counter](https://en.wikipedia.org/wiki/Time_Stamp_Counter) is `300`, but rating of the [high precision event timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer) is `250`. The next field is `read` - it is pointer to the function that allows it to read clocksource's cycle value; or in other words, it just returns `jiffies` variable with `cycle_t` type:
+例如，[时间戳计数器](https://en.wikipedia.org/wiki/Time_Stamp_Counter)的 `rating` 是 300，但[高精度事件定时器](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)的评级是 250。下一个字段是 `read`，它是一个指针，指向允许它读取 clocksource 的周期值的函数，或者换句话说，它只是返回 `cycle_t` 类型的 `jiffies` 变量:
 
 ```C
 static cycle_t jiffies_read(struct clocksource *cs)
@@ -205,13 +208,13 @@ static cycle_t jiffies_read(struct clocksource *cs)
 }
 ```
 
-that is just 64-bit unsigned type:
+`cycle_t` 只是64位无符号类型:
 
 ```C
 typedef u64 cycle_t;
 ```
 
-The next field is the `mask` value, which ensures that subtraction between counters values from non `64 bit` counters do not need special overflow logic. In our case the mask is `0xffffffff` and it is `32` bits. This means that `jiffy` wraps around to zero after `42` seconds:
+下一个字段是 `mask` 值，它确保非 `64位` 计数器的计数器值之间的减法不需要特殊的溢出逻辑。在我们的例子中，掩码是 `0xffffffff`，它是32位。这意味着 `jiffy` 在 42 秒后会返回 0:
 
 ```python
 >>> 0xffffffff
@@ -224,13 +227,12 @@ The next field is the `mask` value, which ensures that subtraction between count
 4.3e-08
 ```
 
-The next two fields `mult` and `shift` are used to convert the clocksource's period to nanoseconds per cycle. When the kernel calls the `clocksource.read` function, this function returns a value in `machine` time units represented with `cycle_t` data type that we saw just now. To convert this return value to [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond) we need these two fields: `mult` and `shift`. The `clocksource` provides the `clocksource_cyc2ns` function that will do it for us with the following expression:
+接下来的两个字段 `mult` 和 `shift` 用于将时钟源的周期转换为每个周期的纳秒。当内核调用 `clocksource.clock` 时。函数，这个函数返回一个以机器时间单位表示的值，用我们刚才看到的 `cycle_t` 数据类型表示。要将这个返回值转换为[纳秒](https://en.wikipedia.org/wiki/Nanosecond)，我们需要这两个字段: `mult` 和`shift`。`clocksource` 提供了`clocksource_cyc2ns` 函数，它将使用以下表达式为我们完成这项工作:
 
 ```C
 ((u64) cycles * mult) >> shift;
 ```
-
-As we can see the `mult` field is equal:
+我们可以看到 `mult` 字段是相等的:
 
 ```C
 NSEC_PER_JIFFY << JIFFIES_SHIFT
@@ -239,7 +241,7 @@ NSEC_PER_JIFFY << JIFFIES_SHIFT
 #define NSEC_PER_SEC    1000000000L
 ```
 
-by default, and the `shift` is
+默认情况下，`shift` 是
 
 ```C
 #if HZ < 34
@@ -251,37 +253,37 @@ by default, and the `shift` is
 #endif
 ```
 
-The `jiffies` clock source uses the `NSEC_PER_JIFFY` multiplier conversion to specify the nanosecond over cycle ratio. Note that values of the  `JIFFIES_SHIFT` and `NSEC_PER_JIFFY` depend on `HZ` value. The `HZ` represents the frequency of the system timer. This macro defined in the [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/param.h) and depends on the `CONFIG_HZ` kernel configuration option. The value of `HZ` differs for each supported architecture, but for `x86` it's defined like:
+`jiffies` 时钟源使用 `NSEC_PER_JIFFY` 乘法器转换来指定纳秒/周期比。请注意，`JIFFIES_SHIFT` 和 `NSEC_PER_JIFFY` 的值取决于 `HZ` 的值。`HZ` 表示系统定时器的频率。该宏定义在 [include/asm-generic/param.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/asm-generic/param.h) 中，并依赖于 `CONFIG_HZ` 内核配置选项。`HZ` 的值因支持的体系结构而异，但对于 `x86`，它的定义如下:
 
 ```C
 #define HZ		CONFIG_HZ
 ```
 
-Where `CONFIG_HZ` can be one of the following values:
+其中 `CONFIG_HZ` 可以是以下值之一:
 
 ![HZ](images/HZ.png)
 
-This means that in our case the timer interrupt frequency is `250 HZ` or occurs `250` times per second or one timer interrupt each `4ms`.
+这意味着在我们的例子中，定时器中断频率是 250 HZ，或者每秒发生 250 次，或者每个 4ms 发生一个定时器中断。
 
-The last field that we can see in the definition of the `clocksource_jiffies` structure is the - `max_cycles` that holds the maximum cycle value that can safely be multiplied without potentially causing an overflow.
+在 `clocksource_jiffies` 结构体定义中，我们可以看到的最后一个字段是 - `max_cycles`，它保存了可以安全地相乘而不会导致溢出的最大周期值。
 
-Ok, we just saw definition of the `clocksource_jiffies` structure, also we know a little about `jiffies` and `clocksource`, now it is time to get back to the implementation of the our function. In the beginning of this part we have stopped on the call of the:
+好的，我们刚刚看到了 `clocksource_jiffies` 结构体的定义，我们也了解了一些关于 `jiffies` 和 `clocksource` 的知识，现在是时候回到我们函数的实现了。在这一部分的开始时，我们停在了下面的调用:
 
 ```C
 register_refined_jiffies(CLOCK_TICK_RATE);
 ```
 
-function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842) source code file.
+在 [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L842) 源代码文件中的函数。
 
-As I already wrote, the main purpose of the `register_refined_jiffies` function is to register `refined_jiffies` clocksource. We already saw the `clocksource_jiffies` structure represents standard `jiffies` clock source. Now, if you look in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file, you will find yet another clock source definition:
+正如我已经写的，`register_refined_jiffies` 函数的主要目的是注册 `refined_jiffies` 时钟源。我们已经知道 `clocksource_jiffies` 结构表示标准的 `jiffies` 时钟源。现在，如果查看[kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) 源代码文件，你会发现另一个时钟源定义:
 
 ```C
 struct clocksource refined_jiffies;
 ```
 
-There is one difference between `refined_jiffies` and `clocksource_jiffies`: The standard `jiffies` based clock source is the lowest common denominator clock source which should function on all systems. As we already know, the `jiffies` global variable will be increased during each timer interrupt. This means the that standard `jiffies` based clock source has the same resolution as the timer interrupt frequency. From this we can understand that standard `jiffies` based clock source may suffer from inaccuracies. The `refined_jiffies` uses `CLOCK_TICK_RATE` as the base of `jiffies` shift.
+`refined_jiffies` 和 `clocksource_jiffies` 之间有一个区别:基于 `jiffies` 的标准时钟源是最小公分母时钟源，应该在所有系统上都能工作。我们已经知道，`jiffies` 全局变量会在每次定时器中断期间增加。这意味着基于 `jiffies` 的标准时钟源具有与定时器中断频率相同的分辨率。由此我们可以理解，基于 `jiffies` 的标准时钟源可能会受到不准确性的影响。`refined_jiffies` 使用 `CLOCK_TICK_RATE` 作为 `jiffies` 移位的基准。
 
-Let's look at the implementation of this function. First of all, we can see that the `refined_jiffies` clock source based on the `clocksource_jiffies` structure:
+让我们看一下这个函数的实现。首先，我们可以看到基于 `clocksource_jiffies` 结构的 `refined_jiffies` 时钟源:
 
 ```C
 int register_refined_jiffies(long cycles_per_second)
@@ -297,27 +299,27 @@ int register_refined_jiffies(long cycles_per_second)
 	...
 ```
 
-Here we can see that we update the name of the `refined_jiffies` to `refined-jiffies` and increase the rating of this structure. As you remember, the `clocksource_jiffies` has rating - `1`, so our `refined_jiffies` clocksource will have rating - `2`. This means that the `refined_jiffies` will be the best selection for clock source management code.
+在这里，我们可以看到，我们将 `refined_jiffies` 的名称更新为 `refined-jiffies`，并增加了此结构的 rating。如你所知，`clocksource_jiffies` 的 rating 为 1，所以我们的 `refined_jiffies`时钟源的 rating 为 2。这意味着 `refined_jiffies` 将是时钟源管理代码的最佳选择。
 
-In the next step we need to calculate number of cycles per one tick:
+下一步，我们需要计算每个滴答的时钟周期数:
 
 ```C
 cycles_per_tick = (cycles_per_second + HZ/2)/HZ;
 ```
 
-Note that we have used `NSEC_PER_SEC` macro as the base of the standard `jiffies` multiplier. Here we are using the `cycles_per_second` which is the first parameter of the `register_refined_jiffies` function. We've passed the `CLOCK_TICK_RATE` macro to the `register_refined_jiffies` function. This macro is defined in the [arch/x86/include/asm/timex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/timex.h) header file and expands to the:
+请注意，我们使用 `NSEC_PER_SEC` 宏作为标准 `jiffies` 乘法器的基础。这里我们使用的是 `register_refined_jiffies` 函数的第一个参数 `cycles_per_second`。我们已经将 `CLOCK_TICK_RATE` 宏传递给了 `register_refined_jiffies` 函数。该宏定义在 [arch/x86/include/asm/timex.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/timex.h) 头文件中，并扩展为
 
 ```C
 #define CLOCK_TICK_RATE         PIT_TICK_RATE
 ```
 
-where the `PIT_TICK_RATE` macro expands to the frequency of the [Intel 8253](Programmable interval timer):
+其中 `PIT_TICK_RATE` 宏扩展到[Intel 8253](可编程间隔定时器) 的频率:
 
 ```C
 #define PIT_TICK_RATE 1193182ul
 ```
 
-After this we calculate `shift_hz` for the `register_refined_jiffies` that will store `hz << 8` or in other words frequency of the system timer. We shift left the `cycles_per_second` or frequency of the programmable interval timer on `8` in order to get extra accuracy:
+之后，我们为 `register_refined_jiffies` 计算 `shift_hz`，它将赋值为 `hz << 8`，或者换句话说，系统定时器的频率。我们将 `cycles_per_second` 或可编程间隔定时器的频率左移到`8`，以获得额外的精度:
 
 ```C
 shift_hz = (u64)cycles_per_second << 8;
@@ -325,7 +327,7 @@ shift_hz += cycles_per_tick/2;
 do_div(shift_hz, cycles_per_tick);
 ```
 
-In the next step we calculate the number of seconds per one tick by shifting left the `NSEC_PER_SEC` on `8` too as we did it with the `shift_hz` and do the same calculation as before:
+在下一步中，我们通过将 `NSEC_PER_SEC` 在 `8` 上左移来计算每个时钟周期的秒数，就像我们对 `shift_hz` 所做的那样，并进行与之前相同的计算:
 
 ```C
 nsec_per_tick = (u64)NSEC_PER_SEC << 8;
@@ -337,24 +339,23 @@ do_div(nsec_per_tick, (u32)shift_hz);
 refined_jiffies.mult = ((u32)nsec_per_tick) << JIFFIES_SHIFT;
 ```
 
-In the end of the `register_refined_jiffies` function we register new clock source with the `__clocksource_register` function that is defined in the [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) header file and return:
+在 `register_refined_jiffies` 函数的末尾，我们使用在 [include/linux/clocksource.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/clocksource.h) 头文件中定义的 `__clocksource_register` 函数注册新的时钟源并返回:
 
 ```C
 __clocksource_register(&refined_jiffies);
 return 0;
 ```
 
-The clock source management code provides the API for clock source registration and selection. As we can see, clock sources are registered by calling the  `__clocksource_register` function during kernel initialization or from a kernel module. During registration, the clock source management code will choose the best clock source available in the system using the `clocksource.rating` field which we already saw when we initialized `clocksource` structure for `jiffies`.
+时钟源管理代码提供了时钟源注册和选择的 API。我们可以看到，时钟源是通过在内核初始化期间或从内核模块中调用 `__clocksource_register` 函数来注册的。在注册期间，时钟源管理代码将使用 `clocksource.rating` 来选择系统中可用的最佳时钟源。当我们为 `jiffies` 初始化 `clocksource` 结构时，已经看到了。
 
-Using the jiffies
---------------------------------------------------------------------------------
+## 使用 the jiffies
 
-We just saw initialization of two `jiffies` based clock sources in the previous paragraph:
+在上一段中，我们看到了两个基于`jiffies`的时钟源的初始化:
 
-* standard `jiffies` based clock source;
-* refined  `jiffies` based clock source;
+* 基于标准 `jiffies` 的时钟源;
+* 基于改进 `jiffies` 的时钟源;
 
-Don't worry if you don't understand the calculations here. They look frightening at first. Soon, step by step we will learn these things. So, we just saw initialization of `jiffies` based clock sources and also we know that the Linux kernel has the global variable `jiffies` that holds the number of ticks that have occurred since the kernel started to work. Now, let's look how to use it. To use `jiffies` we just can use the `jiffies` global variable by its name or with the call of the `get_jiffies_64` function. This function defined in the [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) source code file and just returns full `64-bit` value of the `jiffies`:
+如果你不理解这里的计算，也不用担心。它们一开始看起来很吓人。很快，我们就会一步一步地学习这些东西。因此，我们刚刚看到了基于 `jiffies` 的时钟源的初始化，我们也知道 Linux 内核有全局变量 `jiffies`，它保存了自内核开始工作以来发生的时标数量。现在，让我们看看如何使用它。要使用 `jiffies`，我们只需通过名称或调用 `get_jiffies_64` 函数来使用 `jiffies` 全局变量。这个函数定义在 [kernel/time/jiffies.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/time/jiffies.c) 源代码文件中，只返回完整的 `jiffies` 的64位值:
 
 ```C
 u64 get_jiffies_64(void)
@@ -371,7 +372,7 @@ u64 get_jiffies_64(void)
 EXPORT_SYMBOL(get_jiffies_64);
 ```
 
-Note that the `get_jiffies_64` function is not implemented as `jiffies_read` for example:
+请注意，例如 `get_jiffies_64` 函数并没有被实现为 `jiffies_read`:
 
 ```C
 static cycle_t jiffies_read(struct clocksource *cs)
@@ -380,15 +381,15 @@ static cycle_t jiffies_read(struct clocksource *cs)
 }
 ```
 
-We can see that implementation of the `get_jiffies_64` is more complex. The reading of the `jiffies_64` variable is implemented using [seqlocks](https://en.wikipedia.org/wiki/Seqlock). Actually this is done for machines that cannot atomically read the full 64-bit values.
+我们可以看到 `get_jiffies_64` 的实现更复杂。`jiffies_64` 变量的读取是使用[seqlocks](https://en.wikipedia.org/wiki/Seqlock) 实现的。实际上，这是为那些不能原子读取完整 64 位值的机器而做的。
 
-If we can access the `jiffies` or the `jiffies_64` variable we can convert it to `human` time units. To get one second we can use following expression:
+如果我们可以访问 `jiffies` 或 `jiffies_64` 变量，我们可以将其转换为 `human` 时间单位。为了获得一秒钟的时间，我们可以使用以下表达式:
 
 ```C
 jiffies / HZ
 ```
 
-So, if we know this, we can get any time units. For example:
+如果我们知道这个，我们可以得到任何时间单位。例如:
 
 ```C
 /* Thirty seconds from now */
@@ -401,36 +402,36 @@ jiffies + 120*HZ
 jiffies + HZ / 1000
 ```
 
-That's all.
+以上。
 
-Conclusion
+结论
 --------------------------------------------------------------------------------
 
-This concludes the first part covering time and time management related concepts in the Linux kernel. We first met two concepts and their initialization: `jiffies` and `clocksource`. In the next part we will continue to dive into this interesting theme, and as I already wrote in this part, we will try to understand the insides of these and other time management concepts in the Linux kernel.
+到此为止，第一部分涵盖了 Linux 内核中与时间和时间管理相关的概念。我们首先遇到了 `jiffies` 和 `clocksource` 两个概念及其初始化。在下一部分中，我们将继续深入这个有趣的主题，如前所述，我们将尝试理解 Linux 内核中时间管理概念的内部原理。
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+如果你有问题或者建议，可随时在推特上联系我 [0xAX](https://twitter.com/0xAX), 给我发送 [email](mailto:anotherworldofworld@gmail.com) 或者直接创建 [issue](https://github.com/0xAX/linux-insides/issues/new).
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+**请注意，英语不是我的母语，给您带来的不便我感到非常抱歉。如果你发现任何错误，请提交 PR 到 [linux-insides](https://github.com/0xAX/linux-insides).**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
-* [system call](https://en.wikipedia.org/wiki/System_call)
+* [系统调用](https://en.wikipedia.org/wiki/System_call)
 * [TCP](https://en.wikipedia.org/wiki/Transmission_Control_Protocol)
-* [lock validator](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
+* [锁验证器](https://www.kernel.org/doc/Documentation/locking/lockdep-design.txt)
 * [cgroups](https://en.wikipedia.org/wiki/Cgroups)
 * [bss](https://en.wikipedia.org/wiki/.bss)
 * [initrd](https://en.wikipedia.org/wiki/Initrd)
 * [Intel MID](https://en.wikipedia.org/wiki/Mobile_Internet_device#Intel_MID_platforms)
 * [TSC](https://en.wikipedia.org/wiki/Time_Stamp_Counter)
 * [void](https://en.wikipedia.org/wiki/Void_type)
-* [Simple Firmware Interface](https://en.wikipedia.org/wiki/Simple_Firmware_Interface)
+* [简单固件接口](https://en.wikipedia.org/wiki/Simple_Firmware_Interface)
 * [x86_64](https://en.wikipedia.org/wiki/X86-64)
-* [real time clock](https://en.wikipedia.org/wiki/Real-time_clock)
+* [实时时钟](https://en.wikipedia.org/wiki/Real-time_clock)
 * [Jiffy](https://en.wikipedia.org/wiki/Jiffy_%28time%29)
-* [high precision event timer](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
-* [nanoseconds](https://en.wikipedia.org/wiki/Nanosecond)
+* [高精度事件定时器](https://en.wikipedia.org/wiki/High_Precision_Event_Timer)
+* [纳秒](https://en.wikipedia.org/wiki/Nanosecond)
 * [Intel 8253](https://en.wikipedia.org/wiki/Intel_8253)
 * [seqlocks](https://en.wikipedia.org/wiki/Seqlock)
-* [cloksource documentation](https://www.kernel.org/doc/Documentation/timers/timekeeping.txt)
-* [Previous chapter](https://0xax.gitbook.io/linux-insides/summary/syscall)
+* [cloksource 文档](https://www.kernel.org/doc/Documentation/timers/timekeeping.txt)
+* [前一章](https://0xax.gitbook.io/linux-insides/summary/syscall)
