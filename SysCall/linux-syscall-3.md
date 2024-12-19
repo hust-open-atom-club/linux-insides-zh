@@ -11,7 +11,7 @@ vsyscalls 和 vDSO
  vsyscalls 介绍
 --------------------------------------------------------------------------------
 
- `vsyscall` 或 `virtual system call` 是第一种也是最古老的一种用于加快系统调用的机制。 `vsyscall` 的工作原则其实十分简单。Linux 内核在用户空间映射一个包含一些变量及一些系统调用的实现的内存页。 对于 [X86_64](https://en.wikipedia.org/wiki/X86-64) 架构可以在 Linux 内核的 [文档] (https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) 找到关于这一内存区域的信息：
+ `vsyscall` 或 `virtual system call` 是第一种也是最古老的一种用于加快系统调用的机制。 `vsyscall` 的工作原则其实十分简单。Linux 内核在用户空间映射一个包含一些变量及一些系统调用的实现的内存页。 对于 [X86_64](https://en.wikipedia.org/wiki/X86-64) 架构可以在 Linux 内核的 [文档](https://github.com/torvalds/linux/blob/master/Documentation/x86/x86_64/mm.txt) 找到关于这一内存区域的信息：
 
 ```
 ffffffffff600000 - ffffffffffdfffff (=8 MB) vsyscalls
