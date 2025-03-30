@@ -1,20 +1,20 @@
-Kernel initialization. Part 7.
+内核初始化 第七部分
 ================================================================================
 
-The End of the architecture-specific initialization, almost...
+架构相关初始化尾声：最后一程
 ================================================================================
 
-This is the seventh part of the Linux Kernel initialization process which covers insides of the `setup_arch` function from the [arch/x86/kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861). As you can know from the previous [parts](https://0xax.gitbook.io/linux-insides/summary/initialization), the `setup_arch` function does some architecture-specific (in our case it is [x86_64](http://en.wikipedia.org/wiki/X86-64)) initialization stuff like reserving memory for kernel code/data/bss, early scanning of the [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface), early dump of the [PCI](http://en.wikipedia.org/wiki/PCI) device and many many more. If you have read the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6), you can remember that we've finished it at the `setup_real_mode` function. In the next step, as we set limit of the [memblock](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1) to the all mapped pages, we can see the call of the `setup_log_buf` function from the [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c).
+这是 Linux 内核初始化过程的第七部分，主要解析 [arch/x86/Kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861) 文件中 `setup_arch` 函数内部机制。通过[前文](https://0xax.gitbook.io/linux-insides/summary/initialization)可知，`setup_arch` 函数执行架构相关（本文以 [x86_64](http://en.wikipedia.org/wiki/X86-64) 为例）的初始化工作，包括为内核代码/数据/bss 保留内存，[桌面管理界面](http://en.wikipedia.org/wiki/Desktop_Management_Interface)的早期扫描，[PCI](http://en.wikipedia.org/wiki/PCI) 设备的早期转储等众多操作。如果您已经阅读了前面的[部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)，会记得我们是在 `setup_real_mode` 函数处结束的。接下来，在我们限制 [memblock](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1) 为所有已映射页后，可以看到 [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c) 中调用了 `setup_log_buf` 函数。
 
-The `setup_log_buf` function setups kernel cyclic buffer and its length depends on the `CONFIG_LOG_BUF_SHIFT` configuration option. As we can read from the documentation of the `CONFIG_LOG_BUF_SHIFT` it can be between `12` and `21`. In the insides, buffer defined as array of chars:
+`setup_log_buf` 函数用于设置内核循环缓冲区，其长度取决于 `CONFIG_LOG_BUF_SHIFT` 配置选项。从文档中可知，`CONFIG_LOG_BUF_SHIFT `取值范围在 `12` 到 `21` 之间。在内部实现中，该缓冲区定义为字符数组：
 
-```C
+```c
 #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
 static char __log_buf[__LOG_BUF_LEN] __aligned(LOG_ALIGN);
 static char *log_buf = __log_buf;
 ```
 
-Now let's look on the implementation of the `setup_log_buf` function. It starts with check that current buffer is empty (It must be empty, because we just setup it) and another check that it is early setup. If setup of the kernel log buffer is not early, we call the `log_buf_add_cpu` function which increase size of the buffer for every CPU:
+现在我们来看 `setup_log_buf` 函数的实现。它首先会检查当前缓冲区是否为空（由于刚刚初始化，此时缓冲区必须为空），同时还会检查是否为早期初始化阶段。如果内核日志缓冲区的设置不属于早期初始化阶段，则会调用 `log_buf_add_cpu` 函数，该函数会为每个 CPU 扩展缓冲区的大小：
 
 ```C
 if (log_buf != __log_buf)
@@ -24,15 +24,15 @@ if (!early && !new_log_buf_len)
     log_buf_add_cpu();
 ```
 
-We will not research `log_buf_add_cpu` function, because as you can see in the `setup_arch`, we call `setup_log_buf` as:
+这里我们暂不深入分析 `log_buf_add_cpu` 函数，因为正如 `setup_arch` 中所示，我们是通过以下方式调用 `setup_log_buf` 的：
 
 ```C
 setup_log_buf(1);
 ```
 
-where `1` means that it is early setup. In the next step we check `new_log_buf_len` variable which is updated length of the kernel log buffer and allocate new space for the buffer with the `memblock_virt_alloc` function for it, or just return.
+其中参数 `1` 表示当前处于早期初始化阶段。接下来，我们会检查 `new_log_buf_len` 变量（该变量表示更新后的内核日志缓冲区长度），并通过 `memblock_virt_alloc` 函数为其分配新的缓冲区空间，否则直接返回。
 
-As kernel log buffer is ready, the next function is `reserve_initrd`. You can remember that we already called the `early_reserve_initrd` function in the fourth part of the [Kernel initialization](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4). Now, as we reconstructed direct memory mapping in the `init_mem_mapping` function, we need to move [initrd](http://en.wikipedia.org/wiki/Initrd) into directly mapped memory. The `reserve_initrd` function starts from the definition of the base address and end address of the `initrd` and check that `initrd` is provided by a bootloader. All the same as what we saw in the `early_reserve_initrd`. But instead of the reserving place in the `memblock` area with the call of the `memblock_reserve` function, we get the mapped size of the direct memory area and check that the size of the `initrd` is not greater than this area with:
+当内核日志缓冲区准备就绪后，下一个执行的是 `reserve_initrd` 函数。您可能还记得，在[内核初始化第四部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4)中我们已经调用过 `early_reserve_initrd` 函数。现在，由于我们已在 `init_mem_mapping` 函数中重建了直接内存映射，因此需要将[初始RAM磁盘](http://en.wikipedia.org/wiki/Initrd)移入直接映射内存区域。`reserve_initrd` 函数首先确定 initrd 的基地址和结束地址，并检查 bootloader 是否提供了 initrd —— 这些操作与我们在 `early_reserve_initrd` 中看到的完全一致。但不同于之前通过调用 `memblock_reserve` 在 memblock 区域中保留空间的做法，这里我们会获取直接内存映射区域的映射大小，并通过以下方式确保 initrd 的大小不超过该区域：
 
 ```C
 mapped_size = memblock_mem_size(max_pfn_mapped);
@@ -42,13 +42,15 @@ if (ramdisk_size >= (mapped_size>>1))
 	      ramdisk_size, mapped_size>>1);
 ```
 
-You can see here that we call `memblock_mem_size` function and pass the `max_pfn_mapped` to it, where `max_pfn_mapped` contains the highest direct mapped page frame number. If you do not remember what is `page frame number`, explanation is simple: First `12` bits of the virtual address represent offset in the physical page or page frame. If we right-shift out `12` bits of the virtual address, we'll discard offset part and will get `Page Frame Number`. In the `memblock_mem_size` we go through the all memblock `mem` (not reserved) regions and calculates size of the mapped pages and return it to the `mapped_size` variable (see code above). As we got amount of the direct mapped memory, we check that size of the `initrd` is not greater than mapped pages. If it is greater we just call `panic` which halts the system and prints famous [Kernel panic](http://en.wikipedia.org/wiki/Kernel_panic) message. In the next step we print information about the `initrd` size. We can see the result of this in the `dmesg` output:
+可以看到，这里我们调用了 `memblock_mem_size` 函数，并将 `max_pfn_mapped` 作为参数传入。其中，`max_pfn_mapped` 存储的是当前直接映射的最高页帧号（Page Frame Number）。若不记得什么是页帧号，这里简单说明：虚拟地址的低 `12` 位表示物理页（页帧）的偏移量。当我们右移虚拟地址的 `12` 位时，将丢弃偏移部分，从而得到页帧号。在 `memblock_mem_size` 函数内部，我们会遍历所有 memblock 的 `mem` 区域（不包括保留区域），计算已映射页面的总大小，并将结果返回给 `mapped_size` 变量（参见上文代码）。获取到直接映射内存的总量后，我们会检查 `initrd` 的大小是否超过已映射的页面范围。如果超出，则直接调用 `panic` 函数终止系统运行，并打印著名的[内核恐慌](http://en.wikipedia.org/wiki/Kernel_panic)信息。
+
+接下来，我们会打印关于 `initrd` 大小的信息。通过 `dmesg` 命令的输出可以看到如下结果：
 
 ```C
 [0.000000] RAMDISK: [mem 0x36d20000-0x37687fff]
 ```
 
-and relocate `initrd` to the direct mapping area with the `relocate_initrd` function. In the start of the `relocate_initrd` function we try to find a free area with the `memblock_find_in_range` function:
+随后通过 `relocate_initrd` 函数将 `initrd` 重定位到直接映射区域。在 `relocate_initrd` 函数起始处，我们会尝试使用 `memblock_find_in_range` 函数来寻找可用内存区域：
 
 ```C
 relocated_ramdisk = memblock_find_in_range(0, PFN_PHYS(max_pfn_mapped), area_size, PAGE_SIZE);
@@ -58,17 +60,17 @@ if (!relocated_ramdisk)
 	       ramdisk_size);
 ```
 
-The `memblock_find_in_range` function tries to find a free area in a given range, in our case from `0` to the maximum mapped physical address and size must equal to the aligned size of the `initrd`. If we didn't find a area with the given size, we call `panic` again. If all is good, we start to relocated RAM disk to the down of the directly mapped memory in the next step.
+`memblock_find_in_range` 函数会尝试在指定范围内（本例中是从 `0` 到最大已映射物理地址）寻找可用区域，且该区域大小必须等于经过对齐处理的 `initrd` 大小。如果未能找到符合要求的区域，系统将再次调用 `panic` 函数终止运行。若成功找到合适区域，我们将在下一步将 RAM 磁盘重定位至直接映射内存的末端。
 
-In the end of the `reserve_initrd` function, we free memblock memory which occupied by the ramdisk with the call of the:
+在 `reserve_initrd` 函数的最后阶段，通过调用以下函数释放原 RAM 磁盘占用的 memblock 内存：
 
 ```C
 memblock_free(ramdisk_image, ramdisk_end - ramdisk_image);
 ```
 
-After we relocated `initrd` ramdisk image, the next function is `vsmp_init` from the [arch/x86/kernel/vsmp_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vsmp_64.c). This function initializes support of the `ScaleMP vSMP`. As I already wrote in the previous parts, this chapter will not cover non-related `x86_64` initialization parts (for example as the current or `ACPI`, etc.). So we will skip implementation of this for now and will back to it in the part which cover techniques of parallel computing.
+在完成 `initrd` RAM 磁盘镜像的重定位后，接下来执行的是位于 [arch/x86/kernel/vsmp_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/vsmp_64.c) 的 `vsmp_init` 函数。该函数用于初始化 `ScaleMP vSMP` 架构支持。如先前章节所述，本文不会涉及与 `x86_64` 初始化无关的内容（例如当前的 `ACPI` 等）。因此我们将暂时跳过其具体实现，留待后续讲解并行计算技术时再作探讨。
 
-The next function is `io_delay_init` from the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c). This function allows to override default I/O delay `0x80` port. We already saw I/O delay in the [Last preparation before transition into protected mode](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-3), now let's look on the `io_delay_init` implementation:
+随后调用的是 [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c) 中的 `io_delay_init` 函数。该函数允许覆盖默认的 I/O 延迟端口 `0x80`。我们已在[进入保护模式前的最后准备](https://0xax.gitbook.io/linux-insides/summary/booting/linux-bootstrap-3)中接触过 I/O 延迟的概念，现在让我们深入分析 `io_delay_init` 的具体实现：
 
 ```C
 void __init io_delay_init(void)
@@ -78,7 +80,7 @@ void __init io_delay_init(void)
 }
 ```
 
-This function check `io_delay_override` variable and overrides I/O delay port if `io_delay_override` is set. We can set `io_delay_override` variably by passing `io_delay` option to the kernel command line. As we can read from the [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst), `io_delay` option is:
+该函数会检查 `io_delay_override` 变量，若该变量被设置，则覆盖默认的 I/O 延迟端口。我们可以通过向内核命令行传递 `io_delay` 参数来设置 `io_delay_override` 变量。根据 [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst) 文档说明，`io_delay` 选项是：
 
 ```
 io_delay=	[X86] I/O delay method
@@ -92,13 +94,13 @@ io_delay=	[X86] I/O delay method
         No delay
 ```
 
-We can see `io_delay` command line parameter setup with the `early_param` macro in the [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c)
+可以看到，在 [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c) 文件中，`io_delay` 命令行参数是通过 `early_param` 宏进行设置的：
 
 ```C
 early_param("io_delay", io_delay_param);
 ```
 
-More about `early_param` you can read in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6). So the `io_delay_param` function which setups `io_delay_override` variable will be called in the [do_early_param](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L413) function. `io_delay_param` function gets the argument of the `io_delay` kernel command line parameter and sets `io_delay_type` depends on it:
+关于 `early_param` 宏的更多细节，您可以在[第六部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)中查阅。因此，用于设置 `io_delay_override` 变量的 `io_delay_param` 函数将会在 [do_early_param](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c#L413) 函数中被调用。`io_delay_param` 函数通过解析 `io_delay` 内核命令行参数，根据传入值设置相应的 `io_delay_type`：
 
 ```C
 static int __init io_delay_param(char *s)
@@ -122,12 +124,12 @@ static int __init io_delay_param(char *s)
 }
 ```
 
-The next functions are `acpi_boot_table_init`, `early_acpi_boot_init` and `initmem_init` after the `io_delay_init`, but as I wrote above we will not cover [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) related stuff in this `Linux Kernel initialization process` chapter.
+在 `io_delay_init` 之后，接下来执行的函数依次是 `acpi_boot_table_init`、`early_acpi_boot_init` 和 `initmem_init`。不过正如前文所述，在当前的「Linux 内核初始化流程」章节中，我们将不涉及与 [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) 相关的内容。
 
-Allocate area for DMA
+为DMA分配域
 --------------------------------------------------------------------------------
 
-In the next step we need to allocate area for the [Direct memory access](http://en.wikipedia.org/wiki/Direct_memory_access) with the `dma_contiguous_reserve` function which is defined in the [drivers/base/dma-contiguous.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/base/dma-contiguous.c). `DMA` is a special mode when devices communicate with memory without CPU. Note that we pass one parameter - `max_pfn_mapped << PAGE_SHIFT`, to the `dma_contiguous_reserve` function and as you can understand from this expression, this is limit of the reserved memory. Let's look on the implementation of this function. It starts from the definition of the following variables:
+下一步我们需要通过 `dma_contiguous_reserve` 函数为[直接内存访问（DMA）](http://en.wikipedia.org/wiki/Direct_memory_access)分配专用区域，该函数定义于 [drivers/base/dma-contiguous.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/base/dma-contiguous.c)。DMA 是一种特殊工作模式，设备无需 CPU 介入即可直接与内存通信。请注意，我们向 `dma_contiguous_reserve` 函数传递了一个关键参数——`max_pfn_mapped << PAGE_SHIFT`。从该表达式可以理解，此参数表示可保留内存的上限地址（将最大页帧号转换为字节地址）。让我们分析该函数的实现，它从定义以下变量开始：
 
 ```C
 phys_addr_t selected_size = 0;
@@ -136,7 +138,7 @@ phys_addr_t selected_limit = limit;
 bool fixed = false;
 ```
 
-where first represents size in bytes of the reserved area, second is base address of the reserved area, third is end address of the reserved area and the last `fixed` parameter shows where to place reserved area. If `fixed` is `1` we just reserve area with the `memblock_reserve`, if it is `0` we allocate space with the `kmemleak_alloc`. In the next step we check `size_cmdline` variable and if it is not equal to `-1` we fill all variables which you can see above with the values from the `cma` kernel command line parameter:
+其中第一个参数表示保留区域的大小（以字节为单位），第二个参数是保留区域的基地址，第三个参数是保留区域的结束地址，最后一个 `fixed` 参数用于指定保留区域的放置方式。当 `fixed` 为 `1` 时，直接通过 `memblock_reserve` 保留内存区域；若为 `0` ，则使用`kmemleak_alloc` 动态分配空间。在接下来的步骤中，函数会检查 `size_cmdline` 变量。若该变量不等于 `-1`（表示已通过命令行参数指定大小），则将使用来自 `cma` 内核命令行参数的值填充上述所有变量：
 
 ```C
 if (size_cmdline != -1) {
@@ -146,13 +148,13 @@ if (size_cmdline != -1) {
 }
 ```
 
-You can find in this source code file definition of the early parameter:
+在该源码文件中可以找到如下早期参数的定义：
 
 ```C
 early_param("cma", early_cma);
 ```
 
-where `cma` is:
+其中 `cma` 表示:
 
 ```
 cma=nn[MG]@[start[MG][-end[MG]]]
@@ -165,31 +167,31 @@ cma=nn[MG]@[start[MG][-end[MG]]]
 		include/linux/dma-contiguous.h
 ```
 
-If we will not pass `cma` option to the kernel command line, `size_cmdline` will be equal to `-1`. In this way we need to calculate size of the reserved area which depends on the following kernel configuration options:
+如果未向内核命令行传递 `cma` 参数，则 `size_cmdline` 将保持默认值 `-1`。此时，系统需要根据以下内核配置选项来计算保留区域的大小：
 
-* `CONFIG_CMA_SIZE_SEL_MBYTES` - size in megabytes, default global `CMA` area, which is equal to `CMA_SIZE_MBYTES * SZ_1M` or `CONFIG_CMA_SIZE_MBYTES * 1M`;
-* `CONFIG_CMA_SIZE_SEL_PERCENTAGE` - percentage of total memory;
-* `CONFIG_CMA_SIZE_SEL_MIN` - use lower value;
-* `CONFIG_CMA_SIZE_SEL_MAX` - use higher value.
+* `CONFIG_CMA_SIZE_SEL_MBYTES` -  该选项表示以兆字节（MB）为单位的默认全局连续内存分配器（CMA）区域大小，其计算公式为 `CMA_SIZE_MBYTES * SZ_1M` 或等价的 `CONFIG_CMA_SIZE_MBYTES * 1M`；
+* `CONFIG_CMA_SIZE_SEL_PERCENTAGE` - 总内存的百分比；
+* `CONFIG_CMA_SIZE_SEL_MIN` - 取较小值；
+* `CONFIG_CMA_SIZE_SEL_MAX` - 取较大值；
 
-As we calculated the size of the reserved area, we reserve area with the call of the `dma_contiguous_reserve_area` function which first of all calls:
+在计算出保留区域的大小后，系统将通过调用 `dma_contiguous_reserve_area` 函数来实际保留该内存区域。该函数的执行流程首先会调用以下函数：
 
 ```
 ret = cma_declare_contiguous(base, size, limit, 0, 0, fixed, res_cma);
 ```
 
-function. The `cma_declare_contiguous` reserves contiguous area from the given base address with given size. After we reserved area for the `DMA`, next function is the `memblock_find_dma_reserve`. As you can understand from its name, this function counts the reserved pages in the `DMA` area. This part will not cover all details of the `CMA` and `DMA`, because they are big. We will see much more details in the special part in the Linux Kernel Memory management which covers contiguous memory allocators and areas.
+`cma_declare_contiguous` 函数用于从指定的基地址开始保留一块连续的物理内存区域，其大小由参数指定。完成 DMA 区域的内存保留后，接下来会调用 `memblock_find_dma_reserve` 函数——顾名思义，该函数用于统计 DMA 区域中已保留的页框数量。由于 CMA（连续内存分配器）和 DMA 相关实现较为复杂，本文暂不深入探讨所有细节。我们将在后续专门讲解 Linux 内核内存管理的章节中，详细分析连续内存分配器及其内存区域的实现机制。
 
-Initialization of the sparse memory
+稀疏内存初始化
 --------------------------------------------------------------------------------
 
-The next step is the call of the function - `x86_init.paging.pagetable_init`. If you try to find this function in the Linux kernel source code, in the end of your search, you will see the following macro:
+接下来将调用 `x86_init.paging.pagetable_init` 函数。若您在内核源码中追溯该函数的实现，最终会发现以下宏定义：
 
 ```C
 #define native_pagetable_init        paging_init
 ```
 
-which expands as you can see to the call of the `paging_init` function from the [arch/x86/mm/init_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/init_64.c). The `paging_init` function initializes sparse memory and zone sizes. First of all what's zones and what is it `Sparsemem`. The `Sparsemem` is a special foundation in the Linux kernel memory manager which used to split memory area into different memory banks in the [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) systems. Let's look on the implementation of the `paging_init` function:
+该宏如您所见，会展开调用 [arch/x86/mm/init_64.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/init_64.c) 中的 `paging_init` 函数。`paging_init` 函数负责初始化稀疏内存和内存区域大小。首先需要了解什么是内存区域（zone）以及什么是 `Sparsemem`。`Sparsemem` 是 Linux 内核内存管理器中用于在 [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access) 系统中将内存区域划分为不同内存组（memory bank）的特殊基础架构。让我们看看 `paging_init` 函数的实现：
 
 ```C
 void __init paging_init(void)
@@ -205,14 +207,14 @@ void __init paging_init(void)
 }
 ```
 
-As you can see there is call of the `sparse_memory_present_with_active_regions` function which records a memory area for every `NUMA` node to the array of the `mem_section` structure which contains a pointer to the structure of the array of `struct page`. The next `sparse_init` function allocates non-linear `mem_section` and `mem_map`. In the next step we clear state of the movable memory nodes and initialize sizes of zones. Every `NUMA` node is divided into a number of pieces which are called - `zones`. So, `zone_sizes_init` function from the [arch/x86/mm/init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/init.c) initializes size of zones.
+可以看到，这里调用了 `sparse_memory_present_with_active_regions` 函数，该函数会为每个 NUMA 节点记录内存区域到 `mem_section` 结构数组中，该结构包含指向 `struct page` 数组结构的指针。随后的 `sparse_init` 函数会分配非线性的 `mem_section` 和 `mem_map`。接下来我们会清除可移动内存节点的状态并初始化各内存区域(zone)的大小。每个 NUMA 节点都被划分为多个称为"zone"的部分。因此，来自 [arch/x86/mm/init.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/mm/init.c) 的 `zone_sizes_init` 函数就是用于初始化这些zone的大小的。
 
-Again, this part and next parts do not cover this theme in full details. There will be special part about `NUMA`.
+再次说明，本部分及后续部分不会完整详细地涵盖这一主题。关于 NUMA 将有专门的章节进行讲解。
 
-vsyscall mapping
+vsyscall 映射
 --------------------------------------------------------------------------------
 
-The next step after `SparseMem` initialization is setting of the `trampoline_cr4_features` which must contain content of the `cr4` [Control register](http://en.wikipedia.org/wiki/Control_register). First of all we need to check that current CPU has support of the `cr4` register and if it has, we save its content to the `trampoline_cr4_features` which is storage for `cr4` in the real mode:
+在 `SparseMem` 初始化之后，下一步是设置 `trampoline_cr4_features`，它必须包含 `cr4` [控制寄存器](http://en.wikipedia.org/wiki/Control_register)的内容。首先我们需要检查当前 CPU 是否支持 `cr4` 寄存器，如果支持，就将其内容保存到 `trampoline_cr4_features` ，这是在实模式下存储 `cr4` 的地方。
 
 ```C
 if (boot_cpu_data.cpuid_level >= 0) {
@@ -222,7 +224,7 @@ if (boot_cpu_data.cpuid_level >= 0) {
 }
 ```
 
-The next function which you can see is `map_vsyscal` from the [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c). This function maps memory space for [vsyscalls](https://lwn.net/Articles/446528/) and depends on `CONFIG_X86_VSYSCALL_EMULATION` kernel configuration option. Actually `vsyscall` is a special segment which provides fast access to the certain system calls like `getcpu`, etc. Let's look on implementation of this function:
+接下来您会看到的是 [arch/x86/entry/vsyscall/vsyscall_64.c](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_64.c) 的 `map_vsyscall` 函数。这个函数为 [vsyscalls](https://lwn.net/Articles/446528/) 映射内存空间，其功能依赖于内核配置选项 `CONFIG_X86_VSYSCALL_EMULATION`。实际上，`vsyscall` 是一个特殊的段，它提供了对某些系统调用(如 `getcpu` 等)的快速访问。该函数的具体实现如下：
 
 ```C
 void __init map_vsyscall(void)
@@ -241,7 +243,7 @@ void __init map_vsyscall(void)
 }
 ```
 
-In the beginning of the `map_vsyscall` we can see definition of two variables. The first is extern variable `__vsyscall_page`. As a extern variable, it defined somewhere in other source code file. Actually we can see definition of the `__vsyscall_page` in the [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S). The `__vsyscall_page` symbol points to the aligned calls of the `vsyscalls` as `gettimeofday`, etc.:
+在 `map_vsyscall` 函数的开头，我们可以看到两个变量的定义。第一个是外部变量 `__vsyscall_page`。作为外部变量，它实际上是在其他源文件中定义的。我们可以在 [arch/x86/entry/vsyscall/vsyscall_emu_64.S](https://github.com/torvalds/linux/blob/master/arch/x86/entry/vsyscall/vsyscall_emu_64.S) 中找到 `__vsyscall_page` 的定义。`__vsyscall_page` 符号指向对齐的 vsyscalls 调用，如 `gettimeofday` 等：
 
 ```assembly
 	.globl __vsyscall_page
@@ -262,13 +264,13 @@ __vsyscall_page:
     ...
 ```
 
-The second variable is `physaddr_vsyscall` which just stores physical address of the `__vsyscall_page` symbol. In the next step we check the `vsyscall_mode` variable, and if it is not equal to `NONE`, it is `EMULATE` by default:
+第二个变量是 `physaddr_vsyscall`，它仅存储 `__vsyscall_page` 符号的物理地址。在接下来的步骤中，我们会检查 `vsyscall_mode` 变量，如果它不等于 `NONE`（默认情况下是 `EMULATE` 模式）：
 
 ```C
 static enum { EMULATE, NATIVE, NONE } vsyscall_mode = EMULATE;
 ```
 
-And after this check we can see the call of the `__set_fixmap` function which calls `native_set_fixmap` with the same parameters:
+随后我们会看到调用 `__set_fixmap` 函数，该函数会以相同的参数调用 `native_set_fixmap`：
 
 ```C
 void native_set_fixmap(enum fixed_addresses idx, unsigned long phys, pgprot_t flags)
@@ -289,26 +291,26 @@ void __native_set_fixmap(enum fixed_addresses idx, pte_t pte)
 }
 ```
 
-Here we can see that `native_set_fixmap` makes value of `Page Table Entry` from the given physical address (physical address of the `__vsyscall_page` symbol in our case) and calls internal function - `__native_set_fixmap`. Internal function gets the virtual address of the given `fixed_addresses` index (`VSYSCALL_PAGE` in our case) and checks that given index is not greater than end of the fix-mapped addresses. After this we set page table entry with the call of the `set_pte_vaddr` function and increase count of the fix-mapped addresses. And in the end of the `map_vsyscall` we check that virtual address of the `VSYSCALL_PAGE` (which is first index in the `fixed_addresses`) is not greater than `VSYSCALL_ADDR` which is `-10UL << 20` or `ffffffffff600000` with the `BUILD_BUG_ON` macro:
+这里我们可以看到 `native_set_fixmap` 根据给定的物理地址（在我们的例子中是 `__vsyscall_page` 符号的物理地址）生成页表项的值，并调用内部函数 `__native_set_fixmap`。这个内部函数获取给定 `fixed_addresses` 索引（在我们的例子中是 `VSYSCALL_PAGE`）的虚拟地址，并检查给定的索引不超过 fix-mapped 地址的结束范围。之后我们通过调用 `set_pte_vaddr` 函数设置页表项，并增加 fix-mapped 地址的计数。在 `map_vsyscall` 的最后，我们检查 `VSYSCALL_PAGE`（这是 `fixed_addresses` 中的第一个索引）的虚拟地址不超过 `VSYSCALL_ADDR`，即 `-10UL << 20` 或 `ffffffffff600000`，这是通过 `BUILD_BUG_ON` 宏实现的。
 
 ```C
 BUILD_BUG_ON((unsigned long)__fix_to_virt(VSYSCALL_PAGE) !=
                      (unsigned long)VSYSCALL_ADDR);
 ```
 
-Now `vsyscall` area is in the `fix-mapped` area. That's all about `map_vsyscall`, if you do not know anything about fix-mapped addresses, you can read [Fix-Mapped Addresses and ioremap](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2). We will see more about `vsyscalls` in the `vsyscalls and vdso` part.
+现在，`vsyscall` 区域已被置于固定映射（fix-mapped）地址区域。关于 `map_vsyscall` 的内容就是这些。如果您对固定映射地址不熟悉，可以参考[《固定映射地址与 ioremap》](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-2)一文。我们将在后续关于 `vsyscalls` 和 `vdso` 的章节中更详细地探讨 `vsyscalls` 的实现机制。
 
-Getting the SMP configuration
+获取 SMP 配置
 --------------------------------------------------------------------------------
 
-You may remember how we made a search of the [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing) configuration in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6). Now we need to get the `SMP` configuration if we found it. For this we check `smp_found_config` variable which we set in the `smp_scan_config` function (read about it the previous part) and call the `get_smp_config` function:
+您可能还记得我们在前一部分中是如何搜索 [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing) 配置的。现在，如果找到了 SMP 配置，我们需要获取它。为此，我们检查在 `smp_scan_config` 函数中设置的 `smp_found_config` 变量（关于该函数请参阅前一部分），并调用 `get_smp_config` 函数：
 
 ```C
 if (smp_found_config)
 	get_smp_config();
 ```
 
-The `get_smp_config` expands to the `x86_init.mpparse.default_get_smp_config` function which is defined in the [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/mpparse.c). This function defines a pointer to the multiprocessor floating pointer structure - `mpf_intel` (you can read about it in the previous [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)) and does some checks:
+`get_smp_config` 展开为 `x86_init.mpparse.default_get_smp_config` 函数，该函数定义于 [arch/x86/kernel/mpparse.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/mpparse.c)。这个函数定义了指向多处理器浮点指针结构 `mpf_intel` 的指针（您可以在前文[第六部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)中阅读相关内容），并执行以下检查：
 
 ```C
 struct mpf_intel *mpf = mpf_found;
@@ -320,21 +322,23 @@ if (acpi_lapic && early)
    return;
 ```
 
-Here we can see that multiprocessor configuration was found in the `smp_scan_config` function or just return from the function if not. The next check is `acpi_lapic` and `early`. And as we did this checks, we start to read the `SMP` configuration. As we finished reading it, the next step is - `prefill_possible_map` function which makes preliminary filling of the possible CPU's `cpumask` (more about it you can read in the [Introduction to the cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)).
+这里我们可以看到，如果在 `smp_scan_config` 函数中找到了多处理器配置就继续执行，否则直接返回函数。接下来的检查是 `acpi_lapic` 和 `early` 标志。完成这些检查后，我们开始读取 SMP 配置。读取完成后，下一步是调用 `prefill_possible_map` 函数，该函数会预先填充可能的 CPU 的 `cpumask`（更多关于此的内容可参阅 [cpumasks 简介](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)）。
 
-The rest of the setup_arch
+setup_arch 的剩余部分
 --------------------------------------------------------------------------------
 
-Here we are getting to the end of the `setup_arch` function. The rest of function of course is important, but details about these stuff will not will not be included in this part. We will just take a short look on these functions, because although they are important as I wrote above, they cover non-generic kernel features related with the `NUMA`, `SMP`, `ACPI` and `APICs`, etc. First of all, the next call of the `init_apic_mappings` function. As we can understand this function sets the address of the local [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller). The next is `x86_io_apic_ops.init` and this function initializes I/O APIC. Please note that we will see all details related with `APIC` in the chapter about interrupts and exceptions handling. In the next step we reserve standard I/O resources like `DMA`, `TIMER`, `FPU`, etc., with the call of the `x86_init.resources.reserve_resources` function. Following is `mcheck_init` function initializes `Machine check Exception` and the last is `register_refined_jiffies` which registers [jiffy](http://en.wikipedia.org/wiki/Jiffy_%28time%29) (There will be separate chapter about timers in the kernel).
+现在我们已经接近 `setup_arch` 函数的尾声。虽然剩余部分也很重要，但本部分不会详细讨论这些内容。我们将简要浏览这些函数，因为它们主要涉及 `NUMA`、`SMP`、`ACPI` 和 `APIC` 等非通用内核特性。首先调用的是 `init_apic_mappings` 函数，它负责设置本地 [APIC](http://en.wikipedia.org/wiki/Advanced_Programmable_Interrupt_Controller) 的地址。接着是 `x86_io_apic_ops.init` 函数，用于初始化 I/O APIC（关于 APIC 的完整细节将在中断和异常处理章节介绍）。随后通过 `x86_init.resources.reserve_resources` 调用保留标准 I/O 资源（如 `DMA`、`TIMER`、`FPU` 等）。然后是初始化机器检查异常的 `mcheck_init` 函数，最后是注册 [jiffy](http://en.wikipedia.org/wiki/Jiffy_%28time%29) 的 `register_refined_jiffies`（内核定时器将有专门章节讨论）。
 
-So that's all. Finally we have finished with the big `setup_arch` function in this part. Of course as I already wrote many times, we did not see full details about this function, but do not worry about it. We will be back more than once to this function from different chapters for understanding how different platform-dependent parts are initialized.
+至此，我们完成了对 `setup_arch` 这个庞大函数的分析。虽然如我多次提到的，我们尚未涵盖该函数的全部细节，但不必担心。在后续不同章节中，我们还会多次回顾这个函数，以理解各种平台相关部分是如何初始化的。
 
-That's all, and now we can back to the `start_kernel` from the `setup_arch`.
+现在我们可以从 `setup_arch` 返回到 `start_kernel` 函数继续分析了。
 
-Back to the main.c
+回到 main.c
 ================================================================================
 
-As I wrote above, we have finished with the `setup_arch` function and now we can back to the `start_kernel` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). As you may remember or saw yourself, `start_kernel` function as big as the `setup_arch`. So the couple of the next part will be dedicated to learning of this function. So, let's continue with it. After the `setup_arch` we can see the call of the `mm_init_cpumask` function. This function sets the [cpumask](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) pointer to the memory descriptor `cpumask`. We can look on its implementation:
+如前所述，我们已经完成了对 `setup_arch` 函数的分析，现在可以回到 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中的 `start_kernel` 函数。您可能记得或已经注意到，`start_kernel` 函数与 `setup_arch` 一样庞大，因此接下来的几个部分将专门学习这个函数。
+
+在 `setup_arch` 之后，我们可以看到 `mm_init_cpumask` 函数的调用。这个函数将 [cpumask](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) 指针设置到内存描述符的 `cpumask` 中。让我们看看它的实现：
 
 ```C
 static inline void mm_init_cpumask(struct mm_struct *mm)
@@ -346,23 +350,23 @@ static inline void mm_init_cpumask(struct mm_struct *mm)
 }
 ```
 
-As you can see in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c), we pass memory descriptor of the init process to the `mm_init_cpumask` and depends on `CONFIG_CPUMASK_OFFSTACK` configuration option we clear [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) switch `cpumask`.
+如您所见，在 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中我们将init进程的内存描述符传递给 `mm_init_cpumask` 函数，并根据 `CONFIG_CPUMASK_OFFSTACK` 配置选项来决定是否清除 [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) 并切换 `cpumask`。
 
-In the next step we can see the call of the following function:
+在接下来的步骤中，我们会看到以下函数的调用：
 
 ```C
 setup_command_line(command_line);
 ```
 
-This function takes pointer to the kernel command line allocates a couple of buffers to store command line. We need a couple of buffers, because one buffer used for future reference and accessing to command line and one for parameter parsing. We will allocate space for the following buffers:
+该函数接收内核命令行指针，并分配两个缓冲区来存储命令行。我们需要两个缓冲区，因为一个用于将来引用和访问命令行，另一个用于参数解析。我们将为以下缓冲区分配空间：
 
-* `saved_command_line` - will contain boot command line;
-* `initcall_command_line` - will contain boot command line. will be used in the `do_initcall_level`;
-* `static_command_line` - will contain command line for parameters parsing.
+* `saved_command_line` - 将保存启动命令行；
+* `initcall_command_line` - 将保存启动命令行，将在 `do_initcall_level` 中使用；
+* `static_command_line` - 将保存用于参数解析的命令行。
 
-We will allocate space with the `memblock_virt_alloc` function. This function calls `memblock_virt_alloc_try_nid` which allocates boot memory block with `memblock_reserve` if [slab](http://en.wikipedia.org/wiki/Slab_allocation) is not available or uses `kzalloc_node` (more about it will be in the Linux memory management chapter). The `memblock_virt_alloc` uses `BOOTMEM_LOW_LIMIT` (physical address of the `(PAGE_OFFSET + 0x1000000)` value) and `BOOTMEM_ALLOC_ACCESSIBLE` (equal to the current value of the `memblock.current_limit`) as minimum address of the memory region and maximum address of the memory region.
+我们将使用 `memblock_virt_alloc` 函数分配空间。这个函数调用 `memblock_virt_alloc_try_nid`，如果 [slab](http://en.wikipedia.org/wiki/Slab_allocation) 不可用，则用 `memblock_reserve` 分配启动内存块，否则使用 `kzalloc_node`（更多相关内容将在Linux内存管理章节介绍）。`memblock_virt_alloc` 使用 `BOOTMEM_LOW_LIMIT`（值为 `PAGE_OFFSET + 0x1000000` 的物理地址）和 `BOOTMEM_ALLOC_ACCESSIBLE`（等于当前 `memblock.current_limit` 的值）作为内存区域的最小地址和最大地址。
 
-Let's look on the implementation of the `setup_command_line`:
+让我们看看 `setup_command_line` 的实现：
 
 ```C
 static void __init setup_command_line(char *command_line)
@@ -375,11 +379,11 @@ static void __init setup_command_line(char *command_line)
         strcpy(saved_command_line, boot_command_line);
         strcpy(static_command_line, command_line);
  }
- ```
+```
 
-Here we can see that we allocate space for the three buffers which will contain kernel command line for the different purposes (read above). And as we allocated space, we store `boot_command_line` in the `saved_command_line` and `command_line` (kernel command line from the `setup_arch`) to the `static_command_line`.
+这里我们为三个缓冲区分配了空间，这些缓冲区将存储用于不同目的的内核命令行（如上所述）。完成空间分配后，我们将 `boot_command_line` 存入 `saved_command_line`，并将来自 `setup_arch` 的 `command_line`（内核命令行）存入 `static_command_line`。
 
-The next function after the `setup_command_line` is the `setup_nr_cpu_ids`. This function setting `nr_cpu_ids` (number of CPUs) according to the last bit in the `cpu_possible_mask` (more about it you can read in the chapter describes [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) concept). Let's look on its implementation:
+在 `setup_command_line` 之后的下一个函数是 `setup_nr_cpu_ids`。该函数根据 `cpu_possible_mask` 的最后一位来设置 `nr_cpu_ids`（CPU的数量）。关于此概念的更多细节，您可以阅读描述 [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) 概念的章节。让我们看看它的实现：
 
 ```C
 void __init setup_nr_cpu_ids(void)
@@ -388,22 +392,24 @@ void __init setup_nr_cpu_ids(void)
 }
 ```
 
-Here `nr_cpu_ids` represents number of CPUs, `NR_CPUS` represents the maximum number of CPUs which we can set in configuration time:
+这里 `nr_cpu_ids` 表示实际可用的CPU数量，而 `NR_CPUS` 表示在配置时可设置的最大CPU数量：
 
 ![CONFIG_NR_CPUS](images/CONFIG_NR_CPUS.png)
 
-Actually we need to call this function, because `NR_CPUS` can be greater than actual amount of the CPUs in the your computer. Here we can see that we call `find_last_bit` function and pass two parameters to it:
+实际上我们需要调用这个函数，因为 `NR_CPUS` 可能会大于您计算机中实际的CPU数量。这里我们可以看到调用了 `find_last_bit` 函数并传递了两个参数：
 
-* `cpu_possible_mask` bits;
-* maximum number of CPUS.
+- `cpu_possible_mask` 位图；
+- CPU 的最大数量。
 
-In the `setup_arch` we can find the call of the `prefill_possible_map` function which calculates and writes to the `cpu_possible_mask` actual number of the CPUs. We call the `find_last_bit` function which takes the address and maximum size to search and returns bit number of the first set bit. We passed `cpu_possible_mask` bits and maximum number of the CPUs. First of all the `find_last_bit` function splits given `unsigned long` address to the [words](http://en.wikipedia.org/wiki/Word_%28computer_architecture%29):
+在 `setup_arch` 中，我们可以找到 `prefill_possible_map` 函数的调用，它计算实际 CPU 数量并写入 `cpu_possible_mask`。`find_last_bit` 函数接收地址和最大搜索范围作为参数，返回第一个置位(1)的位号。我们传入了 `cpu_possible_mask` 位图和CPU的最大数量。
+
+首先，`find_last_bit` 函数将给定的 `unsigned long` 地址分割成[字](http://en.wikipedia.org/wiki/Word_%28computer_architecture%29)：
 
 ```C
 words = size / BITS_PER_LONG;
 ```
 
-where `BITS_PER_LONG` is `64` on the `x86_64`. As we got amount of words in the given size of the search data, we need to check is given size does not contain partial words with the following check:
+其中在 `x86_64` 架构上，`BITS_PER_LONG` 的值为 `64`。当我们获得搜索数据给定大小中的字数后，需要通过以下检查确认给定大小是否包含不完整的字：
 
 ```C
 if (size & (BITS_PER_LONG-1)) {
@@ -414,14 +420,14 @@ if (size & (BITS_PER_LONG-1)) {
 }
 ```
 
-if it contains partial word, we mask the last word and check it. If the last word is not zero, it means that current word contains at least one set bit. We go to the `found` label:
+如果存在不完整的字，我们将对最后一个字进行掩码处理并检查它。如果最后一个字不为零，则表明当前字至少包含一个置位。此时程序将跳转到 `found` 标签处继续执行：
 
 ```C
 found:
     return words * BITS_PER_LONG + __fls(tmp);
 ```
 
-Here you can see `__fls` function which returns last set bit in a given word with help of the `bsr` instruction:
+这里您可以看到 `__fls` 函数，它通过 `bsr`（Bit Scan Reverse）指令的帮助返回给定字中最后一个置位的位号：
 
 ```C
 static inline unsigned long __fls(unsigned long word)
@@ -433,7 +439,7 @@ static inline unsigned long __fls(unsigned long word)
 }
 ```
 
-The `bsr` instruction which scans the given operand for first bit set. If the last word is not partial we going through the all words in the given address and trying to find first set bit:
+`bsr` 指令会扫描给定的操作数以查找第一个置位。如果最后一个字不是部分字，我们将遍历给定地址中的所有字，尝试找到第一个置位：
 
 ```C
 while (words) {
@@ -445,38 +451,21 @@ found:
 }
 ```
 
-Here we put the last word to the `tmp` variable and check that `tmp` contains at least one set bit. If a set bit found, we return the number of this bit. If no one words do not contains set bit we just return given size:
+这里我们将最后一个字存入 `tmp` 变量，并检查 `tmp` 是否包含至少一个置位。如果找到置位，就返回该位的编号。如果所有字都不包含置位，则直接返回给定的搜索范围大小：
 
 ```C
 return size;
 ```
 
-After this `nr_cpu_ids` will contain the correct amount of the available CPUs.
+完成这些操作后，`nr_cpu_ids` 将包含正确的可用 CPU 数量。
 
-That's all.
+至此关于架构相关初始化分析完毕。
 
-Conclusion
+总结
 ================================================================================
 
-It is the end of the seventh part about the Linux kernel initialization process. In this part, finally we have finished with the `setup_arch` function and returned to the `start_kernel` function. In the next part we will continue to learn generic kernel code from the `start_kernel` and will continue our way to the first `init` process.
+这是关于 Linux 内核初始化过程的第七部分的结尾。在本次分析中，我们最终完成了对 `setup_arch` 函数的研究，并返回到 `start_kernel` 函数。在下一部分中，我们将继续学习 `start_kernel` 中的通用内核代码，沿着内核启动路径深入，直到第一个 `init` 进程的创建。
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+如果您有任何疑问或建议，欢迎在评论区留言，或通过 [Twitter](https://twitter.com/0xAX) 与我联系。
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
-
-Links
-================================================================================
-
-* [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface)
-* [x86_64](http://en.wikipedia.org/wiki/X86-64)
-* [initrd](http://en.wikipedia.org/wiki/Initrd)
-* [Kernel panic](http://en.wikipedia.org/wiki/Kernel_panic)
-* [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst)
-* [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)
-* [Direct memory access](http://en.wikipedia.org/wiki/Direct_memory_access)
-* [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access)
-* [Control register](http://en.wikipedia.org/wiki/Control_register)
-* [vsyscalls](https://lwn.net/Articles/446528/)
-* [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
-* [jiffy](http://en.wikipedia.org/wiki/Jiffy_%28time%29)
-* [Previous part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)
