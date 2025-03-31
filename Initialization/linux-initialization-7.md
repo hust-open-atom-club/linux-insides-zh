@@ -6,7 +6,7 @@
 
 这是 Linux 内核初始化过程的第七部分，主要解析 [arch/x86/Kernel/setup.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/setup.c#L861) 文件中 `setup_arch` 函数内部机制。通过[前文](https://0xax.gitbook.io/linux-insides/summary/initialization)可知，`setup_arch` 函数执行架构相关（本文以 [x86_64](http://en.wikipedia.org/wiki/X86-64) 为例）的初始化工作，包括为内核代码/数据/bss 保留内存，[桌面管理界面](http://en.wikipedia.org/wiki/Desktop_Management_Interface)的早期扫描，[PCI](http://en.wikipedia.org/wiki/PCI) 设备的早期转储等众多操作。如果您已经阅读了前面的[部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)，会记得我们是在 `setup_real_mode` 函数处结束的。接下来，在我们限制 [memblock](https://0xax.gitbook.io/linux-insides/summary/mm/linux-mm-1) 为所有已映射页后，可以看到 [kernel/printk/printk.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/printk/printk.c) 中调用了 `setup_log_buf` 函数。
 
-`setup_log_buf` 函数用于设置内核循环缓冲区，其长度取决于 `CONFIG_LOG_BUF_SHIFT` 配置选项。从文档中可知，`CONFIG_LOG_BUF_SHIFT `取值范围在 `12` 到 `21` 之间。在内部实现中，该缓冲区定义为字符数组：
+`setup_log_buf` 函数用于设置内核循环缓冲区，其长度取决于 `CONFIG_LOG_BUF_SHIFT` 配置选项。从文档中可知，`CONFIG_LOG_BUF_SHIFT` 取值范围在 `12` 到 `21` 之间。在内部实现中，该缓冲区定义为字符数组：
 
 ```c
 #define __LOG_BUF_LEN (1 << CONFIG_LOG_BUF_SHIFT)
@@ -14,7 +14,7 @@ static char __log_buf[__LOG_BUF_LEN] __aligned(LOG_ALIGN);
 static char *log_buf = __log_buf;
 ```
 
-现在我们来看 `setup_log_buf` 函数的实现。它首先会检查当前缓冲区是否为空（由于刚刚初始化，此时缓冲区必须为空），同时还会检查是否为早期初始化阶段。如果内核日志缓冲区的设置不属于早期初始化阶段，则会调用 `log_buf_add_cpu` 函数，该函数会为每个 CPU 扩展缓冲区的大小：
+现在我们来看 `setup_log_buf` 函数的实现。它首先会检查当前缓冲区是否为空（因为缓冲区刚刚完成初始化，所以其必然为空），同时还会检查是否为早期初始化阶段。如果内核日志缓冲区的设置不属于早期初始化阶段，则会调用 `log_buf_add_cpu` 函数，该函数会为每个 CPU 扩展缓冲区的大小：
 
 ```C
 if (log_buf != __log_buf)
@@ -32,7 +32,7 @@ setup_log_buf(1);
 
 其中参数 `1` 表示当前处于早期初始化阶段。接下来，我们会检查 `new_log_buf_len` 变量（该变量表示更新后的内核日志缓冲区长度），并通过 `memblock_virt_alloc` 函数为其分配新的缓冲区空间，否则直接返回。
 
-当内核日志缓冲区准备就绪后，下一个执行的是 `reserve_initrd` 函数。您可能还记得，在[内核初始化第四部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4)中我们已经调用过 `early_reserve_initrd` 函数。现在，由于我们已在 `init_mem_mapping` 函数中重建了直接内存映射，因此需要将[初始RAM磁盘](http://en.wikipedia.org/wiki/Initrd)移入直接映射内存区域。`reserve_initrd` 函数首先确定 initrd 的基地址和结束地址，并检查 bootloader 是否提供了 initrd —— 这些操作与我们在 `early_reserve_initrd` 中看到的完全一致。但不同于之前通过调用 `memblock_reserve` 在 memblock 区域中保留空间的做法，这里我们会获取直接内存映射区域的映射大小，并通过以下方式确保 initrd 的大小不超过该区域：
+当内核日志缓冲区准备就绪后，下一个执行的是 `reserve_initrd` 函数。您可能还记得，在[内核初始化第四部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4)中我们已经调用过 `early_reserve_initrd` 函数。现在，由于我们已在 `init_mem_mapping` 函数中重建了直接内存映射，因此需要将[初始 RAM 磁盘](http://en.wikipedia.org/wiki/Initrd)移入直接映射内存区域。`reserve_initrd` 函数首先确定 initrd 的基地址和结束地址，并检查 bootloader 是否提供了 initrd —— 这些操作与我们在 `early_reserve_initrd` 中看到的完全一致。但不同于之前通过调用 `memblock_reserve` 在 memblock 区域中保留空间的做法，这里我们会获取直接内存映射区域的映射大小，并通过以下方式确保 initrd 的大小不超过该区域：
 
 ```C
 mapped_size = memblock_mem_size(max_pfn_mapped);
@@ -94,7 +94,7 @@ io_delay=	[X86] I/O delay method
         No delay
 ```
 
-可以看到，在 [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c) 文件中，`io_delay` 命令行参数是通过 `early_param` 宏进行设置的：
+我们可以看到，在 [arch/x86/kernel/io_delay.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/io_delay.c) 文件中，`io_delay` 命令行参数是通过 `early_param` 宏进行设置的：
 
 ```C
 early_param("io_delay", io_delay_param);
@@ -126,7 +126,7 @@ static int __init io_delay_param(char *s)
 
 在 `io_delay_init` 之后，接下来执行的函数依次是 `acpi_boot_table_init`、`early_acpi_boot_init` 和 `initmem_init`。不过正如前文所述，在当前的「Linux 内核初始化流程」章节中，我们将不涉及与 [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface) 相关的内容。
 
-为DMA分配域
+为 DMA 分配域
 --------------------------------------------------------------------------------
 
 下一步我们需要通过 `dma_contiguous_reserve` 函数为[直接内存访问（DMA）](http://en.wikipedia.org/wiki/Direct_memory_access)分配专用区域，该函数定义于 [drivers/base/dma-contiguous.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/drivers/base/dma-contiguous.c)。DMA 是一种特殊工作模式，设备无需 CPU 介入即可直接与内存通信。请注意，我们向 `dma_contiguous_reserve` 函数传递了一个关键参数——`max_pfn_mapped << PAGE_SHIFT`。从该表达式可以理解，此参数表示可保留内存的上限地址（将最大页帧号转换为字节地址）。让我们分析该函数的实现，它从定义以下变量开始：
@@ -138,7 +138,7 @@ phys_addr_t selected_limit = limit;
 bool fixed = false;
 ```
 
-其中第一个参数表示保留区域的大小（以字节为单位），第二个参数是保留区域的基地址，第三个参数是保留区域的结束地址，最后一个 `fixed` 参数用于指定保留区域的放置方式。当 `fixed` 为 `1` 时，直接通过 `memblock_reserve` 保留内存区域；若为 `0` ，则使用`kmemleak_alloc` 动态分配空间。在接下来的步骤中，函数会检查 `size_cmdline` 变量。若该变量不等于 `-1`（表示已通过命令行参数指定大小），则将使用来自 `cma` 内核命令行参数的值填充上述所有变量：
+其中第一个参数表示保留区域的大小（以字节为单位），第二个参数是保留区域的基地址，第三个参数是保留区域的结束地址，最后一个 `fixed` 参数用于指定保留区域的放置方式。当 `fixed` 为 `1` 时，直接通过 `memblock_reserve` 保留内存区域；若为 `0` ，则使用 `kmemleak_alloc` 动态分配空间。在接下来的步骤中，函数会检查 `size_cmdline` 变量。若该变量不等于 `-1`（表示已通过命令行参数指定大小），则将使用来自 `cma` 内核命令行参数的值填充上述所有变量：
 
 ```C
 if (size_cmdline != -1) {
@@ -350,7 +350,7 @@ static inline void mm_init_cpumask(struct mm_struct *mm)
 }
 ```
 
-如您所见，在 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中我们将init进程的内存描述符传递给 `mm_init_cpumask` 函数，并根据 `CONFIG_CPUMASK_OFFSTACK` 配置选项来决定是否清除 [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) 并切换 `cpumask`。
+如您所见，在 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中我们将 init 进程的内存描述符传递给 `mm_init_cpumask` 函数，并根据 `CONFIG_CPUMASK_OFFSTACK` 配置选项来决定是否清除 [TLB](http://en.wikipedia.org/wiki/Translation_lookaside_buffer) 并切换 `cpumask`。
 
 在接下来的步骤中，我们会看到以下函数的调用：
 
@@ -383,7 +383,7 @@ static void __init setup_command_line(char *command_line)
 
 这里我们为三个缓冲区分配了空间，这些缓冲区将存储用于不同目的的内核命令行（如上所述）。完成空间分配后，我们将 `boot_command_line` 存入 `saved_command_line`，并将来自 `setup_arch` 的 `command_line`（内核命令行）存入 `static_command_line`。
 
-在 `setup_command_line` 之后的下一个函数是 `setup_nr_cpu_ids`。该函数根据 `cpu_possible_mask` 的最后一位来设置 `nr_cpu_ids`（CPU的数量）。关于此概念的更多细节，您可以阅读描述 [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) 概念的章节。让我们看看它的实现：
+在 `setup_command_line` 之后的下一个函数是 `setup_nr_cpu_ids`。该函数根据 `cpu_possible_mask` 的最后一位来设置 `nr_cpu_ids`（CPU 的数量）。关于此概念的更多细节，您可以阅读描述 [cpumasks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2) 概念的章节。让我们看看它的实现：
 
 ```C
 void __init setup_nr_cpu_ids(void)
@@ -392,16 +392,16 @@ void __init setup_nr_cpu_ids(void)
 }
 ```
 
-这里 `nr_cpu_ids` 表示实际可用的CPU数量，而 `NR_CPUS` 表示在配置时可设置的最大CPU数量：
+这里 `nr_cpu_ids` 表示实际可用的 CPU 数量，而 `NR_CPUS` 表示在配置时可设置的最大 CPU 数量：
 
 ![CONFIG_NR_CPUS](images/CONFIG_NR_CPUS.png)
 
-实际上我们需要调用这个函数，因为 `NR_CPUS` 可能会大于您计算机中实际的CPU数量。这里我们可以看到调用了 `find_last_bit` 函数并传递了两个参数：
+实际上我们需要调用这个函数，因为 `NR_CPUS` 可能会大于您计算机中实际的 CPU 数量。这里我们可以看到调用了 `find_last_bit` 函数并传递了两个参数：
 
 - `cpu_possible_mask` 位图；
 - CPU 的最大数量。
 
-在 `setup_arch` 中，我们可以找到 `prefill_possible_map` 函数的调用，它计算实际 CPU 数量并写入 `cpu_possible_mask`。`find_last_bit` 函数接收地址和最大搜索范围作为参数，返回第一个置位(1)的位号。我们传入了 `cpu_possible_mask` 位图和CPU的最大数量。
+在 `setup_arch` 中，我们可以找到 `prefill_possible_map` 函数的调用，它计算实际 CPU 数量并写入 `cpu_possible_mask`。`find_last_bit` 函数接收地址和最大搜索范围作为参数，返回第一个置位(1)的位号。我们传入了 `cpu_possible_mask` 位图和 CPU 的最大数量。
 
 首先，`find_last_bit` 函数将给定的 `unsigned long` 地址分割成[字](http://en.wikipedia.org/wiki/Word_%28computer_architecture%29)：
 
@@ -459,7 +459,7 @@ return size;
 
 完成这些操作后，`nr_cpu_ids` 将包含正确的可用 CPU 数量。
 
-至此关于架构相关初始化分析完毕。
+至此架构相关初始化部分分析完毕。
 
 总结
 ================================================================================
