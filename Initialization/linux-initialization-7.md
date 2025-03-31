@@ -469,3 +469,20 @@ return size;
 如果您有任何疑问或建议，欢迎在评论区留言，或通过 [Twitter](https://twitter.com/0xAX) 与我联系。
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
+
+链接
+================================================================================
+
+* [Desktop Management Interface](http://en.wikipedia.org/wiki/Desktop_Management_Interface)
+* [x86_64](http://en.wikipedia.org/wiki/X86-64)
+* [initrd](http://en.wikipedia.org/wiki/Initrd)
+* [Kernel panic](http://en.wikipedia.org/wiki/Kernel_panic)
+* [Documentation/kernel-parameters.txt](https://github.com/torvalds/linux/blob/master/Documentation/admin-guide/kernel-parameters.rst)
+* [ACPI](http://en.wikipedia.org/wiki/Advanced_Configuration_and_Power_Interface)
+* [Direct memory access](http://en.wikipedia.org/wiki/Direct_memory_access)
+* [NUMA](http://en.wikipedia.org/wiki/Non-uniform_memory_access)
+* [Control register](http://en.wikipedia.org/wiki/Control_register)
+* [vsyscalls](https://lwn.net/Articles/446528/)
+* [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)
+* [jiffy](http://en.wikipedia.org/wiki/Jiffy_%28time%29)
+* [Previous part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)
