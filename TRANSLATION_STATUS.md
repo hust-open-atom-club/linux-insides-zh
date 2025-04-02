@@ -21,7 +21,7 @@
 |├ [2.5](Initialization/linux-initialization-5.md)|[@NeoCui](https://github.com/NeoCui)|更新至[cf32dc6c81ab](https://github.com/0xAX/linux-insides/commit/cf32dc6c81abce567af330c480afc3d58678443d)|
 |├ [2.6](Initialization/linux-initialization-6.md)|[@kele1997](https://github.com/kele1997)|更新至[e896e56c867](https://github.com/0xAX/linux-insides/commit/e896e56c867876397ef78da58d5e2a31b2e690b6)|
 |├ [2.7](Initialization/linux-initialization-7.md)|[@chenhr56](https://github.com/chenhr56)|更新至[20ee3691a418](https://github.com/0xAX/linux-insides/commit/20ee3691a41889b95feae6fe0964e94e72a1b8d0)|
-|├ [2.8](Initialization/linux-initialization-8.md)||未开始|
+|├ [2.8](Initialization/linux-initialization-8.md)|[@chenhr56](https://github.com/chenhr56)|已完成|
 |├ [2.9](Initialization/linux-initialization-9.md)||未开始|
 |└ [2.10](Initialization/linux-initialization-10.md)||未开始|
 | 3. [Interrupts](Interrupts)||正在进行|

@@ -1,14 +1,14 @@
 Kernel initialization. Part 8.
 ================================================================================
 
-Scheduler initialization
+调度器初始化
 ================================================================================
 
-This is the eighth [part](https://0xax.gitbook.io/linux-insides/summary/initialization) of the Linux kernel initialization process chapter and we stopped on the `setup_nr_cpu_ids` function in the [previous part](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-7.md).
+这是 Linux 内核初始化过程章节的第八[部分](https://0xax.gitbook.io/linux-insides/summary/initialization)，在[上一部分](https://github.com/0xAX/linux-insides/blob/master/Initialization/linux-initialization-7.md)中我们停在了 `setup_nr_cpu_ids` 函数处。
 
-The main point of this part is [scheduler](http://en.wikipedia.org/wiki/Scheduling_%28computing%29) initialization. But before we will start to learn initialization process of the scheduler, we need to do some stuff. The next step in the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) is the `setup_per_cpu_areas` function. This function setups memory areas for the `percpu` variables, more about it you can read in the special part about the [Per-CPU variables](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1). After `percpu` areas is up and running, the next step is the `smp_prepare_boot_cpu` function.
+本部分的重点是[调度器](http://en.wikipedia.org/wiki/Scheduling_%28computing%29)的初始化。但在开始学习调度器的初始化过程之前，我们需要完成一些准备工作。接下来是在 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中的 `setup_per_cpu_areas` 函数，该函数为 `percpu` 变量设置内存区域。更多相关信息您可以在关于 [Per-CPU 变量](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) 的专门章节中阅读。在 `percpu` 区域启动并运行后，下一步是 `smp_prepare_boot_cpu` 函数。
 
-This function does some preparations for [symmetric multiprocessing](http://en.wikipedia.org/wiki/Symmetric_multiprocessing). Since this function is architecture specific, it is located in the [arch/x86/include/asm/smp.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/smp.h#L78) Linux kernel header file. Let's look at the definition of this function:
+`smp_prepare_boot_cpu` 函数为[对称多处理](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)做一些准备工作。由于此函数是针对特定架构的，它位于 [arch/x86/include/asm/smp.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/include/asm/smp.h#L78) Linux 内核头文件中。让我们看看这个函数的定义：
 
 ```C
 static inline void smp_prepare_boot_cpu(void)
@@ -17,7 +17,7 @@ static inline void smp_prepare_boot_cpu(void)
 }
 ```
 
-We may see here that it just calls the `smp_prepare_boot_cpu` callback of the `smp_ops` structure. If we look at the definition of instance of this structure from the [arch/x86/kernel/smp.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/smp.c) source code file, we will see that the `smp_prepare_boot_cpu` expands to the call of the `native_smp_prepare_boot_cpu` function:
+可以看到，这里实际上调用了 `smp_ops` 结构体的 `smp_prepare_boot_cpu` 回调函数。如果我们查看 [arch/x86/kernel/smp.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/smp.c) 源文件中该结构体实例的定义，会发现 `smp_prepare_boot_cpu` 展开为对 `native_smp_prepare_boot_cpu` 函数的调用：
 
 ```C
 struct smp_ops smp_ops = {
@@ -32,7 +32,7 @@ struct smp_ops smp_ops = {
 EXPORT_SYMBOL_GPL(smp_ops);
 ```
 
-The `native_smp_prepare_boot_cpu` function looks:
+函数 `native_smp_prepare_boot_cpu` 形式如下：
 
 ```C
 void __init native_smp_prepare_boot_cpu(void)
@@ -44,7 +44,7 @@ void __init native_smp_prepare_boot_cpu(void)
 }
 ```
 
-and executes following things: first of all it gets the `id` of the current CPU (which is Bootstrap processor and its `id` is zero for this moment) with the `smp_processor_id` function. I will not explain how the `smp_processor_id` works, because we already saw it in the [Kernel entry point](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4) part. After we've got processor `id` number we reload [Global Descriptor Table](http://en.wikipedia.org/wiki/Global_Descriptor_Table) for the given CPU with the `switch_to_new_gdt` function:
+该函数主要执行以下操作：首先通过 `smp_processor_id` 函数获取当前 CPU `id`（此时为引导处理器 BSP，其 `id` 为 0）。关于 `smp_processor_id` 的工作原理，此处不再赘述，因为我们已在[内核入口点](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-4)部分详细分析过。获取处理器 `id` 后，函数通过 `switch_to_new_gdt` 为指定 CPU 重新加载[全局描述符表 GDT](http://en.wikipedia.org/wiki/Global_Descriptor_Table)：
 
 ```C
 void switch_to_new_gdt(int cpu)
@@ -58,13 +58,13 @@ void switch_to_new_gdt(int cpu)
 }
 ```
 
-The `gdt_descr` variable represents pointer to the `GDT` descriptor here (we already saw definition of a `desc_ptr` structure in the [Early interrupt and exception handling](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-2) part). We get the address and the size of the `GDT` descriptor for the `CPU` with the given `id`. The `GDT_SIZE` is `256` or:
+这里的 `gdt_descr` 变量表示指向 `GDT` 描述符的指针（`desc_ptr` 结构定义已在[早期中断和异常处理](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-2)部分见过）。我们通过指定 `id` 获取对应 `CPU` 的 `GDT` 描述符地址和大小。其中 `GDT_SIZE` 的值为 `256`，或者更准确地说：
 
 ```C
 #define GDT_SIZE (GDT_ENTRIES * 8)
 ```
 
-and the address of the descriptor we will get with the `get_cpu_gdt_table`:
+而描述符的地址将通过 `get_cpu_gdt_table` 函数获取：
 
 ```C
 static inline struct desc_struct *get_cpu_gdt_table(unsigned int cpu)
@@ -73,9 +73,9 @@ static inline struct desc_struct *get_cpu_gdt_table(unsigned int cpu)
 }
 ```
 
-The `get_cpu_gdt_table` uses `per_cpu` macro for getting value of a `gdt_page` percpu variable for the given CPU number (bootstrap processor with `id` - 0 in our case).
+`get_cpu_gdt_table` 函数通过 `per_cpu` 宏来获取指定 CPU 编号（本例中为 `ID` 0 的 BSP）对应的 `gdt_page` percpu 变量值。
 
-You may ask the following question: so, if we can access `gdt_page` percpu variable, where was it defined? Actually we already saw it in this book. If you have read the first [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1) of this chapter, you can remember that we saw definition of the `gdt_page` in the [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/head_64.S):
+您可能会问：既然我们能访问 `gdt_page` 这个 percpu 变量，它是在哪里定义的呢？实际上我们在本书前文已经见过它。如果您阅读过本章第一[部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-1)，会记得我们在 [arch/x86/kernel/head_64.S](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/head_64.S) 中看到过 `gdt_page` 的定义：
 
 ```assembly
 early_gdt_descr:
@@ -84,14 +84,14 @@ early_gdt_descr_base:
 	.quad	INIT_PER_CPU_VAR(gdt_page)
 ```
 
-and if we will look on the [linker](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/vmlinux.lds.S) file we can see that it locates after the `__per_cpu_load` symbol:
+如果我们查看[链接器](https://github.com/0xAX/linux/blob/0a07b238e5f488b459b6113a62e06b6aab017f71/arch/x86/kernel/vmlinux.lds.S)脚本，可以看到它被放在 `__per_cpu_load` 符号之后：
 
 ```C
 #define INIT_PER_CPU(x) init_per_cpu__##x = x + __per_cpu_load
 INIT_PER_CPU(gdt_page);
 ```
 
-and filled `gdt_page` in the [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c#L94):
+并且在 [arch/x86/kernel/cpu/common.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/arch/x86/kernel/cpu/common.c#L94) 中完成了对 `gdt_page` 的初始化：
 
 ```C
 DEFINE_PER_CPU_PAGE_ALIGNED(struct gdt_page, gdt_page) = { .gdt = {
@@ -107,7 +107,7 @@ DEFINE_PER_CPU_PAGE_ALIGNED(struct gdt_page, gdt_page) = { .gdt = {
     ...
 ```
 
-more about `percpu` variables you can read in the [Per-CPU variables](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1) part. As we got address and size of the `GDT` descriptor we reload `GDT` with the `load_gdt` which just execute `lgdt` instruct and load `percpu_segment` with the following function:
+关于 `percpu` 变量的更多细节，您可以在 [Per-CPU 变量](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-1)章节中阅读。当我们获取到 `GDT` 描述符的地址和大小后，通过 `load_gdt` 函数重新加载 `GDT`，该函数实际执行 `lgdt` 指令，并通过以下函数加载 `percpu_segment`：
 
 ```C
 void load_percpu_segment(int cpu) {
@@ -117,26 +117,26 @@ void load_percpu_segment(int cpu) {
 }
 ```
 
-The base address of the `percpu` area must contain `gs` register (or `fs` register for `x86`), so we are using `loadsegment` macro and pass `gs`. In the next step we write the base address if the [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) stack and setup stack [canary](http://en.wikipedia.org/wiki/Buffer_overflow_protection) (this is only for `x86_32`). After we load new `GDT`, we fill `cpu_callout_mask` bitmap with the current cpu and set cpu state as online with the setting `cpu_state` percpu variable for the current processor - `CPU_ONLINE`:
+`percpu` 区域的基地址必须存放在 `gs` 寄存器（x86 架构下也可能是 `fs` 寄存器）中，因此我们使用 `loadsegment` 宏并传入 `gs`。接下来的步骤会写入 [IRQ](http://en.wikipedia.org/wiki/Interrupt_request_%28PC_architecture%29) 栈的基地址，并设置栈 [canary](http://en.wikipedia.org/wiki/Buffer_overflow_protection)（仅针对 `x86_32`）。在加载新的 `GDT` 后，我们会用当前 CPU 填充 `cpu_callout_mask` 位图，并通过设置当前处理器的 `cpu_state` percpu 变量为 `CPU_ONLINE` 来标记 CPU 状态为在线。
 
 ```C
 cpumask_set_cpu(me, cpu_callout_mask);
 per_cpu(cpu_state, me) = CPU_ONLINE;
 ```
 
-So, what is `cpu_callout_mask` bitmap? As we initialized bootstrap processor (processor which is booted the first on `x86`) the other processors in a multiprocessor system are known as `secondary processors`. Linux kernel uses following two bitmasks:
+那么，什么是 `cpu_callout_mask` 位图？在初始化引导处理器（x86 架构中第一个启动的处理器）后，多处理器系统中的其他处理器被称为`次级处理器`。Linux 内核使用以下两个位掩码：
 
 * `cpu_callout_mask`
 * `cpu_callin_mask`
 
-After bootstrap processor initialized, it updates the `cpu_callout_mask` to indicate which secondary processor can be initialized next. All other or secondary processors can do some initialization stuff before and check the `cpu_callout_mask` on the bootstrap processor bit. Only after the bootstrap processor filled the `cpu_callout_mask` with this secondary processor, it will continue the rest of its initialization. After that the certain processor finish its initialization process, the processor sets bit in the `cpu_callin_mask`. Once the bootstrap processor finds the bit in the `cpu_callin_mask` for the current secondary processor, this processor repeats the same procedure for initialization of one of the remaining secondary processors. In a short words it works as I described, but we will see more details in the chapter about `SMP`.
+当 BSP 初始化完成后，它会更新 `cpu_callout_mask` 来指示接下来可以初始化哪个次级处理器。所有其他次级处理器在初始化前会检查引导处理器设置的 `cpu_callout_mask` 位图。只有当引导处理器在 `cpu_callout_mask` 中标记了某个次级处理器后，该次级处理器才会继续其剩余的初始化工作。完成初始化流程后，该次级处理器会在 `cpu_callin_mask` 中设置自己的位。当引导处理器检测到当前次级处理器在 `cpu_callin_mask` 中的位被置位后，就会对剩余的次级处理器重复相同的初始化流程。简而言之，其工作原理如我所描述，但我们将在关于 `SMP`（对称多处理）的章节中看到更多细节。
 
-That's all. We did all `SMP` boot preparation.
+至此，我们已完成所有的 `SMP` 启动准备工作。
 
-Build zonelists
+Zonelists 构建
 -----------------------------------------------------------------------
 
-In the next step we can see the call of the `build_all_zonelists` function. This function sets up the order of zones that allocations are preferred from. What are zones and what's order we will understand soon. For the start let's see how Linux kernel considers physical memory. Physical memory is split into banks which are called - `nodes`. If you have no hardware support for `NUMA`, you will see only one node:
+接下来，我们会看到 `build_all_zonelists` 函数的调用。该函数设置了内存分配时优先从哪些内存区域（zone）获取的顺序。我们稍后会解释什么是 zone 以及这个顺序的含义。首先让我们看看 Linux 内核如何管理物理内存。物理内存被划分为称为节点（`nodes`）的存储单元。如果您的硬件不支持 `NUMA`（非统一内存访问架构），您将只会看到一个节点：
 
 ```
 $ cat /sys/devices/system/node/node0/numastat
@@ -148,15 +148,15 @@ local_node 72452442
 other_node 0
 ```
 
-Every `node` is presented by the `struct pglist_data` in the Linux kernel. Each node is divided into a number of special blocks which are called - `zones`. Every zone is presented by the `zone struct` in the linux kernel and has one of the type:
+在 Linux 内核中，每个 `node` 都由 `struct pglist_data` 结构体表示，其又被划分为若干特殊的区块，称为内存区域（`zones`）。每个 zone 在内核中由 `zone struct` 表示，并属于以下类型之一（通过 `zone_type` 枚举定义）：
 
-* `ZONE_DMA` - 0-16M;
-* `ZONE_DMA32` - used for 32 bit devices that can only do DMA areas below 4G;
-* `ZONE_NORMAL` - all RAM from the 4GB on the `x86_64`;
-* `ZONE_HIGHMEM` - absent on the `x86_64`;
-* `ZONE_MOVABLE` - zone which contains movable pages.
+* `ZONE_DMA` - 0-16MB 内存区域；
+* `ZONE_DMA32` - 32 位 DMA 设备专用区域（仅能访问 4GB 以下内存）；
+* `ZONE_NORMAL` - `x86_64` 架构上 4GB 以上普通内存区域；
+* `ZONE_HIGHMEM` - 在 x86_64 架构上不存在（仅用于 32 位系统）；
+* `ZONE_MOVABLE` - 包含可移动页面的特殊区域。
 
-which are presented by the `zone_type` enum. We can get information about zones with the:
+可以通过以下方式获取 zone 的详细信息：
 
 ```
 $ cat /proc/zoneinfo
@@ -180,12 +180,12 @@ Node 0, zone   Normal
         ...
 ```
 
-As I wrote above all nodes are described with the `pglist_data` or `pg_data_t` structure in memory. This structure is defined in the [include/linux/mmzone.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mmzone.h). The `build_all_zonelists` function from the [mm/page_alloc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/page_alloc.c) constructs an ordered `zonelist` (of different zones `DMA`, `DMA32`, `NORMAL`, `HIGH_MEMORY`, `MOVABLE`) which specifies the zones/nodes to visit when a selected `zone` or `node` cannot satisfy the allocation request. That's all. More about `NUMA` and multiprocessor systems will be in the special part.
+如前所述，所有内存节点在内核中均通过 `pglist_data`（即 `pg_data_t`）结构体描述，该结构定义于 [include/linux/mmzone.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/mmzone.h)。[mm/page_alloc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/page_alloc.c) 中的 `build_all_zonelists` 函数会构建一个有序的 `zonelist`（包含 `DMA`、`DMA32`、`NORMAL`、`HIGH_MEMORY`、`MOVABLE` 等不同内存区域），用于指定当所选 `zone` 或 `node` 无法满足分配请求时应尝试访问的备用区域/节点顺序。关于 `NUMA` 和多处理器系统的更多细节，将在后续专题章节深入讨论。
 
-The rest of the stuff before scheduler initialization
+调度器初始化前的剩余步骤
 --------------------------------------------------------------------------------
 
-Before we start to dive into Linux kernel scheduler initialization process we must do a couple of things. The first thing is the `page_alloc_init` function from the [mm/page_alloc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/page_alloc.c). This function looks pretty easy:
+在深入探讨 Linux 内核调度器初始化过程之前，我们需要完成几项准备工作。首先是位于 [mm/page_alloc.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/mm/page_alloc.c) 中的 `page_alloc_init` 函数。这个函数看似简单：
 
 ```C
 void __init page_alloc_init(void)
@@ -199,28 +199,28 @@ void __init page_alloc_init(void)
 }
 ```
 
-It setups setup the `startup` and `teardown` callbacks (second and third parameters) for the `CPUHP_PAGE_ALLOC_DEAD` cpu [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) state. Of course the implementation of this function depends on the `CONFIG_HOTPLUG_CPU` kernel configuration option and if this option is set, such callbacks will be set for all cpu(s) in the system depends on their `hotplug` states. [hotplug](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt) mechanism is a big theme and it will not be described in this book.
+该函数为 CPU [热插拔](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)状态 `CPUHP_PAGE_ALLOC_DEAD` 设置 `startup` 和 `teardown` 回调函数（第二和第三个参数）。当然，这个函数的实现取决于内核配置选项 `CONFIG_HOTPLUG_CPU` ——若启用该选项，系统将根据各个 CPU 的热插拔状态为其设置相应的回调函数。CPU [热插拔](https://www.kernel.org/doc/Documentation/cpu-hotplug.txt)机制是一个复杂主题，本书将不做详细探讨。
 
-After this function we can see the kernel command line in the initialization output:
+完成此函数后，我们能在初始化输出中看到内核命令行信息：
 
 ![kernel command line](images/kernel_command_line.png)
 
-And a couple of functions such as `parse_early_param` and `parse_args` which handles Linux kernel command line. You may remember that we already saw the call of the `parse_early_param` function in the sixth [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6) of the kernel initialization chapter, so why we call it again? Answer is simple: we call this function in the architecture-specific code (`x86_64` in our case), but not all architecture calls this function. And we need to call the second function `parse_args` to parse and handle non-early command line arguments.
+接下来会调用几个处理 Linux 内核命令行的函数，包括 `parse_early_param` 和 `parse_args`。您可能记得我们在内核初始化章节的第六[部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-6)已经见过 `parse_early_param` 的调用，那么为什么这里需要再次调用呢？原因很简单：之前是在架构特定代码（如 x86_64）中调用的，但并非所有架构都会调用此函数。而这里调用 `parse_args` 是为了解析和处理非早期的命令行参数。
 
-In the next step we can see the call of the `jump_label_init` from the [kernel/jump_label.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/jump_label.c). and initializes [jump label](https://lwn.net/Articles/412072/).
+随后我们可以看到来自 [kernel/jump_label.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/jump_label.c) 的 `jump_label_init` 函数调用，它用于初始化[跳转标签（jump label）](https://lwn.net/Articles/412072/)机制。
 
-After this we can see the call of the `setup_log_buf` function which setups the [printk](http://www.makelinux.net/books/lkd2/ch18lev1sec3) log buffer. We already saw this function in the seventh [part](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-7) of the Linux kernel initialization process chapter.
+接着是 `setup_log_buf` 函数调用，该函数设置 [printk](http://www.makelinux.net/books/lkd2/ch18lev1sec3) 日志缓冲区。我们在 Linux 内核初始化流程的第七[部分](https://0xax.gitbook.io/linux-insides/summary/initialization/linux-initialization-7)已经分析过这个函数。
 
-PID hash initialization
+PID 哈希初始化
 --------------------------------------------------------------------------------
 
-The next is `pidhash_init` function. As you know each process has assigned a unique number which called - `process identification number` or `PID`. Each process generated with fork or clone is automatically assigned a new unique `PID` value by the kernel. The management of `PIDs` centered around the two special data structures: `struct pid` and `struct upid`. First structure represents information about a `PID` in the kernel. The second structure represents the information that is visible in a specific namespace. All `PID` instances stored in the special hash table:
+接下来是 `pidhash_init` 函数。如您所知，每个进程都会被分配一个唯一的编号，称为进程标识符（`Process Identification Number`，简称 `PID`）。内核会为通过 fork 或 clone 生成的每个新进程自动分配一个唯一的 `PID` 值。`PID` 的管理主要围绕两个特殊数据结构展开：`struct pid` 与 `struct upid`。第一个结构表示内核中 `PID` 信息。第二个结构表示特定命名空间可见的 `PID` 信息。所有 `PID` 实例都存储在专门的哈希表中：
 
 ```C
 static struct hlist_head *pid_hash;
 ```
 
-This hash table is used to find the pid instance that belongs to a numeric `PID` value. So, `pidhash_init` initializes this hash table. In the start of the `pidhash_init` function we can see the call of the `alloc_large_system_hash`:
+该哈希表用于通过数字 `PID` 值查找对应的 `pid` 实例。因此，`pidhash_init` 函数负责初始化这个哈希表。在 `pidhash_init` 函数的开头，我们可以看到调用了 `alloc_large_system_hash` 函数：
 
 ```C
 pid_hash = alloc_large_system_hash("PID", sizeof(*pid_hash), 0, 18,
@@ -229,10 +229,9 @@ pid_hash = alloc_large_system_hash("PID", sizeof(*pid_hash), 0, 18,
                                    0, 4096);
 ```
 
-The number of elements of the `pid_hash` depends on the `RAM` configuration, but it can be between `2^4` and `2^12`. The `pidhash_init` computes the size
-and allocates the required storage (which is `hlist` in our case - the same as [doubly linked list](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1), but contains one pointer instead on the [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h). The `alloc_large_system_hash` function allocates a large system hash table with `memblock_virt_alloc_nopanic` if we pass `HASH_EARLY` flag (as it in our case) or with `__vmalloc` if we did no pass this flag.
+`pid_hash` 哈希表的元素数量取决于 `RAM` 内存配置，其范围介于 $2^4$ 到 $2^{12}$ 之间。`pidhash_init` 函数会计算所需大小并分配存储空间（此处使用的是 `hlist` 结构——与[双向链表](https://0xax.gitbook.io/linux-insides/summary/datastructures/linux-datastructures-1)类似，但在 [struct hlist_head](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/types.h) 中仅包含单个指针）。如果传递 `HASH_EARLY` 标志时（如当前场景），`alloc_large_system_hash` 函数使用 `memblock_virt_alloc_nopanic` 分配大型系统哈希表，否则改用 `__vmalloc` 进行分配。
 
-The result we can see in the `dmesg` output:
+执行结果可通过 `dmesg` 命令查看：
 
 ```
 $ dmesg | grep hash
@@ -242,9 +241,13 @@ $ dmesg | grep hash
 ...
 ```
 
-That's all. The rest of the stuff before scheduler initialization is the following functions: `vfs_caches_init_early` does early initialization of the [virtual file system](http://en.wikipedia.org/wiki/Virtual_file_system) (more about it will be in the chapter which will describe virtual file system), `sort_main_extable` sorts the kernel's built-in exception table entries which are between `__start___ex_table` and `__stop___ex_table`, and `trap_init` initializes trap handlers (more about last two function we will know in the separate chapter about interrupts).
+以上就是调度器初始化前的所有准备工作。剩余需要执行的函数包括：
 
-The last step before the scheduler initialization is initialization of the memory manager with the `mm_init` function from the [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c). As we can see, the `mm_init` function initializes different parts of the Linux kernel memory manager:
+ - `vfs_caches_init_early` 执行[虚拟文件系统（VFS）](http://en.wikipedia.org/wiki/Virtual_file_system)的早期初始化（详细分析将在 VFS 专题章节展开）；
+ - `sort_main_extable` 对内核内置的异常表项（位于 `__start___ex_table` 和 `__stop___ex_table` 之间）进行排序；
+ - `trap_init` 初始化陷阱处理程序（后两个函数将在中断相关章节详细探讨）。
+
+调度器初始化前最后一步是通过 [init/main.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/init/main.c) 中的 `mm_init` 函数完成内存管理器的初始化。我们可以看到，该函数负责初始化 Linux 内核内存管理器各个部分：
 
 ```C
 page_ext_init_flatmem();
@@ -255,22 +258,22 @@ pgtable_init();
 vmalloc_init();
 ```
 
-The first is `page_ext_init_flatmem` which depends on the `CONFIG_SPARSEMEM` kernel configuration option and initializes extended data per page handling. The `mem_init` releases all `bootmem`, the `kmem_cache_init` initializes kernel cache, the `percpu_init_late` - replaces `percpu` chunks with those allocated by [slub](http://en.wikipedia.org/wiki/SLUB_%28software%29), the `pgtable_init` - initializes the `page->ptl` kernel cache, the `vmalloc_init` - initializes `vmalloc`. Please, **NOTE** that we will not dive into details about all of these functions and concepts, but we will see all of them it in the [Linux kernel memory manager](https://0xax.gitbook.io/linux-insides/summary/mm) chapter.
+首先是 `page_ext_init_flatmem` 函数，其功能取决于内核配置选项 `CONFIG_SPARSEMEM`，主要用于初始化每页的扩展数据处理。`mem_init` 负责释放所有 `bootmem` 内存，`kmem_cache_init` 初始化内核缓存，`percpu_init_late` 将 `percpu` 内存块替换为 [SLUB](http://en.wikipedia.org/wiki/SLUB_%28software%29) 分配器分配的内存块，`pgtable_init` 初始化 `page->ptl` 内核缓存，而 `vmalloc_init` 则用于初始化 `vmalloc` 机制。**请注意**，我们不会深入探讨这些函数和概念的具体细节，但您可以在 [Linux 内核内存管理](https://0xax.gitbook.io/linux-insides/summary/mm)章节中详细了解它们。
 
-That's all. Now we can look on the `scheduler`.
+至此，准备工作已全部完成。接下来，我们可以开始探讨 `scheduler`（调度器）的初始化过程。
 
-Scheduler initialization
+调度器初始化
 --------------------------------------------------------------------------------
 
-And now we come to the main purpose of this part - initialization of the task scheduler. I want to say again as I already did it many times, you will not see the full explanation of the scheduler here, there will be special separate chapter about this. Here will be described first initial scheduler mechanisms which are initialized first of all. So let's start.
+现在，我们来到本部分的核心目标——任务调度器的初始化。需要再次说明的是（正如我已多次强调），这里不会完整解释调度器的全部内容，后续会有专门的章节来详细介绍。这里主要描述最先初始化的调度机制。让我们开始吧。
 
-Our current point is the `sched_init` function from the [kernel/sched/core.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/core.c) kernel source code file and as we can understand from the function's name, it initializes scheduler. Let's start to dive into this function and try to understand how the scheduler is initialized. At the start of the `sched_init` function we can see the following call:
+当前我们关注的是位于 [kernel/sched/core.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/core.c) 内核源代码文件中的 `sched_init` 函数，顾名思义，它负责初始化调度器。让我们开始深入这个函数，尝试理解调度器是如何初始化的。在 `sched_init` 函数的开头，我们可以看到以下调用：
 
 ```C
 sched_clock_init();
 ```
 
-The `sched_clock_init` is pretty easy function and as we may see it just sets `sched_clock_init` variable:
+`sched_clock_init` 是一个相当简单的函数，其主要功能是设置 `sched_clock_init` 变量：
 
 ```C
 void sched_clock_init(void)
@@ -279,14 +282,14 @@ void sched_clock_init(void)
 }
 ```
 
-that will be used later. At the next step is initialization of the array of `waitqueues`:
+该变量将在后续流程中使用。接下来的步骤是初始化 `waitqueues` 数组：
 
 ```C
 for (i = 0; i < WAIT_TABLE_SIZE; i++)
 	init_waitqueue_head(bit_wait_table + i);
 ```
 
-where `bit_wait_table` is defined as:
+其中 `bit_wait_table` 定义如下：
 
 ```C
 #define WAIT_TABLE_BITS 8
@@ -294,7 +297,7 @@ where `bit_wait_table` is defined as:
 static wait_queue_head_t bit_wait_table[WAIT_TABLE_SIZE] __cacheline_aligned;
 ```
 
-The `bit_wait_table` is array of wait queues that will be used for wait/wake up of processes depends on the value of a designated bit. The next step after initialization of `waitqueues` array is calculating size of memory to allocate for the `root_task_group`. As we may see this size depends on two following kernel configuration options:
+`bit_wait_table` 是一个等待队列数组，用于根据特定位的值来等待/唤醒进程。初始化 `waitqueues` 数组后，下一步是计算为 `root_task_group` 分配的内存大小。可以看到，这个大小取决于以下两个内核配置选项：
 
 ```C
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -305,26 +308,26 @@ The `bit_wait_table` is array of wait queues that will be used for wait/wake up 
 #endif
 ```
 
-* `CONFIG_FAIR_GROUP_SCHED`;
-* `CONFIG_RT_GROUP_SCHED`.
+* `CONFIG_FAIR_GROUP_SCHED`；
+* `CONFIG_RT_GROUP_SCHED`。
 
-Both of these options provide two different planning models. As we can read from the [documentation](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt), the current scheduler - `CFS` or `Completely Fair Scheduler` use a simple concept. It models process scheduling as if the system has an ideal multitasking processor where each process would receive `1/n` processor time, where `n` is the number of the runnable processes. The scheduler uses the special set of rules. These rules determine when and how to select a new process to run and they are called `scheduling policy`.
+这两个选项提供了两种不同的调度模型。根据[文档](https://www.kernel.org/doc/Documentation/scheduler/sched-design-CFS.txt)说明，当前使用的调度器——完全公平调度器（`CFS`）采用了一个简洁的设计理念。它将进程调度建模为理想的多任务处理器，其中每个可运行进程都能获得 $\displaystyle\frac 1 n$ 的处理器时间（`n` 代表可运行进程数量）。该调度器遵循特定的规则集，这些规则决定了何时以及如何选择新进程运行，被称为`调度策略`。
 
-The `Completely Fair Scheduler` supports following `normal` or in other words `non-real-time` scheduling policies:
+`完全公平调度器`支持以下`普通`（即`非实时`）调度策略：
 
 * `SCHED_NORMAL`;
 * `SCHED_BATCH`;
 * `SCHED_IDLE`.
 
-The `SCHED_NORMAL` is used for the most normal applications, the amount of cpu each process consumes is mostly determined by the [nice](http://en.wikipedia.org/wiki/Nice_%28Unix%29) value, the `SCHED_BATCH` used for the 100% non-interactive tasks and the `SCHED_IDLE` runs tasks only when the processor has no task to run besides this task.
+`SCHED_NORMAL` 用于普通应用程序，每个进程占用的 CPU 时间主要由 [nice](http://en.wikipedia.org/wiki/Nice_%28Unix%29) 值决定；`SCHED_BATCH` 用于 100% 非交互式任务；而 `SCHED_IDLE` 仅在处理器没有其他任务可运行时才会调度。
 
-The `real-time` policies are also supported for the time-critical applications: `SCHED_FIFO` and `SCHED_RR`. If you've read something about the Linux kernel scheduler, you can know that it is modular. That means it supports different algorithms to schedule different types of processes. Usually this modularity is called `scheduler classes`. These modules encapsulate scheduling policy details and are handled by the scheduler core without knowing too much about them.
+对于时间敏感的实时应用，内核也支持两种策略：`SCHED_FIFO` 和 `SCHED_RR`。了解 Linux 内核调度器的读者会知道其采用模块化设计，这意味着它支持不同算法来调度不同类型的进程。这种模块化通常称为`调度类`（scheduler classes），这些模块封装了调度策略细节，由调度器核心统一处理而无需了解具体实现。
 
-Now let's get back to the our code and look on the two configuration options: `CONFIG_FAIR_GROUP_SCHED` and `CONFIG_RT_GROUP_SCHED`. The smallest unit that the scheduler works with is an individual task or thread. However, a process is not the only type of entity that the scheduler can operate with. Both of these options provide support for group scheduling. The first option provides support for group scheduling with the `completely fair scheduler` policies and the second with the `real-time` policies respectively.
+现在回到代码，我们关注两个配置选项：`CONFIG_FAIR_GROUP_SCHED` 和 `CONFIG_RT_GROUP_SCHED`。虽然调度器调度的基本单位是单个任务或线程，但进程并非唯一可调度实体。这两个选项均提供了对组调度的支持——前者针对`完全公平调度器`策略，后者则对应`实时`策略。
 
-In simple words, group scheduling is a feature that allows us to schedule a set of tasks as if they were a single task. For example, if you create a group with two tasks on the group, then this group is just like one normal task, from the kernel perspective. After a group is scheduled, the scheduler will pick a task from this group and it will be scheduled inside the group. So, such mechanism allows us to build hierarchies and manage their resources. Although a minimal unit of scheduling is a process, the Linux kernel scheduler does not use `task_struct` structure under the hood. There is special `sched_entity` structure that is used by the Linux kernel scheduler as scheduling unit.
+简单来说，组调度是一种功能，允许我们将一组任务视为单个任务进行调度。例如，如果你创建一个包含两个任务的组，从内核的角度来看，这个组就像一个普通任务。当组被调度时，调度器会从该组中选择一个任务在组内进行调度。这种机制让我们能够构建层级结构并管理它们的资源。虽然调度的最小单位是进程，但 Linux 内核调度器在底层并不直接使用 `task_struct` 结构，而是通过专门的 `sched_entity` 结构作为调度单元。
 
-So, the current goal is to calculate a space to allocate for a `sched_entity(ies)` of the root task group and we do it two times with:
+因此，当前的目标是计算为根任务组的 `sched_entity` 分配的空间大小，我们通过以下两种情况进行计算：
 
 ```C
 #ifdef CONFIG_FAIR_GROUP_SCHED
@@ -335,12 +338,12 @@ So, the current goal is to calculate a space to allocate for a `sched_entity(ies
 #endif
 ```
 
-The first is for case when scheduling of task groups is enabled with `completely fair` scheduler and the second is for the same purpose by in a case of `real-time` scheduler. So here we calculate size which is equal to size of a pointer multiplied on amount of CPUs in the system and multiplied to `2`. We need to multiply this on `2` as we will need to allocate a space for two things:
+第一种情况是启用了`完全公平`调度器的任务组调度功能，第二种情况则是针对`实时`调度器的相同用途。这里我们计算的大小等于指针大小乘以系统中的 CPU 数量，再乘以 `2`。需要乘以 `2` 是因为我们要为以下两项分配空间：
 
-* scheduler entity structure;
-* `runqueue`.
+* 调度实体结构；
+* `runqueue`。
 
-After we have calculated size, we allocate a space with the `kzalloc` function and set pointers of `sched_entity` and `runqueues` there:
+计算完大小后，我们通过 `kzalloc` 函数分配空间，并在此设置 `sched_entity` 和 `runqueues` 的指针：
 
 ```C
 ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
@@ -362,9 +365,9 @@ ptr = (unsigned long)kzalloc(alloc_size, GFP_NOWAIT);
 #endif
 ```
 
-As I already mentioned, the Linux group scheduling mechanism allows to specify a hierarchy. The root of such hierarchies is the `root_runqueuetask_group` task group structure. This structure contains many fields, but we are interested in `se`, `rt_se`, `cfs_rq` and `rt_rq` for this moment:
+如前所述，Linux 的组调度机制支持层级结构定义。这类层级结构的根节点是 `root_runqueuetask_group` 任务组结构体。该结构体包含多个字段，但目前我们重点关注 `se`、`rt_se`、`cfs_rq` 和 `rt_rq` 这四个成员：
 
-The first two are instances of `sched_entity` structure. It is defined in the [include/linux/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/sched.h) kernel header filed and used by the scheduler as a unit of scheduling.
+其中 `se` 和 `rt_se` 是 `sched_entity` 结构体的实例，该结构定义于 [include/linux/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/linux/sched.h) 头文件，是调度器的基本调度单元。
 
 ```C
 struct task_group {
@@ -377,9 +380,9 @@ struct task_group {
 }
 ```
 
-The `cfs_rq` and `rt_rq` present `run queues`. A `run queue` is a special `per-cpu` structure that is used by the Linux kernel scheduler to store `active` threads or in other words set of threads which potentially will be picked up by the scheduler to run.
+`cfs_rq` 和 `rt_rq` 表示运行队列（`run queues`）。运行队列是一种特殊的 `per-cpu` 结构，Linux 内核调度器用它来存储 `active` 线程，换句话说，这些线程集合中的线程可能会被调度器选中运行。
 
-The space is allocated and the next step is to initialize a `bandwidth` of CPU for `real-time` and `deadline` tasks:
+空间分配完成后，下一步是初始化 `real-time`（实时）和 `deadline`（截止时间）任务的 CPU 带宽：
 
 ```C
 init_rt_bandwidth(&def_rt_bandwidth,
@@ -388,12 +391,12 @@ init_dl_bandwidth(&def_dl_bandwidth,
                   global_rt_period(), global_rt_runtime());
 ```
 
-All groups have to be able to rely on the amount of CPU time. The two following structures: `def_rt_bandwidth` and `def_dl_bandwidth` represent default values of bandwidths for `real-time` and `deadline` tasks. We will not look at definition of these structures as it is not so important for now, but we are interested in two following values:
+所有任务组都必须能够依赖预设的 CPU 时间配额。以下两个结构体：`def_rt_bandwidth` 和 `def_dl_bandwidth`，分别表示实时任务和截止时间任务的默认带宽配置。虽然这些结构体的具体定义目前并不重要，但我们重点关注以下两个参数值：
 
 * `sched_rt_period_us`;
 * `sched_rt_runtime_us`.
 
-The first represents a period and the second represents quantum that is allocated for `real-time` tasks during `sched_rt_period_us`. You may see global values of these parameters in the:
+第一个参数表示周期长度，第二个参数表示在 `sched_rt_period_us` 周期内为 `real-time` 任务分配的时间量（quantum）。这些参数的全局默认值可以在以下位置查看：
 
 ```
 $ cat /proc/sys/kernel/sched_rt_period_us
@@ -403,9 +406,9 @@ $ cat /proc/sys/kernel/sched_rt_runtime_us
 950000
 ```
 
-The values related to a group can be configured in `<cgroup>/cpu.rt_period_us` and `<cgroup>/cpu.rt_runtime_us`. Due no one filesystem is not mounted yet, the `def_rt_bandwidth` and the `def_dl_bandwidth` will be initialized with default values which will be returned by the `global_rt_period` and `global_rt_runtime` functions.
+与任务组相关的参数可通过 `<cgroup>/cpu.rt_period_us` 和 `<cgroup>/cpu.rt_runtime_us` 进行配置。由于此时尚未挂载任何文件系统，`def_rt_bandwidth` 和 `def_dl_bandwidth` 将使用 `global_rt_period` 与 `global_rt_runtime` 函数返回的默认值进行初始化。
 
-That's all with the bandwiths of `real-time` and `deadline` tasks and in the next step, depends on enable of [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing), we make initialization of the `root domain`:
+至此已完成 `real-time` 和 `deadline` 任务的带宽设置。接下来，根据是否启用 [SMP](http://en.wikipedia.org/wiki/Symmetric_multiprocessing)，我们将初始化 `root domain`：
 
 ```C
 #ifdef CONFIG_SMP
@@ -413,9 +416,10 @@ That's all with the bandwiths of `real-time` and `deadline` tasks and in the nex
 #endif
 ```
 
-The real-time scheduler requires global resources to make scheduling decision. But unfortunately scalability bottlenecks appear as the number of CPUs increase. The concept of `root domains` was introduced for improving scalability and avoid such bottlenecks. Instead of bypassing over all `run queues`, the scheduler gets information about a CPU where/from to push/pull a `real-time` task from the `root_domain` structure. This structure is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/sched.h) kernel header file and just keeps track of CPUs that can be used to push or pull a process.
+实时调度器需要全局资源来做出调度决策。但随着 CPU 数量增加，可扩展性瓶颈就会出现。引入根域（`root domains`）概念正是为了提升可扩展性并避免此类瓶颈。调度器不再需要遍历所有运行队列，而是通过 `root_domain` 结构获取可以推送/拉取实时任务的 CPU 信息。该结构定义于 [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/sched.h) 头文件，主要跟踪可用于进程迁移的 CPU 集合。
 
-After `root domain` initialization, we make initialization of the `bandwidth` for the `real-time` tasks of the `root task group` as we did the same above:
+完成根域初始化后，我们像之前一样为根任务组的实时任务初始化带宽控制：
+
 ```C
 #ifdef CONFIG_RT_GROUP_SCHED
 	init_rt_bandwidth(&root_task_group.rt_bandwidth,
@@ -423,16 +427,13 @@ After `root domain` initialization, we make initialization of the `bandwidth` fo
 #endif
 ```
 
-with the same default values.
+并使用相同的默认值进行初始化。
 
-In the next step, depends on the `CONFIG_CGROUP_SCHED` kernel configuration option we allocate `slab` cache for `task_group(s)` and initialize the `siblings` and `children` lists of the root task group. As we can read from the documentation, the `CONFIG_CGROUP_SCHED` is:
+接下来，根据内核配置选项 `CONFIG_CGROUP_SCHED` 的设置，我们会为 `task_group` 结构分配 `slab` 缓存，并初始化根任务组的 `siblings` 和 `children` 链表。根据内核文档说明，`CONFIG_CGROUP_SCHED` 选项的作用是：
 
-```
-This option allows you to create arbitrary task groups using the "cgroup" pseudo
-filesystem and control the cpu bandwidth allocated to each such task group.
-```
+> 允许通过 cgroup 伪文件系统创建任意任务组，并控制分配给每个任务组的 CPU 带宽。
 
-As we finished with the lists initialization, we can see the call of the `autogroup_init` function:
+完成链表初始化后，我们可以看到调用了 `autogroup_init` 函数：
 
 ```C
 #ifdef CONFIG_CGROUP_SCHED
@@ -443,9 +444,9 @@ As we finished with the lists initialization, we can see the call of the `autogr
 #endif
 ```
 
-which initializes automatic process group scheduling. The `autogroup` feature is about automatic creation and population of a new task group during creation of a new session via [setsid](https://linux.die.net/man/2/setsid) call.
+该函数用于初始化自动进程组调度机制。`autogroup` 特性的作用是通过 [setsid](https://linux.die.net/man/2/setsid) 系统调用创建新会话时，自动创建并填充新的任务组。
 
-After this we are going through the all `possible` CPUs (you can remember that `possible` CPUs are stored in the `cpu_possible_mask` bitmap that can ever be available in the system) and initialize a `runqueue` for each `possible` cpu:
+完成此操作后，我们会遍历所有 `possible` CPU（您可能记得 `possible` CPU 存储在 `cpu_possible_mask` 位图中，表示系统中可能存在的所有 CPU），并为每个 `possible` CPU 初始化运行队列：
 
 ```C
 for_each_possible_cpu(i) {
@@ -455,15 +456,15 @@ for_each_possible_cpu(i) {
     ...
 ```
 
-The `rq` structure in the Linux kernel is defined in the [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/sched.h#L625). As I already mentioned this above, a `run queue` is a fundamental data structure in a scheduling process. The scheduler uses it to determine who will be ran next. As you may see, this structure has many different fields and we will not cover all of them here, but we will look on them when they will be directly used.
+Linux 内核中的 `rq` 结构体定义于 [kernel/sched/sched.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/sched/sched.h#L625)。如之前所述，运行队列是调度过程中的核心数据结构，调度器通过它决定下一个要运行的任务。该结构体包含众多字段，我们不会在此逐一说明，而是在后续实际使用时具体分析。
 
-After initialization of `per-cpu` run queues with default values, we need to setup `load weight` of the first task in the system:
+在为每个 CPU 的运行队列完成默认值初始化后，我们需要设置系统中第一个任务的`负载权重`（`load weight`）：
 
 ```C
 set_load_weight(&init_task);
 ```
 
-First of all let's try to understand what is it `load weight` of a process. If you will look at the definition of the `sched_entity` structure, you will see that it starts from the `load` field:
+首先我们来理解什么是进程的`负载权重`。如果查看 `sched_entity` 结构的定义，会发现它起始于 `load` 字段：
 
 ```C
 struct sched_entity {
@@ -474,7 +475,7 @@ struct sched_entity {
 }
 ```
 
-represented by the `load_weight` structure which just contains two fields that represent actual load weight of a scheduler entity and its invariant value:
+`load weight` 结构仅包含两个字段，分别表示调度实体的实际权重及其优化计算的固定倒数：
 
 ```C
 struct load_weight {
@@ -483,7 +484,7 @@ struct load_weight {
 };
 ```
 
-You already may know that each process in the system has `priority`. The higher priority allows to get more time to run. A `load weight` of a process is a relation between priority of this process and timeslices of this process. Each process has three following fields related to priority:
+您可能知道系统中每个进程都有`优先级`（`priority`）。更高的优先级意味着可以获得更多的运行时间。进程的`负载权重`实际上反映了该进程优先级与其时间片配额之间的关系。每个进程都包含以下三个与优先级相关的字段：
 
 ```C
 struct task_struct {
@@ -499,9 +500,9 @@ struct task_struct {
 }
 ```
 
-The first one is `dynamic priority` which can't be changed during lifetime of a process based on its static priority and interactivity of the process. The `static_prio` contains initial priority most likely well-known to you `nice value`. This value is not changed by the kernel if a user does not change it. The last one is `normal_priority` based on the value of the `static_prio` too, but also it depends on the scheduling policy of a process.
+第一个是`动态优先级`（`dynamic priority`），它基于进程的静态优先级和交互性，在进程生命周期内不可更改。`static_prio` 包含初始优先级，即您可能熟知的 `nice` 值。除非用户主动修改，否则内核不会改变这个值。最后一个 `normal_priority` 虽然也基于 `static_prio` 的值，但同时还取决于进程的调度策略。
 
-So the main goal of the `set_load_weight` function is to initialize `load_weight` fields for the `init` task:
+`set_load_weight` 函数的主要目标是为 `init` 任务初始化 `load_weight` 字段：
 
 ```C
 static void set_load_weight(struct task_struct *p)
@@ -520,9 +521,9 @@ static void set_load_weight(struct task_struct *p)
 }
 ```
 
-As you may see we calculate initial `prio` from the initial value of the `static_prio` of the `init` task and use it as index of `sched_prio_to_weight` and `sched_prio_to_wmult` arrays to set `weight` and `inv_weight` values. These two arrays contain a `load weight` depends on priority value. In a case of when a process is `idle` process, we set minimal load weight.
+可以看到，我们根据 `init` 任务的初始 `static_prio` 值计算出初始 `prio`，并将其作为 `sched_prio_to_weight` 和 `sched_prio_to_wmult` 数组的索引来设置 `weight` 和 `inv_weight` 值。这两个数组包含了基于优先级值的`负载权重`。对于 `idle` 进程，我们设置最小负载权重。
 
-For this moment we came to the end of initialization process of the Linux kernel scheduler. The last steps are: to make current process (it will be the first `init` process) `idle` that will be ran when a cpu has no other process to run. Calculating next time period of the next calculation of CPU load and initialization of the `fair` class:
+至此，我们已完成 Linux 内核调度器的初始化过程。最后的步骤包括：将当前进程（即首个 `init` 进程）设为 `idle` 状态（当 CPU 没有其他进程可运行时执行），计算下一次 CPU 负载计算的时间周期，以及初始化 `fair` 调度类：
 
 ```C
 __init void init_sched_fair_class(void)
@@ -533,26 +534,26 @@ __init void init_sched_fair_class(void)
 }
 ```
 
-Here we register a [soft irq](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-9) that will call the `run_rebalance_domains` handler. After the `SCHED_SOFTIRQ` will be triggered, the `run_rebalance` will be called to rebalance a run queue on the current CPU.
+这里我们注册了一个[软中断](https://0xax.gitbook.io/linux-insides/summary/interrupts/linux-interrupts-9)，该中断将调用 `run_rebalance_domains` 处理程序。当 `SCHED_SOFTIRQ` 被触发时，`run_rebalance` 函数会被调用来重新平衡当前 CPU 的运行队列。
 
-The last two steps of the `sched_init` function is to initialization of scheduler statistics and setting `scheeduler_running` variable:
+`sched_init` 函数的最后两个步骤是初始化调度器统计信息和设置 `scheduler_running` 变量：
 
 ```C
 scheduler_running = 1;
 ```
 
-That's all. Linux kernel scheduler is initialized. Of course, we have skipped many different details and explanations here, because we need to know and understand how different concepts (like process and process groups, runqueue, rcu, etc.) works in the Linux kernel , but we took a short look on the scheduler initialization process. We will look all other details in the separate part which will be fully dedicated to the scheduler.
+至此，Linux 内核调度器已完成初始化。当然，我们在此跳过了许多细节和解释，因为需要先理解 Linux 内核中各种概念（如进程和进程组、运行队列、RCU 等）的工作原理。不过我们已经对调度器初始化过程有了基本了解，更详细的内容将在专门讨论调度器的独立章节中深入分析。
 
-Conclusion
+总结
 --------------------------------------------------------------------------------
 
-It is the end of the eighth part about the Linux kernel initialization process. In this part, we looked on the initialization process of the scheduler and we will continue in the next part to dive in the linux kernel initialization process and will see initialization of the [RCU](http://en.wikipedia.org/wiki/Read-copy-update) and many other initialization stuff in the next part.
+这是关于 Linux 内核初始化过程的第八部分的结尾。在本部分中，我们探讨了调度器的初始化流程，并将在下一部分继续深入 Linux 内核初始化过程，重点分析 [RCU](http://en.wikipedia.org/wiki/Read-copy-update) 机制及其他核心组件的初始化工作。
 
-If you have any questions or suggestions write me a comment or ping me at [twitter](https://twitter.com/0xAX).
+如果您有任何疑问或建议，请通过 [Twitter](https://twitter.com/0xAX) 或者 [email](https://github.com/hust-open-atom-club/linux-insides-zh/issues/anotherworldofworld@gmail.com) 与我联系，或者创建一个 [issue](https://github.com/hust-open-atom-club/linux-insides-zh/issues/new)。
 
 **Please note that English is not my first language, And I am really sorry for any inconvenience. If you find any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
 
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [CPU masks](https://0xax.gitbook.io/linux-insides/summary/concepts/linux-cpu-2)
