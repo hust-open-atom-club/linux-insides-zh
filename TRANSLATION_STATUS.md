@@ -28,7 +28,7 @@
 |├ [3.0](Interrupts/README.md)|[@littleneko](https://github.com/littleneko)|更新至[5727932167a2](https://github.com/0xAX/linux-insides/commit/5727932167a2ff6a1e647081c85d081d4ed8b508)|
 |├ [3.1](Interrupts/linux-interrupts-1.md)|[@Albertchamberlain](https://github.com/Albertchamberlain)|更新至[e58c06bfca60](https://github.com/0xAX/linux-insides/commit/e58c06bfca60d4af25d92562de1ee9959992fc68)|
 |├ [3.2](Interrupts/linux-interrupts-2.md)|[@narcijie](https://github.com/narcijie)|更新至[4d6351172486](https://github.com/0xAX/linux-insides/commit/4d6351172486e5c046a7d3db2286fc0d0d0d7789)|
-|├ [3.3](Interrupts/linux-interrupts-3.md)||未开始|
+|├ [3.3](Interrupts/linux-interrupts-3.md)|[@ttttyy](https://github.com/ttttyy)|更新至[17a0d7bfbc48](https://github.com/0xAX/linux-insides/commit/17a0d7bfbc482ec1f7e3b7d8b9d279a632d7368b)|
 |├ [3.4](Interrupts/linux-interrupts-4.md)||未开始|
 |├ [3.5](Interrupts/linux-interrupts-5.md)||未开始|
 |├ [3.6](Interrupts/linux-interrupts-6.md)||未开始|
