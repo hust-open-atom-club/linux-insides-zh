@@ -12,6 +12,11 @@ Linux 启动
 
 * [64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf](http://www.intel.com/content/www/us/en/processors/architectures-software-developer-manuals.html)
 
+Linux 内核内存管理
+--------------------------------------
+
+* [Notes on the linux kernel VM subsystem by @lorenzo-stoakes](https://github.com/lorenzo-stoakes/linux-vm-notes)
+
 串口编程
 ------------------------
 
@@ -38,11 +43,6 @@ GCC and GAS
 --------------------------
 
 * [task_struct definition](http://lxr.free-electrons.com/source/include/linux/sched.h#L1274)
-
-其他框架
-------------------------
-
-* [PowerPC and Linux Kernel Inside](http://www.systemcomputing.org/ppc/)
 
 有帮助的链接
 ------------------------
