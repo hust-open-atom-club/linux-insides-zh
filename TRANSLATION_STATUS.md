@@ -13,7 +13,7 @@
 |├ [1.5](Booting/linux-bootstrap-5.md)|[@mytbk](https://github.com/mytbk)|更新至[31998d14320f](https://github.com/0xAX/linux-insides/commit/31998d14320f25399d67d4fff446a65178931e90)|
 |└ [1.6](Booting/linux-bootstrap-6.md)|[@mytbk](https://github.com/mytbk)|更新至[31998d14320f](https://github.com/0xAX/linux-insides/commit/31998d14320f25399d67d4fff446a65178931e90)|
 | 2. [Initialization](Initialization)||正在进行|
-|├ [2.0](Initialization/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[4401750766f7](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
+|├ [2.0](Initialization/README.md)|[@yeying-xingchen](https://github.com/yeying-xingchen)|更新至[c2ecc33](https://github.com/0xAX/linux-insides/commit/c2ecc331a0757360c6c8262af1efc392515510f7)|
 |├ [2.1](Initialization/linux-initialization-1.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[4401750766f7](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
 |├ [2.2](Initialization/linux-initialization-2.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[4401750766f7](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
 |├ [2.3](Initialization/linux-initialization-3.md)|[@dontpanic92](https://github.com/dontpanic92)|更新至[4401750766f7](https://github.com/0xAX/linux-insides/commit/4401750766f7150dcd16f579026f5554541a6ab9)|
