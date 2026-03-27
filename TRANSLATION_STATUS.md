@@ -5,7 +5,7 @@
 |章节|译者|翻译进度|
 | ------------- |:-------------:| -----:|
 | 1. [Booting](Booting)||已完成|
-|├ [1.0](Booting/README.md)|[@xinqiu](https://github.com/xinqiu)|更新至[527b2b8921c3](https://github.com/0xAX/linux-insides/commit/527b2b8921c3d9c043bd914c5990d6a991e3035b)|
+|├ [1.0](Booting/README.md)|[@yeying-xingchen](https://github.com/yeying-xingchen)|更新至[40fb0c6](https://github.com/0xAX/linux-insides/commit/40fb0c66dfbc3721955c62b98a3a89c35646f6a4)|
 |├ [1.1](Booting/linux-bootstrap-1.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.2](Booting/linux-bootstrap-2.md)|[@hailincai](https://github.com/hailincai)|已完成|
 |├ [1.3](Booting/linux-bootstrap-3.md)|[@hailincai](https://github.com/hailincai)|已完成|
