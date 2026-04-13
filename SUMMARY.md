@@ -35,7 +35,7 @@
     * [vsyscall and vDSO](SysCall/linux-syscall-3.md)
     * [Linux 内核如何运行程序](SysCall/linux-syscall-4.md)
     * [open 系统调用的实现](SysCall/linux-syscall-5.md)
-    * [Linux 资源限制](SysCall/linux-syscall-6.html)
+    * [Linux 资源限制](SysCall/linux-syscall-6.md)
 * [定时器和时钟管理](Timers/README.md)
     * [简介](Timers/linux-timers-1.md)
     * [时钟源框架简介](Timers/linux-timers-2.md)
