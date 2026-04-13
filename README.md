@@ -4,6 +4,30 @@
 
 **目的很简单** - 分享我对 Linux 内核机理的一些浅见，帮助读者理解 Linux 内核机理和其他底层内容。从 [这里](https://github.com/hust-open-atom-club/linux-insides-zh/blob/master/SUMMARY.md) 开始阅读这本书吧。
 
+## 使用 mdBook 构建
+
+仓库已经支持直接使用 `mdBook` 构建网页书籍。
+
+安装：
+
+```bash
+cargo install mdbook --locked
+```
+
+构建：
+
+```bash
+mdbook build
+```
+
+本地预览：
+
+```bash
+mdbook serve --open
+```
+
+生成结果位于 `book/` 目录。仓库同时提供了 GitHub Actions 工作流，在 `master` 分支更新后自动构建并部署 GitHub Pages。
+
 **问题/建议**: 如有相关问题或建议，请提交 issue。一方面，对于英文原文问题，请在上游仓库 - [linux-insides](https://github.com/0xAX/linux-insides) 中提交 issue；另一方面，对于中文翻译问题，请在下游仓库 - [linux-insides-zh](https://github.com/hust-open-atom-club/linux-insides-zh) 中提交 issue。
 
 ## 贡献

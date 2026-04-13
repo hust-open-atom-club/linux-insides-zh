@@ -1,0 +1,10 @@
+[book]
+title = "Linux 内核揭秘"
+language = "zh-CN"
+src = "."
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/hust-open-atom-club/linux-insides-zh"
+site-url = "/linux-insides-zh/"
