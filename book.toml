@@ -8,3 +8,9 @@ default-theme = "light"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/hust-open-atom-club/linux-insides-zh"
 site-url = "/linux-insides-zh/"
+
+[output.pdf]
+cover-image = "cover.jpg"
+
+[output.epub]
+cover-image = "cover.jpg"
