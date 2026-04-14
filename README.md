@@ -27,12 +27,12 @@
 
 ## 使用 mdBook 构建
 
-仓库已经支持直接使用 `mdBook` 构建网页书籍。
+仓库已经支持直接使用 `mdBook` 构建网页书籍，同时支持生成 PDF 和 EPUB。
 
 安装：
 
 ```bash
-cargo install mdbook --locked
+cargo install mdbook mdbook-pdf mdbook-epub --locked
 ```
 
 构建：
@@ -47,7 +47,12 @@ mdbook build
 mdbook serve --open
 ```
 
-生成结果位于 `book/` 目录。仓库同时提供了 GitHub Actions 工作流，在 `master` 分支更新后自动构建并部署 GitHub Pages。
+生成结果位于 `book/` 目录：
+- HTML：`book/html/`
+- PDF：`book/pdf/output.pdf`
+- EPUB：`book/epub/Linux 内核揭秘.epub`
+
+仓库同时提供了 GitHub Actions 工作流，在 `master` 分支更新后自动构建并部署 GitHub Pages。
 
 ## 邮件列表
 
