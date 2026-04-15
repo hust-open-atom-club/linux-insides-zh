@@ -7,7 +7,7 @@ src = "."
 default-theme = "light"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/hust-open-atom-club/linux-insides-zh"
-site-url = "/linux-insides-zh/"
+site-url = "/"
 
 [output.pdf]
 optional = true
