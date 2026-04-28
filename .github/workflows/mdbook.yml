@@ -1,4 +1,4 @@
-name: mdBook
+name: Deploy mdBook site to Pages
 
 on:
   push:
@@ -39,8 +39,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: book
+          path: book/html
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
