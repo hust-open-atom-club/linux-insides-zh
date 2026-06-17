@@ -1,0 +1,12 @@
+[build]
+  command = "cargo install --locked mdbook && mdbook build"
+  publish = "book/html"
+
+[build.environment]
+  MDBOOK_OUTPUT__HTML__SITE_URL = "/"
+
+[context.deploy-preview.environment]
+  MDBOOK_OUTPUT__HTML__SITE_URL = "/"
+
+[context.branch-deploy.environment]
+  MDBOOK_OUTPUT__HTML__SITE_URL = "/"
