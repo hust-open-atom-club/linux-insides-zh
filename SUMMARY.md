@@ -87,5 +87,5 @@
     * [内核中的数据结构]()
 * [内核数据结构](KernelStructures/README.md)
     * [中断描述符表](KernelStructures/linux-kernelstructure-1.md)
-* [有帮助的链接](LINKS.md)
+* [有用的链接](LINKS.md)
 * [贡献者](CONTRIBUTORS.md)
