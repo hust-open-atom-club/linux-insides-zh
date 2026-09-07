@@ -43,7 +43,7 @@
 |├ [4.3](SysCall/linux-syscall-3.md)|[@qianmoke](https://github.com/qianmoke)|已完成|
 |├ [4.4](SysCall/linux-syscall-4.md)||未开始|
 |├ [4.5](SysCall/linux-syscall-5.md)|[@asanzjx](https://github.com/asanzjx)|已完成|
-|└ [4.6](SysCall/linux-syscall-6.md)||未开始|
+|└ [4.6](SysCall/linux-syscall-6.md)|[@internetsb](https://github.com/internetsb)|更新至[a61a0872141e](https://github.com/0xAX/linux-insides/commit/a61a0872141ed195390a6f9dd67c761abd74d546)|
 | 5. [Timers and time management](Timers)||正在进行|
 |├ [5.0](Timers/README.md)|[@mudongliang](https://github.com/mudongliang)|更新至[2a742fd4485d](https://github.com/0xAX/linux-insides/commit/2a742fd485df0260efce2078e7162c0de668e98b)|
 |├ [5.1](Timers/linux-timers-1.md)||未开始|
