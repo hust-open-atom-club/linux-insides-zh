@@ -57,7 +57,7 @@ struct rlimit {
 
 最后一个函数看起来稍微复杂一些，它接受 `4` 个参数。除了 `resource` 参数之外，它还接受：
 
-  * `pid` - 指定执行 `prlimit` 的进程 ID；
+  * `pid` - 指定执行 `prlimit` 的目标进程 ID；
   * `new_limit` - 如果此参数不为 `NULL`，则提供新的限制值；
   * `old_limit` - 如果此参数不为 `NULL`，则当前的 `soft` 和 `hard` 限制将被存放在此处。
 
@@ -79,7 +79,7 @@ prlimit64(0, RLIMIT_STACK, NULL, {rlim_cur=8192*1024, rlim_max=RLIM64_INFINITY})
 
 | 资源              | 描述
 |-------------------|------------------------------------------------------------------------------------------|
-| RLIMIT_CPU        | CPU 时间限制 （以秒为单位）                                                                |
+| RLIMIT_CPU        | CPU 时间限制（以秒为单位）                                                                |
 | RLIMIT_FSIZE      | 进程可以创建的文件的最大大小                                                                |
 | RLIMIT_DATA       | 进程数据段的最大大小                                                                       |
 | RLIMIT_STACK      | 进程栈的最大大小（以字节为单位）                                                            |
@@ -120,7 +120,7 @@ if (limit.rlim_cur < global.maxsock) {
 Linux 内核中的资源限制
 --------------------------------------------------------------------------------
 
-`getrlimit` 和 `setrlimit` 系统调用的实现很相似。二者都会执行 `do_prlimit` 函数。该函数是 `prlimit` 系统调用的核心实现，负责在用户空间与指定的 `rlimit` 结构之间复制数据：
+`getrlimit` 和 `setrlimit` 系统调用的实现很相似。二者都会执行 `do_prlimit` 函数，该函数是 `prlimit` 系统调用的核心实现，然后二者在用户空间与指定的 `rlimit` 结构之间复制数据：
 
 `getrlimit`：
 
