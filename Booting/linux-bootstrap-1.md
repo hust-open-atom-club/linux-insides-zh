@@ -357,67 +357,45 @@ cs = 0x1020
 设置堆栈
 --------------------------------------------------------------------------------
 
-绝大部分的 setup 代码都是为 C 语言运行环境做准备。在设置了 `ds` 和 `es` 寄存器之后，接下来 [step](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18#L467) 的代码将检查 `ss` 寄存器的内容，如果寄存器的内容不对，那么将进行更正：
+我们需要为 C 语言运行环境做准备，下一步就是设置堆栈。来看看接下来的代码：
 
 ```assembly
+# Apparently some ancient versions of LILO invoked the kernel with %ss != %ds,
+# which happened to work by accident for the old code.  Recalculate the stack
+# pointer if %ss is invalid.  Otherwise leave it alone, LOADLIN sets up the
+# stack behind its own code, so we can't blindly put it directly past the heap.
+
 	movw	%ss, %dx
-	cmpw	%ax, %dx
+	cmpw	%ax, %dx	# %ds == %ss?
 	movw	%sp, %dx
-	je	2f
+	je	2f		# -> assume %sp is reasonably set
 ```
 
-当进入这段代码的时候， `ss` 寄存器的值可能是一下三种情况之一：
+这里我们比较 `ss` 和 `ds` 寄存器的值，以确认它们是否相等，否则就需要修正 `ss`。
 
-* `ss` 寄存器的值是 0x10000 ( 和其他除了 `cs` 寄存器之外的所有寄存器的一样）
-* `ss` 寄存器的值不是 0x10000，但是 `CAN_USE_HEAP` 标志被设置了
-* `ss` 寄存器的值不是 0x10000，同时 `CAN_USE_HEAP` 标志没有被设置
+根据这段代码的注释，只有非常老旧版本的 [LILO](https://en.wikipedia.org/wiki/LILO_(bootloader)) 引导程序才会将这两个寄存器设置成不同的值。因此我们跳过所有这些“边缘情况”，只考虑 `ss` 寄存器的值与 `ds` 相等这一种情况。既然两个寄存器的值相等，就跳转到标号 `2` 处：
 
-下面我们就来分析在这三中情况下，代码都是如何工作的：
-
-* `ss` 寄存器的值是 0x10000，在这种情况下，代码将直接跳转到标号为 `2` 的代码处执行:
-
-```
-2: 	andw	$~3, %dx
+```assembly
+2:	# Now %dx should point to the end of our stack space
+	andw	$~3, %dx	# dword align (might as well...)
 	jnz	3f
-	movw	$0xfffc, %dx
-3:  movw	%ax, %ss
-	movzwl %dx, %esp
-	sti
+	movw	$0xfffc, %dx	# Make sure we're not zero
+3:	movw	%ax, %ss
+	movzwl	%dx, %esp	# Clear upper half of %esp
+	sti			# Now we should have a working stack
 ```
 
-这段代码首先将 `dx` 寄存器的值（就是当前`sp` 寄存器的值）4字节对齐，然后检查是否为0（如果是0，堆栈就不对了，因为堆栈是从大地址向小地址发展的），如果是0，那么就将 `dx` 寄存器的值设置成 `0xfffc` （64KB地址段的最后一个4字节地址）。如果不是0，那么就保持当前值不变。接下来，就将 `ax` 寄存器的值（ 0x10000 ）设置到 `ss` 寄存器，并根据 `dx` 寄存器的值设置正确的 `sp`。这样我们就得到了正确的堆栈设置，具体请参考下图：
-
-![stack](images/stack1.png)
-
-* 下面让我们来看 `ss` != `ds`的情况，首先将 setup code 的结束地址 [_end](http://lxr.free-electrons.com/source/arch/x86/boot/setup.ld?v=3.18#L52) 写入 `dx` 寄存器。然后检查 `loadflags` 中是否设置了 `CAN_USE_HEAP` 标志。   根据 kernel boot protocol 的定义，[loadflags](http://lxr.free-electrons.com/source/arch/x86/boot/header.S?v=3.18#L321) 是一个标志字段。这个字段的 `Bit 7` 就是 `CAN_USE_HEAP` 标志：
-
-```
-Field name:	loadflags
-
-  This field is a bitmask.
-
-  Bit 7 (write): CAN_USE_HEAP
-	Set this bit to 1 to indicate that the value entered in the
-	heap_end_ptr is valid.  If this field is clear, some setup code
-	functionality will be disabled.
-```
-
-`loadflags` 字段其他可以设置的标志包括：
+此时，`dx` 寄存器保存的是栈指针的值，它应该指向栈顶。这个栈指针的值是 `0x9000`，GRUB 2 引导程序会在加载 Linux 内核镜像时设置它，这个地址由下面的宏定义：
 
 ```C
-#define LOADED_HIGH	    (1<<0)
-#define QUIET_FLAG	    (1<<5)
-#define KEEP_SEGMENTS	(1<<6)
-#define CAN_USE_HEAP	(1<<7)
+#define GRUB_LINUX_SETUP_STACK		0x9000
 ```
 
-如果 `CAN_USE_HEAP` 被置位，那么将 `heap_end_ptr` 放入 `dx` 寄存器，然后加上 `STACK_SIZE` （最小堆栈大小是 512 bytes）。在加法完成之后，如果结果没有溢出（CF flag 没有置位，如果置位那么程序就出错了），那么就跳转到标号为 `2` 的代码处继续执行（这段代码的逻辑在1中已经详细介绍了），接着我们就得到了如下图所示的堆栈：
+接下来，`andw $~3, %dx` 会无条件地将这个地址向下对齐到 4 字节边界；如果对齐后的结果不为零，`jnz` 就会跳转到标号 `3` 处，直接使用这个对齐后的值。只有当对齐后的结果为零时（也就是原始栈指针落在 `0x0000` 到 `0x0003` 之间），才会将其设置为 `0xFFFC`。这是因为栈指针不能为零：栈是向低地址增长的，压栈操作需要指向一个有效地址。`0xFFFC` 是小于 `0x10000` 的最大 4 字节对齐地址。
 
-![stack](images/stack2.png)
+到这里，我们就得到了一个正确的栈，它从 `0x1000:0x9000` 开始，向低地址增长：
 
-* 最后一种情况就是 `CAN_USE_HEAP` 没有置位， 那么我们就将 `dx` 寄存器的值加上 `STACK_SIZE`，然后跳转到标号为 `2` 的代码处继续执行，接着我们就得到了如下图所示的堆栈：
-
-![minimal stack](images/minimal_stack.png)
+![early-stack](images/early-stack.svg)
 
 BSS段设置
 --------------------------------------------------------------------------------
