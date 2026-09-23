@@ -1,39 +1,39 @@
-System calls in the Linux kernel. Part 4.
+Linux 内核系统调用 第四节
 ================================================================================
 
-How does the Linux kernel run a program
+Linux 内核如何运行程序
 --------------------------------------------------------------------------------
 
-This is the fourth part of the [chapter](https://0xax.gitbook.io/linux-insides/summary/syscall) that describes [system calls](https://en.wikipedia.org/wiki/System_call) in the Linux kernel and as I wrote in the conclusion of the [previous](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-3) - this part will be last in this chapter. In the previous part we stopped at the two new concepts:
+本节是讲述 Linux 内核中[系统调用](https://en.wikipedia.org/wiki/System_call)的[章节](/SysCall/)的第四部分，正如我在[上一节](/SysCall/linux-syscall-3.md)的总结中所写的那样，本节将是本章的最后一节。在上一节中，我们停在了两个新概念上：
 
-* `vsyscall`;
-* `vDSO`;
+* `vsyscall`；
+* `vDSO`；
 
-that are related and very similar on system call concept.
+这两个概念与系统调用的概念有关，而且非常相似。
 
-This part will be last part in this chapter and as you can understand from the part's title - we will see what does occur in the Linux kernel when we run our programs. So, let's start.
+本节是本章的最后一部分，正如你从本节标题中可以理解的那样，我们将看到当我们运行自己的程序时，Linux 内核中发生了什么。那么，让我们开始吧。
 
-how do we launch our programs?
+我们如何启动程序？
 --------------------------------------------------------------------------------
 
-There are many different ways to launch an application from a user perspective. For example we can run a program from the [shell](https://en.wikipedia.org/wiki/Unix_shell) or double-click on the application icon. It does not matter. The Linux kernel handles application launch regardless how we do launch this application.
+从用户的角度来看，启动一个应用程序有许多种不同的方式。例如，我们可以在 [shell](https://en.wikipedia.org/wiki/Unix_shell) 中运行一个程序，也可以双击应用程序的图标。这无关紧要。无论我们以何种方式启动应用程序，Linux 内核都负责处理应用程序的启动。
 
-In this part we will consider the way when we just launch an application from the shell. As you know, the standard way to launch an application from shell is the following: We just launch a [terminal emulator](https://en.wikipedia.org/wiki/Terminal_emulator) application and just write the name of the program and pass or not arguments to our program, for example:
+在本节中，我们将讨论直接在 shell 中启动应用程序这种方式。如你所知，从 shell 启动应用程序的标准方式如下：我们先启动一个[终端模拟器](https://en.wikipedia.org/wiki/Terminal_emulator)应用程序，然后输入程序的名字，并向我们的程序传递参数或者不传递参数，例如：
 
 ![ls shell](images/ls_shell.png)
 
-Let's consider what does occur when we launch an application from the shell, what does shell do when we write program name, what does Linux kernel do etc. But before we will start to consider these interesting things, I want to warn that this book is about the Linux kernel. That's why we will see Linux kernel insides related stuff mostly in this part. We will not consider in details what does shell do, we will not consider complex cases, for example subshells etc.
+让我们考虑一下，当我们从 shell 启动一个应用程序时发生了什么，当我们输入程序名字时 shell 做了什么，Linux 内核又做了什么，等等。但在开始讨论这些有趣的内容之前，我想提醒一下，本书是关于 Linux 内核的。因此，本节我们主要关注与 Linux 内核内部实现相关的内容。我们不会详细讨论 shell 做了什么，也不会考虑诸如子 shell 之类的复杂情况。
 
-My default shell is - [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29), so I will consider how do bash shell launches a program. So let's start. The `bash` shell as well as any program that written with [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) programming language starts from the [main](https://en.wikipedia.org/wiki/Entry_point) function. If you will look on the source code of the `bash` shell, you will find the `main` function in the [shell.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/shell.c#L357) source code file. This function makes many different things before the main thread loop of the `bash` started to work. For example this function:
+我默认使用的 shell 是 [bash](https://en.wikipedia.org/wiki/Bash_%28Unix_shell%29)，因此我将讨论 `bash` shell 如何启动一个程序。那么，让我们开始吧。`bash` shell 与任何用 [C](https://en.wikipedia.org/wiki/C_%28programming_language%29) 语言编写的程序一样，都是从 [main](https://en.wikipedia.org/wiki/Entry_point) 函数开始的。如果你查看 `bash` shell 的源代码，你会在 [shell.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/shell.c#L357) 源文件中找到 `main` 函数。在 `bash` 的主线程循环开始工作之前，这个函数做了许多不同的事情。例如，这个函数会：
 
-* checks and tries to open `/dev/tty`;
-* check that shell running in debug mode;
-* parses command line arguments;
-* reads shell environment;
-* loads `.bashrc`, `.profile` and other configuration files;
-* and many many more.
+* 检查并尝试打开 `/dev/tty`；
+* 检查 shell 是否运行在调试模式下；
+* 解析命令行参数；
+* 读取 shell 环境；
+* 加载 `.bashrc`、`.profile` 以及其他配置文件；
+* 以及许多许多其他的事情。
 
-After all of these operations we can see the call of the `reader_loop` function. This function defined in the [eval.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/eval.c#L67) source code file and represents main thread loop or in other words it reads and executes commands. As the `reader_loop` function made all checks and read the given program name and arguments, it calls the `execute_command` function from the [execute_cmd.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/execute_cmd.c#L378) source code file. The `execute_command` function through the chain of the functions calls:
+完成所有这些操作之后，我们可以看到对 `reader_loop` 函数的调用。这个函数定义在 [eval.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/eval.c#L67) 源文件中，它代表主线程循环，换句话说，它读取并执行命令。当 `reader_loop` 函数完成了所有的检查、并读取了给定的程序名和参数之后，它会调用 [execute_cmd.c](https://github.com/bminor/bash/blob/bc007799f0e1362100375bb95d952d28de4c62fb/execute_cmd.c#L378) 源文件中的 `execute_command` 函数。此函数会经过如下的函数调用链：
 
 ```
 execute_command
@@ -43,19 +43,19 @@ execute_command
 --------> shell_execve
 ```
 
-makes different checks like do we need to start `subshell`, was it builtin `bash` function or not etc. As I already wrote above, we will not consider all details about things that are not related to the Linux kernel. In the end of this process, the `shell_execve` function calls the `execve` system call:
+进行各种检查，例如我们是否需要启动 `subshell`、它是不是 `bash` 的内建函数等等。正如我在上面已经写过的，我们不会讨论所有与 Linux 内核无关的细节。在这个过程的最后，`shell_execve` 函数会调用 `execve` 系统调用：
 
 ```C
 execve (command, args, env);
 ```
 
-The `execve` system call has the following signature:
+`execve` 系统调用具有如下签名：
 
 ```
 int execve(const char *filename, char *const argv [], char *const envp[]);
 ```
 
-and executes a program by the given filename, with the given arguments and [environment variables](https://en.wikipedia.org/wiki/Environment_variable). This system call is the first in our case and only, for example:
+它按照给定的文件名执行程序，并传入给定的参数和[环境变量](https://en.wikipedia.org/wiki/Environment_variable)。在我们的场景中，它是第一个也是唯一一个系统调用，例如：
 
 ```
 $ strace ls
@@ -68,12 +68,12 @@ $ strace uname
 execve("/bin/uname", ["uname"], [/* 62 vars */]) = 0
 ```
 
-So, a user application (`bash` in our case) calls the system call and as we already know the next step is Linux kernel.
+因此，一个用户应用程序（在我们的场景中是 `bash`）调用了系统调用，而正如我们已经知道的，下一步就是 Linux 内核。
 
-execve system call
+execve 系统调用
 --------------------------------------------------------------------------------
 
-We saw preparation before a system call called by a user application and after a system call handler finished its work in the second [part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-2) of this chapter. We stopped at the call of the `execve` system call in the previous paragraph. This system call defined in the [fs/exec.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c) source code file and as we already know it takes three arguments:
+在本章的[第二节](/SysCall/linux-syscall-2.md) 中，我们已经看到了用户应用程序调用系统调用之前的准备工作，以及系统调用处理程序完成工作之后的情形。在上一段中，我们停在了对 `execve` 系统调用的调用处。这个系统调用定义在 [fs/exec.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c) 源文件中，正如我们已经知道的，它接受三个参数：
 
 ```
 SYSCALL_DEFINE3(execve,
@@ -85,12 +85,12 @@ SYSCALL_DEFINE3(execve,
 }
 ```
 
-Implementation of the `execve` is pretty simple here, as we can see it just returns the result of the `do_execve` function. The `do_execve` function defined in the same source code file and do the following things:
+这里 `execve` 的实现相当简单，如我们所见，它只是返回 `do_execve` 函数的结果。`do_execve` 函数定义在同一个源文件中，它做了如下几件事：
 
-* Initialize two pointers on a userspace data with the given arguments and environment variables;
-* return the result of the `do_execveat_common`.
+* 用给定的参数和环境变量初始化两个指向用户空间数据的指针；
+* 返回 `do_execveat_common` 的结果。
 
-We can see its implementation:
+我们可以看到它的实现：
 
 ```C
 struct user_arg_ptr argv = { .ptr.native = __argv };
@@ -98,9 +98,9 @@ struct user_arg_ptr envp = { .ptr.native = __envp };
 return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);
 ```
 
-The `do_execveat_common` function does main work - it executes a new program. This function takes similar set of arguments, but as you can see it takes five arguments instead of three. The first argument is the file descriptor that represent directory with our application, in our case the `AT_FDCWD` means that the given pathname is interpreted relative to the current working directory of the calling process. The fifth argument is flags. In our case we passed `0` to the `do_execveat_common`. We will check in a next step, so will see it later.
+`do_execveat_common` 函数完成了主要的工作 —— 它执行一个新的程序。这个函数接受一组类似的参数，但如你所见，它接受的是五个参数而不是三个。第一个参数是代表我们的应用程序所在目录的文件描述符，在我们的场景中，`AT_FDCWD` 意味着给定的路径名是相对于调用进程的当前工作目录来解释的。第五个参数是标志（flags）。在我们的场景中，我们向 `do_execveat_common` 传入了 `0`。我们会在下一步检查它，稍后就会看到。
 
-First of all the `do_execveat_common` function checks the `filename` pointer and returns if it is `NULL`. After this we check flags of the current process that limit of running processes is not exceeded:
+首先，`do_execveat_common` 函数检查 `filename` 指针，如果它为 `NULL` 就返回。在这之后，我们检查当前进程的标志，以确保正在运行的进程数量没有超出限制：
 
 ```C
 if (IS_ERR(filename))
@@ -115,7 +115,7 @@ if ((current->flags & PF_NPROC_EXCEEDED) &&
 current->flags &= ~PF_NPROC_EXCEEDED;
 ```
 
-If these two checks were successful we unset `PF_NPROC_EXCEEDED` flag in the flags of the current process to prevent fail of the `execve`. You can see that in the next step we call the `unshare_files` function that defined in the [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c) and unshares the files of the current task and check the result of this function:
+如果这两个检查都通过了，我们就清除当前进程标志中的 `PF_NPROC_EXCEEDED` 标志，以避免 `execve` 失败。你可以看到，在下一步我们调用了 [kernel/fork.c](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/kernel/fork.c) 中定义的 `unshare_files` 函数，它取消共享当前任务的文件，我们还会检查这个函数的返回值：
 
 ```C
 retval = unshare_files(&displaced);
@@ -123,9 +123,9 @@ if (retval)
 	goto out_ret;
 ```
 
-We need to call this function to eliminate potential leak of the execve'd binary's [file descriptor](https://en.wikipedia.org/wiki/File_descriptor). In the next step we start preparation of the `bprm` that represented by the `struct linux_binprm` structure (defined in the [include/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/include/linux/binfmts.h) header file). The `linux_binprm` structure is used to hold the arguments that are used when loading binaries. For example it contains `vma` field which has `vm_area_struct` type and represents single memory area over a contiguous interval in a given address space where our application will be loaded, `mm` field which is memory descriptor of the binary, pointer to the top of memory and many other different fields.
+我们需要调用这个函数，以消除被 `execve` 执行的二进制文件可能发生的[文件描述符](https://en.wikipedia.org/wiki/File_descriptor)泄漏。在下一步中，我们开始准备 `bprm`，它由 `struct linux_binprm` 结构体（定义在 [include/linux/binfmts.h](https://github.com/torvalds/linux/blob/master/include/linux/binfmts.h) 头文件中）表示。`linux_binprm` 结构体用于保存装载二进制文件时所用的参数。例如，它包含 `vma` 字段（类型为 `vm_area_struct`），表示给定地址空间中一段连续区间上的单个内存区域，我们的应用程序就将被装载到那里；它还包含 `mm` 字段（该二进制文件的内存描述符）、指向内存顶部的指针，以及许多其他不同的字段。
 
-First of all we allocate memory for this structure with the `kzalloc` function and check the result of the allocation:
+首先，我们用 `kzalloc` 函数为这个结构体分配内存，并检查分配的结果：
 
 ```C
 bprm = kzalloc(sizeof(*bprm), GFP_KERNEL);
@@ -133,7 +133,7 @@ if (!bprm)
 	goto out_files;
 ```
 
-After this we start to prepare the `binprm` credentials with the call of the `prepare_bprm_creds` function:
+在这之后，我们通过调用 `prepare_bprm_creds` 函数来开始准备 `binprm` 的凭证（credentials）：
 
 ```C
 retval = prepare_bprm_creds(bprm);
@@ -144,9 +144,9 @@ check_unsafe_exec(bprm);
 current->in_execve = 1;
 ```
 
-Initialization of the `binprm` credentials in other words is initialization of the `cred` structure that stored inside of the `linux_binprm` structure. The `cred` structure contains the security context of a task for example [real uid](https://en.wikipedia.org/wiki/User_identifier#Real_user_ID) of the task, real [guid](https://en.wikipedia.org/wiki/Globally_unique_identifier) of the task, `uid` and `guid` for the [virtual file system](https://en.wikipedia.org/wiki/Virtual_file_system) operations etc. In the next step as we executed preparation of the `bprm` credentials we check that now we can safely execute a program with the call of the `check_unsafe_exec` function and set the current process to the `in_execve` state.
+初始化 `binprm` 的凭证，换句话说就是初始化存放在 `linux_binprm` 结构体内部的 `cred` 结构体。`cred` 结构体包含任务的安全上下文，例如任务的真实 [uid](https://en.wikipedia.org/wiki/User_identifier#Real_user_ID)、任务的真实 [guid](https://en.wikipedia.org/wiki/Globally_unique_identifier)、用于[虚拟文件系统](https://en.wikipedia.org/wiki/Virtual_file_system)操作的 `uid` 和 `guid` 等等。在下一步中，由于我们已经完成了 `bprm` 凭证的准备工作，我们会调用 `check_unsafe_exec` 函数来检查现在是否可以安全地执行程序，并把当前进程设置为 `in_execve` 状态。
 
-After all of these operations we call the `do_open_execat` function that checks the flags that we passed to the `do_execveat_common` function (remember that we have `0` in the `flags`) and searches and opens executable file on disk, checks that our we will load a binary file from `noexec` mount points (we need to avoid execute a binary from filesystems that do not contain executable binaries like [proc](https://en.wikipedia.org/wiki/Procfs) or [sysfs](https://en.wikipedia.org/wiki/Sysfs)), initializes `file` structure and returns pointer on this structure. Next we can see the call the `sched_exec` after this:
+完成所有这些操作之后，我们调用 `do_open_execat` 函数，它会检查我们传给 `do_execveat_common` 函数的标志（记住 `flags` 为 `0`），在磁盘上查找并打开可执行文件，检查我们是否将从 `noexec` 挂载点装载二进制文件（我们需要避免从 [proc](https://en.wikipedia.org/wiki/Procfs) 或 [sysfs](https://en.wikipedia.org/wiki/Sysfs) 这类不包含可执行二进制文件的文件系统中执行二进制文件），接着初始化 `file` 结构体并返回指向该结构体的指针。接下来我们可以看到对 `sched_exec` 的调用：
 
 ```C
 file = do_open_execat(fd, filename, flags);
@@ -157,11 +157,11 @@ if (IS_ERR(file))
 sched_exec();
 ```
 
-The `sched_exec` function is used to determine the least loaded processor that can execute the new program and to migrate the current process to it.
+`sched_exec` 函数用于确定负载最轻、可以执行新程序的处理器，并把当前进程迁移到该处理器上。
 
-After this we need to check [file descriptor](https://en.wikipedia.org/wiki/File_descriptor) of the give executable binary. We try to check does the name of the our binary file starts from the `/` symbol or does the path of the given executable binary is interpreted relative to the current working directory of the calling process or in other words file descriptor is `AT_FDCWD` (read above about this).
+在这之后，我们需要检查给定可执行二进制文件的[文件描述符](https://en.wikipedia.org/wiki/File_descriptor)。我们要检查的是：我们的二进制文件名是否以 `/` 符号开头（即是否是绝对路径），或者给定的可执行二进制的路径是否相对于调用进程的当前工作目录来解释，换句话说，文件描述符是否等于 `AT_FDCWD`（请阅读上文关于它的内容）。
 
-If one of these checks is successful we set the binary parameter filename:
+如果其中一个检查通过，我们就设置二进制参数的文件名：
 
 ```C
 bprm->file = file;
@@ -171,7 +171,7 @@ if (fd == AT_FDCWD || filename->name[0] == '/') {
 }
 ```
 
-Otherwise if the filename is empty we set the binary parameter filename to the `/dev/fd/%d` or `/dev/fd/%d/%s` depends on the filename of the given executable binary which means that we will execute the file to which the file descriptor refers:
+否则，如果文件名为空，我们会根据给定可执行二进制的文件名，把二进制参数的文件名设置为 `/dev/fd/%d` 或 `/dev/fd/%d/%s`，这意味着我们将执行该文件描述符所指向的文件：
 
 ```C
 } else {
@@ -191,7 +191,7 @@ Otherwise if the filename is empty we set the binary parameter filename to the `
 bprm->interp = bprm->filename;
 ```
 
-Note that we set not only the `bprm->filename` but also `bprm->interp` that will contain name of the program interpreter. For now we just write the same name there, but later it will be updated with the real name of the program interpreter depends on binary format of a program. You can read above that we already prepared `cred` for the `linux_binprm`. The next step is initialization of other fields of the `linux_binprm`.  First of all we call the `bprm_mm_init` function and pass the `bprm` to it:
+注意，我们不仅设置了 `bprm->filename`，还设置了 `bprm->interp`，后者将包含程序解释器的名字。目前我们只是把同样的名字写进去，但之后它会根据程序的二进制格式，被更新为程序解释器的真实名字。你可以在上文读到，我们已经为 `linux_binprm` 准备好了 `cred`。下一步是初始化 `linux_binprm` 的其他字段。首先我们调用 `bprm_mm_init` 函数并把 `bprm` 传给它：
 
 ```C
 retval = bprm_mm_init(bprm);
@@ -199,9 +199,9 @@ if (retval)
 	goto out_unmark;
 ```
 
-The `bprm_mm_init` defined in the same source code file and as we can understand from the function's name, it makes initialization of the memory descriptor or in other words the `bprm_mm_init` function initializes `mm_struct` structure. This structure defined in the [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/master/include/linux/mm_types.h) header file and represents address space of a process. We will not consider implementation of the `bprm_mm_init` function because we do not know many important stuff related to the Linux kernel memory manager, but we just need to know that this function initializes `mm_struct` and populate it with a temporary stack `vm_area_struct`.
+`bprm_mm_init` 定义在同一个源文件中，从函数名可以理解，它进行内存描述符的初始化，换句话说，`bprm_mm_init` 函数初始化 `mm_struct` 结构体。这个结构体定义在 [include/linux/mm_types.h](https://github.com/torvalds/linux/blob/master/include/linux/mm_types.h) 头文件中，表示进程的地址空间。我们不会讨论 `bprm_mm_init` 函数的实现，因为还有许多与 Linux 内核内存管理器相关的重要内容我们尚不了解，我们只需要知道这个函数初始化了 `mm_struct`，并为它填充了一个临时的栈 `vm_area_struct`。
 
-After this we calculate the count of the command line arguments which were passed to our executable binary, the count of the environment variables and set it to the `bprm->argc` and `bprm->envc` respectively:
+在这之后，我们计算传给可执行二进制文件的命令行参数个数、环境变量个数，并分别把它们设置到 `bprm->argc` 和 `bprm->envc`：
 
 ```C
 bprm->argc = count(argv, MAX_ARG_STRINGS);
@@ -213,13 +213,13 @@ if ((retval = bprm->envc) < 0)
 	goto out;
 ```
 
-As you can see we do this operations with the help of the `count` function that defined in the [same](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c) source code file and calculates the count of strings in the `argv` array. The `MAX_ARG_STRINGS` macro defined in the [include/uapi/linux/binfmts.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/binfmts.h) header file and as we can understand from the macro's name, it represents maximum number of strings that were passed to the `execve` system call. The value of the `MAX_ARG_STRINGS`:
+如你所见，我们借助[同一个](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/fs/exec.c)源文件中定义的 `count` 函数来完成这些操作，它计算 `argv` 数组中字符串的个数。`MAX_ARG_STRINGS` 宏定义在 [include/uapi/linux/binfmts.h](https://github.com/torvalds/linux/blob/16f73eb02d7e1765ccab3d2018e0bd98eb93d973/include/uapi/linux/binfmts.h) 头文件中，从这个宏的名字可以理解，它表示传给 `execve` 系统调用的字符串的最大数目。`MAX_ARG_STRINGS` 的值是：
 
 ```C
 #define MAX_ARG_STRINGS 0x7FFFFFFF
 ```
 
-After we calculated the number of the command line arguments and environment variables, we call the `prepare_binprm` function. We already call the function with the similar name before this moment. This function is called `prepare_binprm_cred` and we remember that this function initializes `cred` structure in the `linux_bprm`. Now the `prepare_binprm` function:
+在计算完命令行参数和环境变量的数量之后，我们调用 `prepare_binprm` 函数。在此之前，我们已经调用过一个名字相似的函数。那个函数叫做 `prepare_binprm_cred`，它初始化了 `linux_bprm` 中的 `cred` 结构体。而现在 `prepare_binprm` 函数：
 
 ```C
 retval = prepare_binprm(bprm);
@@ -227,7 +227,7 @@ if (retval < 0)
 	goto out;
 ```
 
-fills the `linux_binprm` structure with the `uid` from [inode](https://en.wikipedia.org/wiki/Inode) and read `128` bytes from the binary executable file. We read only first `128` from the executable file because we need to check a type of our executable. We will read the rest of the executable file in the later step. After the preparation of the `linux_bprm` structure we copy the filename of the executable binary file, command line arguments and environment variables to the `linux_bprm` with the call of the `copy_strings_kernel` function:
+会用来自 [inode](https://en.wikipedia.org/wiki/Inode) 的 `uid` 填充 `linux_binprm` 结构体，并从二进制可执行文件中读取 `128` 个字节。只读取前 `128` 个字节是因为我们需要检查可执行文件的类型。可执行文件的其余部分我们会在后面的步骤中读取。在 `linux_bprm` 结构体准备好之后，我们通过调用 `copy_strings_kernel` 函数把可执行二进制文件的文件名、命令行参数和环境变量复制到 `linux_bprm` 中：
 
 ```C
 retval = copy_strings_kernel(1, &bprm->filename, bprm);
@@ -243,15 +243,15 @@ if (retval < 0)
 	goto out;
 ```
 
-And set the pointer to the top of new program's stack that we set in the `bprm_mm_init` function:
+并设置指向新程序栈顶的指针，这个指针是我们在 `bprm_mm_init` 函数中设置的：
 
 ```C
 bprm->exec = bprm->p;
 ```
 
-The top of the stack will contain the program filename and we store this filename to the `exec` field of the `linux_bprm` structure.
+栈顶将存放程序的文件名，我们把这个文件名保存到 `linux_bprm` 结构体的 `exec` 字段中。
 
-Now we have filled `linux_bprm` structure, we call the `exec_binprm` function:
+现在我们已经填充好了 `linux_bprm` 结构体，于是调用 `exec_binprm` 函数：
 
 ```C
 retval = exec_binprm(bprm);
@@ -259,7 +259,7 @@ if (retval < 0)
 	goto out;
 ```
 
-First of all we store the [pid](https://en.wikipedia.org/wiki/Process_identifier) and `pid` that seen from the [namespace](https://en.wikipedia.org/wiki/Cgroups) of the current task in the `exec_binprm`:
+首先，我们在 `exec_binprm` 中保存当前任务的 [pid](https://en.wikipedia.org/wiki/Process_identifier)，以及从当前任务的[命名空间](https://en.wikipedia.org/wiki/Cgroups)中看到的 `pid`：
 
 ```C
 old_pid = current->pid;
@@ -268,23 +268,23 @@ old_vpid = task_pid_nr_ns(current, task_active_pid_ns(current->parent));
 rcu_read_unlock();
 ```
 
-and call the:
+并调用：
 
 ```C
 search_binary_handler(bprm);
 ```
 
-function. This function goes through the list of handlers that contains different binary formats. Currently the Linux kernel supports the following binary formats:
+这个函数会遍历包含不同二进制格式的处理程序（handler）链表。目前 Linux 内核支持如下二进制格式：
 
-* `binfmt_script` - support for interpreted scripts that are starts from the [#!](https://en.wikipedia.org/wiki/Shebang_%28Unix%29) line;
-* `binfmt_misc` - support different binary formats, according to runtime configuration of the Linux kernel;
-* `binfmt_elf` - support [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) format;
-* `binfmt_aout` - support [a.out](https://en.wikipedia.org/wiki/A.out) format;
-* `binfmt_flat` - support for [flat](https://en.wikipedia.org/wiki/Binary_file#Structure) format;
-* `binfmt_elf_fdpic` - Support for [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF) binaries;
-* `binfmt_em86` - support for Intel [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) binaries running on [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha) machines.
+* `binfmt_script` —— 支持以 [#!](https://en.wikipedia.org/wiki/Shebang_%28Unix%29) 行开头的解释型脚本；
+* `binfmt_misc` —— 根据 Linux 内核运行时的配置支持不同的二进制格式；
+* `binfmt_elf` —— 支持 [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) 格式；
+* `binfmt_aout` —— 支持 [a.out](https://en.wikipedia.org/wiki/A.out) 格式；
+* `binfmt_flat` —— 支持 [flat](https://en.wikipedia.org/wiki/Binary_file#Structure) 格式；
+* `binfmt_elf_fdpic` —— 支持 [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF) 二进制文件；
+* `binfmt_em86` —— 支持在 [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha) 机器上运行的 Intel [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) 二进制文件。
 
-So, the `search_binary_handler` tries to call the `load_binary` function and pass `linux_binprm` to it. If the binary handler supports the given executable file format, it starts to prepare the executable binary for execution:
+因此，`search_binary_handler` 会尝试调用 `load_binary` 函数，并把 `linux_binprm` 传给它。如果某个二进制格式处理程序支持给定的可执行文件格式，它就开始为执行该可执行二进制文件做准备：
 
 ```C
 int search_binary_handler(struct linux_binprm *bprm)
@@ -303,7 +303,7 @@ int search_binary_handler(struct linux_binprm *bprm)
 	return retval;
 ```
 
-Where the `load_binary` for example for the [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) checks the magic number (each `elf` binary file contains magic number in the header) in the `linux_bprm` buffer (remember that we read first `128` bytes from the executable binary file): and exit if it is not `elf` binary:
+其中，例如针对 [elf](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format) 的 `load_binary` 会检查 `linux_bprm` 缓冲区中的魔数（每个 `elf` 二进制文件的头部都包含魔数；记住我们已经从可执行二进制文件中读取了前 `128` 个字节），如果它不是 `elf` 二进制文件就退出：
 
 ```C
 static int load_elf_binary(struct linux_binprm *bprm)
@@ -317,7 +317,7 @@ static int load_elf_binary(struct linux_binprm *bprm)
 		goto out;
 ```
 
-If the given executable file is in `elf` format, the `load_elf_binary` continues to execute. The `load_elf_binary` does many different things to prepare on execution executable file. For example it checks the architecture and type of the executable file:
+如果给定的可执行文件是 `elf` 格式，`load_elf_binary` 就继续执行。为了让可执行文件能够被执行，`load_elf_binary` 做了许多不同的事情。例如，它检查可执行文件的体系结构和类型：
 
 ```C
 if (loc->elf_ex.e_type != ET_EXEC && loc->elf_ex.e_type != ET_DYN)
@@ -326,7 +326,7 @@ if (!elf_check_arch(&loc->elf_ex))
 	goto out;
 ```
 
-and exit if there is wrong architecture and executable file non executable non shared. Tries to load the `program header table`:
+如果体系结构不正确，或者可执行文件既不是可执行类型也不是共享类型，就退出。接着它尝试装载 `program header table`（程序头表）：
 
 ```C
 elf_phdata = load_elf_phdrs(&loc->elf_ex, bprm->file);
@@ -334,9 +334,9 @@ if (!elf_phdata)
 	goto out;
 ```
 
-that describes [segments](https://en.wikipedia.org/wiki/Memory_segmentation). Read the `program interpreter` and libraries that linked with the our executable binary file from disk and load it to memory. The `program interpreter` specified in the `.interp` section of the executable file and as you can read in the part that describes [Linkers](https://0xax.gitbook.io/linux-insides/summary/misc/linux-misc-3) it is - `/lib64/ld-linux-x86-64.so.2` for the `x86_64`. It setups the stack and map `elf` binary into the correct location in memory. It maps the [bss](https://en.wikipedia.org/wiki/.bss) and the [brk](https://man7.org/linux/man-pages/man2/sbrk.2.html) sections and does many many other different things to prepare executable file to execute.
+它描述了各个[段](https://en.wikipedia.org/wiki/Memory_segmentation)。从磁盘读取 `program interpreter`（程序解释器）以及与我们的可执行二进制文件链接的库，并把它们装载到内存中。`program interpreter` 在可执行文件的 `.interp` 节中指定，你可以在讲述[链接器](/Misc/linux-misc-3.md)的部分读到，对于 `x86_64` 而言它就是 `/lib64/ld-linux-x86-64.so.2`。它设置栈，并把 `elf` 二进制文件映射到内存中正确的位置。它映射 [bss](https://en.wikipedia.org/wiki/.bss) 和 [brk](http://man7.org/linux/man-pages/man2/sbrk.2.html) 节，还做了许多许多其他不同的事情，以便为执行可执行文件做好准备。
 
-In the end of the execution of the `load_elf_binary` we call the `start_thread` function and pass three arguments to it:
+在 `load_elf_binary` 执行结束时，我们调用 `start_thread` 函数并向它传递三个参数：
 
 ```C
 	start_thread(regs, elf_entry, bprm->p);
@@ -347,13 +347,13 @@ out_ret:
 	return retval;
 ```
 
-These arguments are:
+这三个参数是：
 
-* Set of [registers](https://en.wikipedia.org/wiki/Processor_register) for the new task;
-* Address of the entry point of the new task;
-* Address of the top of the stack for the new task.
+* 新任务的[寄存器](https://en.wikipedia.org/wiki/Processor_register)集合；
+* 新任务的入口点地址；
+* 新任务的栈顶地址。
 
-As we can understand from the function's name, it starts new thread, but it is not so. The `start_thread` function just prepares new task's registers to be ready to run. Let's look on the implementation of this function:
+从函数名可以理解，它启动一个新线程，但事实并非如此。`start_thread` 函数只是准备好新任务的寄存器，使其处于可以运行的状态。让我们看看这个函数的实现：
 
 ```C
 void
@@ -364,7 +364,7 @@ start_thread(struct pt_regs *regs, unsigned long new_ip, unsigned long new_sp)
 }
 ```
 
-As we can see the `start_thread` function just makes a call of the `start_thread_common` function that will do all for us:
+如我们所见，`start_thread` 函数只是调用了 `start_thread_common` 函数，后者会为我们完成所有工作：
 
 ```C
 static void
@@ -385,22 +385,20 @@ start_thread_common(struct pt_regs *regs, unsigned long new_ip,
 }
 ```
 
-The `start_thread_common` function fills `fs` segment register with zero and `es` and `ds` with the value of the data segment register. After this we set new values to the [instruction pointer](https://en.wikipedia.org/wiki/Program_counter), `cs` segments etc. In the end of the `start_thread_common` function we can see the `force_iret` macro that forces a system call return via `iret` instruction. Ok, we prepared new thread to run in userspace and now we can return from the `exec_binprm` and now we are in the `do_execveat_common` again. After the `exec_binprm` will finish its execution we release memory for structures that was allocated before and return.
+`start_thread_common` 函数把 `fs` 段寄存器填为零，并用数据段寄存器的值填充 `es` 和 `ds`。在这之后，我们为[指令指针](https://en.wikipedia.org/wiki/Program_counter)、`cs` 段等设置新的值。在 `start_thread_common` 函数的末尾，我们可以看到 `force_iret` 宏，它强制通过 `iret` 指令从系统调用返回。好了，我们已经准备好让新线程在用户空间中运行，现在我们可以从 `exec_binprm` 返回，于是我们又回到了 `do_execveat_common` 中。当 `exec_binprm` 执行结束之后，我们释放之前分配的结构体所占用的内存并返回。
 
-After we returned from the `execve` system call handler, execution of our program will be started. We can do it, because all context related information is already configured for this purpose. As we saw the `execve` system call does not return control to a process, but code, data and other segments of the caller process are just overwritten of the program segments. The exit from our application will be implemented through the `exit` system call.
+当我们从 `execve` 系统调用的处理程序返回之后，我们的程序就将开始执行。我们之所以能够这样做，是因为所有与上下文相关的信息都已经为此配置好了。正如我们所看到的，`execve` 系统调用并不会把控制权返回给进程，调用进程的代码段、数据段和其他段只是被新程序的各个段覆盖了。我们应用程序的退出将通过 `exit` 系统调用来实现。
 
-That's all. From this point our program will be executed.
+就是这样。从这一刻起，我们的程序就开始执行了。
 
-Conclusion
+总结
 --------------------------------------------------------------------------------
 
-This is the end of the fourth part of the about the system calls concept in the Linux kernel. We saw almost all related stuff to the `system call` concept in these four parts. We started from the understanding of the `system call` concept, we have learned what is it and why do users applications need in this concept. Next we saw how does the Linux handle a system call from a user application. We met two similar concepts to the `system call` concept, they are `vsyscall` and `vDSO` and finally we saw how does Linux kernel run a user program.
+这是关于 Linux 内核中系统调用概念的第四节的结尾。在这四节中，我们几乎看到了与系统调用概念相关的全部内容。我们从理解系统调用的概念开始，了解了它是什么，以及用户应用程序为什么需要它。接着我们看到了 Linux 如何处理来自用户应用程序的系统调用。我们还认识了两个与系统调用概念相似的概念 —— `vsyscall` 和 `vDSO`，最后我们看到了 Linux 内核如何运行一个用户程序。
 
-If you have questions or suggestions, feel free to ping me in twitter [0xAX](https://twitter.com/0xAX), drop me [email](mailto:anotherworldofworld@gmail.com) or just create [issue](https://github.com/0xAX/linux-insides/issues/new).
+如果你有任何问题或建议，欢迎在 Twitter 上联系 [0xAX](https://twitter.com/0xAX)，给我发[邮件](mailto:anotherworldofworld@gmail.com)，或者直接创建一个 [issue](https://github.com/0xAX/linux-insides/issues/new)。
 
-**Please note that English is not my first language and I am really sorry for any inconvenience. If you found any mistakes please send me PR to [linux-insides](https://github.com/0xAX/linux-insides).**
-
-Links
+链接
 --------------------------------------------------------------------------------
 
 * [System call](https://en.wikipedia.org/wiki/System_call)
@@ -424,7 +422,7 @@ Links
 * [Alpha](https://en.wikipedia.org/wiki/DEC_Alpha)
 * [FDPIC](http://elinux.org/UClinux_Shared_Library#FDPIC_ELF)
 * [segments](https://en.wikipedia.org/wiki/Memory_segmentation)
-* [Linkers](https://0xax.gitbook.io/linux-insides/summary/misc/linux-misc-3)
+* [Linkers](/Misc/linux-misc-3.md)
 * [Processor register](https://en.wikipedia.org/wiki/Processor_register)
 * [instruction pointer](https://en.wikipedia.org/wiki/Program_counter)
-* [Previous part](https://0xax.gitbook.io/linux-insides/summary/syscall/linux-syscall-3)
+* [Previous part](/SysCall/linux-syscall-3.md)
